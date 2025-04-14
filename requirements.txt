@@ -3,3 +3,5 @@ python-dotenv
 pandas
 pymysql
 cryptography
+sqlparse
+typing
