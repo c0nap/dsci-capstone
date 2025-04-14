@@ -7,44 +7,58 @@ Rochester Institute of Technology
 
 Capstone Project DSCI-601/602 w/ Travis Desell
 
-### Requirements
+## 1 - Requirements
 
 - Python 3.12
-- PostgreSQL
+- PostgreSQL or MySQL
+- MongoDB
 
-### Setup
+## 2 - Setup
 
+1. Create a new folder directly under `C:/` for easy access from WSL, and navigate into it using the terminal.
 ```bash
-cd <path>
+cd /mnt/c/<folder>
 ```
 
-(Optional) Create a virtual environment and activate it.
+2. (Optional) Create a virtual environment and activate it. This prevents installed packages from interfering with other Python installations on your system.
 ```bash
 python -m venv env-cap
+```
+```bash
 source env-cap/bin/activate
 ```
 
-1. Install required packages:
+3. Clone the repository and place the project folder inside your created directory (next to your virtual environment).
+```bash
+git clone https://github.com/C0NAP/dsci-capstone.git /mnt/c/<folder>/dsci-capstone
+```
+
+4. IMPORTANT! Enter the project folder for the following steps.
+```bash
+cd /mnt/c/<folder>/dsci-capstone
+```
+
+5. Install required packages into your virtual environment.
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-2. Install database engines (PostgreSQL) if you do not have them already:
+6. Install database engines if you do not have them already.
 ```bash
 sudo apt install postgresql
 ```
 
-3. Start the database service.
+7. Start the database service.
 ```bash
 sudo service mysql start
 ```
 
-4. Copy `.env.example` to `.env`, and add your PostgreSQL credentials. Make sure `DB_ENGINE` is set to `POSTGRESQL`.
+8. Copy `.env.example` to `.env`, and add your PostgreSQL credentials. Make sure `DB_ENGINE` is set to `POSTGRESQL`.
 
-5. Run setup script to verify basic components are working.
+9. Run setup script to verify basic components are working.
 ```bash
 python src/setup.py
 ```
 
-6. Load example JSON into database.
+10. Load example JSON into database.
 
