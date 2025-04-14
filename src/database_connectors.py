@@ -53,11 +53,11 @@ class Connector(ABC):
         self.db_type = DB
         ## The .env file contains multiple credentials.
         ## Select environment variables corresponding to our database engine.
-        db_engine = os.getenv(f"{DB}_ENGINE")
-        username = os.getenv(f"{DB}_USERNAME")
-        password = os.getenv(f"{DB}_PASSWORD")
-        host = os.getenv(f"{DB}_HOST")
-        port = os.getenv(f"{DB}_PORT")
+        self.db_engine = os.getenv(f"{DB}_ENGINE")
+        self.username = os.getenv(f"{DB}_USERNAME")
+        self.password = os.getenv(f"{DB}_PASSWORD")
+        self.host = os.getenv(f"{DB}_HOST")
+        self.port = os.getenv(f"{DB}_PORT")
         ## Condense these variables into a connection string
         self.change_database(database_name)
     
@@ -83,13 +83,13 @@ class Connector(ABC):
         ## Perform basic error checks.
         query = query.strip()  # Remove whitespace
         if not query: return None  # Check if empty
-        if not is_single_query(query):
+        if not self.is_single_query(query):
             results = self.execute_combined(query)
             if len(results) == 0:
                 return None
             ## Return the final result if several are found.
             if len(results) > 1:
-                if (self.verbose): Log.fail("A combined query was executed as a single query. Some results are hidden.")
+                if self.verbose: Log.fail("A combined query was executed as a single query. Some results are hidden.")
             return results[-1]
         ## Derived classes MUST implement single-query execution.
         pass
@@ -115,21 +115,21 @@ class Connector(ABC):
             with open(filename, 'r') as file:
                 multi_query = file.read()
         except Exception as e:
-            if (self.verbose): Log.file_read_error(filename)
+            if self.verbose: Log.file_read_error(filename)
             raise
         try:   ## Attempt to run the multi-query
             results = self.execute_combined(multi_query)
-            if (self.verbose): Log.success(f"Finished executing \"{filename}\"\n")
+            if self.verbose: Log.success(f"Finished executing \"{filename}\"\n")
             return results
         except Exception as e:
-            if (self.verbose): Log.fail(f"Failed to execute file \"{filename}\"")
+            if self.verbose: Log.fail(f"Failed to execute file \"{filename}\"")
             raise
 
     def is_single_query(self, query: str) -> bool:
         """Checks if a string contains multiple queries.
         @param query  A single or combined query string.
         @return  Whether the query is single (true) or combined (false)."""
-        queries = split_combined_query(query)
+        queries = self.split_combined_query(query)
         return len(queries) == 1
 
     @abstractmethod
@@ -150,6 +150,7 @@ class Connector(ABC):
     def create_database(self, database_name: str):
         """Use the current database connection to create a sibling database in this engine.
         @param database_name  The name of the new database to create."""
+        self.drop_database(database_name)
         pass
 
     @abstractmethod
@@ -172,7 +173,7 @@ class RelationalConnector(Connector):
         """Creates a new database connector.
         @param verbose  Whether to print success and failure messages.
         """
-        super().__init__()
+        super().__init__(verbose)
         engine = os.getenv("DB_ENGINE")
         database = os.getenv("DB_NAME")  # "" for Neo4j
         super().configure(engine, database)
@@ -182,19 +183,21 @@ class RelationalConnector(Connector):
         "MYSQL": ["SELECT DATABASE();", "SHOW DATABASES;"],
         "POSTGRES": ["SELECT current_database();", "SELECT datname FROM pg_database;"],
     }
-    def test_connection(self) -> bool:
+    def test_connection(self, print_results=False) -> bool:
         """Establish a basic connection to the database.
+        @param print_results  Whether to display the retrieved test DataFrames
         @return  Whether the connection test was successful."""
         try:
             engine = create_engine(self.connection_string)
             with engine.connect() as connection:
                 connection.execute(text("SELECT 1"))   ## This query should work in all relational databases.
-                result = connection.execute(text(test_queries[self.db_type][0]))
-                if (self.verbose): Log.success(f"Successfully connected to database: {result.fetchone()[0]}\n")
+                result = connection.execute(text(self.test_queries[self.db_type][0]))
+                if self.verbose: Log.connect_success(result.fetchone()[0])
         except Exception as e:
-            if (self.verbose): Log.fail_connect(self.connection_string)
-            raise
-        self.execute_query(test_queries[self.db_type][1])
+            if self.verbose: Log.connect_fail(self.connection_string)
+            return False
+        result = self.execute_query(self.test_queries[self.db_type][1])
+        if print_results: print(result)
         return True
     
     def execute_query(self, query: str) -> DataFrame:
@@ -211,12 +214,11 @@ class RelationalConnector(Connector):
             with engine.connect() as connection:
                 result = connection.execute(text(query))
                 if result.returns_rows and result.keys():
-                    df = pd.DataFrame(result.fetchall(), columns=result.keys())
-                    print(df)
+                    result = DataFrame(result.fetchall(), columns=result.keys())
                 connection.commit()
                 return result
         except Exception as e:
-            if (self.verbose): Log.fail_connect(self.connection_string)
+            if self.verbose: Log.fail_connect(self.connection_string)
             raise
 
     def split_combined_query(self, multi_query: str) -> List[str]:
@@ -242,13 +244,14 @@ class RelationalConnector(Connector):
         """Use the current database connection to create a sibling database in this engine.
         Auto-commit is required for database management.
         @param database_name  The name of the new database to create."""
+        super().create_database(database_name)
         try:
-            engine = create_engine(connection_string)
+            engine = create_engine(self.connection_string)
             with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
                 connection.execute(text(f"CREATE DATABASE {database_name}"))
-            if (self.verbose): Log.success_manage_db(database_name, "Created new")
+            if self.verbose: Log.success_manage_db(database_name, "Created new")
         except Exception as e:
-            if (self.verbose): Log.fail_manage_db(self.connection_string, database_name, "create")
+            if self.verbose: Log.fail_manage_db(self.connection_string, database_name, "create")
             raise
 
     def drop_database(self, database_name: str = ""):
@@ -257,11 +260,11 @@ class RelationalConnector(Connector):
         @param database_name  The name of an existing database."""
         super().drop_database(database_name)
         try:
-            engine = create_engine(connection_string)
+            engine = create_engine(self.connection_string)
             with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
                 connection.execute(text(f"DROP DATABASE IF EXISTS {database_name}"))
-            if (self.verbose): Log.success_manage_db(database_name, "Dropped")
+            if self.verbose: Log.success_manage_db(database_name, "Dropped")
         except Exception as e:
-            if (self.verbose): Log.fail_manage_db(self.connection_string, database_name, "drop")
+            if self.verbose: Log.fail_manage_db(self.connection_string, database_name, "drop")
             raise
 

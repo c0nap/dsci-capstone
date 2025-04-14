@@ -20,9 +20,14 @@ class Log:
         @param filename  The file which caused the error."""
         Log.fail(f"Failed to read file \"{filename}\"")
 
-    def fail_connect(connection_string: str):
+    def connect_success(database_name: str):
         """Prints a failure message when a database connection fails.
-        @param filename  The connection string which caused the error."""
+        @param database_name  The name of the database which was connected to."""
+        Log.success(f"Successfully connected to database: {database_name}")
+
+    def connect_fail(connection_string: str):
+        """Prints a failure message when a database connection fails.
+        @param connection_string  The connection string which caused the error."""
         Log.fail(f"Failed to connect on {connection_string}")
 
     def success_manage_db(database_name: str, managed: str):
@@ -30,7 +35,7 @@ class Log:
         @param database_name  The name of the target database."""
         Log.success(f"{managed} database \"{database_name}\"")
     
-    def fail_create_db(connection_string: str, database_name: str, manage: str):
+    def fail_manage_db(connection_string: str, database_name: str, manage: str):
         """Prints a failure message when database creation or deletion fails.
         @param connection_string  The database connector which had the error.
         @param database_name  The name of the database which could not be created or dropped."""
