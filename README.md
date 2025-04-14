@@ -7,6 +7,10 @@ Rochester Institute of Technology
 
 Capstone Project DSCI-601/602 w/ Travis Desell
 
+Construction of a Flexible Fact Database for Fictional Stories
+
+The goal of this project is to extract details from fiction books, and store facts in a knowledge database. The final output is a JSON-style list of entities and their relationships.
+
 ## 1 - Requirements
 
 - Python 3.12
