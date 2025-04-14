@@ -26,7 +26,10 @@ if not already_exists:
     db_connector.test_connection(print_results=True)
 print()
 
-db_connector.execute_file("./src/reset.sql")
-db_connector.execute_file("./src/example1.sql")
+db_connector.execute_file("./tests/reset.sql")
+db_connector.execute_file("./tests/example1.sql")
+db_connector.execute_file("./tests/example2.sql")
 df = db_connector.get_dataframe("EntityName")
-print(f"EntityName table:\n{df}")
+print(f"EntityName table:\n{df}\n")
+df = db_connector.get_dataframe("ExampleEAV")
+print(f"ExampleEAV table:\n{df}\n")

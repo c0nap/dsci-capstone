@@ -47,6 +47,15 @@ python -m pip install -r requirements.txt
 ```bash
 sudo apt install postgresql
 ```
+```bash
+sudo -i -u postgres
+psql
+CREATE USER yourusername WITH PASSWORD 'yourpassword';
+ALTER USER yourusername CREATEDB;
+```
+```bash
+
+```
 
 7. Start the database service.
 ```bash
