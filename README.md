@@ -11,18 +11,32 @@ Construction of a Flexible Fact Database for Fictional Stories
 
 The goal of this project is to extract details from fiction books, and store facts in a knowledge database. The final output is a JSON-style list of entities and their relationships.
 
-## 1 - Requirements
+---
+
+## Requirements
 
 - Python 3.12
-- PostgreSQL or MySQL
-- MongoDB
+- Relational database (PostgreSQL or MySQL preferred)
+- Document database (MongoDB)
+- Graph database (Neo4j)
 
-## 2 - Setup
+If you need help installing your databases, follow the [database guides](docs/database_instructions.md).
+
+#### Common Issues
+- Each login should have a username and password (not always set by default).
+- Remember to start the database server. `sudo service postgresql start`
+- If your database is installed on your OS (Windows) and this code is running in WSL, localhost may not work. [How to Fix](docs/database_instructions.md)
+
+---
+
+## Project Setup
 
 1. Create a new folder directly under `C:/` for easy access from WSL, and navigate into it using the terminal.
 ```bash
 cd /mnt/c/<folder>
 ```
+
+(TODO: Adding __init__.py to a folder makes it a module    Run modules using `python -m <folder>.<script>` instead of `python <folder>/<script>.py`    Benefit: import scripts across folders)
 
 2. (Optional) Create a virtual environment and activate it. This prevents installed packages from interfering with other Python installations on your system.
 ```bash
@@ -47,31 +61,16 @@ cd /mnt/c/<folder>/dsci-capstone
 python -m pip install -r requirements.txt
 ```
 
-6. Install database engines if you do not have them already.
-```bash
-sudo apt install postgresql
-```
-```bash
-sudo -i -u postgres
-psql
-CREATE USER yourusername WITH PASSWORD 'yourpassword';
-ALTER USER yourusername CREATEDB;
-```
-```bash
+6. Copy `.env.example` to `.env`, and add your PostgreSQL credentials. Make sure `DB_ENGINE` is set to `POSTGRESQL`.
 
-```
-
-7. Start the database service.
-```bash
-sudo service mysql start
-```
-
-8. Copy `.env.example` to `.env`, and add your PostgreSQL credentials. Make sure `DB_ENGINE` is set to `POSTGRESQL`.
-
-9. Run setup script to verify basic components are working.
+7. Run setup script to verify basic components are working.
 ```bash
 python src/setup.py
+pytest tests/test_components.py
 ```
 
 10. Load example JSON into database.
 
+---
+
+## 3 - Modules
