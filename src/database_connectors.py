@@ -1,11 +1,11 @@
 import os
 from pandas import DataFrame
 from abc import ABC, abstractmethod
-from sqlalchemy import create_engine, text, Table, MetaData
+from sqlalchemy import create_engine, text, Table, MetaData, select
 from dotenv import load_dotenv
 from typing import List
 from sqlparse import parse as sql_parse
-from util import Log
+from src.util import Log
 
 ## Read environment variables at compile time
 load_dotenv(".env")
@@ -17,7 +17,7 @@ class Connector(ABC):
     - @ref __init__
     - @ref test_connection
     - @ref execute_query
-    - @ref split_combined_query
+    - @ref _split_combined_query
     - @ref get_dataframe
     - @ref create_database
     - @ref drop_database
@@ -83,7 +83,7 @@ class Connector(ABC):
         ## Perform basic error checks.
         query = query.strip()  # Remove whitespace
         if not query: return None  # Check if empty
-        if not self.is_single_query(query):
+        if not self._is_single_query(query):
             results = self.execute_combined(query)
             if len(results) == 0:
                 return None
@@ -98,7 +98,7 @@ class Connector(ABC):
         """Run several commands in sequence.
         @param multi_query  A string containing multiple queries.
         @return  A list of query results converted to DataFrames."""
-        queries = self.split_combined_query(multi_query)
+        queries = self._split_combined_query(multi_query)
         results = []
         for query in queries:
             df = self.execute_query(query)
@@ -125,20 +125,6 @@ class Connector(ABC):
             if self.verbose: Log.fail(f"Failed to execute file \"{filename}\"")
             raise
 
-    def is_single_query(self, query: str) -> bool:
-        """Checks if a string contains multiple queries.
-        @param query  A single or combined query string.
-        @return  Whether the query is single (true) or combined (false)."""
-        queries = self.split_combined_query(query)
-        return len(queries) == 1
-
-    @abstractmethod
-    def split_combined_query(self, multi_query: str) -> List[str]:
-        """Checks if a string contains multiple queries.
-        @param multi_query  A string containing multiple queries.
-        @return  A list of single-query strings."""
-        pass
-
     @abstractmethod
     def get_dataframe(self, name: str) -> DataFrame:
         """Automatically generate a query for the specified resource.
@@ -160,6 +146,20 @@ class Connector(ABC):
         if not database_name: database_name = self.database_name
         pass
 
+    def _is_single_query(self, query: str) -> bool:
+        """Checks if a string contains multiple queries.
+        @param query  A single or combined query string.
+        @return  Whether the query is single (true) or combined (false)."""
+        queries = self._split_combined_query(query)
+        return len(queries) == 1
+
+    @abstractmethod
+    def _split_combined_query(self, multi_query: str) -> List[str]:
+        """Checks if a string contains multiple queries.
+        @param multi_query  A string containing multiple queries.
+        @return  A list of single-query strings."""
+        pass
+
 
 
 
@@ -167,22 +167,37 @@ class Connector(ABC):
 
 
 class RelationalConnector(Connector):
-    """Connector for relational databases (MySQL, PostgreSQL)."""
+    """Connector for relational databases (MySQL, PostgreSQL).
+    Uses SQLAlchemy to abstract complex database operations.
+    Hard-coded queries are used for testing purposes, and depend on the specific engine.
+    """
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose, specific_queries: list, default_database: str):
         """Creates a new database connector.
         @param verbose  Whether to print success and failure messages.
+        @param specific_queries  A list of helpful SQL queries.
+        @param default_database  The name of a database which always accepts connections.
         """
         super().__init__(verbose)
         engine = os.getenv("DB_ENGINE")
         database = os.getenv("DB_NAME")  # "" for Neo4j
         super().configure(engine, database)
+        ## Hard-coded queries which depend in the specific engine, and cannot be abstracted with SQLAlchemy.
+        ## This is set by derived classes e.g. 'mysqlConnector' for lanugage-sensitive syntax
+        self._specific_queries = specific_queries
+        self._default_database = default_database
+        assert(len(specific_queries) == 2)
 
-    ## A dictionary for basic test queries. Keys are db_type.
-    test_queries = {
-        "MYSQL": ["SELECT DATABASE();", "SHOW DATABASES;"],
-        "POSTGRES": ["SELECT current_database();", "SELECT datname FROM pg_database;"],
-    }
+    @classmethod
+    def from_env(cls, verbose=False):
+        """Decides what type of relational connector to create using the .env file.
+        @param verbose  Whether to print success and failure messages."""
+        engine = os.getenv("DB_ENGINE")
+        if engine == "MYSQL": return mysqlConnector(verbose)
+        elif engine == "MYSQL": return postgresConnector(verbose)
+        Log.fail(f"Database engine '{engine}' not supported. Did you mean 'MYSQL' or 'POSTGRES'?")
+        raise
+
     def test_connection(self, print_results=False) -> bool:
         """Establish a basic connection to the database.
         @param print_results  Whether to display the retrieved test DataFrames
@@ -190,14 +205,30 @@ class RelationalConnector(Connector):
         try:
             engine = create_engine(self.connection_string)
             with engine.connect() as connection:
-                connection.execute(text("SELECT 1"))   ## This query should work in all relational databases.
-                result = connection.execute(text(self.test_queries[self.db_type][0]))
-                if self.verbose: Log.connect_success(result.fetchone()[0])
+                ## These queries should work in all relational databases.
+                result = connection.execute(text("SELECT 1")).fetchone()[0]
+                if print_results: print(result)
+                if result != 1:
+                    Log.incorrect_result(result, 1)
+                    return False
+                result = self.execute_combined("SELECT 1; SELECT 2;")[1].iloc[0,0]
+                if print_results: print(result)
+                if result != 2:
+                    Log.incorrect_result(result, 2)
+                    return False
+                ## Extract data with specific test queries which cannot be abstracted with SQLAlchemy.
+                db_name = self.execute_query(self._specific_queries[0]).iloc[0,0]
+                if print_results: print(db_name)
+                databases = self.execute_query(self._specific_queries[1])
+                if print_results: print(databases)
+                ## TODO: Test database management and table creation / deletion.
+
+                ## File execution tests are performed by /tests/test_components.py
+                if self.verbose: Log.connect_success(db_name)
         except Exception as e:
             if self.verbose: Log.connect_fail(self.connection_string)
+            print(e)
             return False
-        result = self.execute_query(self.test_queries[self.db_type][1])
-        if print_results: print(result)
         return True
     
     def execute_query(self, query: str) -> DataFrame:
@@ -208,7 +239,6 @@ class RelationalConnector(Connector):
         """
         super().execute_query(query)
         ## Derived classes MUST implement single-query execution.
-        ## The 
         try:
             engine = create_engine(self.connection_string)
             with engine.connect() as connection:
@@ -218,10 +248,10 @@ class RelationalConnector(Connector):
                 connection.commit()
                 return result
         except Exception as e:
-            if self.verbose: Log.fail_connect(self.connection_string)
+            if self.verbose: Log.connect_fail(self.connection_string)
             raise
 
-    def split_combined_query(self, multi_query: str) -> List[str]:
+    def _split_combined_query(self, multi_query: str) -> List[str]:
         """Checks if a string contains multiple queries.
         @param multi_query  A string containing multiple queries.
         @return  A list of single-query strings."""
@@ -232,13 +262,20 @@ class RelationalConnector(Connector):
         return queries
 
     def get_dataframe(self, name: str) -> DataFrame:
-        """Automatically generate a query for the specified resource.
-        For more complex queries, SQLAlchemy's ORM can be used.
-        e.g. Table(name, MetaData(), autoload_with=engine), select([table])
-        But this is overkill for simple statements like we have here.
+        """Automatically generate a query for the specified table using SQLAlchemy.
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None"""
-        return self.execute_query(f"SELECT * FROM {name}")
+        try:
+            engine = create_engine(self.connection_string)
+            with engine.connect() as connection:
+                table = Table(name, MetaData(), autoload_with=engine)
+                result = connection.execute(select(table))
+                if result.returns_rows and result.keys():
+                    result = DataFrame(result.fetchall(), columns=result.keys())
+                return result
+        except Exception as e:
+            if self.verbose: Log.connect_fail(self.connection_string)
+            raise
 
     def create_database(self, database_name: str):
         """Use the current database connection to create a sibling database in this engine.
@@ -267,4 +304,35 @@ class RelationalConnector(Connector):
         except Exception as e:
             if self.verbose: Log.fail_manage_db(self.connection_string, database_name, "drop")
             raise
+
+
+class mysqlConnector(RelationalConnector):
+    """A relational database connector configured for MySQL"""
+    def __init__(self, verbose=False):
+        """Configures the relational connector.
+        @param verbose  Whether to print success and failure messages."""
+        super().__init__(verbose, self.specific_queries["MYSQL"], default_database="mysql")
+
+    ## A list of basic test queries, used in RelationalConnector.test_connection()
+    specific_queries  = {"MYSQL": [
+        "SELECT DATABASE();",      # Single value, name of the current database.
+        "SHOW DATABASES;"]         # List of all databases in the database engine.
+    }
+
+    
+
+class postgresConnector(RelationalConnector):
+    """A relational database connector configured for PostgreSQL"""
+    def __init__(self, verbose=False):
+        """Configures the relational connector.
+        @param verbose  Whether to print success and failure messages."""
+        super().__init__(verbose, self.specific_queries["POSTGRES"], default_database="postgres")
+
+    ## A list of basic test queries, used in RelationalConnector.test_connection()
+    specific_queries  = {"POSTGRES": [
+        "SELECT current_database();",           # Single value, name of the current database.
+        "SELECT datname FROM pg_database;"]     # List of all databases in the database engine.
+    }
+
+        
 

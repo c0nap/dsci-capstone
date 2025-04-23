@@ -40,3 +40,13 @@ class Log:
         @param connection_string  The database connector which had the error.
         @param database_name  The name of the database which could not be created or dropped."""
         Log.fail(f"Failed to {manage} database \"{database_name}\" on connection {connection_string}")
+
+    def incorrect_result(observed, expected):
+        """Prints a failure message when database creation or deletion fails.
+        @param observed  The value to check (must be same type as 'expected').
+        @param expected  The correct value (can be any printable type)."""
+        Log.fail(f"Incorrect result: Expected {expected}, got {observed}")
+
+
+def all_none(*args):
+    return all(arg is None for arg in args)

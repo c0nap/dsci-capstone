@@ -6,3 +6,5 @@ cryptography
 sqlparse
 typing
 psycopg2-binary
+pytest
+pytest-order
