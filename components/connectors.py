@@ -10,7 +10,7 @@ from src.util import Log
 ## Read environment variables at compile time
 load_dotenv(".env")
 
-class Connector(ABC):
+class DatabaseConnector(ABC):
     """Abstract base class for database engine connectors.
 
     Derived classes should implement:
@@ -166,7 +166,7 @@ class Connector(ABC):
 
 
 
-class RelationalConnector(Connector):
+class RelationalConnector(DatabaseConnector):
     """Connector for relational databases (MySQL, PostgreSQL).
     Uses SQLAlchemy to abstract complex database operations.
     Hard-coded queries are used for testing purposes, and depend on the specific engine.

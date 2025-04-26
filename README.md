@@ -29,7 +29,28 @@ If you need help installing your databases, follow the [database guides](docs/da
 
 ---
 
-## Project Setup
+## Project Structure
+```
+project/
+  ├── src/                # Entry point for the data pipeline.
+  │   ├── main.py
+  │   ├── setup.py
+  │   └── util.py
+  ├── components/         # Wrapper classes to abstract low-level data processing.
+  │   ├── connectors.py
+  │   ├── data_loader.py
+  │   ├── text_processing.py
+  │   ├── fact_storage.py
+  │   └── semantic_web.py
+  ├── tests/              # Comprehensive tests for project components.
+  │   ├── test_components.py
+  │   └── (other pytest files)
+  ├── datasets/           # Empty directory for user-downloaded or auto-downloaded datasets.
+  ├── requirements.txt
+  └── .env.example
+```
+
+## Setup
 
 1. Create a new folder directly under `C:/` for easy access from WSL, and navigate into it using the terminal.
 ```bash

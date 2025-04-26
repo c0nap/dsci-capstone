@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from src.util import all_none
-from src.database_connectors import (
+from components.connectors import (
     RelationalConnector
 )
 
