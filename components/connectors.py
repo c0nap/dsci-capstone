@@ -10,14 +10,55 @@ from src.util import Log
 ## Read environment variables at compile time
 load_dotenv(".env")
 
-class DatabaseConnector(ABC):
+class Connector(ABC):
+    """Abstract base class for external connectors.
+    Credentials are specified in the .env file.
+
+    Derived classes should implement:
+    - @ref __init__
+    - @ref configure
+    - @ref test_connection
+    - @ref execute_query
+    - @ref execute_file
+    """
+
+    @abstractmethod
+    def configure(self, DB: str, database_name: str):
+        """Read connection settings from the .env file.
+        @param DB  The prefix of fetched credentials.
+        @param name  The specific service to connect to."""
+        pass
+
+    @abstractmethod
+    def test_connection(self) -> bool:
+        """Establish a basic connection to the database.
+        @return  Whether the connection test was successful."""
+        pass
+
+    @abstractmethod
+    def execute_query(self, query: str) -> object:
+        """Send a single command through the connection.
+        @param query  A single query to perform on the database.
+        @return  The result of the query, or None
+        """
+        pass
+
+    @abstractmethod
+    def execute_file(self, filename: str) -> list:
+        """Run several commands from a file.
+        @param filename  The path to a specified query or prompt file (.sql, .txt).
+        @return  Whether the query was performed successfully."""
+        pass
+
+
+class DatabaseConnector(Connector):
     """Abstract base class for database engine connectors.
 
     Derived classes should implement:
     - @ref __init__
     - @ref test_connection
     - @ref execute_query
-    - @ref _split_combined_query
+    - @ref _split_combined
     - @ref get_dataframe
     - @ref create_database
     - @ref drop_database
@@ -68,14 +109,8 @@ class DatabaseConnector(ABC):
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
 
     @abstractmethod
-    def test_connection(self) -> bool:
-        """Establish a basic connection to the database.
-        @return  Whether the connection test was successful."""
-        pass
-
-    @abstractmethod
     def execute_query(self, query: str) -> DataFrame:
-        """Send a single command to the database connection.
+        """Send a single command through the connection.
         If a result is returned, it will be converted to a DataFrame.
         @param query  A single query to perform on the database.
         @return  DataFrame containing the result of the query, or None
@@ -95,10 +130,10 @@ class DatabaseConnector(ABC):
         pass
 
     def execute_combined(self, multi_query: str) -> List[DataFrame]:
-        """Run several commands in sequence.
+        """Run several database commands in sequence.
         @param multi_query  A string containing multiple queries.
         @return  A list of query results converted to DataFrames."""
-        queries = self._split_combined_query(multi_query)
+        queries = self._split_combined(multi_query)
         results = []
         for query in queries:
             df = self.execute_query(query)
@@ -107,7 +142,7 @@ class DatabaseConnector(ABC):
         return results
 
     def execute_file(self, filename: str) -> List[DataFrame]:
-        """Run several commands from a file.
+        """Run several database commands from a file.
         Loads the entire file into memory at once.
         @param filename  The path to a specified query file (.sql, .cql, .json).
         @return  Whether the query was performed successfully."""
@@ -150,11 +185,11 @@ class DatabaseConnector(ABC):
         """Checks if a string contains multiple queries.
         @param query  A single or combined query string.
         @return  Whether the query is single (true) or combined (false)."""
-        queries = self._split_combined_query(query)
+        queries = self._split_combined(query)
         return len(queries) == 1
 
     @abstractmethod
-    def _split_combined_query(self, multi_query: str) -> List[str]:
+    def _split_combined(self, multi_query: str) -> List[str]:
         """Checks if a string contains multiple queries.
         @param multi_query  A string containing multiple queries.
         @return  A list of single-query strings."""
@@ -173,7 +208,7 @@ class RelationalConnector(DatabaseConnector):
     """
 
     def __init__(self, verbose, specific_queries: list, default_database: str):
-        """Creates a new database connector.
+        """Creates a new database connector. Use @ref from_env instead (this is called by derived classes).
         @param verbose  Whether to print success and failure messages.
         @param specific_queries  A list of helpful SQL queries.
         @param default_database  The name of a database which always accepts connections.
@@ -194,7 +229,7 @@ class RelationalConnector(DatabaseConnector):
         @param verbose  Whether to print success and failure messages."""
         engine = os.getenv("DB_ENGINE")
         if engine == "MYSQL": return mysqlConnector(verbose)
-        elif engine == "MYSQL": return postgresConnector(verbose)
+        elif engine == "POSTGRES": return postgresConnector(verbose)
         Log.fail(f"Database engine '{engine}' not supported. Did you mean 'MYSQL' or 'POSTGRES'?")
         raise
 
@@ -251,7 +286,7 @@ class RelationalConnector(DatabaseConnector):
             if self.verbose: Log.connect_fail(self.connection_string)
             raise
 
-    def _split_combined_query(self, multi_query: str) -> List[str]:
+    def _split_combined(self, multi_query: str) -> List[str]:
         """Checks if a string contains multiple queries.
         @param multi_query  A string containing multiple queries.
         @return  A list of single-query strings."""
@@ -307,7 +342,8 @@ class RelationalConnector(DatabaseConnector):
 
 
 class mysqlConnector(RelationalConnector):
-    """A relational database connector configured for MySQL"""
+    """A relational database connector configured for MySQL.
+    Should be hidden from the user using a factory method."""
     def __init__(self, verbose=False):
         """Configures the relational connector.
         @param verbose  Whether to print success and failure messages."""
@@ -322,7 +358,8 @@ class mysqlConnector(RelationalConnector):
     
 
 class postgresConnector(RelationalConnector):
-    """A relational database connector configured for PostgreSQL"""
+    """A relational database connector configured for PostgreSQL.
+    Should be hidden from the user using a factory method."""
     def __init__(self, verbose=False):
         """Configures the relational connector.
         @param verbose  Whether to print success and failure messages."""
@@ -336,3 +373,17 @@ class postgresConnector(RelationalConnector):
 
         
 
+
+
+class LLMConnector(Connector):
+    """Abstract base class for database engine connectors.
+
+    Derived classes should implement:
+    - @ref __init__
+    - @ref test_connection
+    - @ref execute_query
+    - @ref _split_combined
+    - @ref get_dataframe
+    - @ref create_database
+    - @ref drop_database
+    """

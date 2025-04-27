@@ -15,6 +15,7 @@ The goal of this project is to extract details from fiction books, and store fac
 
 ## Requirements
 
+- Windows Subsystem for Linux (WSL), or another terminal
 - Python 3.12
 - Relational database (PostgreSQL or MySQL preferred)
 - Document database (MongoDB)
@@ -32,7 +33,7 @@ If you need help installing your databases, follow the [database guides](docs/da
 ## Project Structure
 
 ```
-project/				# Parent directory (optional).
+project/		 # Parent directory (optional).
   ├── repository/
   │   ├── src/              # Entry point for the data pipeline.
   │   │   ├── main.py
@@ -40,44 +41,41 @@ project/				# Parent directory (optional).
   │   │   └── util.py
   │   ├── components/       # Wrapper classes to abstract low-level data processing.
   │   │   ├── connectors.py
-  │   │   ├── data_loader.py
   │   │   ├── text_processing.py
   │   │   ├── fact_storage.py
   │   │   └── semantic_web.py
   │   ├── tests/            # Comprehensive tests for project components.
   │   │   ├── test_components.py
-  │   │   └── (other pytest files)
+  │   │   └── (TODO: other tests)
   │   ├── datasets/         # Empty directory for user-downloaded or auto-downloaded datasets.
-  │   ├── requirements.txt  # A list of required Python packages for easier installation.
+  │   ├── requirements.txt  # List of required Python packages for easier installation.
   │   └── .env.example      # Stores credentials and configuration (must be renamed to .env).
-  └── venv/ 			# Python virtual environment directory (optional, not committed).
+  └── venv/ 	 # Python virtual environment directory (optional, not committed).
 ```
 
-## Setup
+## Setup (Windows)
 
-1. Download the project folder. Create a new folder directly under `C:/` for easy access from WSL, and navigate into it using the terminal.
+1. Download the project folder. Create a parent folder directly under the `C:/` drive (for easy access from WSL), and navigate into it using your terminal.
 ```bash
-cd /mnt/c/<folder>
+cd /mnt/c/project
 ```
-
-(TODO: Adding __init__.py to a folder makes it a module    Run modules using `python -m <folder>.<script>` instead of `python <folder>/<script>.py`    Benefit: import scripts across folders)
 
 2. (Optional) Create a virtual environment and activate it. This prevents installed packages from interfering with other Python installations on your system.
 ```bash
-python -m venv env-cap
+python3 -m venv your-venv
 ```
 ```bash
-source env-cap/bin/activate
-```
-
-3. Clone the repository and place the project folder inside your created directory (next to your virtual environment).
-```bash
-git clone https://github.com/C0NAP/dsci-capstone.git /mnt/c/<folder>/dsci-capstone
+source your-venv/bin/activate
 ```
 
-4. IMPORTANT! Enter the project folder for the following steps.
+3. Clone the repository and place the project folder inside your parent directory, next to your virtual environment.
 ```bash
-cd /mnt/c/<folder>/dsci-capstone
+git clone https://github.com/C0NAP/dsci-capstone.git /mnt/c/project/repository
+```
+
+4. **IMPORTANT!** You must be in the repository folder for the following steps.
+```bash
+cd /mnt/c/project/repository
 ```
 
 5. Install required packages into your virtual environment.
@@ -87,13 +85,15 @@ python -m pip install -r requirements.txt
 
 6. Copy `.env.example` to `.env`, and add your PostgreSQL credentials. Make sure `DB_ENGINE` is set to `POSTGRESQL`.
 
-7. Run setup script to verify basic components are working.
+7. Run setup script to verify basic components are working. Scripts are treated as modules to simplify imports between folders.
 ```bash
-python src/setup.py
-pytest tests/test_components.py
+python -m src.setup
 ```
 
-10. Load example JSON into database.
+8. Run pytests to load example tables into database.
+```bash
+pytest .
+```
 
 ---
 
