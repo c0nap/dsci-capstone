@@ -34,3 +34,14 @@ sudo service mysql start
 ---
 
 ## Other Issues
+
+
+Running MySQL on local machine: Must allow external connections.
+```sql
+-- Allow root from all IPs (not secure):
+CREATE USER 'root'@'%' IDENTIFIED BY 'your_root_password';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+```
+
+DB_NAME in .env must be all lowercase for Postgres.

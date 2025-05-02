@@ -37,7 +37,7 @@ class Session:
     def setup(self):
         """ TODO: refactor to database_connectors """
         ## Test connection to default database "mysql" on the MySQL engine
-        default_database = "mysql"
+        default_database = self.relational_db._default_database
         self.relational_db.change_database(default_database)
         self.relational_db.test_connection()
         print()
