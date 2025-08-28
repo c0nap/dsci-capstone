@@ -26,11 +26,13 @@ class EPUBToTEI:
 	xml_namespace = {"tei": "http://www.tei-c.org/ns/1.0"}
 	encoding = "utf-8"
 
-	def __init__(self, epub_path, save_intermediate=False, chapter_div_type="level2"):
+	def __init__(self, epub_path, chapter_div_type="level2",
+		save_pandoc=False, save_tei=True):
 		self.epub_path = epub_path
-		self.save_intermediate = save_intermediate
-		self.raw_tei_path = epub_path.replace(".epub", "_pandoc.tei.xml")
-		self.clean_tei_path = epub_path.replace(".epub", ".tei")
+		self.save_pandoc = save_pandoc
+		self.pandoc_xml_path = epub_path.replace(".epub", "_pandoc.tei.xml")
+		self.save_tei = save_tei
+		self.tei_path = epub_path.replace(".epub", ".tei")
 		self.chapter_div_type = chapter_div_type
 		self.raw_tei_content = None
 		self.clean_tei_content = None
@@ -38,9 +40,9 @@ class EPUBToTEI:
 
 	def convert_to_tei(self):
 		"""Convert EPUB → TEI string (via Pandoc)."""
-		if self.save_intermediate:
-			pypandoc.convert_file(self.epub_path, 'tei', outputfile=self.raw_tei_path)
-			with open(self.raw_tei_path, encoding=self.encoding) as f:
+		if self.save_pandoc:
+			pypandoc.convert_file(self.epub_path, 'tei', outputfile=self.pandoc_xml_path)
+			with open(self.pandoc_xml_path, encoding=self.encoding) as f:
 				self.raw_tei_content = f.read()
 		else:
 			self.raw_tei_content = pypandoc.convert_file(self.epub_path, 'tei')
@@ -49,7 +51,7 @@ class EPUBToTEI:
 
 	def clean_tei(self):
 		"""Wrap root if missing, sanitize ids, and save cleaned TEI."""
-		content = self.raw_tei_content or open(self.raw_tei_path, encoding=self.encoding).read()
+		content = self.raw_tei_content or open(self.pandoc_xml_path, encoding=self.encoding).read()
 
 		# Ensure root <TEI>
 		if not content.lstrip().startswith("<TEI"):
@@ -58,9 +60,9 @@ class EPUBToTEI:
 		content = self._sanitize_ids(content)
 		self.clean_tei_content = content
 
-		if self.save_intermediate:
+		if self.save_tei:
 			root = etree.fromstring(content.encode(self.encoding))
-			etree.ElementTree(root).write(self.clean_tei_path, encoding=self.encoding, xml_declaration=True)
+			etree.ElementTree(root).write(self.tei_path, encoding=self.encoding, xml_declaration=True)
 
 
 	def _sanitize_ids(self, content: str) -> str:
@@ -85,8 +87,8 @@ class EPUBToTEI:
 
 	def print_chapters(self, limit: int = 100):
 		"""Debug method: print chapter names + snippet."""
-		if self.save_intermediate:
-			root = etree.parse(self.clean_tei_path).getroot()
+		if self.save_tei:
+			root = etree.parse(self.tei_path).getroot()
 		else:
 			root = etree.fromstring(self.clean_tei_content.encode(self.encoding))
 
