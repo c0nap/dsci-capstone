@@ -1,0 +1,98 @@
+\doxysection{Session Class Reference}
+\hypertarget{classsrc_1_1setup_1_1Session}{}\label{classsrc_1_1setup_1_1Session}\index{Session@{Session}}
+
+
+Read environment variables at compile time.  
+
+
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classsrc_1_1setup_1_1Session_a971b21afaa33d7fc36037d0c73438223}{\+\_\+\+\_\+new\+\_\+\+\_\+}} (cls, \texorpdfstring{$\ast$}{*}args, \texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}kwargs)
+\item 
+\mbox{\hyperlink{classsrc_1_1setup_1_1Session_abdd362d5f799ad16b5d6700efe590290}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self)
+\item 
+\mbox{\hyperlink{classsrc_1_1setup_1_1Session_a55917f1c1705cff6027de163d6822f8a}{setup}} (self)
+\item 
+\mbox{\hyperlink{classsrc_1_1setup_1_1Session_aecbc052233262275fc20a8ee8dfb8a47}{reset}} (self)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classsrc_1_1setup_1_1Session_a1d35d1ef8dc6359e6b80f3d3f731d4d1}{relational\+\_\+db}}
+\begin{DoxyCompactList}\small\item\em The relational database connector is created using a Factory Method, choosing mysql or postgres based on the .env file. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classsrc_1_1setup_1_1Session_ab63976e9b06b054eef3eede7893eb111}{\+\_\+instance}} = None
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Read environment variables at compile time. 
+
+\begin{DoxyVerb}Stores active database connections and configuration settings.
+This class implements Singleton design so that only one session can be created.
+However, the session config can still be updated using the normal constructor.\end{DoxyVerb}
+ 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classsrc_1_1setup_1_1Session_abdd362d5f799ad16b5d6700efe590290}\label{classsrc_1_1setup_1_1Session_abdd362d5f799ad16b5d6700efe590290} 
+\index{Session@{Session}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!Session@{Session}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Initializes the session using the .env file.\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classsrc_1_1setup_1_1Session_a971b21afaa33d7fc36037d0c73438223}\label{classsrc_1_1setup_1_1Session_a971b21afaa33d7fc36037d0c73438223} 
+\index{Session@{Session}!\_\_new\_\_@{\_\_new\_\_}}
+\index{\_\_new\_\_@{\_\_new\_\_}!Session@{Session}}
+\doxysubsubsection{\texorpdfstring{\_\_new\_\_()}{\_\_new\_\_()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+new\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{cls,  }\item[{\texorpdfstring{$\ast$}{*}}]{args,  }\item[{\texorpdfstring{$\ast$}{*}\texorpdfstring{$\ast$}{*}}]{kwargs }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Creates a new session at first access, otherwise uses the existing session.\end{DoxyVerb}
+ \Hypertarget{classsrc_1_1setup_1_1Session_aecbc052233262275fc20a8ee8dfb8a47}\label{classsrc_1_1setup_1_1Session_aecbc052233262275fc20a8ee8dfb8a47} 
+\index{Session@{Session}!reset@{reset}}
+\index{reset@{reset}!Session@{Session}}
+\doxysubsubsection{\texorpdfstring{reset()}{reset()}}
+{\footnotesize\ttfamily reset (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Deletes all created databases and tables.\end{DoxyVerb}
+ \Hypertarget{classsrc_1_1setup_1_1Session_a55917f1c1705cff6027de163d6822f8a}\label{classsrc_1_1setup_1_1Session_a55917f1c1705cff6027de163d6822f8a} 
+\index{Session@{Session}!setup@{setup}}
+\index{setup@{setup}!Session@{Session}}
+\doxysubsubsection{\texorpdfstring{setup()}{setup()}}
+{\footnotesize\ttfamily setup (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb} TODO: refactor to database_connectors \end{DoxyVerb}
+ 
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classsrc_1_1setup_1_1Session_ab63976e9b06b054eef3eede7893eb111}\label{classsrc_1_1setup_1_1Session_ab63976e9b06b054eef3eede7893eb111} 
+\index{Session@{Session}!\_instance@{\_instance}}
+\index{\_instance@{\_instance}!Session@{Session}}
+\doxysubsubsection{\texorpdfstring{\_instance}{\_instance}}
+{\footnotesize\ttfamily \+\_\+instance = None\hspace{0.3cm}{\ttfamily [static]}, {\ttfamily [protected]}}
+
+\begin{DoxyVerb}Creates a new session at first access, otherwise uses the existing session.\end{DoxyVerb}
+ \Hypertarget{classsrc_1_1setup_1_1Session_a1d35d1ef8dc6359e6b80f3d3f731d4d1}\label{classsrc_1_1setup_1_1Session_a1d35d1ef8dc6359e6b80f3d3f731d4d1} 
+\index{Session@{Session}!relational\_db@{relational\_db}}
+\index{relational\_db@{relational\_db}!Session@{Session}}
+\doxysubsubsection{\texorpdfstring{relational\_db}{relational\_db}}
+{\footnotesize\ttfamily relational\+\_\+db}
+
+
+
+The relational database connector is created using a Factory Method, choosing mysql or postgres based on the .env file. 
+
+\begin{DoxyVerb}Initializes the session using the .env file.\end{DoxyVerb}
+
+
+Stores RDF-\/compliant semantic triples. 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/mnt/c/dsci-\/cap/capstone/src/\mbox{\hyperlink{setup_8py}{setup.\+py}}\end{DoxyCompactItemize}

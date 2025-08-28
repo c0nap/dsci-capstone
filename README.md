@@ -83,7 +83,7 @@ cd /mnt/c/project/repository
 python -m pip install -r requirements.txt
 ```
 
-6. Copy `.env.example` to `.env`, and add your PostgreSQL credentials. Make sure `DB_ENGINE` is set to `POSTGRESQL`.
+6. Copy `.env.example` to `.env`, and add your PostgreSQL credentials. Make sure `DB_ENGINE` is set to `POSTGRESQL`. If you have pre-installed engines running on Windows instead of WSL, use `hostname -I` to find the IP.
 
 7. Run setup script to verify basic components are working. Scripts are treated as modules to simplify imports between folders.
 ```bash
@@ -98,3 +98,15 @@ pytest .
 ---
 
 ## 3 - Modules
+
+#### Generating Documentation with Doxygen
+
+[Helpful Guide](https://www.woolseyworkshop.com/2020/06/25/documenting-python-programs-with-doxygen/)
+
+```bash
+sudo apt install doxygen
+sudo apt install graphviz
+cd docs
+doxygen -g  # Next: Configure the generated doxyfile with settings from the Guide link
+doxygen     # Generate the HTML and LaTeX
+```

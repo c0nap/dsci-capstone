@@ -1,0 +1,13 @@
+<map id="RelationalConnector" name="RelationalConnector">
+<area shape="rect" id="Node000001" title=" " alt="" coords="72,225,227,251"/>
+<area shape="rect" id="Node000005" href="$classconnectors_1_1mysqlConnector.html" title=" " alt="" coords="5,299,133,324"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="128,262,84,300,81,296,125,258"/>
+<area shape="rect" id="Node000006" href="$classconnectors_1_1postgresConnector.html" title=" " alt="" coords="157,299,301,324"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="174,258,218,296,214,300,170,262"/>
+<area shape="rect" id="Node000002" href="$classconnectors_1_1DatabaseConnector.html" title=" " alt="" coords="74,152,225,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="152,191,152,225,147,225,147,191"/>
+<area shape="rect" id="Node000003" href="$classconnectors_1_1Connector.html" title="Read environment variables at compile time." alt="" coords="105,79,193,104"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="152,118,152,152,147,152,147,118"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="125,5,174,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="152,44,152,79,147,79,147,44"/>
+</map>

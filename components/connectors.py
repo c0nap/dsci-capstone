@@ -350,7 +350,7 @@ class mysqlConnector(RelationalConnector):
         super().__init__(verbose, self.specific_queries["MYSQL"], default_database="mysql")
 
     ## A list of basic test queries, used in RelationalConnector.test_connection()
-    specific_queries  = {"MYSQL": [
+    specific_queries = {"MYSQL": [
         "SELECT DATABASE();",      # Single value, name of the current database.
         "SHOW DATABASES;"]         # List of all databases in the database engine.
     }
@@ -366,7 +366,7 @@ class postgresConnector(RelationalConnector):
         super().__init__(verbose, self.specific_queries["POSTGRES"], default_database="postgres")
 
     ## A list of basic test queries, used in RelationalConnector.test_connection()
-    specific_queries  = {"POSTGRES": [
+    specific_queries = {"POSTGRES": [
         "SELECT current_database();",           # Single value, name of the current database.
         "SELECT datname FROM pg_database;"]     # List of all databases in the database engine.
     }

@@ -11,7 +11,7 @@ load_dotenv(".env")
 
 class Session:
     """Stores active database connections and configuration settings.
-    This class implements Singleton design so that only one session can be created.
+    This class implements Singleton design - Only one session can be created.
     However, the session config can still be updated using the normal constructor."""
     _instance = None
     def __new__(cls, *args, **kwargs):
@@ -24,7 +24,7 @@ class Session:
         """Initializes the session using the .env file."""
         ## The relational database connector is created using a Factory Method, choosing mysql or postgres based on the .env file.
         ## Stores RDF-compliant semantic triples.
-        self.relational_db = RelationalConnector.from_env(verbose=False)
+        self.relational_db = RelationalConnector.from_env(verbose=True)
         ## The document database connector is created normally since mongo is the only supported option.
         ## Stores input text, pre-processed chunks, JSON intermediates, and final output.
         #self.docs_db = DocumentConnector(verbose=False)

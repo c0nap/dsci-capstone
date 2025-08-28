@@ -1,0 +1,103 @@
+\doxysection{Log Class Reference}
+\hypertarget{classsrc_1_1util_1_1Log}{}\label{classsrc_1_1util_1_1Log}\index{Log@{Log}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classsrc_1_1util_1_1Log_a96348829ace552e6a573529ea08a1b96}{success}} (str msg="{}"{})
+\begin{DoxyCompactList}\small\item\em These functions can be used to print the standard prefix before your own print(), or a message can be specified. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classsrc_1_1util_1_1Log_a22fb24590379a124e8f266c6b0b2c5ca}{fail}} (str msg="{}"{})
+\item 
+\mbox{\hyperlink{classsrc_1_1util_1_1Log_adfed697f8abd6ab739b4d79685f0144c}{file\+\_\+read\+\_\+failure}} (str filename)
+\item 
+\mbox{\hyperlink{classsrc_1_1util_1_1Log_ac50b4fb4e7be0ffa7ce84828c07eb568}{connect\+\_\+success}} (str database\+\_\+name)
+\item 
+\mbox{\hyperlink{classsrc_1_1util_1_1Log_ad5255bd77e0bbefbb53719435165befa}{connect\+\_\+fail}} (str connection\+\_\+string)
+\item 
+\mbox{\hyperlink{classsrc_1_1util_1_1Log_a52de5442a5e82155a5e99a87afd60df9}{success\+\_\+manage\+\_\+db}} (str database\+\_\+name, str managed)
+\item 
+\mbox{\hyperlink{classsrc_1_1util_1_1Log_af0b1193b8756345bbc1b419c0b2c1b36}{fail\+\_\+manage\+\_\+db}} (str connection\+\_\+string, str database\+\_\+name, str manage)
+\item 
+\mbox{\hyperlink{classsrc_1_1util_1_1Log_a5671f23e0a563c737a8363804aedaefa}{incorrect\+\_\+result}} (observed, expected)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}The Log class standardizes console output.\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classsrc_1_1util_1_1Log_ad5255bd77e0bbefbb53719435165befa}\label{classsrc_1_1util_1_1Log_ad5255bd77e0bbefbb53719435165befa} 
+\index{Log@{Log}!connect\_fail@{connect\_fail}}
+\index{connect\_fail@{connect\_fail}!Log@{Log}}
+\doxysubsubsection{\texorpdfstring{connect\_fail()}{connect\_fail()}}
+{\footnotesize\ttfamily connect\+\_\+fail (\begin{DoxyParamCaption}\item[{str}]{connection\+\_\+string }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Prints a failure message when a database connection fails.
+@param connection_string  The connection string which caused the error.\end{DoxyVerb}
+ \Hypertarget{classsrc_1_1util_1_1Log_ac50b4fb4e7be0ffa7ce84828c07eb568}\label{classsrc_1_1util_1_1Log_ac50b4fb4e7be0ffa7ce84828c07eb568} 
+\index{Log@{Log}!connect\_success@{connect\_success}}
+\index{connect\_success@{connect\_success}!Log@{Log}}
+\doxysubsubsection{\texorpdfstring{connect\_success()}{connect\_success()}}
+{\footnotesize\ttfamily connect\+\_\+success (\begin{DoxyParamCaption}\item[{str}]{database\+\_\+name }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Prints a failure message when a database connection fails.
+@param database_name  The name of the database which was connected to.\end{DoxyVerb}
+ \Hypertarget{classsrc_1_1util_1_1Log_a22fb24590379a124e8f266c6b0b2c5ca}\label{classsrc_1_1util_1_1Log_a22fb24590379a124e8f266c6b0b2c5ca} 
+\index{Log@{Log}!fail@{fail}}
+\index{fail@{fail}!Log@{Log}}
+\doxysubsubsection{\texorpdfstring{fail()}{fail()}}
+{\footnotesize\ttfamily fail (\begin{DoxyParamCaption}\item[{str }]{msg = {\ttfamily "{}"{}} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}A failure message begins with a Red X.
+@param msg  The message to print.\end{DoxyVerb}
+ \Hypertarget{classsrc_1_1util_1_1Log_af0b1193b8756345bbc1b419c0b2c1b36}\label{classsrc_1_1util_1_1Log_af0b1193b8756345bbc1b419c0b2c1b36} 
+\index{Log@{Log}!fail\_manage\_db@{fail\_manage\_db}}
+\index{fail\_manage\_db@{fail\_manage\_db}!Log@{Log}}
+\doxysubsubsection{\texorpdfstring{fail\_manage\_db()}{fail\_manage\_db()}}
+{\footnotesize\ttfamily fail\+\_\+manage\+\_\+db (\begin{DoxyParamCaption}\item[{str}]{connection\+\_\+string,  }\item[{str}]{database\+\_\+name,  }\item[{str}]{manage }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Prints a failure message when database creation or deletion fails.
+@param connection_string  The database connector which had the error.
+@param database_name  The name of the database which could not be created or dropped.\end{DoxyVerb}
+ \Hypertarget{classsrc_1_1util_1_1Log_adfed697f8abd6ab739b4d79685f0144c}\label{classsrc_1_1util_1_1Log_adfed697f8abd6ab739b4d79685f0144c} 
+\index{Log@{Log}!file\_read\_failure@{file\_read\_failure}}
+\index{file\_read\_failure@{file\_read\_failure}!Log@{Log}}
+\doxysubsubsection{\texorpdfstring{file\_read\_failure()}{file\_read\_failure()}}
+{\footnotesize\ttfamily file\+\_\+read\+\_\+failure (\begin{DoxyParamCaption}\item[{str}]{filename }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Prints a failure message when a file cannot be opened.
+@param filename  The file which caused the error.\end{DoxyVerb}
+ \Hypertarget{classsrc_1_1util_1_1Log_a5671f23e0a563c737a8363804aedaefa}\label{classsrc_1_1util_1_1Log_a5671f23e0a563c737a8363804aedaefa} 
+\index{Log@{Log}!incorrect\_result@{incorrect\_result}}
+\index{incorrect\_result@{incorrect\_result}!Log@{Log}}
+\doxysubsubsection{\texorpdfstring{incorrect\_result()}{incorrect\_result()}}
+{\footnotesize\ttfamily incorrect\+\_\+result (\begin{DoxyParamCaption}\item[{}]{observed,  }\item[{}]{expected }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Prints a failure message when database creation or deletion fails.
+@param observed  The value to check (must be same type as 'expected').
+@param expected  The correct value (can be any printable type).\end{DoxyVerb}
+ \Hypertarget{classsrc_1_1util_1_1Log_a96348829ace552e6a573529ea08a1b96}\label{classsrc_1_1util_1_1Log_a96348829ace552e6a573529ea08a1b96} 
+\index{Log@{Log}!success@{success}}
+\index{success@{success}!Log@{Log}}
+\doxysubsubsection{\texorpdfstring{success()}{success()}}
+{\footnotesize\ttfamily success (\begin{DoxyParamCaption}\item[{str }]{msg = {\ttfamily "{}"{}} }\end{DoxyParamCaption})}
+
+
+
+These functions can be used to print the standard prefix before your own print(), or a message can be specified. 
+
+\begin{DoxyVerb}A success message begins with a Green Plus.
+@param msg  The message to print.\end{DoxyVerb}
+ \Hypertarget{classsrc_1_1util_1_1Log_a52de5442a5e82155a5e99a87afd60df9}\label{classsrc_1_1util_1_1Log_a52de5442a5e82155a5e99a87afd60df9} 
+\index{Log@{Log}!success\_manage\_db@{success\_manage\_db}}
+\index{success\_manage\_db@{success\_manage\_db}!Log@{Log}}
+\doxysubsubsection{\texorpdfstring{success\_manage\_db()}{success\_manage\_db()}}
+{\footnotesize\ttfamily success\+\_\+manage\+\_\+db (\begin{DoxyParamCaption}\item[{str}]{database\+\_\+name,  }\item[{str}]{managed }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Prints a success message when a new database is created or dropped.
+@param database_name  The name of the target database.\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/mnt/c/dsci-\/cap/capstone/src/\mbox{\hyperlink{util_8py}{util.\+py}}\end{DoxyCompactItemize}

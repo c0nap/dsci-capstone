@@ -1,0 +1,53 @@
+\doxysection{LLMConnector Class Reference}
+\hypertarget{classconnectors_1_1LLMConnector}{}\label{classconnectors_1_1LLMConnector}\index{LLMConnector@{LLMConnector}}
+
+
+Inheritance diagram for LLMConnector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=166pt]{classconnectors_1_1LLMConnector__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for LLMConnector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=166pt]{classconnectors_1_1LLMConnector__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classconnectors_1_1Connector}{Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classconnectors_1_1Connector_a6be10f792be4aba21f4bc7c2bf5ae185}{configure}} (self, str DB, str database\+\_\+name)
+\item 
+bool \mbox{\hyperlink{classconnectors_1_1Connector_a6444c5903715e26fb20cca4d3e52a4f2}{test\+\_\+connection}} (self)
+\item 
+object \mbox{\hyperlink{classconnectors_1_1Connector_a5b7425f9d6f96d4abd3cce185f8ce744}{execute\+\_\+query}} (self, str query)
+\item 
+list \mbox{\hyperlink{classconnectors_1_1Connector_a0e2dfda09f922f47ab1cf3f0c28a086c}{execute\+\_\+file}} (self, str filename)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Abstract base class for database engine connectors.
+
+Derived classes should implement:
+- @ref __init__
+- @ref test_connection
+- @ref execute_query
+- @ref _split_combined
+- @ref get_dataframe
+- @ref create_database
+- @ref drop_database
+\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/mnt/c/dsci-\/cap/capstone/components/\mbox{\hyperlink{connectors_8py}{connectors.\+py}}\end{DoxyCompactItemize}

@@ -1,0 +1,148 @@
+\doxysection{mysql\+Connector Class Reference}
+\hypertarget{classconnectors_1_1mysqlConnector}{}\label{classconnectors_1_1mysqlConnector}\index{mysqlConnector@{mysqlConnector}}
+
+
+Inheritance diagram for mysql\+Connector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=196pt]{classconnectors_1_1mysqlConnector__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for mysql\+Connector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=196pt]{classconnectors_1_1mysqlConnector__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classconnectors_1_1mysqlConnector_aac066d3a007eb967f768e8000d845753}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, \mbox{\hyperlink{classconnectors_1_1DatabaseConnector_aa9e289eddb591991c9bc7321dc5b186b}{verbose}}=False)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classconnectors_1_1RelationalConnector}{Relational\+Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classconnectors_1_1RelationalConnector_ab2a70f30233bdd517d216ca30f6d8db2}{from\+\_\+env}} (cls, \mbox{\hyperlink{classconnectors_1_1DatabaseConnector_aa9e289eddb591991c9bc7321dc5b186b}{verbose}}=False)
+\item 
+bool \mbox{\hyperlink{classconnectors_1_1RelationalConnector_a5719074dd9cdb56d259418d9bab07f74}{test\+\_\+connection}} (self, print\+\_\+results=False)
+\item 
+Data\+Frame \mbox{\hyperlink{classconnectors_1_1RelationalConnector_a7154ca8ff15ba3ccf1a813b74876edd0}{execute\+\_\+query}} (self, str query)
+\item 
+Data\+Frame \mbox{\hyperlink{classconnectors_1_1RelationalConnector_ac3e7151adc2767a7609ee0a3505ff225}{get\+\_\+dataframe}} (self, str name)
+\item 
+\mbox{\hyperlink{classconnectors_1_1RelationalConnector_a8d3de5cf1bae7566fc0b746bc46419fe}{create\+\_\+database}} (self, str \mbox{\hyperlink{classconnectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}})
+\item 
+\mbox{\hyperlink{classconnectors_1_1RelationalConnector_a2ce2385e5656f0d268a958de8c6cb52a}{drop\+\_\+database}} (self, str \mbox{\hyperlink{classconnectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}}="{}"{})
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classconnectors_1_1DatabaseConnector}{Database\+Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classconnectors_1_1DatabaseConnector_a6be10f792be4aba21f4bc7c2bf5ae185}{configure}} (self, str DB, str \mbox{\hyperlink{classconnectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}})
+\item 
+\mbox{\hyperlink{classconnectors_1_1DatabaseConnector_a8324a210c025797f0c8a0550191b4088}{change\+\_\+database}} (self, str new\+\_\+database)
+\item 
+List\mbox{[}Data\+Frame\mbox{]} \mbox{\hyperlink{classconnectors_1_1DatabaseConnector_ac53b71501a8ad701234117e668372b45}{execute\+\_\+combined}} (self, str multi\+\_\+query)
+\item 
+List\mbox{[}Data\+Frame\mbox{]} \mbox{\hyperlink{classconnectors_1_1DatabaseConnector_afa45efe732bf9dc7db6e665a11a628e7}{execute\+\_\+file}} (self, str filename)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+dict \mbox{\hyperlink{classconnectors_1_1mysqlConnector_a663b62f9f3a1b33194cfefcdc3f98def}{specific\+\_\+queries}}
+\begin{DoxyCompactList}\small\item\em A list of basic test queries, used in Relational\+Connector.\+test\+\_\+connection() \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{classconnectors_1_1RelationalConnector}{Relational\+Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classconnectors_1_1RelationalConnector_af687e8c8c8ee35024630bcec03fa5c54}{connection\+\_\+string}}
+\begin{DoxyCompactList}\small\item\em TODO\+: Test database management and table creation / deletion. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{classconnectors_1_1DatabaseConnector}{Database\+Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classconnectors_1_1DatabaseConnector_ade713bacd446db85cbacd6617a61a20d}{db\+\_\+type}}
+\begin{DoxyCompactList}\small\item\em The common name for the type of database as seen in the .env prefixes. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classconnectors_1_1DatabaseConnector_ad6d85692a1c9f8e96dcff4556f263810}{db\+\_\+engine}}
+\begin{DoxyCompactList}\small\item\em The protocol specifying the database type, syntax is usually dialect+driver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classconnectors_1_1DatabaseConnector_a0adcbe0e0e6f64a29b1d205ede9632c1}{username}}
+\begin{DoxyCompactList}\small\item\em The username used to access the database. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classconnectors_1_1DatabaseConnector_a9dbb300e28bc21c8dab41b01883918eb}{password}}
+\begin{DoxyCompactList}\small\item\em The password used to access the database. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classconnectors_1_1DatabaseConnector_a832ddc04754e8a43d4f3c6165b1294a7}{host}}
+\begin{DoxyCompactList}\small\item\em The IP address where the database service is hosted. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classconnectors_1_1DatabaseConnector_af8fb0f45ee0195c7422a49e6a8d72369}{port}}
+\begin{DoxyCompactList}\small\item\em The port number where the database service is hosted. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classconnectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}}
+\begin{DoxyCompactList}\small\item\em The collection being modified by this connector (Optional since Neo4j does not have one). \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classconnectors_1_1DatabaseConnector_af687e8c8c8ee35024630bcec03fa5c54}{connection\+\_\+string}}
+\begin{DoxyCompactList}\small\item\em URI of the database connection, syntax is engine\+://username\+:password@host\+:port/database. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classconnectors_1_1DatabaseConnector_aa9e289eddb591991c9bc7321dc5b186b}{verbose}}
+\begin{DoxyCompactList}\small\item\em Whether to print success and failure messages. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions inherited from \mbox{\hyperlink{classconnectors_1_1RelationalConnector}{Relational\+Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+List\mbox{[}str\mbox{]} \mbox{\hyperlink{classconnectors_1_1RelationalConnector_ad2130d33be4d41c012f714e9dfb824a3}{\+\_\+split\+\_\+combined}} (self, str multi\+\_\+query)
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions inherited from \mbox{\hyperlink{classconnectors_1_1DatabaseConnector}{Database\+Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{classconnectors_1_1DatabaseConnector_abf425f0d46449a2375a03a6c85c70b61}{\+\_\+is\+\_\+single\+\_\+query}} (self, str query)
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classconnectors_1_1RelationalConnector}{Relational\+Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classconnectors_1_1RelationalConnector_afcf80ddc5caa50b6b84516b00b0cade6}{\+\_\+specific\+\_\+queries}}
+\begin{DoxyCompactList}\small\item\em Hard-\/coded queries which depend in the specific engine, and cannot be abstracted with SQLAlchemy. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classconnectors_1_1RelationalConnector_a84c0bf685c13679aae36e8a1e2b41484}{\+\_\+default\+\_\+database}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}A relational database connector configured for MySQL.
+Should be hidden from the user using a factory method.\end{DoxyVerb}
+ 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classconnectors_1_1mysqlConnector_aac066d3a007eb967f768e8000d845753}\label{classconnectors_1_1mysqlConnector_aac066d3a007eb967f768e8000d845753} 
+\index{mysqlConnector@{mysqlConnector}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!mysqlConnector@{mysqlConnector}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{verbose = {\ttfamily False} }\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Configures the relational connector.
+@param verbose  Whether to print success and failure messages.\end{DoxyVerb}
+ 
+
+Reimplemented from \mbox{\hyperlink{classconnectors_1_1RelationalConnector_a907a22b4044d88c776841cd2af237fbf}{Relational\+Connector}}.
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classconnectors_1_1mysqlConnector_a663b62f9f3a1b33194cfefcdc3f98def}\label{classconnectors_1_1mysqlConnector_a663b62f9f3a1b33194cfefcdc3f98def} 
+\index{mysqlConnector@{mysqlConnector}!specific\_queries@{specific\_queries}}
+\index{specific\_queries@{specific\_queries}!mysqlConnector@{mysqlConnector}}
+\doxysubsubsection{\texorpdfstring{specific\_queries}{specific\_queries}}
+{\footnotesize\ttfamily dict specific\+\_\+queries\hspace{0.3cm}{\ttfamily [static]}}
+
+{\bfseries Initial value\+:}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{=\ \ \{\textcolor{stringliteral}{"{}MYSQL"{}}:\ [}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}SELECT\ DATABASE();"{}},\ \ \ \ \ \ \textcolor{comment}{\#\ Single\ value,\ name\ of\ the\ current\ database.}}
+\DoxyCodeLine{\ \ \ \ \ \ \ \ \textcolor{stringliteral}{"{}SHOW\ DATABASES;"{}}]\ \ \ \ \ \ \ \ \ \textcolor{comment}{\#\ List\ of\ all\ databases\ in\ the\ database\ engine.}}
+\DoxyCodeLine{\ \ \ \ \}}
+
+\end{DoxyCode}
+
+
+A list of basic test queries, used in Relational\+Connector.\+test\+\_\+connection() 
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/mnt/c/dsci-\/cap/capstone/components/\mbox{\hyperlink{connectors_8py}{connectors.\+py}}\end{DoxyCompactItemize}
