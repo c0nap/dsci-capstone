@@ -47,6 +47,9 @@ class Log:
         @param expected  The correct value (can be any printable type)."""
         Log.fail(f"Incorrect result: Expected {expected}, got {observed}")
 
+    def warn_parse(trace: str, expected_type: str, bad_value: str):
+        Log.fail(f"Could not convert {trace} with value {bad_value} to type {expected_type}")
+
 
 def all_none(*args):
     return all(arg is None for arg in args)
