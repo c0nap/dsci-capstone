@@ -1,16 +1,26 @@
 #from src.setup import Session
-from components.text_processing import Book, Chunk
+from components.text_processing import Book, Chunk, EPUBToTEI
 
 #session = Session()
 #print()
 
-book = Book(filename = "./datasets/examples/Fairy_Tales.txt",
-    chapter_delimiter_count = 4, chapter_heading_end_count = 2, section_delimiter_count = 4,
-    book_start_line = 405,
-    book_end_line = 10320,
-    author_key = "Editor:")
+# book = Book(filename = "./datasets/examples/Fairy_Tales.txt",
+#     chapter_delimiter_count = 4, chapter_heading_end_count = 2, section_delimiter_count = 4,
+#     book_start_line = 405,
+#     book_end_line = 10320,
+#     author_key = "Editor:")
 
-print("Start reading example book 1")
-book.debug_pre_scan()
+# print("Start reading example book 1")
+# book.debug_pre_scan()
 
+epub_file_1 = "./datasets/examples/pg14916_fairy-tales.epub"
+converter = EPUBToTEI(epub_file_1, save_intermediate=True, chapter_div_type = "level3")
+converter.convert_to_tei()
+converter.clean_tei()
+converter.print_chapters(200)
 
+epub_file_2 = "./datasets/examples/pg22693-images-3_myths.epub"
+converter = EPUBToTEI(epub_file_2, save_intermediate=True, chapter_div_type = "level2")
+converter.convert_to_tei()
+converter.clean_tei()
+converter.print_chapters(200)
