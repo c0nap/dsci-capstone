@@ -1,0 +1,6 @@
+1. Fairy Tales - chapters = books, some have nested chapters
+2. Myths - no "Chapter 1" just the chapter name - harder to parse
+3. Dracula - letters and diary entries, various narrators
+4. Lion - multiple parts
+5. Mist - multiple parts
+6,7,8. Wishes - trilogy
