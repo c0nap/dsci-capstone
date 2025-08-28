@@ -26,87 +26,78 @@ class EPUBToTEI:
 	xml_namespace = {"tei": "http://www.tei-c.org/ns/1.0"}
 	encoding = "utf-8"
 
-	def __init__(self, epub_path, save_intermediate=False, chapter_div_type = "level2"):
+	def __init__(self, epub_path, save_intermediate=False, chapter_div_type="level2"):
 		self.epub_path = epub_path
 		self.save_intermediate = save_intermediate
-		self.raw_tei_path = epub_path.replace(".epub", "_raw.xml")
-		self.clean_tei_path = epub_path.replace(".epub", "_clean.xml")
-		# Allowed elements for pruning
-		self.allowed_div_types = {"part", "chapter", "section"}
-		self.allowed_tags = {"div", "head", "p", "body"}
+		self.raw_tei_path = epub_path.replace(".epub", "_pandoc.tei.xml")
+		self.clean_tei_path = epub_path.replace(".epub", ".tei")
 		self.chapter_div_type = chapter_div_type
+		self.raw_tei_content = None
+		self.clean_tei_content = None
 
 
 	def convert_to_tei(self):
-		"""Convert EPUB to TEI XML using Pandoc."""
-		pypandoc.convert_file(self.epub_path, 'tei', outputfile=self.raw_tei_path)
-		if not self.save_intermediate:
-			# Keep in memory, remove file after conversion
-			with open(self.raw_tei_path, 'r', encoding=self.encoding) as f:
+		"""Convert EPUB → TEI string (via Pandoc)."""
+		if self.save_intermediate:
+			pypandoc.convert_file(self.epub_path, 'tei', outputfile=self.raw_tei_path)
+			with open(self.raw_tei_path, encoding=self.encoding) as f:
 				self.raw_tei_content = f.read()
-			os.remove(self.raw_tei_path)
 		else:
-			self.raw_tei_content = None
+			self.raw_tei_content = pypandoc.convert_file(self.epub_path, 'tei')
 
 
 
 	def clean_tei(self):
-		"""Prune unwanted TEI elements."""
-		# Always read from the raw TEI file
-		with open(self.raw_tei_path, "r", encoding=self.encoding) as f:
-			content = f.read()
-	
-		# Wrap content in a single <TEI> root if it doesn't start with <TEI>
-		if not content.lstrip().startswith("<TEI"):
-			content = f"<TEI xmlns='{self.xml_namespace["tei"]}'>\n" + content + "\n</TEI>"
-	
-		# Sanitize xml:id attributes to be valid NCNames
-		content = re.sub(
-			r'xml:id="[^"]+"',
-			lambda m: 'xml:id="id_' + re.sub(r'[^a-zA-Z0-9_-]', '_', m.group(0)[8:-1]) + '"',
-			content
-		)
+		"""Wrap root if missing, sanitize ids, and save cleaned TEI."""
+		content = self.raw_tei_content or open(self.raw_tei_path, encoding=self.encoding).read()
 
-		# Prepare iterparse from BytesIO
-		context = etree.iterparse(BytesIO(content.encode('utf-8')), events=("start", "end"))
-		# Root element for saving cleaned TEI
-		root = None
-		for event, elem in context:
-			if event == "start" and root is None:
-				root = elem.getroottree().getroot()
+		# Ensure root <TEI>
+		if not content.lstrip().startswith("<TEI"):
+			content = f"<TEI xmlns='{self.xml_namespace['tei']}'>\n{content}\n</TEI>"
+
+		content = self._sanitize_ids(content)
+		self.clean_tei_content = content
+
+		if self.save_intermediate:
+			root = etree.fromstring(content.encode(self.encoding))
+			etree.ElementTree(root).write(self.clean_tei_path, encoding=self.encoding, xml_declaration=True)
+
+
+	def _sanitize_ids(self, content: str) -> str:
+		"""
+		Sanitize XML IDs in the TEI content to ensure they are valid and consistent.
 	
-		# Save cleaned TEI
-		tree = etree.ElementTree(root)
-		tree.write(self.clean_tei_path, encoding=self.encoding, xml_declaration=True)
+		Pandoc sometimes generates invalid or non-unique @xml:id attributes
+		(e.g., containing spaces, punctuation, or mixed casing). Since we rely
+		on these IDs as dictionary keys / anchors, we sanitize them using a
+		regex to enforce alphanumeric/underscore/dash format.
 	
-		# Delete intermediate file if not saving
-		if not self.save_intermediate and os.path.exists(self.raw_tei_path):
-			os.remove(self.raw_tei_path)
+		@param content: The raw TEI XML string possibly containing invalid xml:id attributes.
+		@return: A TEI XML string with valid NCNames, prefixed with 'id_'.
+		"""
+		def repl(m):
+			val = re.sub(r"[^a-zA-Z0-9_-]", "_", m.group(1))
+			return f'xml:id="id_{val}"'
+		return re.sub(r'xml:id="([^"]+)"', repl, content)
+
+
 
 
 	def print_chapters(self, limit: int = 100):
-		"""
-		Debug method: print chapter name and truncated text.
-		"""
-		# Parse the cleaned TEI file
-		tree = etree.parse(self.clean_tei_path)
-		root = tree.getroot()
-	
-		# Iterate over chapter-level divs
-		for div in root.findall(f".//tei:div[@type='{self.chapter_div_type}']", self.xml_namespace):
-			# Extract chapter name
-			head = div.find("tei:head", self.xml_namespace)
-			chapter_name = head.text.strip() if head is not None and head.text else "Untitled"
-	
-			# Extract all text inside <p> tags
-			paragraphs = div.findall("tei:p", self.xml_namespace)
-			chapter_text = " ".join(p.text.strip() for p in paragraphs if p.text)
-	
-			# Truncate for display
-			snippet = (chapter_text[:limit] + "...") if len(chapter_text) > limit else chapter_text
-	
-			print(f"Chapter: {chapter_name}\nText: {snippet}\n{'-'*60}")
+		"""Debug method: print chapter names + snippet."""
+		if self.save_intermediate:
+			root = etree.parse(self.clean_tei_path).getroot()
+		else:
+			root = etree.fromstring(self.clean_tei_content.encode(self.encoding))
 
+		print(f"{'-'*60}")
+		for div in root.findall(f".//tei:div[@type='{self.chapter_div_type}']", self.xml_namespace):
+			head = div.find("tei:head", self.xml_namespace)
+			chapter_name = (head.text or "Untitled").strip()
+			paragraphs = [p.text.strip() for p in div.findall("tei:p", self.xml_namespace) if p.text]
+			chapter_text = " ".join(paragraphs)
+			snippet = (chapter_text[:limit] + "...") if len(chapter_text) > limit else chapter_text
+			print(f"Chapter: {chapter_name}\nText: {snippet}\n{'-'*60}")
 
 
 

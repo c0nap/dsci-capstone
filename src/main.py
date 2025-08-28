@@ -13,12 +13,14 @@ from components.text_processing import Book, Chunk, EPUBToTEI
 # print("Start reading example book 1")
 # book.debug_pre_scan()
 
+print("\n\nCHAPTERS for book 1: FAIRY TALES")
 epub_file_1 = "./datasets/examples/pg14916_fairy-tales.epub"
 converter = EPUBToTEI(epub_file_1, save_intermediate=True, chapter_div_type = "level3")
 converter.convert_to_tei()
 converter.clean_tei()
 converter.print_chapters(200)
 
+print("\n\nCHAPTERS for book 2: MYTHS")
 epub_file_2 = "./datasets/examples/pg22693-images-3_myths.epub"
 converter = EPUBToTEI(epub_file_2, save_intermediate=True, chapter_div_type = "level2")
 converter.convert_to_tei()
