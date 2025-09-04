@@ -168,11 +168,22 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 		Yields Chunk objects for each paragraph (<p>) in the TEI file.
 		Uses etree Element.sourceline to approximate start/end line in TEI.
 		Supports optional start_inclusive / end_inclusive boundaries to slice text and stop iteration.
+		Computes progress percentages using character counts:
+		  - story_percent: progress through the entire story
+		  - chapter_percent: progress through the current chapter
 		"""
 		chapter_counter = 0
 		start_found = not self.start_inclusive  # True if no start boundary specified
 		end_reached = False  # Flag to stop iteration after end_inclusive
 	
+		# Precompute total characters in story for story_percent
+		total_story_chars = sum(
+			len("".join(p.itertext()).strip())
+			for div in self.root.findall(".//tei:div", self.xml_namespace)
+			for p in div.findall("tei:p", self.xml_namespace)
+		)
+		chars_processed_overall = 0
+
 		for div in self.root.findall(".//tei:div", self.xml_namespace):
 			chapter_counter += 1
 			div_type = div.get("type", "unknown")
@@ -182,10 +193,14 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 			# Skip divs not in allowed_chapters
 			if self.allowed_chapters and chapter_name not in self.allowed_chapters:
 				continue
-	
+
 			# Gather paragraphs
 			paragraphs = div.findall("tei:p", self.xml_namespace)
 			total_paragraphs = len(paragraphs)
+
+			# Precompute total characters for chapter_percent
+			total_chapter_chars = sum(len("".join(p.itertext()).strip()) for p in paragraphs)
+			chars_processed_in_chapter = 0
 	
 			for idx, p in enumerate(paragraphs):
 				paragraph_text = "".join(p.itertext()).strip()
@@ -215,9 +230,13 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 				paragraph_line_count = paragraph_text.count("\n") + 1
 				line_end = line_start + paragraph_line_count - 1
 	
-				# Progress percentages
-				story_percent = 100.0 * idx / total_paragraphs
-				chapter_percent = story_percent  # MVP: same as story_percent
+				# Compute character-based percentages
+				chunk_chars = len(paragraph_text)
+				chars_processed_in_chapter += chunk_chars
+				chars_processed_overall += chunk_chars
+	
+				story_percent = 100.0 * chars_processed_overall / max(total_story_chars, 1)
+				chapter_percent = 100.0 * chars_processed_in_chapter / max(total_chapter_chars, 1)
 	
 				yield Chunk(
 					text=paragraph_text,
