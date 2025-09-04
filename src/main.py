@@ -109,9 +109,26 @@ def main1():
 #             traceback.print_exc()
 
 
+tei = "./datasets/examples/trilogy-wishes-1.tei"
+chapters = """
+CHAPTER 1 BEAUTIFUL AS THE DAY\n
+CHAPTER 2 GOLDEN GUINEAS\n
+CHAPTER 3 BEING WANTED\n
+CHAPTER 4 WINGS\n
+CHAPTER 5 NO WINGS\n
+CHAPTER 6 A CASTLE AND NO DINNER\n
+CHAPTER 7 A SIEGE AND BED\n
+CHAPTER 8 BIGGER THAN THE BAKER'S BOY\n
+CHAPTER 9 GROWN UP\n
+CHAPTER 10 SCALPS\n
+CHAPTER 11 THE LAST WISH\n
+"""  # Corresponds to text within <head> in TEI file.
+start = ""
+end = "But I must say no more."
+
 def main3():
-    tei = "./datasets/examples/trilogy-wishes-1.tei"
-    reader = ParagraphStreamTEI(tei, book_id = 1, story_id = 1)
+    chaps = [line.strip() for line in chapters.splitlines() if line.strip()]
+    reader = ParagraphStreamTEI(tei, book_id = 1, story_id = 1, allowed_chapters = chaps, start_inclusive = start, end_inclusive = end)
     story = Story(reader)
     chunks = list(story.stream_chunks())
 
@@ -123,6 +140,12 @@ def main3():
         snippet = (c.text[:80] + "...") if len(c.text) > 80 else c.text
         print(f"  [{i}] Story:{c.story_percent:.1f}% Chapter:{c.chapter_percent:.1f}% - {snippet}")
 
+    print("\n\nFull chunks (last 3):")
+    for i in range(len(chunks)-3, len(chunks)):
+        c = chunks[i]
+        print(f"  [{i}] {c}")
+        print(c.text)
+        print()
 
 
 if __name__ == "__main__":

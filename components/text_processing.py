@@ -141,7 +141,8 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 	xml_namespace = {"tei": "http://www.tei-c.org/ns/1.0"}
 	encoding = "utf-8"
 
-	def __init__(self, tei_path: str, book_id: int, story_id: int):
+	def __init__(self, tei_path: str, book_id: int, story_id: int, allowed_chapters: list[str] = None,
+		start_inclusive: str = "", end_inclusive: str = ""):
 		"""
 		@param tei_path: Path to an existing TEI XML file.
 		@param book_id: ID for this book.
@@ -150,6 +151,9 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 		self.tei_path = tei_path
 		self.book_id = book_id
 		self.story_id = story_id
+		self.allowed_chapters = allowed_chapters
+		self.start_inclusive = start_inclusive
+		self.end_inclusive = end_inclusive
 
 		# Read lines for line-based position tracking
 		with open(tei_path, encoding=self.encoding) as f:
@@ -158,38 +162,63 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 		# Parse TEI
 		self.root = etree.parse(tei_path).getroot()
 
+
 	def stream_segments(self) -> Iterator[Chunk]:
 		"""
 		Yields Chunk objects for each paragraph (<p>) in the TEI file.
 		Uses etree Element.sourceline to approximate start/end line in TEI.
+		Supports optional start_inclusive / end_inclusive boundaries to slice text and stop iteration.
 		"""
 		chapter_counter = 0
-
+		start_found = not self.start_inclusive  # True if no start boundary specified
+		end_reached = False  # Flag to stop iteration after end_inclusive
+	
 		for div in self.root.findall(".//tei:div", self.xml_namespace):
 			chapter_counter += 1
 			div_type = div.get("type", "unknown")
 			head = div.find("tei:head", self.xml_namespace)
 			chapter_name = (head.text or div_type).strip() if head is not None else div_type
-
+	
+			# Skip divs not in allowed_chapters
+			if self.allowed_chapters and chapter_name not in self.allowed_chapters:
+				continue
+	
 			# Gather paragraphs
 			paragraphs = div.findall("tei:p", self.xml_namespace)
 			total_paragraphs = len(paragraphs)
-
+	
 			for idx, p in enumerate(paragraphs):
 				paragraph_text = "".join(p.itertext()).strip()
 				if not paragraph_text:
 					continue
-
+	
+				# --- Apply start boundary ---
+				if not start_found:
+					start_pos = paragraph_text.find(self.start_inclusive)
+					if start_pos >= 0:
+						# Include the start boundary itself
+						paragraph_text = paragraph_text[start_pos:].strip()
+						start_found = True
+					else:
+						continue  # Skip paragraph until start_inclusive is found
+	
+				# --- Apply end boundary ---
+				if self.end_inclusive:
+					end_pos = paragraph_text.find(self.end_inclusive)
+					if end_pos >= 0:
+						# Include the end boundary itself
+						paragraph_text = paragraph_text[:end_pos + len(self.end_inclusive)].strip()
+						end_reached = True
+	
 				# Line numbers
 				line_start = p.sourceline or 1  # etree gives first line of element
-				# Approximate line_end by counting newlines in paragraph text
 				paragraph_line_count = paragraph_text.count("\n") + 1
 				line_end = line_start + paragraph_line_count - 1
-
+	
 				# Progress percentages
 				story_percent = 100.0 * idx / total_paragraphs
 				chapter_percent = story_percent  # MVP: same as story_percent
-
+	
 				yield Chunk(
 					text=paragraph_text,
 					book_id=self.book_id,
@@ -201,6 +230,11 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 					chapter_percent=chapter_percent,
 					max_chunk_length=-1  # No limit in MVP
 				)
+	
+				# Stop iteration if end boundary reached
+				if end_reached:
+					return
+
 
 
 
