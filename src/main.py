@@ -1,5 +1,5 @@
 #from src.setup import Session
-from components.text_processing import Book, Chunk, EPUBToTEI, Story, ParagraphStreamTEI
+from components.book_conversion import Book, Chunk, EPUBToTEI, Story, ParagraphStreamTEI
 import pandas as pd
 
 #session = Session()
