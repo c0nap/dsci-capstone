@@ -130,6 +130,7 @@ def main3():
     chaps = [line.strip() for line in chapters.splitlines() if line.strip()]
     reader = ParagraphStreamTEI(tei, book_id = 1, story_id = 1, allowed_chapters = chaps, start_inclusive = start, end_inclusive = end)
     story = Story(reader)
+    story.pre_split_chunks(max_chunk_length = 1500)
     chunks = list(story.stream_chunks())
 
     print("\n=== STORY SUMMARY ===")
