@@ -1,2 +1,2 @@
-book_id,story_id,epub_path,title_key,author_key,language_key,date_key,start_string,end_string_exclusive
+book_id,story_id,epub_path,title_key,author_key,language_key,date_key,start_string,end_string
 1,1,datasets/examples/trilogy-wishes-1.epub,Title,Author,Language,Release date,CHAPTER 1 BEAUTIFUL AS THE DAY,*Project Gutenberg Etext

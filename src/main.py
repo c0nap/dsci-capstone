@@ -5,7 +5,7 @@ import pandas as pd
 #session = Session()
 #print()
 
-def main1():
+def convert_single():
     print("\n\nCHAPTERS for book 1: FAIRY TALES")
     epub_file_1 = "./datasets/examples/nested-fairy-tales.epub"
     converter = EPUBToTEI(epub_file_1, chapter_div_type = "level3", save_pandoc=True, save_tei=True)
@@ -21,10 +21,43 @@ def main1():
     converter.print_chapters(200)
 
 
+def convert_from_csv():
+    try:
+        df = pd.read_csv("datasets/books.csv")
+    except FileNotFoundError:
+        print("Error: datasets/books.csv not found")
+        return
+    except Exception as e:
+        print(f"Error reading CSV: {e}")
+        return
+    
+    for _, row in df.iterrows():
+        try:
+            print(f"\n{'='*50}")
+            print(f"Processing: {row.get('epub_path', 'Unknown path')}")
+            
+            # Handle NaN values for start/end strings - convert to None
+            start_str = row.get("start_string")
+            end_str = row.get("end_string")
+            if pd.isna(start_str):
+                start_str = None
+            if pd.isna(end_str):
+                end_str = None
 
+            converter = EPUBToTEI(row.get("epub_path"), chapter_div_type = "level2", save_pandoc=False, save_tei=True)
+            converter.convert_to_tei()
+            converter.clean_tei()
+
+        except Exception as e:
+            print(f"Error processing {row.get('epub_path', 'unknown')}: {e}")
+            import traceback
+            traceback.print_exc()
+
+
+
+### Will revisit later - Book classes need refactoring ###
 
 # from components.text_processing import BookFactoryTEI, Story
-
 
 # def main2():
 #     try:
@@ -126,7 +159,7 @@ CHAPTER 11 THE LAST WISH\n
 start = ""
 end = "But I must say no more."
 
-def main3():
+def chunk_single():
     chaps = [line.strip() for line in chapters.splitlines() if line.strip()]
     reader = ParagraphStreamTEI(tei, book_id = 1, story_id = 1, allowed_chapters = chaps, start_inclusive = start, end_inclusive = end)
     story = Story(reader)
@@ -150,4 +183,5 @@ def main3():
 
 
 if __name__ == "__main__":
-    main3()
+    convert_from_csv()
+    chunk_single()

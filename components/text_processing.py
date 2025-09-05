@@ -294,11 +294,14 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 						paragraph_text = paragraph_text[:end_pos + len(self.end_inclusive)].strip()
 						end_reached = True
 	
-				# Line numbers
+				# Line numbers from TEI file
 				line_start = p.sourceline or 1  # etree gives first line of element
 				paragraph_line_count = paragraph_text.count("\n") + 1
 				line_end = line_start + paragraph_line_count - 1
 				
+				# Collapse line breaks within paragraphs
+				paragraph_text = re.sub(r"\s*\n\s*", " ", paragraph_text)
+
 				c = Chunk(
 					text=paragraph_text,
 					book_id=self.book_id,
@@ -412,6 +415,7 @@ class EPUBToTEI:
 			content = f"<TEI xmlns='{self.xml_namespace['tei']}'>\n{content}\n</TEI>"
 
 		content = self._sanitize_ids(content)
+		content = self._prune_bad_tags(content)
 		self.clean_tei_content = content
 
 		if self.save_tei:
@@ -436,6 +440,29 @@ class EPUBToTEI:
 			return f'xml:id="id_{val}"'
 		return re.sub(r'xml:id="([^"]+)"', repl, content)
 
+
+	def _prune_bad_tags(self, content: str) -> str:
+		"""
+		Replace all <lb/> tags with newline characters in TEI.
+		"""
+		return re.sub(r"<lb\s*/?>", " ", content)
+
+
+		## Paragraph handling has been moved to ParagraphStreamTEI.
+
+	# def _normalize_paragraphs(self, content: str) -> str:
+	# 	"""Remove raw newlines inside <p> tags, collapsing them to spaces."""
+	# 	if self.save_tei:
+	# 		root = etree.parse(self.tei_path).getroot()
+	# 	else:
+	# 		root = etree.fromstring(self.clean_tei_content.encode(self.encoding))
+
+	# 	for p in root.findall(".//tei:p", namespaces=self.xml_namespace):
+	# 		# join all text pieces inside <p>, replacing newlines with spaces
+	# 		text = "".join(p.itertext())
+	# 		text = re.sub(r"\s*\n\s*", " ", text)  # collapse line breaks
+	
+	# 	return etree.tostring(root, encoding=self.encoding).decode(self.encoding)
 
 
 

@@ -1,84 +1,53 @@
 
+==================================================
+Processing: datasets/examples/trilogy-wishes-1.epub
+
 === STORY SUMMARY ===
-Total chunks: 205
+Total chunks: 191
 Chunk previews (first 10):
-  [0] Story:0.3% Chapter:0.0% - The house was three miles from the station, but before the dusty
-    hired fly h...
-  [1] Story:0.3% Chapter:2.3% - Everyone got its legs kicked or its feet trodden on in the
-    scramble to get o...
-  [2] Story:0.8% Chapter:6.3% - Of course there are the shops and the theatres, and Maskelyne and
-    Cook's, an...
-  [3] Story:1.7% Chapter:9.7% - The children had explored the gardens and the outhouses
-    thoroughly before th...
-  [4] Story:1.8% Chapter:13.4% - The White House was on the edge of a hill, with a wood behind it
-    - and the c...
-  [5] Story:2.0% Chapter:15.0% - Now that I have begun to tell you about the place, I feel that I
-    could go on...
-  [6] Story:2.0% Chapter:15.0% - Yet I daresay
-    you believe all that about the earth and the sun, and if so yo...
-  [7] Story:3.1% Chapter:20.0% - It was at the gravel-pits. Father had to go away suddenly on
-    business, and m...
-  [8] Story:3.5% Chapter:24.0% - The gravel-pit is very large and wide, with grass growing round
-    the edges at...
-  [9] Story:4.2% Chapter:27.3% - The children dug and they dug and they dug, and their hands got
-    sandy and ho...
+  [0] Story:0.3% Chapter:0.0% - The house was three miles from the station, but before the dusty hired fly had r...
+  [1] Story:0.3% Chapter:2.3% - Everyone got its legs kicked or its feet trodden on in the scramble to get out o...
+  [2] Story:0.8% Chapter:6.2% - Of course there are the shops and the theatres, and Maskelyne and Cook's, and th...
+  [3] Story:1.7% Chapter:9.6% - The children had explored the gardens and the outhouses thoroughly before they w...
+  [4] Story:1.8% Chapter:13.3% - The White House was on the edge of a hill, with a wood behind it - and the chalk...
+  [5] Story:2.0% Chapter:14.9% - Now that I have begun to tell you about the place, I feel that I could go on and...
+  [6] Story:2.0% Chapter:14.9% - At least they called it that, because that was what it called itself; and of cou...
+  [7] Story:3.1% Chapter:19.9% - It was at the gravel-pits. Father had to go away suddenly on business, and mothe...
+  [8] Story:3.5% Chapter:23.9% - The gravel-pit is very large and wide, with grass growing round the edges at the...
+  [9] Story:4.3% Chapter:27.2% - The children dug and they dug and they dug, and their hands got sandy and hot an...
 
 
 Full chunks (last 3):
-  [202] Chunk(len=1089, book=1, chapter=21, story=1, lines=[5264,5286], story%=99.361, chapter%=88.770)
-'And now,' it said as it collapsed, 'can I do anything more for
-      you?'
-'Just one thing; and I think that clears everything up, doesn't
-      it,Jane? I wish Martha to forget about the diamond ring, and
-      motherto forget about the keeper cleaning the
-      windows.''It's like the "Brass Bottle",' said
-      Jane.
-'Yes, I'm glad we read that or I should never have thought of
-      it.'
-'Now,' said the Psammead faintly, 'I'm almost worn out. Is
-      there anything else?'
-'No; only thank you kindly for all you've done for us, and I
-      hope you'll have a good long sleep, and I hope we shall see you
-      again some day.'
+  [188] Chunk(len=1436, book=1, chapter=21, story=1, lines=[5242,5270], story%=99.000, chapter%=83.588)
+'Done,' said the Psammead; but its voice was weaker.
+'Wouldn't you like to rest a little?' asked Anthea considerately.
+'Yes, please,' said the Psammead; 'and, before we go further, will you wish something for me?'
+'Can't you do wishes for yourself?'
+'Of course not,' it said; 'we were always expected to give each other our wishes - not that we had any to speak of in the good old Megatherium days. just wish, will you, that you may never be able, any of you, to tell anyone a word about ME.'
+'Why?' asked Jane.
+'Why, don't you see, if you told grown-ups I should have no peace of my life. They'd get hold of me, and they wouldn't wish silly things like you do, but real earnest things; and the scientific people would hit on some way of making things last after sunset, as likely as not; and they'd ask for a graduated income-tax, and old-age pensions and manhood suffrage, and free secondary education, and dull things like that; and get them, and keep them, and the whole world would be turned topsy-turvy. Do wish it! Quick!'
+Anthea repeated the Psammead's wish, and it blew itself out to a larger size than they had yet seen it attain.
+'And now,' it said as it collapsed, 'can I do anything more for you?'
+'Just one thing; and I think that clears everything up, doesn't it, Jane? I wish Martha to forget about the diamond ring, and mother to forget about the keeper cleaning the windows.' 'It's like the "Brass Bottle",' said Jane.
+
+  [189] Chunk(len=1420, book=1, chapter=21, story=1, lines=[5271,5299], story%=99.645, chapter%=90.087)
+'Yes, I'm glad we read that or I should never have thought of it.'
+'Now,' said the Psammead faintly, 'I'm almost worn out. Is there anything else?'
+'No; only thank you kindly for all you've done for us, and I hope you'll have a good long sleep, and I hope we shall see you again some day.'
 'Is that a wish?' it said in a weak voice.
 'Yes, please,' said the two girls together.
-Then for the last time in this story they saw the Psammead blow
-      itself out and collapse suddenly. It nodded to them, blinked its
-      long snail's eyes, burrowed, and disappeared, scratching fiercely
-      to the last, and the sand closed over it.
+Then for the last time in this story they saw the Psammead blow itself out and collapse suddenly. It nodded to them, blinked its long snail's eyes, burrowed, and disappeared, scratching fiercely to the last, and the sand closed over it.
 'I hope we've done right?' said Jane.
-'I'm sure we have,' said Anthea. 'Come on home and tell the
-      boys.'
+'I'm sure we have,' said Anthea. 'Come on home and tell the boys.'
+Anthea found Cyril glooming over his paper boats, and told him. Jane told Robert. The two tales were only just ended when mother walked in, hot and dusty. She explained that as she was being driven into Rochester to buy the girls' autumn school-dresses the axle had broken, and but for the narrowness of the lane and the high soft hedges she would have been thrown out. As it was, she was not hurt, but she had had to walk home. 'And oh, my dearest dear chicks,' she said, 'I am simply dying for a cup of tea! Do run and see if the kettle boils!'
+'So you see it's all right,'Jane whispered. 'She doesn't remember.'
+'No more does Martha,' said Anthea, who had been to ask after the state of the kettle.
 
-  [203] Chunk(len=1401, book=1, chapter=21, story=1, lines=[5287,5311], story%=99.912, chapter%=93.329)
-Anthea found Cyril glooming over his paper boats, and told him.
-      Jane told Robert. The two tales were only just ended when mother
-      walked in, hot and dusty. She explained that as she was being
-      driven into Rochester to buy the girls' autumn school-dresses the
-      axle had broken, and but for the narrowness of the lane and the
-      high soft hedges she would have been thrown out. As it was, she
-      was not hurt, but she had had to walk home. 'And oh, my dearest
-      dear chicks,' she said, 'I am simply dying for a cup of tea! Do
-      run and see if the kettle boils!'
-'So you see it's all right,'Jane whispered. 'She doesn't
-      remember.'
-'No more does Martha,' said Anthea, who had been to ask after
-      the state of the kettle.
-As the servants sat at their tea, Beale the gamekeeper dropped
-      in. He brought the welcome news that Lady Chittenden's diamonds
-      had not been lost at all. Lord Chittenden had taken them to be
-      re-set and cleaned, and the maid who knew about it had gone for a
-      holiday. So that was all right.
-'I wonder if we ever shall see the Psammead again,' said Jane
-      wistfully as they walked in the garden, while mother was putting
-      the Lamb to bed.
+  [190] Chunk(len=772, book=1, chapter=21, story=1, lines=[5300,5314], story%=99.928, chapter%=96.507)
+As the servants sat at their tea, Beale the gamekeeper dropped in. He brought the welcome news that Lady Chittenden's diamonds had not been lost at all. Lord Chittenden had taken them to be re-set and cleaned, and the maid who knew about it had gone for a holiday. So that was all right.
+'I wonder if we ever shall see the Psammead again,' said Jane wistfully as they walked in the garden, while mother was putting the Lamb to bed.
 'I'm sure we shall,' said Cyril, 'if you really wished it.'
-'We've promised never to ask it for another wish,' said
-      Anthea.
+'We've promised never to ask it for another wish,' said Anthea.
 'I never want to,' said Robert earnestly.
-
-  [204] Chunk(len=186, book=1, chapter=21, story=1, lines=[5312,5314], story%=99.928, chapter%=99.215)
-They did see it again, of course, but not in this story. And it
-      was not in a sand-pit either, but in a very, very, very different
-      place. It was in a — But I must say no more.
+They did see it again, of course, but not in this story. And it was not in a sand-pit either, but in a very, very, very different place. It was in a — But I must say no more.
 
