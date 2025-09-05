@@ -109,6 +109,7 @@ class StoryStreamAdapter(ABC):
 class Story:
 	def __init__(self, reader :StoryStreamAdapter):
 		self.reader = reader
+		self.chunks = []
 
 	def pre_split_chunks(self, max_chunk_length :int):
 		"""
@@ -122,6 +123,7 @@ class Story:
 		This function may be memory intensive in order to keep overhead low for stream_chunks
 		"""
 		pass
+
 
 	def stream_chunks(self) -> Chunk:
 		for chunk in self.reader.stream_segments():
@@ -154,7 +156,7 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 		self.allowed_chapters = allowed_chapters
 		self.start_inclusive = start_inclusive
 		self.end_inclusive = end_inclusive
-
+		
 		# Read lines for line-based position tracking
 		with open(tei_path, encoding=self.encoding) as f:
 			self.lines = f.readlines()
@@ -162,8 +164,15 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 		# Parse TEI
 		self.root = etree.parse(tei_path).getroot()
 
+		# TMP: Necessary to fix chapter percentages
+		self.chunks = list(self.pre_compute_segments())
+
 
 	def stream_segments(self) -> Iterator[Chunk]:
+		for chunk in self.chunks:
+			yield chunk
+
+	def pre_compute_segments(self) -> List[Chunk]:
 		"""
 		Yields Chunk objects for each paragraph (<p>) in the TEI file.
 		Uses etree Element.sourceline to approximate start/end line in TEI.
@@ -171,18 +180,12 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 		Computes progress percentages using character counts:
 		  - story_percent: progress through the entire story
 		  - chapter_percent: progress through the current chapter
+		Populates self.chunks so they can be streamed as requested by interface
 		"""
+		book_chunks = []
 		chapter_counter = 0
 		start_found = not self.start_inclusive  # True if no start boundary specified
 		end_reached = False  # Flag to stop iteration after end_inclusive
-	
-		# Precompute total characters in story for story_percent
-		total_story_chars = sum(
-			len("".join(p.itertext()).strip())
-			for div in self.root.findall(".//tei:div", self.xml_namespace)
-			for p in div.findall("tei:p", self.xml_namespace)
-		)
-		chars_processed_overall = 0
 
 		for div in self.root.findall(".//tei:div", self.xml_namespace):
 			chapter_counter += 1
@@ -198,9 +201,7 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 			paragraphs = div.findall("tei:p", self.xml_namespace)
 			total_paragraphs = len(paragraphs)
 
-			# Precompute total characters for chapter_percent
-			total_chapter_chars = sum(len("".join(p.itertext()).strip()) for p in paragraphs)
-			chars_processed_in_chapter = 0
+			chapter_chunks = []
 	
 			for idx, p in enumerate(paragraphs):
 				paragraph_text = "".join(p.itertext()).strip()
@@ -229,32 +230,44 @@ class ParagraphStreamTEI(StoryStreamAdapter):
 				line_start = p.sourceline or 1  # etree gives first line of element
 				paragraph_line_count = paragraph_text.count("\n") + 1
 				line_end = line_start + paragraph_line_count - 1
-	
-				# Compute character-based percentages
-				chunk_chars = len(paragraph_text)
-				chars_processed_in_chapter += chunk_chars
-				chars_processed_overall += chunk_chars
-	
-				story_percent = 100.0 * chars_processed_overall / max(total_story_chars, 1)
-				chapter_percent = 100.0 * chars_processed_in_chapter / max(total_chapter_chars, 1)
-	
-				yield Chunk(
+				
+				c = Chunk(
 					text=paragraph_text,
 					book_id=self.book_id,
 					chapter_number=chapter_counter,
 					line_start=line_start,
 					line_end=line_end,
 					story_id=self.story_id,
-					story_percent=story_percent,
-					chapter_percent=chapter_percent,
+					story_percent=-1,   # Manually computed later
+					chapter_percent=-1,   # ^
 					max_chunk_length=-1  # No limit in MVP
 				)
+				chapter_chunks.append(c)
 	
 				# Stop iteration if end boundary reached
 				if end_reached:
-					return
+					break
 
+			# TMP: Fix percentages
+			# foreach chapter in book:
+			total_chapter_chars = sum(chunk.char_count() for chunk in chapter_chunks)
+			cumulative_chars = 0
+			for chunk in chapter_chunks:
+				chunk.chapter_percent = 100.0 * cumulative_chars / max(total_chapter_chars, 1)
+				cumulative_chars += chunk.char_count()
+			# merge lists
+			book_chunks += chapter_chunks
 
+			if end_reached:
+				break
+
+		# for single book:
+		total_book_chars = sum(chunk.char_count() for chunk in book_chunks)
+		cumulative_chars = 0
+		for chunk in book_chunks:
+			chunk.story_percent = 100.0 * cumulative_chars / max(total_book_chars, 1)
+			cumulative_chars += chunk.char_count()
+		return book_chunks
 
 
 
