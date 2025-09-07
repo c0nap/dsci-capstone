@@ -53,6 +53,13 @@ project/		 # Parent directory (optional).
   └── venv/ 	 # Python virtual environment directory (optional, not committed).
 ```
 
+```
+huggingface-cli login
+```
+
+
+
+
 ## Setup (Windows)
 
 1. Download the project folder. Create a parent folder directly under the `C:/` drive (for easy access from WSL), and navigate into it using your terminal.

@@ -371,19 +371,4 @@ class postgresConnector(RelationalConnector):
         "SELECT datname FROM pg_database;"]     # List of all databases in the database engine.
     }
 
-        
-
-
-
-class LLMConnector(Connector):
-    """Abstract base class for database engine connectors.
-
-    Derived classes should implement:
-    - @ref __init__
-    - @ref test_connection
-    - @ref execute_query
-    - @ref _split_combined
-    - @ref get_dataframe
-    - @ref create_database
-    - @ref drop_database
-    """
+    

@@ -1,6 +1,9 @@
 #from src.setup import Session
 from components.book_conversion import Book, Chunk, EPUBToTEI, Story, ParagraphStreamTEI
+from components.text_processing import RelationExtractor, LLMConnector
 import pandas as pd
+import random
+import traceback
 
 #session = Session()
 #print()
@@ -50,7 +53,6 @@ def convert_from_csv():
 
         except Exception as e:
             print(f"Error processing {row.get('epub_path', 'unknown')}: {e}")
-            import traceback
             traceback.print_exc()
 
 
@@ -138,7 +140,6 @@ def convert_from_csv():
                 
 #         except Exception as e:
 #             print(f"Error processing {row.get('epub_path', 'unknown')}: {e}")
-#             import traceback
 #             traceback.print_exc()
 
 
@@ -182,6 +183,69 @@ def chunk_single():
         print()
 
 
+
+def process_single():
+    try:
+        df = pd.read_csv("datasets/books.csv")
+    except FileNotFoundError:
+        print("Error: datasets/books.csv not found")
+        return
+    except Exception as e:
+        print(f"Error reading CSV: {e}")
+        return
+    row = df.iloc[0]
+
+    print(f"\n{'='*50}")
+    print(f"Processing: {row.get('tei_path', 'Unknown path')}")
+    
+    # Handle NaN values for start/end strings - convert to None
+    start_str = row.get("start_string")
+    end_str = row.get("end_string")
+    if pd.isna(start_str):
+        start_str = None
+    if pd.isna(end_str):
+        end_str = None
+    
+    chapters = row.get("chapters")
+    chaps = [line.strip() for line in chapters.splitlines() if line.strip()]
+    reader = ParagraphStreamTEI(tei, book_id = 1, story_id = 1, allowed_chapters = chaps, start_inclusive = start, end_inclusive = end)
+    story = Story(reader)
+    story.pre_split_chunks(max_chunk_length = 1500)
+    chunks = list(story.stream_chunks())
+
+    print("\n=== STORY SUMMARY ===")
+    print(f"Total chunks: {len(chunks)}")
+
+    print("\n=== NLP EXTRACTION SAMPLE ===")
+    nlp = RelationExtractor(model_name="Babelscape/rebel-large", max_tokens=1024)
+    llm = LLMConnector(temperature=0, system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON.")
+
+    unique_numbers = random.sample(range(len(chunks)), 2)
+    for i in unique_numbers:
+        c = chunks[i]
+        print("\nChunk details:")
+        print(f"  [{i}] {c}\n")
+        print(c.text)
+
+        extracted = nlp.extract(c, parse_tuples = False)
+        print(f"\nREBEL output:")
+        print(extracted)
+        print()
+
+        human_prompt = f"Here are some semantic triples extracted from a story chunk:\n{extracted}\nConvert them into JSON with keys: subject, relation, object."
+        llm_output = llm.execute_query(human_prompt)
+
+        print("\nLLM input:")
+        print(f"    System prompt: {system_prompt}")
+        print(f"    Human prompt: {human_prompt}")
+
+        print("\nLLM output:")
+        print(llm_output)
+        print("\n" + "="*50 + "\n")
+
+
+
 if __name__ == "__main__":
-    convert_from_csv()
-    chunk_single()
+    #convert_from_csv()
+    #chunk_single()
+    process_single()
