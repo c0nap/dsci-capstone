@@ -1,9 +1,10 @@
 #from src.setup import Session
 from components.book_conversion import Book, Chunk, EPUBToTEI, Story, ParagraphStreamTEI
-from components.text_processing import RelationExtractor, LLMConnector
 import pandas as pd
 import random
 import traceback
+import json
+import os
 
 #session = Session()
 #print()
@@ -185,6 +186,8 @@ def chunk_single():
 
 
 def process_single():
+    from components.text_processing import RelationExtractor, LLMConnector
+
     try:
         df = pd.read_csv("datasets/books.csv")
     except FileNotFoundError:
@@ -220,11 +223,10 @@ def process_single():
     re_rebel = "Babelscape/rebel-large"
     re_rst = "GAIR/rst-information-extraction-11b"
     ner_renard = "compnet-renard/bert-base-cased-literary-NER"
-
     nlp = RelationExtractor(model_name=re_rebel, max_tokens=1024)
     llm = LLMConnector(temperature=0, system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON.")
 
-    unique_numbers = random.sample(range(len(chunks)), 5)
+    unique_numbers = random.sample(range(len(chunks)), 2)
     for i in unique_numbers:
         c = chunks[i]
         print("\nChunk details:")
@@ -240,23 +242,55 @@ def process_single():
         triples_string = ""
         for triple in extracted:
             triples_string += str(triple) + "\n"
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{extracted}\n"
+        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
         prompt += f"And here is the original text:\n{c.text}\n\n"
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
-        prompt += "Remove nonsensical triples, and add new ones to encapsulate events, dialogue, and core meaning."
+        prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
         llm_output = llm.execute_query(prompt)
 
-        print("\nLLM input:")
+        print("\n    LLM prompt:")
+        print(llm.system_prompt)
         print(prompt)
 
-        print("\nLLM output:")
+        print("\n    LLM output:")
         print(llm_output)
 
+        try:
+            data = json.loads(llm_output)
+            print("\nValid JSON")
+        except json.JSONDecodeError as e:
+            print("\nInvalid JSON:", e)
+            continue
+
+        json_path = f"./datasets/triples/chunk-{i}_story-{c.story_id}.json"
+        os.makedirs(os.path.dirname(json_path), exist_ok=True)
+        with open(json_path, "w") as f:
+            f.write(llm_output)
+        print(f"JSON saved to '{json_path}'")
+
         print("\n" + "="*50 + "\n")
+
+
+triple_files = [
+    "./datasets/triples/chunk-160_story-1.json",
+    "./datasets/triples/chunk-70_story-1.json"
+]
+def graph_triple_files():
+    for json_path in triple_files:
+        # Load existing triples to save NLP time / LLM tokens during MVP stage
+        with open(json_path, "r") as f:
+            triples = json.load(f)
+
+        for triple in triples:
+            subj = triple['s']
+            rel = triple['r']
+            obj = triple['o']
+            print(subj, rel, obj)
 
 
 
 if __name__ == "__main__":
     #convert_from_csv()
     #chunk_single()
-    process_single()
+    #process_single()
+    graph_triple_files()
