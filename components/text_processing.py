@@ -31,8 +31,10 @@ class RelationExtractor:
 			outputs = self.model.generate(**inputs)
 			decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 			if parse_tuples:
-				for subj, obj, rel in decoded.split(self.tuple_delim):
-					out.append(tuple(subj, rel, obj))
+				parts = [str(element).strip() for element in decoded.split(self.tuple_delim)]
+				# group 3 at a time using zip
+				for subj, obj, rel in zip(parts[0::3], parts[1::3], parts[2::3]):
+					out.append(tuple([subj, rel, obj]))
 			else:   # raw REBEL text: 'subj  obj  rel'
 				out.append(decoded)
 		return out
@@ -40,9 +42,9 @@ class RelationExtractor:
 
 # === Example usage ===
 if __name__ == "__main__":
-    sample_text = "Alice met Bob in the forest. Bob then went to the village."
-    extractor = RelationExtractor(model_name = "Babelscape/rebel-large")
-    print(extractor.extract(sample_text))
+	sample_text = "Alice met Bob in the forest. Bob then went to the village."
+	extractor = RelationExtractor(model_name = "Babelscape/rebel-large")
+	print(extractor.extract(sample_text))
 
 
 
@@ -101,21 +103,19 @@ class LLMConnector(Connector):
 	def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
 		"""
 		Send a single prompt to the LLM with separate system and human instructions.
-	
-		Args:
-			system_prompt: Instructions to set the LLM's behavior.
-			human_prompt: The actual prompt/query content.
-	
-		Returns:
-			Raw LLM response as a string.
 		"""
 		self.system_prompt = system_prompt
+	
+		# Build prompt template
 		prompt = ChatPromptTemplate.from_messages([
 			SystemMessagePromptTemplate.from_template(system_prompt),
 			HumanMessagePromptTemplate.from_template(human_prompt)
 		])
-		response = self.llm(prompt.format())
+	
+		formatted_prompt = prompt.format_prompt()  # <-- returns ChatPromptValue
+		response = self.llm.invoke(formatted_prompt.to_messages())  # <-- to_messages() returns list of BaseMessage
 		return response.content
+
 
 
 	def execute_query(self, query: str) -> str:

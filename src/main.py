@@ -231,21 +231,27 @@ def process_single():
         print(f"  [{i}] {c}\n")
         print(c.text)
 
-        extracted = nlp.extract(c.text, parse_tuples = False)
+        extracted = nlp.extract(c.text, parse_tuples = True)
         print(f"\nNLP output:")
         for triple in extracted:
             print(triple)
         print()
 
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{extracted}\nConvert them into JSON with keys: subject, relation, object."
+        triples_string = ""
+        for triple in extracted:
+            triples_string += str(triple) + "\n"
+        prompt = f"Here are some semantic triples extracted from a story chunk:\n{extracted}\n"
+        prompt += f"And here is the original text:\n{c.text}\n\n"
+        prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
+        prompt += "Remove nonsensical triples, and add new ones to encapsulate events, dialogue, and core meaning."
         llm_output = llm.execute_query(prompt)
 
         print("\nLLM input:")
-        print(f"    System prompt: {system_prompt}")
-        print(f"    Human prompt: {human_prompt}")
+        print(prompt)
 
         print("\nLLM output:")
         print(llm_output)
+
         print("\n" + "="*50 + "\n")
 
 

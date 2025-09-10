@@ -8,28 +8,502 @@ Total chunks: 191
 === NLP EXTRACTION SAMPLE ===
 
 Chunk details:
-  [92] Chunk(len=1463, book=1, chapter=15, story=1, lines=[2879,2903], story%=47.430, chapter%=32.429)
+  [25] Chunk(len=1471, book=1, chapter=6, story=1, lines=[611,638], story%=13.338, chapter%=94.709)
 
-The leader was the most glorious creature Robert had ever seen. He was exactly like the pictures Robert had so often admired in the historical romances. He had armour, and a helmet, and a horse, and a crest, and feathers, and a shield, and a lance, and a sword. His armour and his weapons were all, I am almost sure, of quite different periods. The shield was thirteenth-century, while the sword was of the pattern used in the Peninsular War. The cuirass was of the time of Charles I, and the helmet dated from the Second Crusade. The arms on the shield were very grand - three red running lions on a blue ground. The tents were of the latest brand and the whole appearance of camp, army, and leader might have been a shock to some. But Robert was dumb with admiration, and it all seemed to him perfectly correct, because he knew no more of heraldry or archaeology than the gifted artists who usually drew the pictures for the historical romances. The scene was indeed 'exactly like a picture'. He admired it all so much that he felt braver than ever.
-'Come hither, lad,' said the glorious leader, when the men in Cromwellian steel-caps had said a few low eager words. And he took off his helmet, because he could not see properly with it on. He had a kind face, and long fair hair. 'Have no fear; thou shalt take no scathe,' he said.
-Robert was glad of that. He wondered what 'scathe' was, and if it was nastier than the senna tea which he had to take sometimes.
+Anthea pinched herself very hard, to make sure, and when she found she could still feel pinching she decided that she was not stone, and then she pinched the others. They, also, were soft.
+'Wake up,' she said, almost in tears of joy; 'it's all right, we're not stone. And oh, Cyril, how nice and ugly you do look, with your old freckles and your brown hair and your little eyes. And so do you all!' she added, so that they might not feel jealous.
+When they got home they were very much scolded by Martha, who told them about the strange children.
+'A good-looking lot, I must say, but that impudent.'
+'I know,' said Robert, who knew by experience how hopeless it would be to try to explain things to Martha.
+'And where on earth have you been all this time, you naughty little things, you?'
+'In the lane.'
+'Why didn't you come home hours ago?'
+'We couldn't because of THEM,' said Anthea.
+'Who?'
+'The children who were as beautiful as the day. They kept us there till after sunset. We couldn't come back till they'd gone. You don't know how we hated them! Oh, do, do give us some supper - we are so hungry.'
+'Hungry! I should think so,' said Martha angrily; 'out all day like this. Well, I hope it'll be a lesson to you not to go picking up with strange children - down here after measles, as likely as not! Now mind, if you see them again, don't you speak to them - not one word nor so much as a look - but come straight away and tell me. I'll spoil their beauty for them!'
 
 NLP output:
- leader  Robert  child  Robert  leader  father
- Robert  historical romances  genre
- shield  armour  subclass of
- armour  weapons  different from  weapons  armour  different from
- pattern  Peninsular War  conflict
- Charles I  Second Crusade  conflict
- shield  arms  subclass of
- camp  army  part of  army  camp  has part
- heraldry  archaeology  part of
- picture  picture  depicts
- William Shakespeare  Cymbeline  notable work  Cymbeline  William Shakespeare  author
- Cromwellian  steel-caps  owner of  steel-caps  Cromwellian  owned by
- World Championships in Athletics  1936  point in time  1936  point in time  1936  1936  point in time  1936  point in time
- Fair  face  subclass of
- Have no fear  scathe  opposite of  scathe  Have no fear  opposite of
- Robert was glad of that.  Robert  child  Robert  Robert was glad of that.  father
- senna tea  scathe  instance of
+('Anthea', 'different from', 'stone')
+('stone', 'different from', 'Anthea')
+('soft', 'facet of', 'soft')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Cyril, how nice and ugly you do look', 'has part', 'brown hair')
+('brown hair', 'part of', 'Cyril, how nice and ugly you do look')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
+('Ljubljana', 'country', 'Slovenia')
+('Slovenia', 'capital', 'Ljubljana')
+('Martha', 'present in work', 'the strange children')
+('the strange children', 'characters', 'Martha')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('Robert', 'spouse', 'Martha')
+('Martha', 'spouse', 'Robert')
+('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
+("A Midsummer Night's Dream", 'author', 'William Shakespeare')
+('In the lane', 'instance of', 'song')
+("Why didn't you come home hours ago", 'followed by', "Don't you come home hours ago")
+("Don't you come home hours ago", 'follows', "Why didn't you come home hours ago")
+('Them', 'has part', 'Anthea')
+('Anthea', 'member of', 'THEM')
+('Who', 'different from', 'Who')
+('Who', 'different from', 'Who')
+('The children who were as beautiful as the day', 'instance of', 'film')
+('film', 'based on', 'The children who were as beautiful as the day')
+('Leningrad', 'located in the administrative territorial entity', 'Russia')
+('Russia', 'contains administrative territorial entity', 'Leningrad')
+('John F. Kennedy', 'position held', 'Secretary of War')
+("Don't know how we hated them!", 'derivative work', "Don't know how we hated them!")
+("Don't know how we hated them!", 'based on', "Don't know how we hated them!")
+('Oh, do, do give us some supper - we are so hungry', 'instance of', 'supper')
+('Hungry', 'derivative work', 'Hungry!')
+('George VI', 'spouse', 'Queen Elizabeth II')
+('Queen Elizabeth II', 'spouse', 'George VI')
+('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
+("A Midsummer Night's Dream", 'author', 'William Shakespeare')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Shakespeare', 'author')
+('author', 'Cymbeline', 'Shakespeare')
+('notable work', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+("I'll spoil their beauty", 'facet of', 'them')
+('them', 'has part', "I'll spoil their beauty")
+
+
+LLM input:
+Here are some semantic triples extracted from a story chunk:
+[('Anthea', 'different from', 'stone'), ('stone', 'different from', 'Anthea'), ('soft', 'facet of', 'soft'), ('John Milton', 'notable work', 'Paradise Lost'), ('Paradise Lost', 'author', 'John Milton'), ('Cyril, how nice and ugly you do look', 'has part', 'brown hair'), ('brown hair', 'part of', 'Cyril, how nice and ugly you do look'), ('John F. Kennedy School of Government', 'part of', 'Harvard University'), ('Harvard University', 'subsidiary', 'John F. Kennedy School of Government'), ('Ljubljana', 'country', 'Slovenia'), ('Slovenia', 'capital', 'Ljubljana'), ('Martha', 'present in work', 'the strange children'), ('the strange children', 'characters', 'Martha'), ('William Shakespeare', 'notable work', 'Cymbeline'), ('Cymbeline', 'author', 'William Shakespeare'), ('Robert', 'spouse', 'Martha'), ('Martha', 'spouse', 'Robert'), ('William Shakespeare', 'notable work', "A Midsummer Night's Dream"), ("A Midsummer Night's Dream", 'author', 'William Shakespeare'), ('In the lane', 'instance of', 'song'), ("Why didn't you come home hours ago", 'followed by', "Don't you come home hours ago"), ("Don't you come home hours ago", 'follows', "Why didn't you come home hours ago"), ('Them', 'has part', 'Anthea'), ('Anthea', 'member of', 'THEM'), ('Who', 'different from', 'Who'), ('Who', 'different from', 'Who'), ('The children who were as beautiful as the day', 'instance of', 'film'), ('film', 'based on', 'The children who were as beautiful as the day'), ('Leningrad', 'located in the administrative territorial entity', 'Russia'), ('Russia', 'contains administrative territorial entity', 'Leningrad'), ('John F. Kennedy', 'position held', 'Secretary of War'), ("Don't know how we hated them!", 'derivative work', "Don't know how we hated them!"), ("Don't know how we hated them!", 'based on', "Don't know how we hated them!"), ('Oh, do, do give us some supper - we are so hungry', 'instance of', 'supper'), ('Hungry', 'derivative work', 'Hungry!'), ('George VI', 'spouse', 'Queen Elizabeth II'), ('Queen Elizabeth II', 'spouse', 'George VI'), ('William Shakespeare', 'notable work', "A Midsummer Night's Dream"), ("A Midsummer Night's Dream", 'author', 'William Shakespeare'), ('William Shakespeare', 'notable work', 'Cymbeline'), ('Cymbeline', 'Cymbeline', 'notable work'), ('William Shakespeare', 'Shakespeare', 'author'), ('author', 'Cymbeline', 'Shakespeare'), ('notable work', 'notable work', 'Cymbeline'), ('Cymbeline', 'author', 'William Shakespeare'), ("I'll spoil their beauty", 'facet of', 'them'), ('them', 'has part', "I'll spoil their beauty")]
+And here is the original text:
+Anthea pinched herself very hard, to make sure, and when she found she could still feel pinching she decided that she was not stone, and then she pinched the others. They, also, were soft.
+'Wake up,' she said, almost in tears of joy; 'it's all right, we're not stone. And oh, Cyril, how nice and ugly you do look, with your old freckles and your brown hair and your little eyes. And so do you all!' she added, so that they might not feel jealous.
+When they got home they were very much scolded by Martha, who told them about the strange children.
+'A good-looking lot, I must say, but that impudent.'
+'I know,' said Robert, who knew by experience how hopeless it would be to try to explain things to Martha.
+'And where on earth have you been all this time, you naughty little things, you?'
+'In the lane.'
+'Why didn't you come home hours ago?'
+'We couldn't because of THEM,' said Anthea.
+'Who?'
+'The children who were as beautiful as the day. They kept us there till after sunset. We couldn't come back till they'd gone. You don't know how we hated them! Oh, do, do give us some supper - we are so hungry.'
+'Hungry! I should think so,' said Martha angrily; 'out all day like this. Well, I hope it'll be a lesson to you not to go picking up with strange children - down here after measles, as likely as not! Now mind, if you see them again, don't you speak to them - not one word nor so much as a look - but come straight away and tell me. I'll spoil their beauty for them!'
+
+Output JSON with keys: s (subject), r (relation), o (object).
+Remove nonsensical triples, and add new ones to encapsulate events, dialogue, and core meaning.
+
+LLM output:
+[
+  {"s":"Anthea", "r":"pinched", "o":"herself"},
+  {"s":"Anthea", "r":"concluded", "o":"not stone"},
+  {"s":"Anthea", "r":"pinched", "o":"the others"},
+  {"s":"Anthea", "r":"solicited", "o":"Wake up"},
+  {"s":"Anthea", "r":"stated", "o":"we're not stone"},
+  {"s":"Anthea", "r":"described_appearance_of", "o":"Cyril (freckles, brown hair, little eyes)"},
+  {"s":"Cyril", "r":"has_part", "o":"brown hair"},
+  {"s":"Cyril", "r":"has_part", "o":"freckles"},
+  {"s":"Cyril", "r":"has_part", "o":"little eyes"},
+  {"s":"Martha", "r":"scolded", "o":"them"},
+  {"s":"Martha", "r":"told", "o":"them about the strange children"},
+  {"s":"The strange children", "r":"located_in", "o":"the lane"},
+  {"s":"The strange children", "r":"kept", "o":"Anthea and friends till after sunset"},
+  {"s":"Anthea", "r":"couldn't_return_until", "o":"they'd gone"},
+  {"s":"The group", "r":"hated", "o":"the strange children"},
+  {"s":"Anthea", "r":"requested", "o":"supper"},
+  {"s":"The group", "r":"are", "o":"hungry"},
+  {"s":"Martha", "r":"warned", "o":"not to speak to the strange children again"},
+  {"s":"Martha", "r":"threatened", "o":"to spoil their beauty"}
+]
+
+==================================================
+
+
+Chunk details:
+  [187] Chunk(len=1473, book=1, chapter=21, story=1, lines=[5212,5241], story%=98.468, chapter%=76.940)
+
+'Of course I do,' it said. 'Leave go of me or I'll bite! - I really will - I mean it. Oh, well, if you choose to risk it.'
+Anthea risked it and held on.
+'Look here,' she said, 'don't bite me - listen to reason. If you'll only do what we want to-day, we'll never ask you for another wish as long as we live.'
+The Psammead was much moved.
+'I'd do anything,' it said in a tearful voice. 'I'd almost burst myself to give you one wish after another, as long as I held out, if you'd only never, never ask me to do it after to-day. If you knew how I hate to blow myself out with other people's wishes, and how frightened I am always that I shall strain a muscle or something. And then to wake up every morning and know you've GOT to do it. You don't know what it is - you don't know what it is, you don't!' Its voice cracked with emotion, and the last 'don't' was a squeak.
+Anthea set it down gently on the sand.
+'It's all over now,' she said soothingly. 'We promise faithfully never to ask for another wish after to-day.' 'Well, go ahead,' said the Psammead; 'let's get it over.'
+'How many can you do?'
+'I don't know - as long as I can hold out.'
+'Well, first, I wish Lady Chittenden may find she's never lost her jewels.'
+The Psammead blew itself out, collapsed, and said, 'Done.'
+'I wish, said Anthea more slowly, 'mother mayn't get to the police.'
+'Done,' said the creature after the proper interval.
+'I wish,' said Jane suddenly, 'mother could forget all about the diamonds.'
+
+NLP output:
+("'Of course I do'", 'derivative work', "'Of course I do'")
+("'Of course I do'", 'based on', "'Of course I do'")
+('Leave go of me', 'has part', 'bite!')
+('bite!', 'part of', 'Leave go of me')
+('I really will', 'said to be the same as', 'I mean it')
+('I mean it', 'said to be the same as', 'I really will')
+('World War I', 'followed by', 'World War II')
+('World War II', 'follows', 'World War I')
+('Anthea', 'spouse', 'Anthea')
+('Anthea', 'spouse', 'Anthea')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
+("A Midsummer Night's Dream", 'author', 'William Shakespeare')
+('Psammead', 'significant event', 'Much moved')
+('Much moved', 'location', 'Psammead')
+("I'd do anything", 'instance of', 'song')
+("I'd almost burst myself to give you one wish after another, as long as I held out", 'followed by', 'to-day')
+('to-day', 'follows', "I'd almost burst myself to give you one wish after another, as long as I held out")
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Cymbeline', 'author')
+('William Shakespeare', 'Cymbeline', 'author')
+('Wake up every morning', 'said to be the same as', "know you've GOT to do it")
+("know you've GOT to do it", 'said to be the same as', 'wake up every morning')
+("Don't know what it is", 'different from', "Don't know what it is")
+("Don't know what it is", 'different from', "Don't know what it is")
+("Don't know what it is", 'different from', "Don't know what it is")
+("Don't", 'instance of', 'squeak')
+('Anthea', 'spouse', 'John F. Kennedy')
+('John F. Kennedy', 'spouse', 'Anthea')
+('World War II', 'follows', 'World War I')
+('World War I', 'followed by', 'World War II')
+('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
+("A Midsummer Night's Dream", 'author', 'William Shakespeare')
+('Psammead', 'has part', 'Psammead')
+('Psammead', 'part of', 'Psammead')
+('How many can you do', 'instance of', 'song')
+("I don't know", 'said to be the same as', 'long as I can hold out')
+('long as I can hold out', 'said to be the same as', "I don't know")
+('long as I can hold out', 'long as I can hold out', 'said to be the same as')
+("I don't know", 'long as I can hold out', 'said to be the same as')
+('said to be the same as', 'long as I can hold out', 'long as I can hold out')
+('Lady Chittenden', 'owner of', 'her jewels')
+('her jewels', 'owned by', 'Lady Chittenden')
+('Psammead', 'instance of', 'collapsed')
+('Mother', 'spouse', 'father')
+('father', 'spouse', 'Mother')
+('the proper interval', 'said to be the same as', 'Done')
+('Done', 'said to be the same as', 'the proper interval')
+('Jane', 'mother', 'mother')
+('mother', 'child', 'Jane')
+
+
+LLM input:
+Here are some semantic triples extracted from a story chunk:
+[("'Of course I do'", 'derivative work', "'Of course I do'"), ("'Of course I do'", 'based on', "'Of course I do'"), ('Leave go of me', 'has part', 'bite!'), ('bite!', 'part of', 'Leave go of me'), ('I really will', 'said to be the same as', 'I mean it'), ('I mean it', 'said to be the same as', 'I really will'), ('World War I', 'followed by', 'World War II'), ('World War II', 'follows', 'World War I'), ('Anthea', 'spouse', 'Anthea'), ('Anthea', 'spouse', 'Anthea'), ('John Milton', 'notable work', 'Paradise Lost'), ('Paradise Lost', 'Paradise Lost', 'notable work'), ('John Milton', 'Milton', 'author'), ('author', 'Paradise Lost', 'Milton'), ('notable work', 'notable work', 'Paradise Lost'), ('Paradise Lost', 'author', 'John Milton'), ('William Shakespeare', 'notable work', "A Midsummer Night's Dream"), ("A Midsummer Night's Dream", 'author', 'William Shakespeare'), ('Psammead', 'significant event', 'Much moved'), ('Much moved', 'location', 'Psammead'), ("I'd do anything", 'instance of', 'song'), ("I'd almost burst myself to give you one wish after another, as long as I held out", 'followed by', 'to-day'), ('to-day', 'follows', "I'd almost burst myself to give you one wish after another, as long as I held out"), ('William Shakespeare', 'notable work', 'Cymbeline'), ('Cymbeline', 'Cymbeline', 'notable work'), ('William Shakespeare', 'Cymbeline', 'author'), ('William Shakespeare', 'Cymbeline', 'author'), ('Wake up every morning', 'said to be the same as', "know you've GOT to do it"), ("know you've GOT to do it", 'said to be the same as', 'wake up every morning'), ("Don't know what it is", 'different from', "Don't know what it is"), ("Don't know what it is", 'different from', "Don't know what it is"), ("Don't know what it is", 'different from', "Don't know what it is"), ("Don't", 'instance of', 'squeak'), ('Anthea', 'spouse', 'John F. Kennedy'), ('John F. Kennedy', 'spouse', 'Anthea'), ('World War II', 'follows', 'World War I'), ('World War I', 'followed by', 'World War II'), ('William Shakespeare', 'notable work', "A Midsummer Night's Dream"), ("A Midsummer Night's Dream", 'author', 'William Shakespeare'), ('Psammead', 'has part', 'Psammead'), ('Psammead', 'part of', 'Psammead'), ('How many can you do', 'instance of', 'song'), ("I don't know", 'said to be the same as', 'long as I can hold out'), ('long as I can hold out', 'said to be the same as', "I don't know"), ('long as I can hold out', 'long as I can hold out', 'said to be the same as'), ("I don't know", 'long as I can hold out', 'said to be the same as'), ('said to be the same as', 'long as I can hold out', 'long as I can hold out'), ('Lady Chittenden', 'owner of', 'her jewels'), ('her jewels', 'owned by', 'Lady Chittenden'), ('Psammead', 'instance of', 'collapsed'), ('Mother', 'spouse', 'father'), ('father', 'spouse', 'Mother'), ('the proper interval', 'said to be the same as', 'Done'), ('Done', 'said to be the same as', 'the proper interval'), ('Jane', 'mother', 'mother'), ('mother', 'child', 'Jane')]
+And here is the original text:
+'Of course I do,' it said. 'Leave go of me or I'll bite! - I really will - I mean it. Oh, well, if you choose to risk it.'
+Anthea risked it and held on.
+'Look here,' she said, 'don't bite me - listen to reason. If you'll only do what we want to-day, we'll never ask you for another wish as long as we live.'
+The Psammead was much moved.
+'I'd do anything,' it said in a tearful voice. 'I'd almost burst myself to give you one wish after another, as long as I held out, if you'd only never, never ask me to do it after to-day. If you knew how I hate to blow myself out with other people's wishes, and how frightened I am always that I shall strain a muscle or something. And then to wake up every morning and know you've GOT to do it. You don't know what it is - you don't know what it is, you don't!' Its voice cracked with emotion, and the last 'don't' was a squeak.
+Anthea set it down gently on the sand.
+'It's all over now,' she said soothingly. 'We promise faithfully never to ask for another wish after to-day.' 'Well, go ahead,' said the Psammead; 'let's get it over.'
+'How many can you do?'
+'I don't know - as long as I can hold out.'
+'Well, first, I wish Lady Chittenden may find she's never lost her jewels.'
+The Psammead blew itself out, collapsed, and said, 'Done.'
+'I wish, said Anthea more slowly, 'mother mayn't get to the police.'
+'Done,' said the creature after the proper interval.
+'I wish,' said Jane suddenly, 'mother could forget all about the diamonds.'
+
+Output JSON with keys: s (subject), r (relation), o (object).
+Remove nonsensical triples, and add new ones to encapsulate events, dialogue, and core meaning.
+
+LLM output:
+[
+  {"s": "Psammead", "r": "said", "o": "Of course I do"},
+  {"s": "Anthea", "r": "spoke to", "o": "Psammead: don't bite me; listen to reason"},
+  {"s": "Anthea", "r": "held onto", "o": "the Psammead"},
+  {"s": "Anthea", "r": "promised", "o": "If you do what we want today, we'll never ask for another wish as long as we live"},
+  {"s": "Psammead", "r": "was moved", "o": "by Anthea's plea"},
+  {"s": "Psammead", "r": "said", "o": "I'd do anything"},
+  {"s": "Psammead", "r": "said", "o": "I'd almost burst myself to give you one wish after another, as long as I held out"},
+  {"s": "Psammead", "r": "explained", "o": "I hate to grant other people's wishes and I'm afraid I'll strain a muscle"},
+  {"s": "Psammead", "r": "described", "o": "waking up every morning and knowing you've got to do it"},
+  {"s": "Anthea", "r": "set down", "o": "the Psammead on the sand"},
+  {"s": "Anthea", "r": "promised", "o": "never to ask for another wish after today"},
+  {"s": "Psammead", "r": "urged", "o": "Let's get it over"},
+  {"s": "Anthea", "r": "asked", "o": "How many can you do?"},
+  {"s": "Psammead", "r": "replied", "o": "I don't know— as long as I can hold out"},
+  {"s": "Anthea", "r": "made a wish", "o": "Lady Chittenden may find she's never lost her jewels"},
+  {"s": "Psammead", "r": "blew out", "o": "and collapsed"},
+  {"s": "Psammead", "r": "said", "o": "Done"},
+  {"s": "Anthea", "r": "made a wish", "o": "Mother mayn't get to the police"},
+  {"s": "Jane", "r": "made a wish", "o": "Mother could forget all about the diamonds"}
+]
+
+==================================================
+
+
+Chunk details:
+  [172] Chunk(len=1272, book=1, chapter=20, story=1, lines=[4856,4879], story%=90.584, chapter%=92.363)
+
+'Cheated of our just and fiery revenge are we,' the chant went on - 'but there are other torments than the scalping-knife and the flames. Yet is the slow fire the correct thing. O strange unnatural country, wherein a man may find no wood to burn his enemy! - Ah, for the boundless forests of my native land, where the great trees for thousands of miles grow but to furnish firewood wherewithal to burn our foes. Ah, would we were but in our native forest once more!'
+Suddenly, like a flash of lightning, the golden gravel shone all round the four children instead of the dusky figures. For every single Indian had vanished on the instant at their leader's word. The Psammead must have been there all the time. And it had given the Indian chief his wish.
+Martha brought home a jug with a pattern of storks and long grasses on it. Also she brought back all Anthea's money.
+'My cousin, she give me the jug for luck; she said it was an odd one what the basin of had got smashed.'
+'Oh, Martha, you arc a dear!' sighed Anthea, throwing her arms round her.
+'Yes,' giggled Martha, 'you'd better make the most of me while you've got me. I shall give your ma notice directly minute she comes back.'
+'Oh, Martha, we haven't been so very horrid to you, have we?' asked Anthea, aghast.
+
+NLP output:
+('John F. Kennedy', 'significant event', 'assassinated')
+('assassinated', 'facet of', 'John F. Kennedy')
+('slow fire', 'said to be the same as', 'correct thing')
+('correct thing', 'said to be the same as', 'slow fire')
+('O strange unnatural country', 'instance of', 'strange')
+('forests', 'has parts of the class', 'trees')
+('trees', 'part of', 'forests')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('flash of lightning', 'opposite of', 'dusky figures')
+('dusky figures', 'opposite of', 'flash of lightning')
+('India', 'diplomatic relation', 'Bangladesh')
+('Bangladesh', 'diplomatic relation', 'India')
+('Pisa', 'country', 'Italy')
+('Italy', 'capital', 'Pisa')
+('India', 'office held by head of government', 'chief')
+('chief', 'country', 'India')
+('George III', 'spouse', 'Queen Elizabeth II')
+('Queen Elizabeth II', 'spouse', 'George III')
+('Anthea', 'owner of', "Anthea's money")
+("Anthea's money", 'owned by', 'Anthea')
+('My cousin', 'spouse', 'my uncle')
+('my uncle', 'spouse', 'My cousin')
+('Martha', 'notable work', 'Oh, Martha, you arc a dear')
+('Oh, Martha, you arc a dear', 'author', 'Martha')
+('Anthea', 'spouse', 'George VI')
+('George VI', 'spouse', 'Anthea')
+('Martha', 'spouse', 'George VI')
+('George VI', 'spouse', 'Martha')
+('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
+("A Midsummer Night's Dream", 'author', 'William Shakespeare')
+("Oh, Martha, we haven't been so very horrid to you, have we?'", 'characters', 'Martha')
+('Anthea', 'subject has role', 'aghast')
+
+
+LLM input:
+Here are some semantic triples extracted from a story chunk:
+[('John F. Kennedy', 'significant event', 'assassinated'), ('assassinated', 'facet of', 'John F. Kennedy'), ('slow fire', 'said to be the same as', 'correct thing'), ('correct thing', 'said to be the same as', 'slow fire'), ('O strange unnatural country', 'instance of', 'strange'), ('forests', 'has parts of the class', 'trees'), ('trees', 'part of', 'forests'), ('William Shakespeare', 'notable work', 'Cymbeline'), ('Cymbeline', 'author', 'William Shakespeare'), ('flash of lightning', 'opposite of', 'dusky figures'), ('dusky figures', 'opposite of', 'flash of lightning'), ('India', 'diplomatic relation', 'Bangladesh'), ('Bangladesh', 'diplomatic relation', 'India'), ('Pisa', 'country', 'Italy'), ('Italy', 'capital', 'Pisa'), ('India', 'office held by head of government', 'chief'), ('chief', 'country', 'India'), ('George III', 'spouse', 'Queen Elizabeth II'), ('Queen Elizabeth II', 'spouse', 'George III'), ('Anthea', 'owner of', "Anthea's money"), ("Anthea's money", 'owned by', 'Anthea'), ('My cousin', 'spouse', 'my uncle'), ('my uncle', 'spouse', 'My cousin'), ('Martha', 'notable work', 'Oh, Martha, you arc a dear'), ('Oh, Martha, you arc a dear', 'author', 'Martha'), ('Anthea', 'spouse', 'George VI'), ('George VI', 'spouse', 'Anthea'), ('Martha', 'spouse', 'George VI'), ('George VI', 'spouse', 'Martha'), ('William Shakespeare', 'notable work', "A Midsummer Night's Dream"), ("A Midsummer Night's Dream", 'author', 'William Shakespeare'), ("Oh, Martha, we haven't been so very horrid to you, have we?'", 'characters', 'Martha'), ('Anthea', 'subject has role', 'aghast')]
+And here is the original text:
+'Cheated of our just and fiery revenge are we,' the chant went on - 'but there are other torments than the scalping-knife and the flames. Yet is the slow fire the correct thing. O strange unnatural country, wherein a man may find no wood to burn his enemy! - Ah, for the boundless forests of my native land, where the great trees for thousands of miles grow but to furnish firewood wherewithal to burn our foes. Ah, would we were but in our native forest once more!'
+Suddenly, like a flash of lightning, the golden gravel shone all round the four children instead of the dusky figures. For every single Indian had vanished on the instant at their leader's word. The Psammead must have been there all the time. And it had given the Indian chief his wish.
+Martha brought home a jug with a pattern of storks and long grasses on it. Also she brought back all Anthea's money.
+'My cousin, she give me the jug for luck; she said it was an odd one what the basin of had got smashed.'
+'Oh, Martha, you arc a dear!' sighed Anthea, throwing her arms round her.
+'Yes,' giggled Martha, 'you'd better make the most of me while you've got me. I shall give your ma notice directly minute she comes back.'
+'Oh, Martha, we haven't been so very horrid to you, have we?' asked Anthea, aghast.
+
+Output JSON with keys: s (subject), r (relation), o (object).
+Remove nonsensical triples, and add new ones to encapsulate events, dialogue, and core meaning.
+
+LLM output:
+[
+  {"s": "the slow fire", "r": "is described as", "o": "the correct thing"},
+  {"s": "the four children", "r": "experienced", "o": "a sudden golden glow around them and the Indians vanished"},
+  {"s": "the Psammead", "r": "granted", "o": "the Indian chief's wish"},
+  {"s": "the Indian chief", "r": "received", "o": "a wish granted by the Psammead"},
+  {"s": "Indians", "r": "vanished", "o": "instantly at their leader's word"},
+  {"s": "Martha", "r": "brought home", "o": "a jug with a pattern of storks and long grasses"},
+  {"s": "Martha", "r": "brought back", "o": "Anthea's money"},
+  {"s": "My cousin", "r": "gave", "o": "Martha the jug for luck"},
+  {"s": "My cousin", "r": "said", "o": "the jug was odd because its basin had been smashed"},
+  {"s": "Anthea", "r": "expressed", "o": "affection to Martha: 'Oh, Martha, you are a dear!'" },
+  {"s": "Martha", "r": "giggled", "o": "that Anthea should make the most of her while she has her"},
+  {"s": "Martha", "r": "promised", "o": "to tell Anthea's mother when she returns"},
+  {"s": "Anthea", "r": "asked", "o": "Martha whether they had not been horrid"}
+]
+
+==================================================
+
+
+Chunk details:
+  [31] Chunk(len=1201, book=1, chapter=7, story=1, lines=[760,781], story%=16.617, chapter%=19.558)
+
+So they did, and presently uncovered the spider-shaped brown hairy body, long arms and legs, bat's ears and snail's eyes of the Sand-fairy himself. Everyone drew a deep breath of satisfaction, for now of course it couldn't have been a dream.
+The Psammead sat up and shook the sand out of its fur.
+'How's your left whisker this morning?' said Anthea politely.
+'Nothing to boast of,' said it, 'it had rather a restless night. But thank you for asking.'
+'I say,' said Robert, 'do you feel up to giving wishes to-day, because we very much want an extra besides the regular one? The extra's a very little one,' he added reassuringly.
+'Humph!' said the Sand-fairy. (If you read this story aloud, please pronounce 'humph' exactly as it is spelt, for that is how he said it.) 'Humph! Do you know, until I heard you being disagreeable to each other just over my head, and so loud too, I really quite thought I had dreamed you all. I do have very odd dreams sometimes.'
+'Do you?'Jane hurried to say, so as to get away from the subject of disagreeableness. 'I wish,' she added politely, 'you'd tell us about your dreams - they must be awfully interesting.'
+'Is that the day's wish?' said the Sand-fairy, yawning.
+
+NLP output:
+('spider', 'has part', 'long arms and legs')
+('long arms and legs', 'part of', 'spider')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Psammead', 'has parts of the class', 'fur')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Anthea', 'spouse', 'Anthea')
+('Anthea', 'spouse', 'Anthea')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('Thank you for asking', 'followed by', 'Thank you for asking')
+('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
+("A Midsummer Night's Dream", 'author', 'William Shakespeare')
+('2008 Summer Olympics', 'point in time', '2008')
+('Beijing', "People's Republic of China", 'location')
+('country', "People's Republic of China", 'Beijing')
+('country', 'Beijing', "People's Republic of China")
+('Humph!', 'author', 'Humph.')
+('Sand-fairy', 'said to be the same as', 'Sand-fairy')
+('Sand-fairy', 'said to be the same as', 'Sand-fairy')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('John F. Kennedy', 'position held', 'President')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Paradise Lost', 'author')
+('odd dreams', 'subclass of', 'dream')
+('Jane', 'spouse', 'Harold Wilson')
+('Harold Wilson', 'spouse', 'Jane')
+('Dream', 'subclass of', 'dream')
+("Is that the day's wish?", 'instance of', "day's wish")
+('Sand-fairy', 'instance of', 'yawning')
+
+
+LLM input:
+Here are some semantic triples extracted from a story chunk:
+[('spider', 'has part', 'long arms and legs'), ('long arms and legs', 'part of', 'spider'), ('John F. Kennedy School of Government', 'part of', 'Harvard University'), ('Psammead', 'has parts of the class', 'fur'), ('John F. Kennedy School of Government', 'part of', 'Harvard University'), ('Anthea', 'spouse', 'Anthea'), ('Anthea', 'spouse', 'Anthea'), ('William Shakespeare', 'notable work', 'Cymbeline'), ('Cymbeline', 'author', 'William Shakespeare'), ('Thank you for asking', 'followed by', 'Thank you for asking'), ('William Shakespeare', 'notable work', "A Midsummer Night's Dream"), ("A Midsummer Night's Dream", 'author', 'William Shakespeare'), ('2008 Summer Olympics', 'point in time', '2008'), ('Beijing', "People's Republic of China", 'location'), ('country', "People's Republic of China", 'Beijing'), ('country', 'Beijing', "People's Republic of China"), ('Humph!', 'author', 'Humph.'), ('Sand-fairy', 'said to be the same as', 'Sand-fairy'), ('Sand-fairy', 'said to be the same as', 'Sand-fairy'), ('John Milton', 'notable work', 'Paradise Lost'), ('Paradise Lost', 'author', 'John Milton'), ('John F. Kennedy', 'position held', 'President'), ('John Milton', 'notable work', 'Paradise Lost'), ('Paradise Lost', 'Paradise Lost', 'notable work'), ('John Milton', 'Paradise Lost', 'author'), ('odd dreams', 'subclass of', 'dream'), ('Jane', 'spouse', 'Harold Wilson'), ('Harold Wilson', 'spouse', 'Jane'), ('Dream', 'subclass of', 'dream'), ("Is that the day's wish?", 'instance of', "day's wish"), ('Sand-fairy', 'instance of', 'yawning')]
+And here is the original text:
+So they did, and presently uncovered the spider-shaped brown hairy body, long arms and legs, bat's ears and snail's eyes of the Sand-fairy himself. Everyone drew a deep breath of satisfaction, for now of course it couldn't have been a dream.
+The Psammead sat up and shook the sand out of its fur.
+'How's your left whisker this morning?' said Anthea politely.
+'Nothing to boast of,' said it, 'it had rather a restless night. But thank you for asking.'
+'I say,' said Robert, 'do you feel up to giving wishes to-day, because we very much want an extra besides the regular one? The extra's a very little one,' he added reassuringly.
+'Humph!' said the Sand-fairy. (If you read this story aloud, please pronounce 'humph' exactly as it is spelt, for that is how he said it.) 'Humph! Do you know, until I heard you being disagreeable to each other just over my head, and so loud too, I really quite thought I had dreamed you all. I do have very odd dreams sometimes.'
+'Do you?'Jane hurried to say, so as to get away from the subject of disagreeableness. 'I wish,' she added politely, 'you'd tell us about your dreams - they must be awfully interesting.'
+'Is that the day's wish?' said the Sand-fairy, yawning.
+
+Output JSON with keys: s (subject), r (relation), o (object).
+Remove nonsensical triples, and add new ones to encapsulate events, dialogue, and core meaning.
+
+LLM output:
+[
+  {"s":"Sand-fairy","r":"has part","o":"spider-shaped brown hairy body"},
+  {"s":"Sand-fairy","r":"has part","o":"long arms and legs"},
+  {"s":"Sand-fairy","r":"has part","o":"bat's ears"},
+  {"s":"Sand-fairy","r":"has part","o":"snail's eyes"},
+  {"s":"Psammead","r":"has part","o":"fur"},
+  {"s":"Anthea","r":"spoke to","o":"Sand-fairy: How's your left whisker this morning?"},
+  {"s":"Psammead","r":"said","o":"Nothing to boast of; it had rather a restless night. But thank you for asking."},
+  {"s":"Robert","r":"asked","o":"Do you feel up to giving wishes today? We want an extra besides the regular one."},
+  {"s":"Sand-fairy","r":"said","o":"Humph!"},
+  {"s":"Sand-fairy","r":"said","o":"Is that the day's wish?"},
+  {"s":"Jane","r":"spoke to","o":"I wish you'd tell us about your dreams – they must be awfully interesting."},
+  {"s":"Sand-fairy","r":"stated","o":"I really thought I had dreamed you all; I do have very odd dreams sometimes."},
+  {"s":"Narrator","r":"stated","o":"It couldn't have been a dream."}
+]
+
+==================================================
+
+
+Chunk details:
+  [113] Chunk(len=1491, book=1, chapter=16, story=1, lines=[3417,3443], story%=59.401, chapter%=77.296)
+
+'How idiotic,' said Robert, lying flat on the floor and putting one eye to the lead hole. 'Of course the holes go straight down into the gate-house - that's for when the enemy has got past the door and the portcullis, and almost all is lost. Here, hand me the pot.' He crawled on to the three-cornered window-ledge in the middle of the wall, and, taking the pot from Anthea, poured the water out through the arrow-slit.
+And as he began to pour, the noise of the battering-ram and the trampling of the foe and the shouts of 'Surrender!' and 'De Talbot for ever!' all suddenly stopped and went out like the snuff of a candle; the little dark room seemed to whirl round and turn topsy-turvy, and when the children came to themselves there they were safe and sound, in the big front bedroom of their own house - the house with the ornamental nightmare iron-top to the roof.
+They all crowded to the window and looked out. The moat and the tents and the besieging force were all gone - and there was the garden with its tangle of dahlias and marigolds and asters and late roses, and the spiky iron railings and the quiet white road.
+Everyone drew a deep breath.
+'And that's all right!' said Robert. 'I told you so! And, I say, we didn't surrender, did we?'
+'Aren't you glad now I wished for a castle?' asked Cyril.
+'I think I am NOW,' said Anthea slowly. 'But I wouldn't wish for it again, I think, Squirrel dear!'
+'Oh, it was simply splendid!' said Jane unexpectedly. 'I wasn't frightened a bit.'
+
+NLP output:
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('portcullis', 'part of', 'gate-house')
+('Hand me the pot', 'instance of', 'pot')
+('three-cornered window-ledge', 'part of', 'wall')
+('wall', 'has part', 'three-cornered window-ledge')
+('Surrender', 'uses', 'battering-ram')
+('De Talbot', 'has part', 'De Talbot for ever')
+('De Talbot for ever', 'part of', 'De Talbot')
+('Nightmare iron-top', 'instance of', 'ornamental')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+("The Queen's Own Guard", 'part of', 'Royal Horseguards')
+('Royal Horseguards', 'Royal Horseguards', 'part of')
+("The Queen's Own Guard", 'Royal Horseguards', 'has part')
+('has part', "The Queen's Own Guard", 'Royal Horseguards')
+('has part', 'has part', 'Royal Horseguards')
+('Royal Horseguards', 'has part', "The Queen's Own Guard")
+('Royal Horseguards', 'Royal Horseguards', 'has part')
+("The Queen's Own Guard", 'Royal Horseguards', 'has part')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'George Orwell')
+("that's all right", 'said to be the same as', "And that's all right")
+("And that's all right", 'said to be the same as', "that's all right")
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+("I say, we didn't surrender, did we?'", 'facet of', "I say, we didn't surrender, did we?'")
+('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
+("A Midsummer Night's Dream", 'author', 'William Shakespeare')
+('Cyril', 'present in work', 'Cyril')
+('I think I am NOW', 'performer', 'Anthea')
+('I think, Squirrel dear', 'present in work', 'I think, I think, Squirrel dear')
+('I think, I think, Squirrel dear', 'characters', 'I think, Squirrel dear')
+('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
+("A Midsummer Night's Dream", 'author', 'William Shakespeare')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'George Orwell')
+("I wasn't frightened a bit", 'said to be the same as', "I wasn't frightened a bit")
+("I wasn't frightened a bit", 'said to be the same as', "I wasn't frightened a bit")
+
+
+LLM input:
+Here are some semantic triples extracted from a story chunk:
+[('George Orwell', 'notable work', 'Nineteen Eighty-Four'), ('Nineteen Eighty-Four', 'author', 'Orwell'), ('portcullis', 'part of', 'gate-house'), ('Hand me the pot', 'instance of', 'pot'), ('three-cornered window-ledge', 'part of', 'wall'), ('wall', 'has part', 'three-cornered window-ledge'), ('Surrender', 'uses', 'battering-ram'), ('De Talbot', 'has part', 'De Talbot for ever'), ('De Talbot for ever', 'part of', 'De Talbot'), ('Nightmare iron-top', 'instance of', 'ornamental'), ('William Shakespeare', 'notable work', 'Cymbeline'), ('Cymbeline', 'author', 'William Shakespeare'), ("The Queen's Own Guard", 'part of', 'Royal Horseguards'), ('Royal Horseguards', 'Royal Horseguards', 'part of'), ("The Queen's Own Guard", 'Royal Horseguards', 'has part'), ('has part', "The Queen's Own Guard", 'Royal Horseguards'), ('has part', 'has part', 'Royal Horseguards'), ('Royal Horseguards', 'has part', "The Queen's Own Guard"), ('Royal Horseguards', 'Royal Horseguards', 'has part'), ("The Queen's Own Guard", 'Royal Horseguards', 'has part'), ('George Orwell', 'notable work', 'Nineteen Eighty-Four'), ('Nineteen Eighty-Four', 'author', 'George Orwell'), ("that's all right", 'said to be the same as', "And that's all right"), ("And that's all right", 'said to be the same as', "that's all right"), ('William Shakespeare', 'notable work', 'Cymbeline'), ('Cymbeline', 'author', 'William Shakespeare'), ('John F. Kennedy School of Government', 'part of', 'Harvard University'), ("I say, we didn't surrender, did we?'", 'facet of', "I say, we didn't surrender, did we?'"), ('William Shakespeare', 'notable work', "A Midsummer Night's Dream"), ("A Midsummer Night's Dream", 'author', 'William Shakespeare'), ('Cyril', 'present in work', 'Cyril'), ('I think I am NOW', 'performer', 'Anthea'), ('I think, Squirrel dear', 'present in work', 'I think, I think, Squirrel dear'), ('I think, I think, Squirrel dear', 'characters', 'I think, Squirrel dear'), ('William Shakespeare', 'notable work', "A Midsummer Night's Dream"), ("A Midsummer Night's Dream", 'author', 'William Shakespeare'), ('George Orwell', 'notable work', 'Nineteen Eighty-Four'), ('Nineteen Eighty-Four', 'author', 'George Orwell'), ("I wasn't frightened a bit", 'said to be the same as', "I wasn't frightened a bit"), ("I wasn't frightened a bit", 'said to be the same as', "I wasn't frightened a bit")]
+And here is the original text:
+'How idiotic,' said Robert, lying flat on the floor and putting one eye to the lead hole. 'Of course the holes go straight down into the gate-house - that's for when the enemy has got past the door and the portcullis, and almost all is lost. Here, hand me the pot.' He crawled on to the three-cornered window-ledge in the middle of the wall, and, taking the pot from Anthea, poured the water out through the arrow-slit.
+And as he began to pour, the noise of the battering-ram and the trampling of the foe and the shouts of 'Surrender!' and 'De Talbot for ever!' all suddenly stopped and went out like the snuff of a candle; the little dark room seemed to whirl round and turn topsy-turvy, and when the children came to themselves there they were safe and sound, in the big front bedroom of their own house - the house with the ornamental nightmare iron-top to the roof.
+They all crowded to the window and looked out. The moat and the tents and the besieging force were all gone - and there was the garden with its tangle of dahlias and marigolds and asters and late roses, and the spiky iron railings and the quiet white road.
+Everyone drew a deep breath.
+'And that's all right!' said Robert. 'I told you so! And, I say, we didn't surrender, did we?'
+'Aren't you glad now I wished for a castle?' asked Cyril.
+'I think I am NOW,' said Anthea slowly. 'But I wouldn't wish for it again, I think, Squirrel dear!'
+'Oh, it was simply splendid!' said Jane unexpectedly. 'I wasn't frightened a bit.'
+
+Output JSON with keys: s (subject), r (relation), o (object).
+Remove nonsensical triples, and add new ones to encapsulate events, dialogue, and core meaning.
+
+LLM output:
+[
+  {"s":"portcullis","r":"is part of","o":"gate-house"},
+  {"s":"three-cornered window-ledge","r":"is part of","o":"wall"},
+  {"s":"holes","r":"lead into","o":"gate-house"},
+  {"s":"enemy","r":"has got past","o":"the door and the portcullis"},
+  {"s":"Robert","r":"asks for","o":"the pot"},
+  {"s":"pot","r":"contains","o":"water"},
+  {"s":"water","r":"is poured through","o":"arrow-slit"},
+  {"s":"foe","r":"uses","o":"battering-ram"},
+  {"s":"foe","r":"shouts","o":"Surrender!"},
+  {"s":"foe","r":"shouts","o":"De Talbot for ever"},
+  {"s":"children","r":"are","o":"safe and sound in the big front bedroom of their own house"},
+  {"s":"house","r":"has","o":"ornamental nightmare iron-top to the roof"},
+  {"s":"garden","r":"contains","o":"dahlias, marigolds, asters and late roses"},
+  {"s":"garden","r":"has","o":"spiky iron railings"},
+  {"s":"garden","r":"is adjacent to","o":"quiet white road"},
+  {"s":"Robert","r":"says","o":"That's all right!"},
+  {"s":"Robert","r":"claims","o":"we didn't surrender, did we?"},
+  {"s":"Cyril","r":"asks","o":"Aren't you glad now I wished for a castle?"},
+  {"s":"Anthea","r":"says","o":"I think I am NOW"},
+  {"s":"Anthea","r":"says","o":"But I wouldn't wish for it again, I think, Squirrel dear!"},
+  {"s":"Jane","r":"exclaims","o":"Oh, it was simply splendid!"},
+  {"s":"Jane","r":"says","o":"I wasn't frightened a bit"}
+]
+
+==================================================
 
