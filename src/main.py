@@ -217,23 +217,28 @@ def process_single():
     print(f"Total chunks: {len(chunks)}")
 
     print("\n=== NLP EXTRACTION SAMPLE ===")
-    nlp = RelationExtractor(model_name="Babelscape/rebel-large", max_tokens=1024)
+    re_rebel = "Babelscape/rebel-large"
+    re_rst = "GAIR/rst-information-extraction-11b"
+    ner_renard = "compnet-renard/bert-base-cased-literary-NER"
+
+    nlp = RelationExtractor(model_name=re_rebel, max_tokens=1024)
     llm = LLMConnector(temperature=0, system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON.")
 
-    unique_numbers = random.sample(range(len(chunks)), 2)
+    unique_numbers = random.sample(range(len(chunks)), 5)
     for i in unique_numbers:
         c = chunks[i]
         print("\nChunk details:")
         print(f"  [{i}] {c}\n")
         print(c.text)
 
-        extracted = nlp.extract(c, parse_tuples = False)
-        print(f"\nREBEL output:")
-        print(extracted)
+        extracted = nlp.extract(c.text, parse_tuples = False)
+        print(f"\nNLP output:")
+        for triple in extracted:
+            print(triple)
         print()
 
-        human_prompt = f"Here are some semantic triples extracted from a story chunk:\n{extracted}\nConvert them into JSON with keys: subject, relation, object."
-        llm_output = llm.execute_query(human_prompt)
+        prompt = f"Here are some semantic triples extracted from a story chunk:\n{extracted}\nConvert them into JSON with keys: subject, relation, object."
+        llm_output = llm.execute_query(prompt)
 
         print("\nLLM input:")
         print(f"    System prompt: {system_prompt}")

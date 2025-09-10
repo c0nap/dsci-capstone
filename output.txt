@@ -8,17 +8,28 @@ Total chunks: 191
 === NLP EXTRACTION SAMPLE ===
 
 Chunk details:
-  [24] Chunk(len=1347, book=1, chapter=6, story=1, lines=[587,610], story%=12.753, chapter%=90.607)
+  [92] Chunk(len=1463, book=1, chapter=15, story=1, lines=[2879,2903], story%=47.430, chapter%=32.429)
 
-The others said 'No,' but they weren't at all comforted.
-Another silence, longer and more miserable, was broken by Cyril's suddenly saying, 'I don't want to frighten you girls, but I believe it's beginning with me already. My foot's quite dead. I'm turning to stone, I know I am, and so will you in a minute.'
-'Never mind,' said Robert kindly, 'perhaps you'll be the only stone one, and the rest of us will be all right, and we'll cherish your statue and hang garlands on it.'
-But when it turned out that Cyril's foot had only gone to sleep through his sitting too long with it under him, and when it came to life in an agony of pins and needles, the others were quite cross.
-'Giving us such a fright for nothing!' said Anthea.
-The third and miserablest silence of all was broken by Jane. She said: 'If we DO come out of this all right, we'll ask the Sammyadd to make it so that the servants don't notice anything different, no matter what wishes we have.'
-The others only grunted. They were too wretched even to make good resolutions.
-At last hunger and fright and crossness and tiredness - four very nasty things - all joined together to bring one nice thing, and that was sleep. The children lay asleep in a row, with their beautiful eyes shut and their beautiful mouths open. Anthea woke first. The sun had set, and the twilight was coming on.
+The leader was the most glorious creature Robert had ever seen. He was exactly like the pictures Robert had so often admired in the historical romances. He had armour, and a helmet, and a horse, and a crest, and feathers, and a shield, and a lance, and a sword. His armour and his weapons were all, I am almost sure, of quite different periods. The shield was thirteenth-century, while the sword was of the pattern used in the Peninsular War. The cuirass was of the time of Charles I, and the helmet dated from the Second Crusade. The arms on the shield were very grand - three red running lions on a blue ground. The tents were of the latest brand and the whole appearance of camp, army, and leader might have been a shock to some. But Robert was dumb with admiration, and it all seemed to him perfectly correct, because he knew no more of heraldry or archaeology than the gifted artists who usually drew the pictures for the historical romances. The scene was indeed 'exactly like a picture'. He admired it all so much that he felt braver than ever.
+'Come hither, lad,' said the glorious leader, when the men in Cromwellian steel-caps had said a few low eager words. And he took off his helmet, because he could not see properly with it on. He had a kind face, and long fair hair. 'Have no fear; thou shalt take no scathe,' he said.
+Robert was glad of that. He wondered what 'scathe' was, and if it was nastier than the senna tea which he had to take sometimes.
 
-REBEL output:
- Anthea  Jane  sibling  Jane  Anthea  sibling
+NLP output:
+ leader  Robert  child  Robert  leader  father
+ Robert  historical romances  genre
+ shield  armour  subclass of
+ armour  weapons  different from  weapons  armour  different from
+ pattern  Peninsular War  conflict
+ Charles I  Second Crusade  conflict
+ shield  arms  subclass of
+ camp  army  part of  army  camp  has part
+ heraldry  archaeology  part of
+ picture  picture  depicts
+ William Shakespeare  Cymbeline  notable work  Cymbeline  William Shakespeare  author
+ Cromwellian  steel-caps  owner of  steel-caps  Cromwellian  owned by
+ World Championships in Athletics  1936  point in time  1936  point in time  1936  1936  point in time  1936  point in time
+ Fair  face  subclass of
+ Have no fear  scathe  opposite of  scathe  Have no fear  opposite of
+ Robert was glad of that.  Robert  child  Robert  Robert was glad of that.  father
+ senna tea  scathe  instance of
 

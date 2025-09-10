@@ -2,6 +2,10 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import re
 import os
 from dotenv import load_dotenv
+import spacy
+
+nlp = spacy.blank("en")  # blank English model, no pipeline
+sentencizer = nlp.add_pipe("sentencizer")
 
 ## Read environment variables at runtime
 load_dotenv(".env")
@@ -12,16 +16,34 @@ class RelationExtractor:
 		self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 		self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 		self.max_tokens = max_tokens
+		self.tuple_delim = "  "
 
-	def extract(self, chunk, parse_tuples: bool = False):
-		text = chunk.text.replace("\n", " ").strip()
-		inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=self.max_tokens)
-		outputs = self.model.generate(**inputs)
-		decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-		if not parse_tuples:
-			return decoded  # raw REBEL text: 'subj[rel]obj'
-		pattern = r'(.+?)\[(.+?)\](.+?)'
-		return [tuple(m.groups()) for m in re.finditer(pattern, decoded)]
+	def extract(self, text :str, parse_tuples: bool = False):
+		# Split into sentences: RE models generally output 1 relation per input.
+		text = text.replace("\n", " ").strip()
+		doc = nlp(text)
+		sentences = [sent.text for sent in doc.sents]
+
+		# Perform RE on each sentence individually
+		out = []
+		for sentence in sentences:
+			inputs = self.tokenizer(sentence, return_tensors="pt", truncation=True, max_length=self.max_tokens)
+			outputs = self.model.generate(**inputs)
+			decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+			if parse_tuples:
+				for subj, obj, rel in decoded.split(self.tuple_delim):
+					out.append(tuple(subj, rel, obj))
+			else:   # raw REBEL text: 'subj  obj  rel'
+				out.append(decoded)
+		return out
+
+
+# === Example usage ===
+if __name__ == "__main__":
+    sample_text = "Alice met Bob in the forest. Bob then went to the village."
+    extractor = RelationExtractor(model_name = "Babelscape/rebel-large")
+    print(extractor.extract(sample_text))
+
 
 
 
@@ -72,11 +94,11 @@ class LLMConnector(Connector):
 		Send a trivial prompt to verify LLM connectivity.
 		Returns True if successful.
 		"""
-		result = self.execute_query("You are a helpful assistant.", query)
+		result = self.execute_full_query("You are a helpful assistant.", query)
 		return result.strip() == "pong"
 
 
-	def execute_query(self, system_prompt: str, human_prompt: str) -> str:
+	def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
 		"""
 		Send a single prompt to the LLM with separate system and human instructions.
 	
@@ -106,7 +128,7 @@ class LLMConnector(Connector):
 		Returns:
 			Raw LLM response (str)
 		"""
-		return self.execute_query(self.system_prompt, query)
+		return self.execute_full_query(self.system_prompt, query)
 
 
 	def execute_file(self, filename: str) -> str:
