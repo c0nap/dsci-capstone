@@ -21,36 +21,36 @@
     <div style="width:250px; padding:10px; border-left:1px solid gray;">
         <h4>Selected Item</h4>
         <pre>@_selectedInfo</pre>
+
+        <div style="width:250px; padding:10px; border-left:1px solid gray;">
+            <h4>Debug Info</h4>
+            <p>Nodes: @_diagram.Nodes.Count</p>
+            <p>Links: @_diagram.Links.Count</p>
+            <p>Selected: @_selectedInfo</p>
+
+            <details>
+                <summary>Node IDs</summary>
+                <ul>
+                    @foreach (var n in _diagram.Nodes)
+                    {
+                    <li>@n.Id (@n.Position.X, @n.Position.Y)</li>
+                    }
+                </ul>
+            </details>
+
+            <details>
+                <summary>Link IDs</summary>
+                <ul>
+                    @foreach (var l in _diagram.Links)
+                    {
+                    var src = (l.Source.Model as NodeModel)?.Id ?? "?";
+                    var tgt = (l.Target.Model as NodeModel)?.Id ?? "?";
+                    <li>@src → @tgt</li>
+                    }
+                </ul>
+            </details>
+        </div>
     </div>
-</div>
-
-<div style="width:250px; padding:10px; border-left:1px solid gray;">
-    <h4>Debug Info</h4>
-    <p>Nodes: @_diagram.Nodes.Count</p>
-    <p>Links: @_diagram.Links.Count</p>
-    <p>Selected: @_selectedInfo</p>
-
-    <details>
-        <summary>Node IDs</summary>
-        <ul>
-            @foreach (var n in _diagram.Nodes)
-            {
-            <li>@n.Id (@n.Position.X, @n.Position.Y)</li>
-            }
-        </ul>
-    </details>
-
-    <details>
-        <summary>Link IDs</summary>
-        <ul>
-            @foreach (var l in _diagram.Links)
-            {
-            var src = (l.Source.Model as NodeModel)?.Id ?? "?";
-            var tgt = (l.Target.Model as NodeModel)?.Id ?? "?";
-            <li>@src → @tgt</li>
-            }
-        </ul>
-    </details>
 </div>
 
 
