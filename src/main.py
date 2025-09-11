@@ -1,4 +1,4 @@
-#from src.setup import Session
+from src.setup import Session
 from components.book_conversion import Book, Chunk, EPUBToTEI, Story, ParagraphStreamTEI
 import pandas as pd
 import random
@@ -6,8 +6,7 @@ import traceback
 import json
 import os
 
-#session = Session()
-#print()
+session = Session(verbose = False)
 
 def convert_single():
     print("\n\nCHAPTERS for book 1: FAIRY TALES")
@@ -277,6 +276,9 @@ triple_files = [
 ]
 def graph_triple_files():
     for json_path in triple_files:
+        print(f"\n{'='*50}")
+        print(f"Processing: {json_path}")
+
         # Load existing triples to save NLP time / LLM tokens during MVP stage
         with open(json_path, "r") as f:
             triples = json.load(f)
@@ -285,7 +287,12 @@ def graph_triple_files():
             subj = triple['s']
             rel = triple['r']
             obj = triple['o']
+
             print(subj, rel, obj)
+            session.graph_db.add_triple(subj, rel, obj)
+
+    print(f"\n{'='*50}")
+    session.graph_db.print_triples(max_col_width = 20)
 
 
 

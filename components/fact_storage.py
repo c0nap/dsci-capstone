@@ -4,6 +4,7 @@ from typing import List
 from pandas import DataFrame
 from neomodel import config, db
 import os
+import re
 import pandas as pd
 
 class GraphConnector(DatabaseConnector):
@@ -89,3 +90,68 @@ class GraphConnector(DatabaseConnector):
 		query = f"MATCH (n) WHERE n.database_id = '{database_name}' DETACH DELETE n"
 		self.execute_query(query)
 		if self.verbose: Log.success_manage_db(database_name, "Dropped (pseudo)")
+
+
+	def add_triple(self, subject: str, relation: str, object_: str):
+		"""Add a semantic triple to the graph using raw Cypher.
+	
+		1. Finds nodes by exact match on `name` and `database_id`.
+		2. Creates a relationship between them with the given label.
+		"""
+
+		# Keep only letters, numbers, underscores
+		relation = re.sub(r'[^A-Za-z0-9_]', '_', relation)
+		subject  = re.sub(r'[^A-Za-z0-9_]', '_', subject)
+		object_   = re.sub(r'[^A-Za-z0-9_]', '_', object_)
+
+		query = f"""
+		MERGE (from_node {{name: '{subject}', database_id: '{self.database_name}'}})
+		MERGE (to_node {{name: '{object_}', database_id: '{self.database_name}'}})
+		MERGE (from_node)-[r:{relation}]->(to_node)
+		RETURN from_node, r, to_node
+		"""
+	
+		try:
+			df = self.execute_query(query)
+			if self.verbose:
+				print(f"Added triple: ({subject})-[:{relation}]->({object_})")
+			return df
+		except Exception as e:
+			if self.verbose:
+				print(f"Failed to add triple: ({subject})-[:{relation}]->({object_})")
+			raise
+
+
+	def get_all_triples(self) -> pd.DataFrame:
+		"""Return all triples in the current pseudo-database as a pandas DataFrame."""
+		db_id = self.database_name
+	
+		query = f"""
+		MATCH (a {{database_id: '{db_id}'}})-[r]->(b {{database_id: '{db_id}'}})
+		RETURN a.name AS subject, type(r) AS relation, b.name AS object
+		"""
+	
+		df = self.execute_query(query)
+		# Ensure we always return a DataFrame with the 3 desired columns
+		if df is None or df.empty:
+			df = pd.DataFrame(columns=["subject", "relation", "object"])
+		else:
+			# Rename columns safely
+			df = df.rename(columns={df.columns[0]: "subject",
+									df.columns[1]: "relation",
+									df.columns[2]: "object"})
+		return df
+	
+	
+	def print_triples(self, max_rows: int = 20, max_col_width: int = 50):
+		"""Print all nodes and edges in the current pseudo-database with row/column formatting."""
+		triples_df = self.get_all_triples()
+	
+		# Set pandas display options temporarily
+		with pd.option_context('display.max_rows', max_rows,
+							   'display.max_colwidth', max_col_width):
+			print(f"Graph triples ({len(triples_df)} total):")
+			print(triples_df)
+
+
+

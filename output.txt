@@ -1,48 +1,44 @@
-[32m+[0m - - Successfully connected to database: mysql
 
-1
-2
-conan_capstone
-                    Database
-0                       book
-1             candy_store_28
-2                    college
-3             conan_capstone
-4   conan_patrick_homework04
-5                 conan_pe06
-6                 conan_pe07
-7                 conan_pe09
-8                     conman
-9                 hw02_conan
-10                       hw2
-11        information_schema
-12                   jimsnew
-13                     mysql
-14                      p1p2
-15        pe02_conan_patrick
-16                       pe3
-17        performance_schema
-18                   recipes
-19                    sakila
-20                 studentdb
-21                       sys
-22                      test
-23                     world
-[32m+[0m - - Successfully connected to database: conan_capstone
-[32m+[0m - - Successfully connected to database: NEO4J
 
-   1
-0  1
-   n
-0  0
-[32m+[0m - - Successfully connected to database: NEO4J
-[32m+[0m - - Dropped (pseudo) database "conan_capstone"
-[32m+[0m - - Dropped (pseudo) database "conan_capstone"
-[32m+[0m - - Dropped (pseudo) database "conan_capstone"
-[32m+[0m - - Initialized (pseudo) database "conan_capstone"
-Retrieved nodes:
-                      n
-0  (database_id, name)
-1  (database_id, name)
-[32m+[0m - - Dropped (pseudo) database "conan_capstone"
+==================================================
+Processing: ./datasets/triples/chunk-160_story-1.json
+Jane owner of Lamb
+Lamb owned by Jane
+Anthea washed Lamb
+Jane hugs Anthea
+Jane comforts Anthea
+Jane said Don't cry, Panther dear!
+Anthea exclaims HE'S safe
+Anthea feared Red Indians near White House
+Red Indians threaten White House
+Anthea believes Lamb is safe
+
+==================================================
+Processing: ./datasets/triples/chunk-70_story-1.json
+ragged children are making dust-pies in the road
+two men are lying on the grass
+two men are smoking on the grass
+three women are washing in an old red watering-can with the top broken off
+old red watering-can with the top broken off has the top broken off
+three women are washing the family washing
+
+==================================================
+Graph triples (16 total):
+                subject        relation               object
+0                  Jane            said  Don_t_cry__Panth...
+1                  Jane        comforts               Anthea
+2                  Jane            hugs               Anthea
+3                  Jane        owner_of                 Lamb
+4                  Lamb        owned_by                 Jane
+5                Anthea        believes         Lamb_is_safe
+6                Anthea          feared  Red_Indians_near...
+7                Anthea        exclaims            HE_S_safe
+8                Anthea          washed                 Lamb
+9           Red_Indians        threaten          White_House
+10      ragged_children      are_making  dust_pies_in_the...
+11              two_men     are_smoking         on_the_grass
+12              two_men       are_lying         on_the_grass
+13          three_women     are_washing   the_family_washing
+14          three_women  are_washing_in  an_old_red_water...
+15  old_red_watering...             has   the_top_broken_off
 
