@@ -87,7 +87,7 @@ class DatabaseConnector(Connector):
         ## Whether to print success and failure messages.
         self.verbose = verbose
 
-    def configure(self, DB: str, database_name: str):
+    def configure(self, DB: str, database_name: str, route_database: bool = True):
         """Read connection settings from the .env file.
         @param DB  The prefix of fetched database credentials.
         @param name  The name of the database to connect to."""
@@ -100,13 +100,16 @@ class DatabaseConnector(Connector):
         self.host = os.getenv(f"{DB}_HOST")
         self.port = os.getenv(f"{DB}_PORT")
         ## Condense these variables into a connection string
-        self.change_database(database_name)
+        self.change_database(database_name, route_database)
     
-    def change_database(self, new_database: str):
+    def change_database(self, new_database: str, route_database: bool = True):
         """Update the connection URI to reference a different database in the same engine.
         @param new_database  The name of the database to connect to."""
         self.database_name = new_database
-        self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
+        if route_database:
+            self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
+        else:
+            self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}"
 
     @abstractmethod
     def execute_query(self, query: str) -> DataFrame:

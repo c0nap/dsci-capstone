@@ -16,3 +16,4 @@ transformers
 openai
 langchain
 langchain_openai
+neomodel

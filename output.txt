@@ -1,160 +1,48 @@
+[32m+[0m - - Successfully connected to database: mysql
 
-==================================================
-Processing: datasets/examples/trilogy-wishes-1.tei
+1
+2
+conan_capstone
+                    Database
+0                       book
+1             candy_store_28
+2                    college
+3             conan_capstone
+4   conan_patrick_homework04
+5                 conan_pe06
+6                 conan_pe07
+7                 conan_pe09
+8                     conman
+9                 hw02_conan
+10                       hw2
+11        information_schema
+12                   jimsnew
+13                     mysql
+14                      p1p2
+15        pe02_conan_patrick
+16                       pe3
+17        performance_schema
+18                   recipes
+19                    sakila
+20                 studentdb
+21                       sys
+22                      test
+23                     world
+[32m+[0m - - Successfully connected to database: conan_capstone
+[32m+[0m - - Successfully connected to database: NEO4J
 
-=== STORY SUMMARY ===
-Total chunks: 191
-
-=== NLP EXTRACTION SAMPLE ===
-
-Chunk details:
-  [70] Chunk(len=205, book=1, chapter=8, story=1, lines=[1596,1620], story%=35.412, chapter%=61.094)
-
-A lot of ragged children were industriously making dust-pies in the road, two men lay on the grass smoking, and three women were doing the family washing in an old red watering-can with the top broken off.
-
-NLP output:
-('Wuthering Heights', 'connects with', 'Christopher Street')
-('High Street', 'High Street', 'connects with')
-('Wuthering Heights', 'Christopher Street', 'connects with')
-('connects with', 'Wuthering Heights', 'Christopher Street')
-('connects with', 'connects with', 'High Street')
-('High Street', 'connects with', 'Wuthering Heights')
-
-
-    LLM prompt:
-You are a helpful assistant that converts semantic triples into structured JSON.
-Here are some semantic triples extracted from a story chunk:
-('Wuthering Heights', 'connects with', 'Christopher Street')
-('High Street', 'High Street', 'connects with')
-('Wuthering Heights', 'Christopher Street', 'connects with')
-('connects with', 'Wuthering Heights', 'Christopher Street')
-('connects with', 'connects with', 'High Street')
-('High Street', 'connects with', 'Wuthering Heights')
-
-And here is the original text:
-A lot of ragged children were industriously making dust-pies in the road, two men lay on the grass smoking, and three women were doing the family washing in an old red watering-can with the top broken off.
-
-Output JSON with keys: s (subject), r (relation), o (object).
-Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
-
-    LLM output:
-[
-  {"s": "ragged children", "r": "are making", "o": "dust-pies in the road"},
-  {"s": "two men", "r": "are lying", "o": "on the grass"},
-  {"s": "two men", "r": "are smoking", "o": "on the grass"},
-  {"s": "three women", "r": "are washing in", "o": "an old red watering-can with the top broken off"},
-  {"s": "old red watering-can with the top broken off", "r": "has", "o": "the top broken off"},
-  {"s": "three women", "r": "are washing", "o": "the family washing"}
-]
-
-Valid JSON
-JSON saved to './datasets/triples/chunk-70_story-1.json'
-
-==================================================
-
-
-Chunk details:
-  [160] Chunk(len=1421, book=1, chapter=20, story=1, lines=[4575,4597], story%=83.865, chapter%=27.521)
-
-'He's going earlier than he thought,' said Anthea eagerly. 'You'd better hurry and get dressed. Do put on that lovely purple frock, Martha, and the hat with the pink cornflowers, and the yellow-lace collar. Jane'll finish laying the cloth, and I'll wash the Lamb and get him ready.'
-As she washed the unwilling Lamb, and hurried him into his best clothes, Anthea peeped out of the window from time to time; so far all was well - she could see no Red Indians. When with a rush and a scurry and some deepening of the damask of Martha's complexion she and the Lamb had been got off, Anthea drew a deep breath.
-'HE'S safe!' she said, and, to jane's horror, flung herself down on the floor and burst into floods of tears. Jane did not understand at all how a person could be so brave and like a general, and then suddenly give way and go flat like an air-balloon when you prick it. It is better not to go flat, of course, but you will observe that Anthea did not give way till her aim was accomplished. She had got the dear Lamb out of danger - she felt certain the Red Indians would be round the White House or nowhere - the farmer's cart would not come back till after sunset, so she could afford to cry a little. It was partly with joy that she cried, because she had done what she meant to do. She cried for about three minutes, while Jane hugged her miserably and said at five-second intervals, 'Don't cry, Panther dear!'
-
-NLP output:
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'George Orwell')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('Orwell', 'Nineteen Eighty-Four', 'author')
-('followed by', 'Orwell', 'Nineteen Eighty-Four')
-('author', 'follows', 'Nineteen Eighty-Four')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('Orwell', 'Nineteen Eighty-Four', 'author')
-('Orwell', 'Nineteen Eighty-Four', 'author')
-('Orwell', 'Nineteen Eighty-Four', 'author')
-('Jane', 'owner of', 'Lamb')
-('Lamb', 'owned by', 'Jane')
-('Lamb', 'mother', 'Anthea')
-('Anthea', 'child', 'Lamb')
-('Martha', 'mother', 'Anthea')
-('Anthea', 'child', 'Martha')
-("HE'S safe", 'present in work', "HE'S safe")
-('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
-("A Midsummer Night's Dream", 'author', 'William Shakespeare')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('followed by', 'George Orwell', 'Nineteen Eighty-Four')
-('author', 'follows', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'George Orwell')
-('Anthea', 'instance of', 'flat')
-('White House', 'occupant', 'Red Indians')
-('Joy', 'instance of', 'emotion')
-('Jane', 'child', 'Panther')
-('Panther', 'mother', 'Jane')
-
-
-    LLM prompt:
-You are a helpful assistant that converts semantic triples into structured JSON.
-Here are some semantic triples extracted from a story chunk:
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'George Orwell')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('Orwell', 'Nineteen Eighty-Four', 'author')
-('followed by', 'Orwell', 'Nineteen Eighty-Four')
-('author', 'follows', 'Nineteen Eighty-Four')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('Orwell', 'Nineteen Eighty-Four', 'author')
-('Orwell', 'Nineteen Eighty-Four', 'author')
-('Orwell', 'Nineteen Eighty-Four', 'author')
-('Jane', 'owner of', 'Lamb')
-('Lamb', 'owned by', 'Jane')
-('Lamb', 'mother', 'Anthea')
-('Anthea', 'child', 'Lamb')
-('Martha', 'mother', 'Anthea')
-('Anthea', 'child', 'Martha')
-("HE'S safe", 'present in work', "HE'S safe")
-('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
-("A Midsummer Night's Dream", 'author', 'William Shakespeare')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('followed by', 'George Orwell', 'Nineteen Eighty-Four')
-('author', 'follows', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'George Orwell')
-('Anthea', 'instance of', 'flat')
-('White House', 'occupant', 'Red Indians')
-('Joy', 'instance of', 'emotion')
-('Jane', 'child', 'Panther')
-('Panther', 'mother', 'Jane')
-
-And here is the original text:
-'He's going earlier than he thought,' said Anthea eagerly. 'You'd better hurry and get dressed. Do put on that lovely purple frock, Martha, and the hat with the pink cornflowers, and the yellow-lace collar. Jane'll finish laying the cloth, and I'll wash the Lamb and get him ready.'
-As she washed the unwilling Lamb, and hurried him into his best clothes, Anthea peeped out of the window from time to time; so far all was well - she could see no Red Indians. When with a rush and a scurry and some deepening of the damask of Martha's complexion she and the Lamb had been got off, Anthea drew a deep breath.
-'HE'S safe!' she said, and, to jane's horror, flung herself down on the floor and burst into floods of tears. Jane did not understand at all how a person could be so brave and like a general, and then suddenly give way and go flat like an air-balloon when you prick it. It is better not to go flat, of course, but you will observe that Anthea did not give way till her aim was accomplished. She had got the dear Lamb out of danger - she felt certain the Red Indians would be round the White House or nowhere - the farmer's cart would not come back till after sunset, so she could afford to cry a little. It was partly with joy that she cried, because she had done what she meant to do. She cried for about three minutes, while Jane hugged her miserably and said at five-second intervals, 'Don't cry, Panther dear!'
-
-Output JSON with keys: s (subject), r (relation), o (object).
-Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
-
-    LLM output:
-[
-  {"s": "Jane", "r": "owner of", "o": "Lamb"},
-  {"s": "Lamb", "r": "owned by", "o": "Jane"},
-  {"s": "Anthea", "r": "washed", "o": "Lamb"},
-  {"s": "Jane", "r": "hugs", "o": "Anthea"},
-  {"s": "Jane", "r": "comforts", "o": "Anthea"},
-  {"s": "Jane", "r": "said", "o": "Don't cry, Panther dear!"},
-  {"s": "Anthea", "r": "exclaims", "o": "HE'S safe"},
-  {"s": "Anthea", "r": "feared", "o": "Red Indians near White House"},
-  {"s": "Red Indians", "r": "threaten", "o": "White House"},
-  {"s": "Anthea", "r": "believes", "o": "Lamb is safe"}
-]
-
-Valid JSON
-JSON saved to './datasets/triples/chunk-160_story-1.json'
-
-==================================================
+   1
+0  1
+   n
+0  0
+[32m+[0m - - Successfully connected to database: NEO4J
+[32m+[0m - - Dropped (pseudo) database "conan_capstone"
+[32m+[0m - - Dropped (pseudo) database "conan_capstone"
+[32m+[0m - - Dropped (pseudo) database "conan_capstone"
+[32m+[0m - - Initialized (pseudo) database "conan_capstone"
+Retrieved nodes:
+                      n
+0  (database_id, name)
+1  (database_id, name)
+[32m+[0m - - Dropped (pseudo) database "conan_capstone"
 
