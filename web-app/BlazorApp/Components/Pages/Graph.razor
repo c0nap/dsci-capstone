@@ -1,0 +1,133 @@
+﻿@page "/Graph"
+
+@using Blazor.Diagrams
+@using Blazor.Diagrams.Core.Models
+@using Blazor.Diagrams.Core.Geometry
+@using Blazor.Diagrams.Components
+@using Neo4j.Driver
+
+@inject IDriver Neo4jDriver
+
+<h3>Neo4j Graph Visualization</h3>
+
+<div style="display:flex; height:80vh;">
+    <CascadingValue Value="_diagram">
+        <div style="flex:1; border:1px solid gray;">
+            <DiagramCanvas />
+        </div>
+    </CascadingValue>
+    <div style="width:250px; padding:10px; border-left:1px solid gray;">
+        <h4>Selected Item</h4>
+        <pre>@_selectedInfo</pre>
+    </div>
+</div>
+
+@code {
+    private BlazorDiagram _diagram = new();
+    private string _selectedInfo = "Click a node or edge";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var nodes = new List<NodeModel>();
+        var links = new List<LinkModel>();
+
+        var session = Neo4jDriver.AsyncSession();
+        try
+        {
+            var result = await session.RunAsync(@"
+                MATCH (n)-[r]->(m)
+                RETURN n, r, m
+                LIMIT 50
+            ");
+
+            await result.ForEachAsync(record =>
+            {
+                var n1Node = record["n"].As<INode>();
+                var n2Node = record["m"].As<INode>();
+                var rel = record["r"].As<IRelationship>();
+
+                if (nodes.All(x => x.Id != n1Node.ElementId))
+                {
+                    var node = new NodeModel(n1Node.ElementId, new Blazor.Diagrams.Core.Geometry.Point(0, 0))
+                    {
+                        Title = n1Node.Labels.FirstOrDefault() ?? "Node"
+                    };
+                    nodes.Add(node);
+                }
+
+                if (nodes.All(x => x.Id != n2Node.ElementId))
+                {
+                    var node = new NodeModel(n2Node.ElementId, new Blazor.Diagrams.Core.Geometry.Point(0, 0))
+                    {
+                        Title = n2Node.Labels.FirstOrDefault() ?? "Node"
+                    };
+                    nodes.Add(node);
+                }
+
+                var link = new LinkModel(
+                    nodes.First(x => x.Id == n1Node.ElementId),
+                    nodes.First(x => x.Id == n2Node.ElementId)
+                );
+                links.Add(link);
+            });
+        }
+        finally
+        {
+            await session.CloseAsync();
+        }
+
+        ApplyForceDirectedLayout(nodes, links);
+        CenterNodes(nodes);
+
+        nodes.ForEach(n => _diagram.Nodes.Add(n));
+        links.ForEach(l => _diagram.Links.Add(l));
+
+        foreach (var node in _diagram.Nodes)
+        {
+            node.Changed += (model) => {
+                if (!node.Selected) return;
+                _selectedInfo = $"Node: {node.Id}";
+                InvokeAsync(StateHasChanged);
+            };
+        }
+
+        foreach (var link in _diagram.Links)
+        {
+            link.Changed += (model) => {
+                if (!link.Selected) return;
+                var sourceNode = link.Source.Model as NodeModel;
+                var targetNode = link.Target.Model as NodeModel;
+                _selectedInfo = $"Link: {sourceNode?.Id} -> {targetNode?.Id}";
+                InvokeAsync(StateHasChanged);
+            };
+        }
+    }
+
+    private void ApplyForceDirectedLayout(List<NodeModel> nodes, List<LinkModel> links)
+    {
+        var rand = new Random();
+        foreach (var node in nodes)
+        {
+            var x = rand.Next(0, 800);
+            var y = rand.Next(0, 600);
+            node.Position = new Blazor.Diagrams.Core.Geometry.Point(x, y);
+        }
+    }
+
+    private void CenterNodes(List<NodeModel> nodes)
+    {
+        if (!nodes.Any()) return;
+
+        var avgX = nodes.Average(n => n.Position.X);
+        var avgY = nodes.Average(n => n.Position.Y);
+        var offsetX = 400 - avgX;
+        var offsetY = 300 - avgY;
+
+        foreach (var node in nodes)
+        {
+            node.Position = new Blazor.Diagrams.Core.Geometry.Point(node.Position.X + offsetX, node.Position.Y + offsetY);
+        }
+    }
+}

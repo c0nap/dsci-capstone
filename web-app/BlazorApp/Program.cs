@@ -1,10 +1,21 @@
 using BlazorApp.Components;
+using Neo4j.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Register Neo4j Driver
+builder.Services.AddSingleton<IDriver>(provider =>
+{
+    var uri = builder.Configuration.GetConnectionString("Neo4j") ?? "bolt://localhost:7687";
+    var user = builder.Configuration["Neo4j:Username"] ?? "neo4j";
+    var password = builder.Configuration["Neo4j:Password"] ?? "password";
+    
+    return GraphDatabase.Driver(uri, AuthTokens.Basic(user, password));
+});
 
 var app = builder.Build();
 
