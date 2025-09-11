@@ -5,6 +5,8 @@
 @using Blazor.Diagrams.Core.Geometry
 @using Blazor.Diagrams.Components
 @using Neo4j.Driver
+@using BlazorApp.Models
+@using BlazorApp.Components.GraphUI
 
 @inject IDriver Neo4jDriver
 
@@ -58,6 +60,7 @@
     
     protected override async Task OnInitializedAsync()
     {
+        _diagram.RegisterComponent<NeoNode, CircleNode>();
         var nodes = new List<NodeModel>();
         var links = new List<LinkModel>();
 
@@ -78,19 +81,13 @@
 
                 if (nodes.All(x => x.Id != n1Node.ElementId))
                 {
-                    var node = new NodeModel(n1Node.ElementId, new Blazor.Diagrams.Core.Geometry.Point(0, 0))
-                    {
-                        Title = n1Node.Labels.FirstOrDefault() ?? "Node"
-                    };
+                    var node = new NeoNode(n1Node.ElementId, new Blazor.Diagrams.Core.Geometry.Point(400, 0), n1Node.Labels.FirstOrDefault() ?? "Node");
                     nodes.Add(node);
                 }
 
                 if (nodes.All(x => x.Id != n2Node.ElementId))
                 {
-                    var node = new NodeModel(n2Node.ElementId, new Blazor.Diagrams.Core.Geometry.Point(0, 0))
-                    {
-                        Title = n2Node.Labels.FirstOrDefault() ?? "Node"
-                    };
+                    var node = new NeoNode(n2Node.ElementId, new Blazor.Diagrams.Core.Geometry.Point(400, 0), n2Node.Labels.FirstOrDefault() ?? "Node");
                     nodes.Add(node);
                 }
 
@@ -106,8 +103,8 @@
             await session.CloseAsync();
         }
 
-        ApplyForceDirectedLayout(nodes, links);
-        CenterNodes(nodes);
+        //ApplyForceDirectedLayout(nodes, links);
+        //CenterNodes(nodes);
 
         nodes.ForEach(n => _diagram.Nodes.Add(n));
         links.ForEach(l => _diagram.Links.Add(l));
@@ -131,6 +128,35 @@
                 InvokeAsync(StateHasChanged);
             };
         }
+        
+        foreach (var node in _diagram.Nodes)
+        {
+            node.Changed += (model) =>
+            {
+                if (node.Selected)
+                {
+                    _selectedInfo = $"Node: {((NeoNode)node).Label}";
+                    InvokeAsync(StateHasChanged);
+                }
+            };
+        }
+        
+        _diagram.SelectionChanged += (model) =>
+        {
+            var selectedNode = _diagram.Nodes.FirstOrDefault(n => n.Selected) as NeoNode;
+            if (selectedNode != null)
+            {
+                _selectedInfo = $"Node: {selectedNode.Label}";
+            }
+            else
+            {
+                _selectedInfo = "Click a node or edge";
+            }
+
+            InvokeAsync(StateHasChanged);
+        };
+
+
         
     }
 
@@ -159,4 +185,16 @@
             node.Position = new Blazor.Diagrams.Core.Geometry.Point(node.Position.X + offsetX, node.Position.Y + offsetY);
         }
     }
+    
+    private NeoNode _selectedNode;
+
+    private void NodeClicked(NeoNode node)
+    {
+        _selectedNode = node;
+        _selectedInfo = $"Node: {node.Label}";
+        StateHasChanged();
+    }
+
+
+
 }
