@@ -1,70 +1,103 @@
 ﻿@page "/Graph"
 
-@using Blazor.Diagrams
-@using Blazor.Diagrams.Core.Models
-@using Blazor.Diagrams.Core.Geometry
-@using Blazor.Diagrams.Components
+@using Syncfusion.Blazor.Diagram
+@using Syncfusion.Blazor.Buttons
 @using Neo4j.Driver
-@using BlazorApp.Models
-@using BlazorApp.Components.GraphUI
 
 @inject IDriver Neo4jDriver
 
-<h3>Neo4j Graph Visualization</h3>
+<h3>Neo4j Graph Visualization with Syncfusion</h3>
 
 <div style="display:flex; height:80vh;">
-    <CascadingValue Value="_diagram">
-        <div style="flex:1; border:1px solid gray;">
-            <DiagramCanvas />
+    <div style="flex:1; border:1px solid gray;">
+        <SfDiagramComponent @ref="DiagramRef" 
+                           Height="100%" 
+                           Width="100%"
+                           Nodes="@nodes" 
+                           Connectors="@connectors"
+                           Click="@OnClick"
+                           ScrollChanged="@OnScrollChanged">
+            
+            @* Enable Interactive Pan and Zoom with Mouse Wheel *@
+            <ScrollSettings CurrentZoom="1.0" 
+                           MinZoom="0.2" 
+                           MaxZoom="5.0"
+                           HorizontalOffset="0" 
+                           VerticalOffset="0"
+                           EnableAutoScroll="true"
+                           ScrollLimit="ScrollLimitMode.Infinity"
+                           CurrentZoomChanged="@OnZoomChanged"
+                           HorizontalOffsetChanged="@OnPanChanged"
+                           VerticalOffsetChanged="@OnPanChanged">
+            </ScrollSettings>
+            
+            @* Enable snap to grid for better node positioning *@
+            <SnapSettings Constraints="SnapConstraints.ShowLines">
+            </SnapSettings>
+            
+        </SfDiagramComponent>
+    </div>
+    
+    <div style="width:300px; padding:10px; border-left:1px solid gray;">
+        <h4>Zoom & Pan Controls</h4>
+        <div style="margin-bottom:15px;">
+            <SfButton Content="Zoom In" CssClass="e-primary e-small" OnClick="@ZoomIn" />
+            <SfButton Content="Zoom Out" CssClass="e-primary e-small" OnClick="@ZoomOut" />
+            <SfButton Content="Fit to Page" CssClass="e-success e-small" OnClick="@FitToPage" />
+            <SfButton Content="Reset" CssClass="e-danger e-small" OnClick="@ResetView" />
         </div>
-    </CascadingValue>
-    <div style="width:250px; padding:10px; border-left:1px solid gray;">
+        
+        <h4>Current Status</h4>
+        <div style="margin-bottom:15px;">
+            <p><strong>Zoom:</strong> @currentZoom.ToString("F2")x</p>
+            <p><strong>Pan X:</strong> @horizontalOffset.ToString("F0")px</p>
+            <p><strong>Pan Y:</strong> @verticalOffset.ToString("F0")px</p>
+        </div>
+        
         <h4>Selected Item</h4>
-        <pre>@_selectedInfo</pre>
+        <pre style="background:#f5f5f5; padding:10px; border-radius:4px;">@selectedInfo</pre>
 
-        <div style="width:250px; padding:10px; border-left:1px solid gray;">
-            <h4>Debug Info</h4>
-            <p>Nodes: @_diagram.Nodes.Count</p>
-            <p>Links: @_diagram.Links.Count</p>
-            <p>Selected: @_selectedInfo</p>
+        <h4>Debug Info</h4>
+        <p><strong>Nodes:</strong> @nodes.Count</p>
+        <p><strong>Connectors:</strong> @connectors.Count</p>
 
-            <details>
-                <summary>Node IDs</summary>
-                <ul>
-                    @foreach (var n in _diagram.Nodes)
-                    {
-                    <li>@n.Id (@n.Position.X, @n.Position.Y)</li>
-                    }
-                </ul>
-            </details>
-
-            <details>
-                <summary>Link IDs</summary>
-                <ul>
-                    @foreach (var l in _diagram.Links)
-                    {
-                    var src = (l.Source.Model as NodeModel)?.Id ?? "?";
-                    var tgt = (l.Target.Model as NodeModel)?.Id ?? "?";
-                    <li>@src → @tgt</li>
-                    }
-                </ul>
-            </details>
-        </div>
+        <details>
+            <summary>Node Details</summary>
+            <div style="max-height:200px; overflow-y:auto;">
+                @foreach (var node in nodes)
+                {
+                    <p style="font-size:12px; margin:2px 0;">
+                        @node.ID - (@node.OffsetX.ToString("F0"), @node.OffsetY.ToString("F0"))
+                    </p>
+                }
+            </div>
+        </details>
     </div>
 </div>
 
-
 @code {
-    private readonly BlazorDiagram _diagram = new();
-    private string _selectedInfo = "Click a node or edge";
+    private SfDiagramComponent? DiagramRef;
+    private readonly DiagramObjectCollection<Node> nodes = [];
+    private readonly DiagramObjectCollection<Connector> connectors = [];
     
+    private string selectedInfo = "Click a node or connector to view details";
+    private double currentZoom = 1.0;
+    private double horizontalOffset = 0;
+    private double verticalOffset = 0;
+
+    private readonly Dictionary<string, (string label, List<string> properties)> nodeData = [];
+
     protected override async Task OnInitializedAsync()
     {
-        _diagram.RegisterComponent<NeoNode, CircleNode>();
-        var nodes = new List<NodeModel>();
-        var links = new List<LinkModel>();
+        await LoadGraphFromNeo4j();
+    }
 
+    private async Task LoadGraphFromNeo4j()
+    {
         var session = Neo4jDriver.AsyncSession();
+        var processedNodes = new HashSet<string>();
+        var processedRelationships = new HashSet<string>();
+
         try
         {
             var result = await session.RunAsync(@"
@@ -79,122 +112,241 @@
                 var n2Node = record["m"].As<INode>();
                 var rel = record["r"].As<IRelationship>();
 
-                if (nodes.All(x => x.Id != n1Node.ElementId))
+                // Process source node
+                if (!processedNodes.Contains(n1Node.ElementId))
                 {
-                    var node = new NeoNode(n1Node.ElementId, new Blazor.Diagrams.Core.Geometry.Point(400, 0), n1Node.Labels.FirstOrDefault() ?? "Node");
-                    nodes.Add(node);
+                    var node1 = CreateNodeFromNeo4j(n1Node);
+                    nodes.Add(node1);
+                    processedNodes.Add(n1Node.ElementId);
                 }
 
-                if (nodes.All(x => x.Id != n2Node.ElementId))
+                // Process target node
+                if (!processedNodes.Contains(n2Node.ElementId))
                 {
-                    var node = new NeoNode(n2Node.ElementId, new Blazor.Diagrams.Core.Geometry.Point(400, 0), n2Node.Labels.FirstOrDefault() ?? "Node");
-                    nodes.Add(node);
+                    var node2 = CreateNodeFromNeo4j(n2Node);
+                    nodes.Add(node2);
+                    processedNodes.Add(n2Node.ElementId);
                 }
 
-                var link = new LinkModel(
-                    nodes.First(x => x.Id == n1Node.ElementId),
-                    nodes.First(x => x.Id == n2Node.ElementId)
-                );
-                links.Add(link);
+                // Process relationship
+                var relationshipKey = $"{n1Node.ElementId}-{rel.Type}-{n2Node.ElementId}";
+                if (!processedRelationships.Contains(relationshipKey))
+                {
+                    var connector = CreateConnectorFromNeo4j(n1Node.ElementId, n2Node.ElementId, rel);
+                    connectors.Add(connector);
+                    processedRelationships.Add(relationshipKey);
+                }
             });
         }
         finally
         {
             await session.CloseAsync();
         }
+    }
 
-        //ApplyForceDirectedLayout(nodes, links);
-        //CenterNodes(nodes);
-
-        nodes.ForEach(n => _diagram.Nodes.Add(n));
-        links.ForEach(l => _diagram.Links.Add(l));
-
-        foreach (var node in _diagram.Nodes)
-        {
-            node.Changed += (model) => {
-                if (!node.Selected) return;
-                _selectedInfo = $"Node: {node.Id}";
-                InvokeAsync(StateHasChanged);
-            };
-        }
-
-        foreach (var link in _diagram.Links)
-        {
-            link.Changed += (model) => {
-                if (!link.Selected) return;
-                var sourceNode = link.Source.Model as NodeModel;
-                var targetNode = link.Target.Model as NodeModel;
-                _selectedInfo = $"Link: {sourceNode?.Id} -> {targetNode?.Id}";
-                InvokeAsync(StateHasChanged);
-            };
-        }
+    private Node CreateNodeFromNeo4j(INode neoNode)
+    {
+        var label = neoNode.Labels.FirstOrDefault() ?? "Node";
+        var properties = neoNode.Properties.Select(kvp => $"{kvp.Key}: {kvp.Value}").ToList();
         
-        foreach (var node in _diagram.Nodes)
+        // Store node data for selection display
+        nodeData[neoNode.ElementId] = (label, properties);
+
+        return new Node()
         {
-            node.Changed += (model) =>
+            ID = neoNode.ElementId,
+            OffsetX = GetRandomPosition(100, 800),
+            OffsetY = GetRandomPosition(100, 600),
+            Width = 120,
+            Height = 60,
+            Shape = new BasicShape() { Type = NodeShapes.Basic, Shape = NodeBasicShapes.Ellipse },
+            Style = new ShapeStyle() 
+            { 
+                Fill = GetNodeColor(label),
+                StrokeColor = "#333333",
+                StrokeWidth = 2
+            },
+            Annotations = new DiagramObjectCollection<ShapeAnnotation>()
             {
-                if (node.Selected)
-                {
-                    _selectedInfo = $"Node: {((NeoNode)node).Label}";
-                    InvokeAsync(StateHasChanged);
+                new ShapeAnnotation 
+                { 
+                    Content = label,
+                    Style = new TextStyle() 
+                    { 
+                        Color = "white", 
+                        Bold = true,
+                        FontSize = 12
+                    }
                 }
-            };
-        }
-        
-        _diagram.SelectionChanged += (model) =>
-        {
-            var selectedNode = _diagram.Nodes.FirstOrDefault(n => n.Selected) as NeoNode;
-            if (selectedNode != null)
-            {
-                _selectedInfo = $"Node: {selectedNode.Label}";
             }
-            else
-            {
-                _selectedInfo = "Click a node or edge";
-            }
-
-            InvokeAsync(StateHasChanged);
         };
+    }
 
+    private Connector CreateConnectorFromNeo4j(string sourceId, string targetId, IRelationship relationship)
+    {
+        return new Connector()
+        {
+            ID = $"conn_{sourceId}_{targetId}_{relationship.Type}",
+            SourceID = sourceId,
+            TargetID = targetId,
+            Type = ConnectorSegmentType.Straight,
+            Style = new ShapeStyle()
+            {
+                StrokeColor = "#6495ED",
+                StrokeWidth = 2
+            },
+            TargetDecorator = new DecoratorSettings()
+            {
+                Shape = DecoratorShape.Arrow,
+                Style = new ShapeStyle() { Fill = "#6495ED", StrokeColor = "#6495ED" }
+            },
+            Annotations = new DiagramObjectCollection<PathAnnotation>()
+            {
+                new PathAnnotation() 
+                { 
+                    Content = relationship.Type,
+                    Style = new TextStyle() 
+                    { 
+                        Color = "#333333",
+                        FontSize = 10,
+                        Bold = true
+                    }
+                }
+            }
+        };
+    }
 
+    private string GetNodeColor(string label)
+    {
+        // Generate colors based on node labels
+        var colors = new[] { "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#98D8C8" };
+        var hash = label.GetHashCode();
+        return colors[Math.Abs(hash) % colors.Length];
+    }
+
+    private double GetRandomPosition(int min, int max)
+    {
+        var random = new Random();
+        return random.Next(min, max);
+    }
+
+    #region Event Handlers
+
+    private void OnClick(ClickEventArgs args)
+    {
+        if (args.Element != null)
+        {
+            if (args.Element is Node selectedNode)
+            {
+                if (selectedNode.ID != null && nodeData.TryGetValue(selectedNode.ID, out var data))
+                {
+                    selectedInfo = $"Node: {data.label}\nID: {selectedNode.ID}\nProperties:\n{string.Join("\n", data.properties)}";
+                }
+                else
+                {
+                    selectedInfo = $"Node: {selectedNode.ID}";
+                }
+            }
+            else if (args.Element is Connector selectedConnector)
+            {
+                selectedInfo = $"Connector: {selectedConnector.ID}\nFrom: {selectedConnector.SourceID}\nTo: {selectedConnector.TargetID}";
+            }
+        }
+        else
+        {
+            selectedInfo = "Click a node or connector to view details";
+        }
         
-    }
-
-    private void ApplyForceDirectedLayout(List<NodeModel> nodes, List<LinkModel> links)
-    {
-        var rand = new Random();
-        foreach (var node in nodes)
-        {
-            var x = rand.Next(0, 800);
-            var y = rand.Next(0, 600);
-            node.Position = new Blazor.Diagrams.Core.Geometry.Point(x, y);
-        }
-    }
-
-    private void CenterNodes(List<NodeModel> nodes)
-    {
-        if (!nodes.Any()) return;
-
-        var avgX = nodes.Average(n => n.Position.X);
-        var avgY = nodes.Average(n => n.Position.Y);
-        var offsetX = 400 - avgX;
-        var offsetY = 300 - avgY;
-
-        foreach (var node in nodes)
-        {
-            node.Position = new Blazor.Diagrams.Core.Geometry.Point(node.Position.X + offsetX, node.Position.Y + offsetY);
-        }
-    }
-    
-    private NeoNode _selectedNode;
-
-    private void NodeClicked(NeoNode node)
-    {
-        _selectedNode = node;
-        _selectedInfo = $"Node: {node.Label}";
         StateHasChanged();
     }
 
+    private void OnScrollChanged(ScrollChangedEventArgs args) {
+        // Update current values when user pans/zooms
+        if (DiagramRef?.ScrollSettings == null) return;
+        currentZoom = DiagramRef.ScrollSettings.CurrentZoom;
+        horizontalOffset = DiagramRef.ScrollSettings.HorizontalOffset;
+        verticalOffset = DiagramRef.ScrollSettings.VerticalOffset;
+        StateHasChanged();
+    }
 
+    private void OnZoomChanged() {
+        if (DiagramRef?.ScrollSettings == null) return;
+        currentZoom = DiagramRef.ScrollSettings.CurrentZoom;
+        StateHasChanged();
+    }
 
+    private void OnPanChanged() {
+        if (DiagramRef?.ScrollSettings == null) return;
+        horizontalOffset = DiagramRef.ScrollSettings.HorizontalOffset;
+        verticalOffset = DiagramRef.ScrollSettings.VerticalOffset;
+        StateHasChanged();
+    }
+
+    #endregion
+
+    #region Zoom and Pan Controls
+
+    private async Task ZoomIn()
+    {
+        if (DiagramRef?.ScrollSettings != null)
+        {
+            var newZoom = Math.Min(currentZoom + 0.25, 5.0);
+            DiagramRef.ScrollSettings.CurrentZoom = newZoom;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ZoomOut()
+    {
+        if (DiagramRef?.ScrollSettings != null)
+        {
+            var newZoom = Math.Max(currentZoom - 0.25, 0.2);
+            DiagramRef.ScrollSettings.CurrentZoom = newZoom;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task FitToPage()
+    {
+        if (DiagramRef?.ScrollSettings != null && nodes.Count > 0)
+        {
+            // Calculate bounds of all nodes
+            var minX = nodes.Min(n => n.OffsetX - n.Width / 2);
+            var maxX = nodes.Max(n => n.OffsetX + n.Width / 2);
+            var minY = nodes.Min(n => n.OffsetY - n.Height / 2);
+            var maxY = nodes.Max(n => n.OffsetY + n.Height / 2);
+
+            var contentWidth = maxX - minX;
+            var contentHeight = maxY - minY;
+
+            // Estimate viewport size (you might need to adjust these values)
+            var viewportWidth = 800.0;
+            var viewportHeight = 600.0;
+
+            var zoomX = viewportWidth / contentWidth;
+            var zoomY = viewportHeight / contentHeight;
+            var zoom = Math.Min((double)zoomX!, (double)zoomY!) * 0.9; // 90% of fit for padding
+
+            // Apply zoom and center
+            var newZoom = Math.Max(0.2, Math.Min(zoom, 5.0));
+            DiagramRef.ScrollSettings.CurrentZoom = newZoom;
+            DiagramRef.ScrollSettings.HorizontalOffset = (viewportWidth - (double)contentWidth! * newZoom) / 2 - (double)minX! * newZoom;
+            DiagramRef.ScrollSettings.VerticalOffset = (viewportHeight - (double)contentHeight! * newZoom) / 2 - (double)minY! * newZoom;
+            
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ResetView()
+    {
+        if (DiagramRef?.ScrollSettings != null)
+        {
+            DiagramRef.ScrollSettings.CurrentZoom = 1.0;
+            DiagramRef.ScrollSettings.HorizontalOffset = 0;
+            DiagramRef.ScrollSettings.VerticalOffset = 0;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    #endregion
 }

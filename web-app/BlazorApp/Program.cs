@@ -1,11 +1,14 @@
 using BlazorApp.Components;
 using Neo4j.Driver;
+using Syncfusion.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddSyncfusionBlazor();
 
 // Register Neo4j Driver
 builder.Services.AddSingleton<IDriver>(provider =>
