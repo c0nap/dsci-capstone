@@ -20,6 +20,11 @@ builder.Services.AddSingleton<IDriver>(provider =>
     return GraphDatabase.Driver(uri, AuthTokens.Basic(user, password));
 });
 
+// SyncFusion license key - removes watermark, and free with account verification.
+var licenseKey = builder.Configuration["Syncfusion:LicenseKey"];
+if (!string.IsNullOrEmpty(licenseKey) && !licenseKey.Equals("your_key_optional"))
+    Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(licenseKey);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
