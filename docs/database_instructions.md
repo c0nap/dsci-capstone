@@ -7,7 +7,7 @@ Data Science Capstone - Patrick Conan
 If you need help installing your databases, follow these guides (click to expand).
 
 <details>
-  <summary><h4>PostgreSQL</h4></summary>
+  <summary><h3>PostgreSQL</h3></summary>
   
 
   1. Install database engine.
@@ -32,7 +32,7 @@ sudo service mysql start
 
 ---
 
-#### Other Issues
+### Other Issues
 
 
 Running MySQL on local machine: Must allow external connections.
@@ -46,7 +46,7 @@ FLUSH PRIVILEGES;
 DB_NAME in .env must be all lowercase for Postgres.
 
 
-#### Neo4j Installation for WSL (Ubuntu)
+### Neo4j Installation for WSL (Ubuntu)
 
 1. Install prerequisites `wget`, `gnupg`, and `apt-transport-https`
 
@@ -88,7 +88,7 @@ Now apt knows where to find the package and can verify its signature.
 sudo apt install neo4j
 ```
 
-#### First-time setup
+### First-time setup
 
 1. Start the database service. Ignore the message that Neo4j is running on port 7474 instead of 7687 - it runs on both.
 
@@ -111,7 +111,7 @@ MATCH (n) RETURN count(n);
 MATCH ()-[r]->() RETURN count(r);
 ```
 
-##### If you are also running the web application:
+#### If you are also running the web application:
 
 5. Allow external connections to database (e.g. web app)
 

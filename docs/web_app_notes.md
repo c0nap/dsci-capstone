@@ -7,7 +7,7 @@ Data Science Capstone - Patrick Conan
 
 1. On NuGet, `Z.Blazor.Diagrams` might work for you, but `Syncfusion.Blazor.Diagram` was easier to use and has more documentation. However, you should install only `Syncfusion.Blazor` to avoid complicating the locations of dependencies.
 
-2. Follow the instructions on this page: https://blazor.syncfusion.com/documentation/diagram/getting-started. Note: must add `builder.Services.AddSyncfusionBlazor()` and `app.UseStaticFiles()` before `app.MapStaticAssets()` in your `Program.cs`. Also, add the static web assets to your `App.razor`: JavaScript `_content/Syncfusion.Blazor/scripts/syncfusion-blazor.min.js` and Styles `_content/Syncfusion.Blazor/styles/bootstrap5-lite.css`. Sometimes refreshing the page will fix it too.
+2. Follow the instructions on this page: [Getting Started with Syncfusion](https://blazor.syncfusion.com/documentation/diagram/getting-started). Note: must add `builder.Services.AddSyncfusionBlazor()` and `app.UseStaticFiles()` before `app.MapStaticAssets()` in your `Program.cs`. Also, add the static web assets to your `App.razor`: JavaScript `_content/Syncfusion.Blazor/scripts/syncfusion-blazor.min.js` and Styles `_content/Syncfusion.Blazor/styles/bootstrap5-lite.css`. Sometimes refreshing the page will fix it too.
 
 3. IMPORTANT: The latest versions of Blazor require a render mode specification for elements to be interactive. `@rendermode InteractiveServer` at the top of the Razor page, or in `_Imports.razor` to apply it globally.
 

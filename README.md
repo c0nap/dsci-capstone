@@ -106,7 +106,7 @@ Create OpenAI and HuggingFace API keys, and copy them into `OPENAI_API_KEY` and 
 
 #### Generating Documentation with Doxygen
 
-[Helpful Guide](https://www.woolseyworkshop.com/2020/06/25/documenting-python-programs-with-doxygen/)
+[External Guide](https://www.woolseyworkshop.com/2020/06/25/documenting-python-programs-with-doxygen/)
 
 ```bash
 sudo apt install doxygen
