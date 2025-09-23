@@ -1,8 +1,109 @@
 ﻿@page "/Metrics"
 
+@using BlazorApp.Models
+
 <PageTitle>Metrics</PageTitle>
-<h3>Book Summaries & Metrics</h3>
+
+<h2>Book Summary</h2>
+<h4>@BookTitle</h4>
+<p>@GeneratedSummary</p>
+
+<hr />
+
+<h3>Evaluation Metrics</h3>
+
+<h4>P/R/F1 Metrics</h4>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Metric</th>
+        <th>Precision</th>
+        <th>Recall</th>
+        <th>F1</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var metric in metrics.PRF1Metrics)
+    {
+    <tr>
+        <td>@metric.Name</td>
+        <td>@metric.Precision</td>
+        <td>@metric.Recall</td>
+        <td>@metric.F1Score</td>
+    </tr>
+    }
+    </tbody>
+</table>
+
+<h4>Scalar Metrics</h4>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Metric</th>
+        <th>Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var metric in metrics.ScalarMetrics)
+    {
+    <tr>
+        <td>@metric.Name</td>
+        <td>@metric.Value</td>
+    </tr>
+    }
+    </tbody>
+</table>
+
+<h4>QA Results</h4>
+<p><strong>Average QA Accuracy:</strong> @metrics.QA.AverageAccuracy.ToString("P2")</p>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Question</th>
+        <th>Gold Answer</th>
+        <th>Generated Answer</th>
+        <th>Correct?</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var qa in metrics.QA.QAItems)
+    {
+    <tr>
+        <td>@qa.Question</td>
+        <td>@qa.GoldAnswer</td>
+        <td>@qa.GeneratedAnswer</td>
+        <td>@(qa.IsCorrect == true ? "✔️" : "❌")</td>
+    </tr>
+    }
+    </tbody>
+</table>
+
+
 
 @code {
-    
+    private string BookTitle = "Example Book";
+    private string GeneratedSummary = "This is an AI-generated summary of the entire book. It captures the key plot points and themes.";
+
+    private SummaryMetrics metrics = new SummaryMetrics
+    {
+        PRF1Metrics = new List<PRF1Metric>
+        {
+            new PRF1Metric { Name="ROUGE", Precision=0.80, Recall=0.85, F1Score=0.82 },
+            new PRF1Metric { Name="BERTScore", Precision=0.89, Recall=0.90, F1Score=0.89 }
+        },
+        ScalarMetrics = new List<ScalarMetric>
+        {
+            new ScalarMetric { Name="BooookScore (Chang 2024)", Value=0.76 },
+            new ScalarMetric { Name="QuestEval (Scialom 2021)", Value=0.81 }
+        },
+        QA = new QAMetrics
+        {
+            QAItems = new List<QAItem>
+            {
+                new QAItem { Question="Who is the protagonist?", GoldAnswer="Alice", GeneratedAnswer="Alice", IsCorrect=true },
+                new QAItem { Question="Where does the story start?", GoldAnswer="Wonderland", GeneratedAnswer="Forest", IsCorrect=false }
+            }
+        }
+    };
 }
