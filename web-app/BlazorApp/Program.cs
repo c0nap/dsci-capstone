@@ -31,6 +31,7 @@ if (!app.Environment.IsDevelopment()) {
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles(); // Syncfusion.Blazor in App.Razor
 
 app.UseAntiforgery();
 

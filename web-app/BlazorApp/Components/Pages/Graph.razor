@@ -1,10 +1,12 @@
 ﻿@page "/Graph"
+@rendermode InteractiveServer
 
 @using Syncfusion.Blazor.Diagram
 @using Syncfusion.Blazor.Buttons
 @using Neo4j.Driver
 
 @inject IDriver Neo4jDriver
+@inject ILogger<Graph> Logger
 
 <h3>Neo4j Graph Visualization with Syncfusion</h3>
 
@@ -16,7 +18,9 @@
                            Nodes="@nodes" 
                            Connectors="@connectors"
                            Click="@OnClick"
-                           ScrollChanged="@OnScrollChanged">
+                           ScrollChanged="@OnScrollChanged"
+                           InteractionController="@DiagramInteractions.ZoomPan"
+                           Created="@OnDiagramCreated">
             
             @* Enable Interactive Pan and Zoom with Mouse Wheel *@
             <ScrollSettings CurrentZoom="1.0" 
@@ -25,10 +29,7 @@
                            HorizontalOffset="0" 
                            VerticalOffset="0"
                            EnableAutoScroll="true"
-                           ScrollLimit="ScrollLimitMode.Infinity"
-                           CurrentZoomChanged="@OnZoomChanged"
-                           HorizontalOffsetChanged="@OnPanChanged"
-                           VerticalOffsetChanged="@OnPanChanged">
+                           ScrollLimit="ScrollLimitMode.Infinity">
             </ScrollSettings>
             
             @* Enable snap to grid for better node positioning *@
@@ -87,10 +88,55 @@
 
     private readonly Dictionary<string, (string label, List<string> properties)> nodeData = [];
 
+    
     protected override async Task OnInitializedAsync()
     {
+        Logger.LogInformation("Loading initial graph...");
         await LoadGraphFromNeo4j();
+
+        // Force UI update so Diagram can render nodes
+        StateHasChanged();
     }
+
+    private async Task OnDiagramCreated()
+    {
+        Logger.LogInformation("Diagram created; safe to add nodes/connectors and call FitToPage.");
+
+        if (nodes.Count > 0)
+        {
+            DiagramRef?.FitToPage();
+            DebugDiagramTransformed(sampleNodes: 10);
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            Logger.LogWarning("No nodes loaded to display in Diagram.");
+        }
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Logger.LogInformation(
+                "First render complete. Nodes: {NodeCount}, Connectors: {ConnectorCount}", 
+                nodes.Count, connectors.Count);
+
+            if (nodes.Count > 0)
+            {
+                Logger.LogInformation("Nodes loaded; waiting for Diagram Created event to apply FitToPage.");
+            }
+            else
+            {
+                Logger.LogWarning("No nodes loaded from Neo4j!");
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+
+
 
     private async Task LoadGraphFromNeo4j()
     {
@@ -100,13 +146,16 @@
 
         try
         {
+            Logger.LogInformation("Running Cypher query...");
             var result = await session.RunAsync(@"
                 MATCH (n)-[r]->(m)
                 RETURN n, r, m
                 LIMIT 50
             ");
-
-            await result.ForEachAsync(record =>
+            var records = await result.ToListAsync();
+            Logger.LogInformation("Fetched {Count} results.", records.Count);
+            
+            foreach (var record in records)
             {
                 var n1Node = record["n"].As<INode>();
                 var n2Node = record["m"].As<INode>();
@@ -136,7 +185,9 @@
                     connectors.Add(connector);
                     processedRelationships.Add(relationshipKey);
                 }
-            });
+            }
+            
+            Logger.LogInformation("Created {NodeCount} nodes and {ConnectorCount} relations.", nodes.Count, connectors.Count);
         }
         finally
         {
@@ -224,10 +275,11 @@
         return colors[Math.Abs(hash) % colors.Length];
     }
 
+    private static readonly Random _random = new();
+    
     private double GetRandomPosition(int min, int max)
     {
-        var random = new Random();
-        return random.Next(min, max);
+        return _random.Next(min, max);
     }
 
     #region Event Handlers
@@ -260,26 +312,16 @@
         StateHasChanged();
     }
 
-    private void OnScrollChanged(ScrollChangedEventArgs args) {
-        // Update current values when user pans/zooms
-        if (DiagramRef?.ScrollSettings == null) return;
-        currentZoom = DiagramRef.ScrollSettings.CurrentZoom;
-        horizontalOffset = DiagramRef.ScrollSettings.HorizontalOffset;
-        verticalOffset = DiagramRef.ScrollSettings.VerticalOffset;
-        StateHasChanged();
-    }
-
-    private void OnZoomChanged() {
-        if (DiagramRef?.ScrollSettings == null) return;
-        currentZoom = DiagramRef.ScrollSettings.CurrentZoom;
-        StateHasChanged();
-    }
-
-    private void OnPanChanged() {
-        if (DiagramRef?.ScrollSettings == null) return;
-        horizontalOffset = DiagramRef.ScrollSettings.HorizontalOffset;
-        verticalOffset = DiagramRef.ScrollSettings.VerticalOffset;
-        StateHasChanged();
+    private void OnScrollChanged(ScrollChangedEventArgs args) 
+    {
+        // Update current values when user pans/zooms via mouse
+        if (DiagramRef?.ScrollSettings != null)
+        {
+            currentZoom = DiagramRef.ScrollSettings.CurrentZoom;
+            horizontalOffset = DiagramRef.ScrollSettings.HorizontalOffset;
+            verticalOffset = DiagramRef.ScrollSettings.VerticalOffset;
+            StateHasChanged();
+        }
     }
 
     #endregion
@@ -288,65 +330,77 @@
 
     private async Task ZoomIn()
     {
-        if (DiagramRef?.ScrollSettings != null)
+        if (DiagramRef != null)
         {
             var newZoom = Math.Min(currentZoom + 0.25, 5.0);
-            DiagramRef.ScrollSettings.CurrentZoom = newZoom;
+            DiagramRef.Zoom(newZoom / currentZoom, null);
+            Logger.LogInformation($"Zoom set to {newZoom}.");
             await InvokeAsync(StateHasChanged);
         }
     }
 
     private async Task ZoomOut()
     {
-        if (DiagramRef?.ScrollSettings != null)
+        if (DiagramRef != null)
         {
             var newZoom = Math.Max(currentZoom - 0.25, 0.2);
-            DiagramRef.ScrollSettings.CurrentZoom = newZoom;
+            DiagramRef.Zoom(newZoom / currentZoom, null);
+            Logger.LogInformation($"Zoom set to {newZoom}.");
             await InvokeAsync(StateHasChanged);
         }
     }
 
     private async Task FitToPage()
     {
-        if (DiagramRef?.ScrollSettings != null && nodes.Count > 0)
+        if (nodes.Count > 0)
         {
-            // Calculate bounds of all nodes
-            var minX = nodes.Min(n => n.OffsetX - n.Width / 2);
-            var maxX = nodes.Max(n => n.OffsetX + n.Width / 2);
-            var minY = nodes.Min(n => n.OffsetY - n.Height / 2);
-            var maxY = nodes.Max(n => n.OffsetY + n.Height / 2);
-
-            var contentWidth = maxX - minX;
-            var contentHeight = maxY - minY;
-
-            // Estimate viewport size (you might need to adjust these values)
-            var viewportWidth = 800.0;
-            var viewportHeight = 600.0;
-
-            var zoomX = viewportWidth / contentWidth;
-            var zoomY = viewportHeight / contentHeight;
-            var zoom = Math.Min((double)zoomX!, (double)zoomY!) * 0.9; // 90% of fit for padding
-
-            // Apply zoom and center
-            var newZoom = Math.Max(0.2, Math.Min(zoom, 5.0));
-            DiagramRef.ScrollSettings.CurrentZoom = newZoom;
-            DiagramRef.ScrollSettings.HorizontalOffset = (viewportWidth - (double)contentWidth! * newZoom) / 2 - (double)minX! * newZoom;
-            DiagramRef.ScrollSettings.VerticalOffset = (viewportHeight - (double)contentHeight! * newZoom) / 2 - (double)minY! * newZoom;
-            
+            DiagramRef?.FitToPage();
             await InvokeAsync(StateHasChanged);
         }
     }
 
     private async Task ResetView()
     {
-        if (DiagramRef?.ScrollSettings != null)
+        if (DiagramRef != null)
         {
-            DiagramRef.ScrollSettings.CurrentZoom = 1.0;
-            DiagramRef.ScrollSettings.HorizontalOffset = 0;
-            DiagramRef.ScrollSettings.VerticalOffset = 0;
+            DiagramRef.Zoom(1.0 / currentZoom, null);
+            // Reset pan to center
+            if (DiagramRef.ScrollSettings != null)
+            {
+                DiagramRef.ScrollSettings.HorizontalOffset = 0;
+                DiagramRef.ScrollSettings.VerticalOffset = 0;
+            }
             await InvokeAsync(StateHasChanged);
         }
     }
 
     #endregion
+    
+    private void DebugDiagramTransformed(int sampleNodes = 5)
+    {
+        if (DiagramRef == null)
+        {
+            Logger.LogWarning("DiagramRef is null, cannot print transformed positions.");
+            return;
+        }
+
+        Logger.LogInformation("Diagram viewport: {Width}x{Height}, Zoom={Zoom}, HOffset={H}, VOffset={V}",
+            DiagramRef.Width, DiagramRef.Height, currentZoom, horizontalOffset, verticalOffset);
+
+        var count = Math.Min(sampleNodes, nodes.Count);
+        var rnd = new Random();
+        var sampledNodes = nodes.OrderBy(_ => rnd.Next()).Take(count).ToList();
+
+        foreach (var node in sampledNodes)
+        {
+            // Apply zoom & pan to get rendered position
+            var renderedX = node.OffsetX * currentZoom + horizontalOffset;
+            var renderedY = node.OffsetY * currentZoom + verticalOffset;
+
+            Logger.LogInformation(
+                "Node at position: original ({X},{Y}) -> rendered ({RX},{RY}) at zoom {Z}",
+                node.OffsetX, node.OffsetY, renderedX, renderedY, currentZoom);
+        }
+    }
+
 }
