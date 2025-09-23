@@ -1,6 +1,5 @@
 
----
-title: Data Science Capstone - Patrick Conan
+Data Science Capstone - Patrick Conan
 ---
 
 ## Database Setup
@@ -8,7 +7,7 @@ title: Data Science Capstone - Patrick Conan
 If you need help installing your databases, follow these guides (click to expand).
 
 <details>
-  <summary><h2>PostgreSQL</h2></summary>
+  <summary><h4>PostgreSQL</h4></summary>
   
 
   1. Install database engine.
@@ -33,7 +32,7 @@ sudo service mysql start
 
 ---
 
-## Other Issues
+#### Other Issues
 
 
 Running MySQL on local machine: Must allow external connections.
@@ -47,7 +46,7 @@ FLUSH PRIVILEGES;
 DB_NAME in .env must be all lowercase for Postgres.
 
 
-## Neo4j Installation for WSL (Ubuntu)
+#### Neo4j Installation for WSL (Ubuntu)
 
 1. Install prerequisites `wget`, `gnupg`, and `apt-transport-https`
 
@@ -112,7 +111,7 @@ MATCH (n) RETURN count(n);
 MATCH ()-[r]->() RETURN count(r);
 ```
 
-#### Web App
+##### If you are also running the web application:
 
 5. Allow external connections to database (e.g. web app)
 

@@ -1,10 +1,9 @@
 
----
-title: Data Science Capstone - Patrick Conan
+Data Science Capstone - Patrick Conan
 ---
 
 
-## Tips for designing a Blazor.Diagrams page.
+#### Tips for designing a Blazor.Diagrams page
 
 1. On NuGet, `Z.Blazor.Diagrams` might work for you, but `Syncfusion.Blazor.Diagram` was easier to use and has more documentation. However, you should install only `Syncfusion.Blazor` to avoid complicating the locations of dependencies.
 
