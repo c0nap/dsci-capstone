@@ -105,7 +105,7 @@
         if (nodes.Count > 0)
         {
             DiagramRef?.FitToPage();
-            DebugDiagramTransformed(sampleNodes: 10);
+            //DebugDiagramTransformed(sampleNodes: 10);
             await InvokeAsync(StateHasChanged);
         }
         else
@@ -194,23 +194,48 @@
             await session.CloseAsync();
         }
     }
+    
+    private string GetNodeLabel(INode neoNode, int maxLength = 20)
+    {
+        // Get name property or fallback to first label
+        var label = neoNode.Properties.TryGetValue("name", out var property) 
+            ? property?.ToString() : neoNode.Labels.FirstOrDefault();
+
+        // Fallback if null or whitespace
+        label = string.IsNullOrWhiteSpace(label) ? "<MISSING NAME>" : label.Trim();
+
+        // Truncate if too long
+        if (label.Length > maxLength)
+            label = label[..(maxLength - 3)] + "...";
+
+        return label;
+    }
+
 
     private Node CreateNodeFromNeo4j(INode neoNode)
     {
-        var label = neoNode.Labels.FirstOrDefault() ?? "Node";
-        var properties = neoNode.Properties.Select(kvp => $"{kvp.Key}: {kvp.Value}").ToList();
-        
-        // Store node data for selection display
+        // Use the "name" property as the label if it exists
+        var label = GetNodeLabel(neoNode);
+    
+        var properties = neoNode.Properties
+            .Select(kvp => $"{kvp.Key}: {kvp.Value}")
+            .ToList();
+    
         nodeData[neoNode.ElementId] = (label, properties);
-
+    
         return new Node()
         {
             ID = neoNode.ElementId,
             OffsetX = GetRandomPosition(100, 800),
             OffsetY = GetRandomPosition(100, 600),
-            Width = 120,
-            Height = 60,
-            Shape = new BasicShape() { Type = NodeShapes.Basic, Shape = NodeBasicShapes.Ellipse },
+            Width = 140,
+            Height = 40,
+            Shape = new BasicShape() 
+            { 
+                Type = NodeShapes.Basic, 
+                Shape = NodeBasicShapes.Rectangle,
+                CornerRadius = 15
+            },
             Style = new ShapeStyle() 
             { 
                 Fill = GetNodeColor(label),
@@ -224,7 +249,7 @@
                     Content = label,
                     Style = new TextStyle() 
                     { 
-                        Color = "white", 
+                        Color = "black", 
                         Bold = true,
                         FontSize = 12
                     }
@@ -232,7 +257,7 @@
             }
         };
     }
-
+    
     private Connector CreateConnectorFromNeo4j(string sourceId, string targetId, IRelationship relationship)
     {
         return new Connector()
