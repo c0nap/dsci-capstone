@@ -4,11 +4,15 @@
 @using Syncfusion.Blazor.Diagram
 @using Syncfusion.Blazor.Buttons
 @using Neo4j.Driver
+@using Microsoft.Msagl.Core.Geometry.Curves
+@using Microsoft.Msagl.Core.Layout
+@using Microsoft.Msagl.Layout.Layered
+@using Microsoft.Msagl.Miscellaneous
 
 @inject IDriver Neo4jDriver
 @inject ILogger<Graph> Logger
 
-<h3>Neo4j Graph Visualization with Syncfusion</h3>
+<h3>Neo4j Graph Visualization</h3>
 
 <div style="display:flex; height:80vh;">
     <div style="flex:1; border:1px solid gray;">
@@ -40,6 +44,12 @@
     </div>
     
     <div style="width:300px; padding:10px; border-left:1px solid gray;">
+        <h4>Layout Controls</h4>
+        <div style="margin-bottom:15px;">
+            <SfButton Content="Apply MSAGL Layout" CssClass="e-success e-small" OnClick="@ApplyMSAGLLayout" />
+            <SfButton Content="Random Layout" CssClass="e-warning e-small" OnClick="@ApplyRandomLayout" />
+        </div>
+        
         <h4>Zoom & Pan Controls</h4>
         <div style="margin-bottom:15px;">
             <SfButton Content="Zoom In" CssClass="e-primary e-small" OnClick="@ZoomIn" />
@@ -53,6 +63,7 @@
             <p><strong>Zoom:</strong> @currentZoom.ToString("F2")x</p>
             <p><strong>Pan X:</strong> @horizontalOffset.ToString("F0")px</p>
             <p><strong>Pan Y:</strong> @verticalOffset.ToString("F0")px</p>
+            <p><strong>Layout:</strong> @currentLayoutType</p>
         </div>
         
         <h4>Selected Item</h4>
@@ -78,13 +89,14 @@
 
 @code {
     private SfDiagramComponent? DiagramRef;
-    private readonly DiagramObjectCollection<Node> nodes = [];
+    private readonly DiagramObjectCollection<Syncfusion.Blazor.Diagram.Node> nodes = [];
     private readonly DiagramObjectCollection<Connector> connectors = [];
     
     private string selectedInfo = "Click a node or connector to view details";
     private double currentZoom = 1.0;
     private double horizontalOffset = 0;
     private double verticalOffset = 0;
+    private string currentLayoutType = "Random";
 
     private readonly Dictionary<string, (string label, List<string> properties)> nodeData = [];
 
@@ -104,8 +116,9 @@
 
         if (nodes.Count > 0)
         {
+            // Apply MSAGL layout immediately after diagram creation
+            await ApplyMSAGLLayout();
             DiagramRef?.FitToPage();
-            //DebugDiagramTransformed(sampleNodes: 10);
             await InvokeAsync(StateHasChanged);
         }
         else
@@ -124,7 +137,7 @@
 
             if (nodes.Count > 0)
             {
-                Logger.LogInformation("Nodes loaded; waiting for Diagram Created event to apply FitToPage.");
+                Logger.LogInformation("Nodes loaded; waiting for Diagram Created event to apply MSAGL layout.");
             }
             else
             {
@@ -135,14 +148,12 @@
         return Task.CompletedTask;
     }
 
-
-
-
     private async Task LoadGraphFromNeo4j()
     {
         var session = Neo4jDriver.AsyncSession();
         var processedNodes = new HashSet<string>();
         var processedRelationships = new HashSet<string>();
+        var connectionTracker = new Dictionary<string, List<(string relType, string relId, bool isReverse)>>();
 
         try
         {
@@ -177,13 +188,33 @@
                     processedNodes.Add(n2Node.ElementId);
                 }
 
+                // Track bidirectional connections for better routing
+                var connectionKey = GetConnectionKey(n1Node.ElementId, n2Node.ElementId);
+                if (!connectionTracker.ContainsKey(connectionKey))
+                    connectionTracker[connectionKey] = new List<(string, string, bool)>();
+                
+                connectionTracker[connectionKey].Add((rel.Type, rel.ElementId, false));
+
                 // Process relationship
                 var relationshipKey = $"{n1Node.ElementId}-{rel.Type}-{n2Node.ElementId}";
                 if (!processedRelationships.Contains(relationshipKey))
                 {
-                    var connector = CreateConnectorFromNeo4j(n1Node.ElementId, n2Node.ElementId, rel);
-                    connectors.Add(connector);
                     processedRelationships.Add(relationshipKey);
+                }
+            }
+
+            // Create connectors with bidirectional awareness
+            foreach (var (connectionKey, relationships) in connectionTracker)
+            {
+                var parts = connectionKey.Split('|');
+                var nodeId1 = parts[0];
+                var nodeId2 = parts[1];
+                
+                for (int i = 0; i < relationships.Count; i++)
+                {
+                    var (relType, relId, _) = relationships[i];
+                    var connector = CreateConnectorFromNeo4j(nodeId1, nodeId2, relType, relId, i, relationships.Count);
+                    connectors.Add(connector);
                 }
             }
             
@@ -211,8 +242,7 @@
         return label;
     }
 
-
-    private Node CreateNodeFromNeo4j(INode neoNode)
+    private Syncfusion.Blazor.Diagram.Node CreateNodeFromNeo4j(INode neoNode)
     {
         // Use the "name" property as the label if it exists
         var label = GetNodeLabel(neoNode);
@@ -223,7 +253,7 @@
     
         nodeData[neoNode.ElementId] = (label, properties);
     
-        return new Node()
+        return new Syncfusion.Blazor.Diagram.Node()
         {
             ID = neoNode.ElementId,
             OffsetX = GetRandomPosition(100, 800),
@@ -234,7 +264,7 @@
             { 
                 Type = NodeShapes.Basic, 
                 Shape = NodeBasicShapes.Rectangle,
-                CornerRadius = 15
+                CornerRadius = 20
             },
             Style = new ShapeStyle() 
             { 
@@ -258,38 +288,81 @@
         };
     }
     
-    private Connector CreateConnectorFromNeo4j(string sourceId, string targetId, IRelationship relationship)
+    private Connector CreateConnectorFromNeo4j(string sourceId, string targetId, string relationshipType, string relationshipId, int connectionIndex, int totalConnections)
     {
-        return new Connector()
+        // Calculate offset for multiple connections between same nodes
+        var baseOffset = 0.0;
+        if (totalConnections > 1)
         {
-            ID = $"conn_{sourceId}_{targetId}_{relationship.Type}",
+            // Distribute connections with different curvatures
+            var offsetRange = 60.0; // Maximum offset in pixels
+            baseOffset = (connectionIndex - (totalConnections - 1) / 2.0) * (offsetRange / Math.Max(totalConnections - 1, 1));
+        }
+
+        var connector = new Connector()
+        {
+            ID = $"conn_{sourceId}_{targetId}_{relationshipType}_{connectionIndex}",
             SourceID = sourceId,
             TargetID = targetId,
-            Type = ConnectorSegmentType.Straight,
+            Type = ConnectorSegmentType.Bezier,
             Style = new ShapeStyle()
             {
-                StrokeColor = "#6495ED",
+                StrokeColor = GetConnectorColor(connectionIndex),
                 StrokeWidth = 2
             },
             TargetDecorator = new DecoratorSettings()
             {
                 Shape = DecoratorShape.Arrow,
-                Style = new ShapeStyle() { Fill = "#6495ED", StrokeColor = "#6495ED" }
+                Style = new ShapeStyle() { Fill = GetConnectorColor(connectionIndex), StrokeColor = GetConnectorColor(connectionIndex) }
             },
             Annotations = new DiagramObjectCollection<PathAnnotation>()
             {
                 new PathAnnotation() 
                 { 
-                    Content = relationship.Type,
+                    Content = relationshipType,
                     Style = new TextStyle() 
                     { 
                         Color = "#333333",
                         FontSize = 10,
                         Bold = true
-                    }
+                    },
+                    // Offset annotation position for multiple connections
+                    Offset = totalConnections > 1 ? 0.5 + (connectionIndex * 0.1) : 0.5,
+                    Alignment = AnnotationAlignment.Center
                 }
             }
         };
+
+        // Apply bezier control point offset for curved routing
+        if (Math.Abs(baseOffset) > 1)
+        {
+            connector.Segments = new DiagramObjectCollection<ConnectorSegment>
+            {
+                new BezierSegment()
+                {
+                    Type = ConnectorSegmentType.Bezier,
+                    // These control points create the curve offset
+                    Point1 = new DiagramPoint() { X = baseOffset, Y = -Math.Abs(baseOffset) },
+                    Point2 = new DiagramPoint() { X = -baseOffset, Y = -Math.Abs(baseOffset) }
+                }
+            };
+        }
+
+        return connector;
+    }
+
+    private string GetConnectorColor(int index)
+    {
+        var colors = new[] { "#6495ED", "#FF6B6B", "#4ECDC4", "#96CEB4", "#FFEAA7", "#DDA0DD" };
+        return colors[index % colors.Length];
+    }
+
+    private string GetConnectionKey(string nodeId1, string nodeId2)
+    {
+        // Create consistent key regardless of direction for bidirectional tracking
+        return string.Compare(nodeId1, nodeId2, StringComparison.Ordinal) < 0 
+            ? $"{nodeId1}|{nodeId2}" 
+            : $"{nodeId2}|{nodeId1}";
     }
 
     private string GetNodeColor(string label)
@@ -307,13 +380,104 @@
         return _random.Next(min, max);
     }
 
+    #region MSAGL Layout Integration
+
+    private async Task ApplyMSAGLLayout()
+    {
+        if (nodes.Count == 0)
+        {
+            Logger.LogWarning("No nodes to layout with MSAGL.");
+            return;
+        }
+
+        try
+        {
+            Logger.LogInformation("Applying MSAGL layout to {NodeCount} nodes...", nodes.Count);
+            
+            // Create MSAGL geometry graph
+            var geometryGraph = new Microsoft.Msagl.Core.Layout.GeometryGraph();
+            var nodeMap = new Dictionary<string, Microsoft.Msagl.Core.Layout.Node>();
+
+            // Add nodes to MSAGL graph
+            foreach (var syncNode in nodes)
+            {
+                var msaglNode = new Microsoft.Msagl.Core.Layout.Node(
+                    CurveFactory.CreateRectangle((double)syncNode.Width, (double)syncNode.Height, new Microsoft.Msagl.Core.Geometry.Point()),
+                    syncNode.ID);
+                
+                geometryGraph.Nodes.Add(msaglNode);
+                nodeMap[syncNode.ID] = msaglNode;
+            }
+
+            // Add edges to MSAGL graph
+            foreach (var connector in connectors)
+            {
+                if (nodeMap.TryGetValue(connector.SourceID, out var sourceNode) && 
+                    nodeMap.TryGetValue(connector.TargetID, out var targetNode))
+                {
+                    var edge = new Microsoft.Msagl.Core.Layout.Edge(sourceNode, targetNode);
+                    geometryGraph.Edges.Add(edge);
+                }
+            }
+
+            // Configure and run MSAGL layout
+            var layoutSettings = new SugiyamaLayoutSettings
+            {
+                Transformation = PlaneTransformation.Rotation(Math.PI / 2), // Rotate for better fit
+                NodeSeparation = 80,  // Increase separation to reduce overlap
+                LayerSeparation = 100, // Vertical separation between layers
+                MinNodeWidth = 140,
+                MinNodeHeight = 40
+            };
+
+            var layoutEngine = new LayeredLayout(geometryGraph, layoutSettings);
+            layoutEngine.Run();
+
+            // Apply calculated positions back to Syncfusion nodes
+            foreach (var syncNode in nodes)
+            {
+                if (nodeMap.TryGetValue(syncNode.ID, out var msaglNode))
+                {
+                    syncNode.OffsetX = msaglNode.Center.X;
+                    syncNode.OffsetY = msaglNode.Center.Y;
+                }
+            }
+
+            currentLayoutType = "MSAGL Layered";
+            Logger.LogInformation("MSAGL layout applied successfully.");
+            
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error applying MSAGL layout: {Message}", ex.Message);
+            currentLayoutType = "MSAGL Failed";
+        }
+    }
+
+    private async Task ApplyRandomLayout()
+    {
+        Logger.LogInformation("Applying random layout...");
+        
+        foreach (var node in nodes)
+        {
+            node.OffsetX = GetRandomPosition(100, 1200);
+            node.OffsetY = GetRandomPosition(100, 800);
+        }
+        
+        currentLayoutType = "Random";
+        await InvokeAsync(StateHasChanged);
+    }
+
+    #endregion
+
     #region Event Handlers
 
     private void OnClick(ClickEventArgs args)
     {
         if (args.Element != null)
         {
-            if (args.Element is Node selectedNode)
+            if (args.Element is Syncfusion.Blazor.Diagram.Node selectedNode)
             {
                 if (selectedNode.ID != null && nodeData.TryGetValue(selectedNode.ID, out var data))
                 {
