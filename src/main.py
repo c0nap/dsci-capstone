@@ -364,10 +364,137 @@ def output_single():
 	print("\nOutput sent to web app.")
 
 
+
+
+
+
+def full_pipeline(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
+	from components.text_processing import RelationExtractor, LLMConnector
+
+	# convert EPUB file
+	print(f"\n{'='*50}")
+	print(f"Processing: {epub_path}")
+
+	converter = EPUBToTEI(epub_path, chapter_div_type = "null", save_pandoc=False, save_tei=True)
+	converter.convert_to_tei()
+	converter.clean_tei()
+	tei_path = converter.tei_path
+	
+	chaps = [line.strip() for line in book_chapters.splitlines() if line.strip()]
+	reader = ParagraphStreamTEI(tei_path, book_id, story_id, allowed_chapters = chaps, start_inclusive = start_str, end_inclusive = end_str)
+	story = Story(reader)
+	story.pre_split_chunks(max_chunk_length = 1500)
+	chunks = list(story.stream_chunks())
+
+	print("\n=== STORY SUMMARY ===")
+	print(f"Total chunks: {len(chunks)}")
+
+	re_rebel = "Babelscape/rebel-large"
+	re_rst = "GAIR/rst-information-extraction-11b"
+	ner_renard = "compnet-renard/bert-base-cased-literary-NER"
+	nlp = RelationExtractor(model_name=re_rebel, max_tokens=1024)
+	llm = LLMConnector(temperature=0, system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON.")
+
+	unique_number = random.sample(range(len(chunks)), 1)[0]
+	c = chunks[unique_number]
+	print("\nChunk details:")
+	print(f"  index: {c}\n")
+	print(c.text)
+
+	extracted = nlp.extract(c.text, parse_tuples = True)
+	print(f"\nNLP output:")
+	triples_string = ""
+	for triple in extracted:
+		print(triple)
+		triples_string += str(triple) + "\n"
+	print()
+
+	prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+	prompt += f"And here is the original text:\n{c.text}\n\n"
+	prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
+	prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
+	llm_output = llm.execute_query(prompt)
+
+	print("\n    LLM prompt:")
+	print(llm.system_prompt)
+	print(prompt)
+	print("\n    LLM output:")
+	print(llm_output)
+	print("\n" + "="*50 + "\n")
+
+	try:
+		triples = json.loads(llm_output)
+		print("\nValid JSON")
+	except json.JSONDecodeError as e:
+		print("\nInvalid JSON:", e)
+		return
+
+	for triple in triples:
+		subj = triple['s']
+		rel = triple['r']
+		obj = triple['o']
+		print(subj, rel, obj)
+		session.graph_db.add_triple(subj, rel, obj)
+
+	# basic linear verbalization of triples (concatenate)
+	edge_count_df = session.graph_db.get_edge_counts(top_n = 3)
+	print("\nMost relevant nodes:")
+	print(edge_count_df)
+
+	triples_df = session.graph_db.get_all_triples()
+	triples_string = ""
+	for _, row in edge_count_df.iterrows():
+		node_name = row.get("node_name")
+		node_triples_df = triples_df[triples_df["subject"] == node_name]
+
+		for _, triple in node_triples_df.iterrows():
+			subj = triple.get("subject")
+			rel = triple.get("relation")
+			obj = triple.get("object")
+			triples_string += f"{subj} {rel} {obj}\n"
+	print("\nTriples which best represent the graph:")
+	print(triples_string)
+
+	# Prompt LLM to generate summary
+	llm = LLMConnector(temperature=0, system_prompt = "You are a helpful assistant that processes semantic triples.")
+	prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+	prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
+	prompt += "Output your generated summary and nothing else."
+	response = llm.execute_query(prompt)
+
+	print("\nGenerated summary:")
+	print(response)
+
+	post_basic_output(book_id, book_title, summary = response)
+	print("\nOutput sent to web app.")
+
+
+
 if __name__ == "__main__":
 	#convert_from_csv()
 	#chunk_single()
 	#process_single()
 	#graph_triple_files()
 	#post_example_results()
-	output_single()
+	#output_single()
+
+	full_pipeline(
+		epub_path = "./datasets/examples/trilogy-wishes-2.epub",
+		book_chapters = """
+CHAPTER 1. THE EGG\n
+CHAPTER 2. THE TOPLESS TOWER\n
+CHAPTER 3. THE QUEEN COOK\n
+CHAPTER 4. TWO BAZAARS\n
+CHAPTER 5. THE TEMPLE\n
+CHAPTER 6. DOING GOOD\n
+CHAPTER 7. MEWS FROM PERSIA\n
+CHAPTER 8. THE CATS, THE COW, AND THE BURGLAR\n
+CHAPTER 9. THE BURGLAR’S BRIDE\n
+CHAPTER 10. THE HOLE IN THE CARPET\n
+CHAPTER 11. THE BEGINNING OF THE END\n
+CHAPTER 12. THE END OF THE END\n
+""",
+		start_str = "", end_str = "end of the Phoenix and the Carpet.",
+		book_id = 2, story_id = 1,
+		book_title = "The Phoenix and the Carpet")
+

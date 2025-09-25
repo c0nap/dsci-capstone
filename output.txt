@@ -1,40 +1,172 @@
 
 
 ==================================================
-Processing: ./datasets/triples/chunk-160_story-1.json
-Jane owner of Lamb
-Lamb owned by Jane
-Anthea washed Lamb
-Jane hugs Anthea
-Jane comforts Anthea
-Jane said Don't cry, Panther dear!
-Anthea exclaims HE'S safe
-Anthea feared Red Indians near White House
-Red Indians threaten White House
-Anthea believes Lamb is safe
+Processing: ./datasets/examples/trilogy-wishes-2.epub
+
+=== STORY SUMMARY ===
+Total chunks: 254
+
+Chunk details:
+  index: Chunk(len=1227, book=2, chapter=14, story=1, lines=[4609,4631], story%=72.114, chapter%=31.432)
+
+But what in her day Zulieka’s grandmother had been was destined never to be revealed, for Cyril and Robert suddenly burst into the room, and on each brow were the traces of deep emotion. On Cyril’s pale brow stood beads of agitation and perspiration, and on the scarlet brow of Robert was a large black smear.
+‘What ails ye both?’ asked the Phoenix, and it added tartly that story-telling was quite impossible if people would come interrupting like that.
+‘Oh, do shut up, for any sake!’ said Cyril, sinking into a chair.
+Robert smoothed the ruffled golden feathers, adding kindly—
+‘Squirrel doesn’t mean to be a beast. It’s only that the MOST AWFUL thing has happened, and stories don’t seem to matter so much. Don’t be cross. You won’t be when you’ve heard what’s happened.’
+‘Well, what HAS happened?’ said the bird, still rather crossly; and Anthea and Jane paused with long needles poised in air, and long needlefuls of Scotch heather-mixture fingering wool drooping from them.
+‘The most awful thing you can possibly think of,’ said Cyril. ‘That nice chap—our own burglar—the police have got him, on suspicion of stolen cats. That’s what his brother’s missis told me.’
+‘Oh, begin at the beginning!’ cried Anthea impatiently.
+
+NLP output:
+('Cyril', 'sibling', 'Robert')
+('Robert', 'sibling', 'Cyril')
+('Cyril', 'sibling', 'Robert')
+('Robert', 'sibling', 'Cyril')
+('What ails ye both?', 'characters', 'Ye both?')
+('Ye both?', 'present in work', 'What ails ye both?')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Oh, do shut up', 'said to be the same as', 'for any sake!')
+('for any sake!', 'said to be the same as', 'Oh, do shut up')
+('for any sake!', 'for any sake!', 'said to be the same as')
+('Oh, do shut up', 'for any sake! said to be the same as', 'said to be the same as')
+('for any sake!', 'said to be the same as', 'Oh, do shut up')
+('Cyril', 'uses', 'chair')
+('chair', 'used by', 'Cyril')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Don’t be cross', 'different from', 'cross')
+('cross', 'different from', 'Don’t be cross')
+('World War I', 'followed by', 'World War II')
+('World War II', 'follows', 'World War I')
+('What HAS happened?', 'has effect', 'Has happened?')
+('Has happened?', 'has cause', 'What HAS happened?')
+('Anthea', 'spouse', 'Jane')
+('Jane', 'spouse', 'Anthea')
+('Cyril', 'present in work', 'The most awful thing you can possibly think of')
+('burglar', 'has cause', 'police')
+('police', 'has effect', 'burglar')
+('his brother', 'sibling', 'missis')
+('missis', 'sibling', 'his brother')
+('Begin at the beginning!', 'has part', 'Oh, begin at the beginning!')
+('Oh, begin at the beginning!', 'part of', 'Begin at the beginning!')
+('Anthea', 'child', 'Anthea')
+
+
+    LLM prompt:
+You are a helpful assistant that converts semantic triples into structured JSON.
+Here are some semantic triples extracted from a story chunk:
+('Cyril', 'sibling', 'Robert')
+('Robert', 'sibling', 'Cyril')
+('Cyril', 'sibling', 'Robert')
+('Robert', 'sibling', 'Cyril')
+('What ails ye both?', 'characters', 'Ye both?')
+('Ye both?', 'present in work', 'What ails ye both?')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Oh, do shut up', 'said to be the same as', 'for any sake!')
+('for any sake!', 'said to be the same as', 'Oh, do shut up')
+('for any sake!', 'for any sake!', 'said to be the same as')
+('Oh, do shut up', 'for any sake! said to be the same as', 'said to be the same as')
+('for any sake!', 'said to be the same as', 'Oh, do shut up')
+('Cyril', 'uses', 'chair')
+('chair', 'used by', 'Cyril')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Don’t be cross', 'different from', 'cross')
+('cross', 'different from', 'Don’t be cross')
+('World War I', 'followed by', 'World War II')
+('World War II', 'follows', 'World War I')
+('What HAS happened?', 'has effect', 'Has happened?')
+('Has happened?', 'has cause', 'What HAS happened?')
+('Anthea', 'spouse', 'Jane')
+('Jane', 'spouse', 'Anthea')
+('Cyril', 'present in work', 'The most awful thing you can possibly think of')
+('burglar', 'has cause', 'police')
+('police', 'has effect', 'burglar')
+('his brother', 'sibling', 'missis')
+('missis', 'sibling', 'his brother')
+('Begin at the beginning!', 'has part', 'Oh, begin at the beginning!')
+('Oh, begin at the beginning!', 'part of', 'Begin at the beginning!')
+('Anthea', 'child', 'Anthea')
+
+And here is the original text:
+But what in her day Zulieka’s grandmother had been was destined never to be revealed, for Cyril and Robert suddenly burst into the room, and on each brow were the traces of deep emotion. On Cyril’s pale brow stood beads of agitation and perspiration, and on the scarlet brow of Robert was a large black smear.
+‘What ails ye both?’ asked the Phoenix, and it added tartly that story-telling was quite impossible if people would come interrupting like that.
+‘Oh, do shut up, for any sake!’ said Cyril, sinking into a chair.
+Robert smoothed the ruffled golden feathers, adding kindly—
+‘Squirrel doesn’t mean to be a beast. It’s only that the MOST AWFUL thing has happened, and stories don’t seem to matter so much. Don’t be cross. You won’t be when you’ve heard what’s happened.’
+‘Well, what HAS happened?’ said the bird, still rather crossly; and Anthea and Jane paused with long needles poised in air, and long needlefuls of Scotch heather-mixture fingering wool drooping from them.
+‘The most awful thing you can possibly think of,’ said Cyril. ‘That nice chap—our own burglar—the police have got him, on suspicion of stolen cats. That’s what his brother’s missis told me.’
+‘Oh, begin at the beginning!’ cried Anthea impatiently.
+
+Output JSON with keys: s (subject), r (relation), o (object).
+Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
+
+    LLM output:
+[
+  {"s": "Cyril", "r": "sibling", "o": "Robert"},
+  {"s": "Cyril", "r": "burst into", "o": "the room"},
+  {"s": "Robert", "r": "burst into", "o": "the room"},
+  {"s": "Phoenix", "r": "spoke", "o": "What ails ye both?"},
+  {"s": "Phoenix", "r": "comment", "o": "story-telling was quite impossible if people would come interrupting like that"},
+  {"s": "Cyril", "r": "spoke", "o": "Oh, do shut up, for any sake!"},
+  {"s": "Robert", "r": "spoke", "o": "Squirrel doesn’t mean to be a beast. It’s only that the MOST AWFUL thing has happened, and stories don’t seem to matter so much."},
+  {"s": "Robert", "r": "spoke", "o": "Don’t be cross. You won’t be when you’ve heard what’s happened."},
+  {"s": "Cyril", "r": "spoke", "o": "The most awful thing you can possibly think of."},
+  {"s": "burglar", "r": "arrested by", "o": "police"},
+  {"s": "police", "r": "arrested", "o": "burglar"},
+  {"s": "burglar", "r": "on suspicion of", "o": "stolen cats"},
+  {"s": "Robert", "r": "smoothed", "o": "ruffled golden feathers"},
+  {"s": "Anthea", "r": "spoke", "o": "Oh, begin at the beginning!"}
+]
+
+==================================================
+
+
+Valid JSON
+Cyril sibling Robert
+Cyril burst into the room
+Robert burst into the room
+Phoenix spoke What ails ye both?
+Phoenix comment story-telling was quite impossible if people would come interrupting like that
+Cyril spoke Oh, do shut up, for any sake!
+Robert spoke Squirrel doesn’t mean to be a beast. It’s only that the MOST AWFUL thing has happened, and stories don’t seem to matter so much.
+Robert spoke Don’t be cross. You won’t be when you’ve heard what’s happened.
+Cyril spoke The most awful thing you can possibly think of.
+burglar arrested by police
+police arrested burglar
+burglar on suspicion of stolen cats
+Robert smoothed ruffled golden feathers
+Anthea spoke Oh, begin at the beginning!
 
 Most relevant nodes:
   node_name  edge_count
-0    Anthea           6
-1      Jane           5
-2      Lamb           3
+0    Robert           5
+1     Cyril           4
+2   burglar           3
 
 Triples which best represent the graph:
-Anthea believes Lamb_is_safe
-Anthea feared Red_Indians_near_White_House
-Anthea exclaims HE_S_safe
-Anthea washed Lamb
-Jane said Don_t_cry__Panther_dear_
-Jane comforts Anthea
-Jane hugs Anthea
-Jane owner_of Lamb
-Lamb owned_by Jane
+Robert smoothed ruffled_golden_feathers
+Robert spoke Don_t_be_cross__You_won_t_be_when_you_ve_heard_what_s_happened_
+Robert spoke Squirrel_doesn_t_mean_to_be_a_beast__It_s_only_that_the_MOST_AWFUL_thing_has_happened__and_stories_don_t_seem_to_matter_so_much_
+Robert burst_into the_room
+Cyril spoke The_most_awful_thing_you_can_possibly_think_of_
+Cyril spoke Oh__do_shut_up__for_any_sake_
+Cyril burst_into the_room
+Cyril sibling Robert
+burglar on_suspicion_of stolen_cats
+burglar arrested_by police
 
-LLM output was saved to './datasets/triples/chunk-160_story-1.txt'
 
 Generated summary:
-Jane owns the Lamb, which Anthea washes. Anthea believes the Lamb is safe and later exclaims that he is safe. She also fears Red Indians near the White House. Jane comforts and hugs Anthea, addressing her as “Panther dear” and telling her not to cry.
-POST succeeded
-{'bookID': '1', 'bookTitle': 'Five Children and It', 'summaryText': 'Jane owns the Lamb, which Anthea washes. Anthea believes the Lamb is safe and later exclaims that he is safe. She also fears Red Indians near the White House. Jane comforts and hugs Anthea, addressing her as “Panther dear” and telling her not to cry.', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
+Robert smooths his ruffled golden feathers as he and his sibling Cyril burst into a room in distress. He tries to reassure Cyril, saying he’ll explain what happened and that the most awful thing has occurred. Cyril replies that it’s the most awful thing imaginable and tells him to shut up. A burglar suspected of stealing cats is arrested by the police.
+POST failed: 400
+{"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"errors":{"summary":["The summary field is required."],"$.BookID":["The JSON value could not be converted to System.String. Path: $.BookID | LineNumber: 0 | BytePositionInLine: 12."]},"traceId":"00-93601dbde33a38c50a752c9835fabb01-a12603204e756193-00"}
 
 Output sent to web app.
