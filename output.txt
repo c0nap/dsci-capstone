@@ -13,32 +13,28 @@ Anthea feared Red Indians near White House
 Red Indians threaten White House
 Anthea believes Lamb is safe
 
-==================================================
-Processing: ./datasets/triples/chunk-70_story-1.json
-ragged children are making dust-pies in the road
-two men are lying on the grass
-two men are smoking on the grass
-three women are washing in an old red watering-can with the top broken off
-old red watering-can with the top broken off has the top broken off
-three women are washing the family washing
+Most relevant nodes:
+  node_name  edge_count
+0    Anthea           6
+1      Jane           5
+2      Lamb           3
 
-==================================================
-Graph triples (16 total):
-                subject        relation               object
-0                  Jane            said  Don_t_cry__Panth...
-1                  Jane        comforts               Anthea
-2                  Jane            hugs               Anthea
-3                  Jane        owner_of                 Lamb
-4                  Lamb        owned_by                 Jane
-5                Anthea        believes         Lamb_is_safe
-6                Anthea          feared  Red_Indians_near...
-7                Anthea        exclaims            HE_S_safe
-8                Anthea          washed                 Lamb
-9           Red_Indians        threaten          White_House
-10      ragged_children      are_making  dust_pies_in_the...
-11              two_men     are_smoking         on_the_grass
-12              two_men       are_lying         on_the_grass
-13          three_women     are_washing   the_family_washing
-14          three_women  are_washing_in  an_old_red_water...
-15  old_red_watering...             has   the_top_broken_off
+Triples which best represent the graph:
+Anthea believes Lamb_is_safe
+Anthea feared Red_Indians_near_White_House
+Anthea exclaims HE_S_safe
+Anthea washed Lamb
+Jane said Don_t_cry__Panther_dear_
+Jane comforts Anthea
+Jane hugs Anthea
+Jane owner_of Lamb
+Lamb owned_by Jane
 
+LLM output was saved to './datasets/triples/chunk-160_story-1.txt'
+
+Generated summary:
+Jane owns the Lamb, which Anthea washes. Anthea believes the Lamb is safe and later exclaims that he is safe. She also fears Red Indians near the White House. Jane comforts and hugs Anthea, addressing her as “Panther dear” and telling her not to cry.
+POST succeeded
+{'bookID': '1', 'bookTitle': 'Five Children and It', 'summaryText': 'Jane owns the Lamb, which Anthea washes. Anthea believes the Lamb is safe and later exclaims that he is safe. She also fears Red Indians near the White House. Jane comforts and hugs Anthea, addressing her as “Panther dear” and telling her not to cry.', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
+
+Output sent to web app.

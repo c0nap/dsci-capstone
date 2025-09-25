@@ -58,7 +58,7 @@ class GraphConnector(DatabaseConnector):
 			results, meta = db.cypher_query(query)
 			if not results:
 				return None
-			return pd.DataFrame(results, columns=[m[0] for m in meta])
+			return pd.DataFrame(results, columns=[m for m in meta])
 		except Exception as e:
 			if self.verbose: Log.fail(f"Failed query on {self.connection_string}")
 			raise
@@ -120,6 +120,26 @@ class GraphConnector(DatabaseConnector):
 			if self.verbose:
 				print(f"Failed to add triple: ({subject})-[:{relation}]->({object_})")
 			raise
+
+	def get_edge_counts(self, top_n: int = 10) -> DataFrame:
+		"""Return node names and their edge counts, ordered by edge count descending.
+		
+		Args:
+			top_n: Number of top nodes to return (by edge count). Default is 10.
+			
+		Returns:
+			DataFrame with columns: node_name, edge_count
+		"""
+		query = f"""
+		MATCH (n)
+		WHERE n.database_id = '{self.database_name}'
+		OPTIONAL MATCH (n)-[r]-()
+		WITH n.name as node_name, count(r) as edge_count
+		ORDER BY edge_count DESC, rand()
+		LIMIT {top_n}
+		RETURN node_name, edge_count
+		"""
+		return self.execute_query(query)
 
 
 	def get_all_triples(self) -> pd.DataFrame:
