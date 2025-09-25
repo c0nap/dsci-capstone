@@ -7,166 +7,150 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 Total chunks: 254
 
 Chunk details:
-  index: Chunk(len=1227, book=2, chapter=14, story=1, lines=[4609,4631], story%=72.114, chapter%=31.432)
+  index: Chunk(len=1458, book=2, chapter=11, story=1, lines=[3058,3083], story%=46.471, chapter%=1.815)
 
-But what in her day Zulieka’s grandmother had been was destined never to be revealed, for Cyril and Robert suddenly burst into the room, and on each brow were the traces of deep emotion. On Cyril’s pale brow stood beads of agitation and perspiration, and on the scarlet brow of Robert was a large black smear.
-‘What ails ye both?’ asked the Phoenix, and it added tartly that story-telling was quite impossible if people would come interrupting like that.
-‘Oh, do shut up, for any sake!’ said Cyril, sinking into a chair.
-Robert smoothed the ruffled golden feathers, adding kindly—
-‘Squirrel doesn’t mean to be a beast. It’s only that the MOST AWFUL thing has happened, and stories don’t seem to matter so much. Don’t be cross. You won’t be when you’ve heard what’s happened.’
-‘Well, what HAS happened?’ said the bird, still rather crossly; and Anthea and Jane paused with long needles poised in air, and long needlefuls of Scotch heather-mixture fingering wool drooping from them.
-‘The most awful thing you can possibly think of,’ said Cyril. ‘That nice chap—our own burglar—the police have got him, on suspicion of stolen cats. That’s what his brother’s missis told me.’
-‘Oh, begin at the beginning!’ cried Anthea impatiently.
+‘Yes, glad,’ said Jane. ‘I don’t want any more things to happen just now. I feel like you do when you’ve been to three parties in a week—like we did at granny’s once—and extras in between, toys and chocs and things like that. I want everything to be just real, and no fancy things happening at all.’ ‘I don’t like being obliged to keep things from mother,’ said Anthea. ‘I don’t know why, but it makes me feel selfish and mean.’
+‘If we could only get the mater to believe it, we might take her to the jolliest places,’ said Cyril, thoughtfully. ‘As it is, we’ve just got to be selfish and mean—if it is that—but I don’t feel it is.’
+‘I KNOW it isn’t, but I FEEL it is,’ said Anthea, ‘and that’s just as bad.’
+‘It’s worse,’ said Robert; ‘if you knew it and didn’t feel it, it wouldn’t matter so much.’
+‘That’s being a hardened criminal, father says,’ put in Cyril, and he picked up mother’s letter and wiped its corners with his handkerchief, to whose colour a trifle of bacon-fat and marmalade made but little difference.
+‘We’re going to-morrow, anyhow,’ said Robert. ‘Don’t,’ he added, with a good-boy expression on his face—‘don’t let’s be ungrateful for our blessings; don’t let’s waste the day in saying how horrid it is to keep secrets from mother, when we all know Anthea tried all she knew to give her the secret, and she wouldn’t take it. Let’s get on the carpet and have a jolly good wish. You’ll have time enough to repent of things all next week.’
 
 NLP output:
-('Cyril', 'sibling', 'Robert')
-('Robert', 'sibling', 'Cyril')
-('Cyril', 'sibling', 'Robert')
-('Robert', 'sibling', 'Cyril')
-('What ails ye both?', 'characters', 'Ye both?')
-('Ye both?', 'present in work', 'What ails ye both?')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Oh, do shut up', 'said to be the same as', 'for any sake!')
-('for any sake!', 'said to be the same as', 'Oh, do shut up')
-('for any sake!', 'for any sake!', 'said to be the same as')
-('Oh, do shut up', 'for any sake! said to be the same as', 'said to be the same as')
-('for any sake!', 'said to be the same as', 'Oh, do shut up')
-('Cyril', 'uses', 'chair')
-('chair', 'used by', 'Cyril')
+('Jane', 'spouse', 'John')
+('John', 'spouse', 'Jane')
+('2008 Summer Olympics', 'point in time', '2008')
+('chocs', 'subclass of', 'toys')
+('Real', 'opposite of', 'Fancy')
+('Fancy', 'opposite of', 'Real')
+('Anthea', 'mother', 'mother')
+('mother', 'child', 'Anthea')
+('selfish', 'said to be the same as', 'mean')
+('mean', 'said to be the same as', 'selfish')
+('the mater', 'owned by', 'Cyril')
+('Cyril', 'owner of', 'the mater')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Don’t be cross', 'different from', 'cross')
-('cross', 'different from', 'Don’t be cross')
-('World War I', 'followed by', 'World War II')
-('World War II', 'follows', 'World War I')
-('What HAS happened?', 'has effect', 'Has happened?')
-('Has happened?', 'has cause', 'What HAS happened?')
-('Anthea', 'spouse', 'Jane')
-('Jane', 'spouse', 'Anthea')
-('Cyril', 'present in work', 'The most awful thing you can possibly think of')
-('burglar', 'has cause', 'police')
-('police', 'has effect', 'burglar')
-('his brother', 'sibling', 'missis')
-('missis', 'sibling', 'his brother')
-('Begin at the beginning!', 'has part', 'Oh, begin at the beginning!')
-('Oh, begin at the beginning!', 'part of', 'Begin at the beginning!')
-('Anthea', 'child', 'Anthea')
+('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('I KNOW it isn’t, but I FEEL it is', 'performer', 'Anthea')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Cymbeline', 'author')
+('William Shakespeare', 'Cymbeline', 'author')
+('father', 'spouse', 'mother')
+('mother', 'spouse', 'father')
+('We’re going to-morrow', 'characters', 'Robert')
+('Robert', 'present in work', 'We’re going to-morrow')
+('Don’t let’t let’s waste the day in saying how horrid it is to keep secrets from mother', 'characters', 'Anthea')
+('Anthea', 'present in work', 'Don’t let’t let’s waste the day in saying how horrid it is to keep secrets from mother')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'George Orwell')
+('Jesus', 'present in work', 'New Testament')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('Cyril', 'sibling', 'Robert')
-('Robert', 'sibling', 'Cyril')
-('Cyril', 'sibling', 'Robert')
-('Robert', 'sibling', 'Cyril')
-('What ails ye both?', 'characters', 'Ye both?')
-('Ye both?', 'present in work', 'What ails ye both?')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Oh, do shut up', 'said to be the same as', 'for any sake!')
-('for any sake!', 'said to be the same as', 'Oh, do shut up')
-('for any sake!', 'for any sake!', 'said to be the same as')
-('Oh, do shut up', 'for any sake! said to be the same as', 'said to be the same as')
-('for any sake!', 'said to be the same as', 'Oh, do shut up')
-('Cyril', 'uses', 'chair')
-('chair', 'used by', 'Cyril')
+('Jane', 'spouse', 'John')
+('John', 'spouse', 'Jane')
+('2008 Summer Olympics', 'point in time', '2008')
+('chocs', 'subclass of', 'toys')
+('Real', 'opposite of', 'Fancy')
+('Fancy', 'opposite of', 'Real')
+('Anthea', 'mother', 'mother')
+('mother', 'child', 'Anthea')
+('selfish', 'said to be the same as', 'mean')
+('mean', 'said to be the same as', 'selfish')
+('the mater', 'owned by', 'Cyril')
+('Cyril', 'owner of', 'the mater')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Don’t be cross', 'different from', 'cross')
-('cross', 'different from', 'Don’t be cross')
-('World War I', 'followed by', 'World War II')
-('World War II', 'follows', 'World War I')
-('What HAS happened?', 'has effect', 'Has happened?')
-('Has happened?', 'has cause', 'What HAS happened?')
-('Anthea', 'spouse', 'Jane')
-('Jane', 'spouse', 'Anthea')
-('Cyril', 'present in work', 'The most awful thing you can possibly think of')
-('burglar', 'has cause', 'police')
-('police', 'has effect', 'burglar')
-('his brother', 'sibling', 'missis')
-('missis', 'sibling', 'his brother')
-('Begin at the beginning!', 'has part', 'Oh, begin at the beginning!')
-('Oh, begin at the beginning!', 'part of', 'Begin at the beginning!')
-('Anthea', 'child', 'Anthea')
+('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('I KNOW it isn’t, but I FEEL it is', 'performer', 'Anthea')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Cymbeline', 'author')
+('William Shakespeare', 'Cymbeline', 'author')
+('father', 'spouse', 'mother')
+('mother', 'spouse', 'father')
+('We’re going to-morrow', 'characters', 'Robert')
+('Robert', 'present in work', 'We’re going to-morrow')
+('Don’t let’t let’s waste the day in saying how horrid it is to keep secrets from mother', 'characters', 'Anthea')
+('Anthea', 'present in work', 'Don’t let’t let’s waste the day in saying how horrid it is to keep secrets from mother')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'George Orwell')
+('Jesus', 'present in work', 'New Testament')
 
 And here is the original text:
-But what in her day Zulieka’s grandmother had been was destined never to be revealed, for Cyril and Robert suddenly burst into the room, and on each brow were the traces of deep emotion. On Cyril’s pale brow stood beads of agitation and perspiration, and on the scarlet brow of Robert was a large black smear.
-‘What ails ye both?’ asked the Phoenix, and it added tartly that story-telling was quite impossible if people would come interrupting like that.
-‘Oh, do shut up, for any sake!’ said Cyril, sinking into a chair.
-Robert smoothed the ruffled golden feathers, adding kindly—
-‘Squirrel doesn’t mean to be a beast. It’s only that the MOST AWFUL thing has happened, and stories don’t seem to matter so much. Don’t be cross. You won’t be when you’ve heard what’s happened.’
-‘Well, what HAS happened?’ said the bird, still rather crossly; and Anthea and Jane paused with long needles poised in air, and long needlefuls of Scotch heather-mixture fingering wool drooping from them.
-‘The most awful thing you can possibly think of,’ said Cyril. ‘That nice chap—our own burglar—the police have got him, on suspicion of stolen cats. That’s what his brother’s missis told me.’
-‘Oh, begin at the beginning!’ cried Anthea impatiently.
+‘Yes, glad,’ said Jane. ‘I don’t want any more things to happen just now. I feel like you do when you’ve been to three parties in a week—like we did at granny’s once—and extras in between, toys and chocs and things like that. I want everything to be just real, and no fancy things happening at all.’ ‘I don’t like being obliged to keep things from mother,’ said Anthea. ‘I don’t know why, but it makes me feel selfish and mean.’
+‘If we could only get the mater to believe it, we might take her to the jolliest places,’ said Cyril, thoughtfully. ‘As it is, we’ve just got to be selfish and mean—if it is that—but I don’t feel it is.’
+‘I KNOW it isn’t, but I FEEL it is,’ said Anthea, ‘and that’s just as bad.’
+‘It’s worse,’ said Robert; ‘if you knew it and didn’t feel it, it wouldn’t matter so much.’
+‘That’s being a hardened criminal, father says,’ put in Cyril, and he picked up mother’s letter and wiped its corners with his handkerchief, to whose colour a trifle of bacon-fat and marmalade made but little difference.
+‘We’re going to-morrow, anyhow,’ said Robert. ‘Don’t,’ he added, with a good-boy expression on his face—‘don’t let’s be ungrateful for our blessings; don’t let’s waste the day in saying how horrid it is to keep secrets from mother, when we all know Anthea tried all she knew to give her the secret, and she wouldn’t take it. Let’s get on the carpet and have a jolly good wish. You’ll have time enough to repent of things all next week.’
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s": "Cyril", "r": "sibling", "o": "Robert"},
-  {"s": "Cyril", "r": "burst into", "o": "the room"},
-  {"s": "Robert", "r": "burst into", "o": "the room"},
-  {"s": "Phoenix", "r": "spoke", "o": "What ails ye both?"},
-  {"s": "Phoenix", "r": "comment", "o": "story-telling was quite impossible if people would come interrupting like that"},
-  {"s": "Cyril", "r": "spoke", "o": "Oh, do shut up, for any sake!"},
-  {"s": "Robert", "r": "spoke", "o": "Squirrel doesn’t mean to be a beast. It’s only that the MOST AWFUL thing has happened, and stories don’t seem to matter so much."},
-  {"s": "Robert", "r": "spoke", "o": "Don’t be cross. You won’t be when you’ve heard what’s happened."},
-  {"s": "Cyril", "r": "spoke", "o": "The most awful thing you can possibly think of."},
-  {"s": "burglar", "r": "arrested by", "o": "police"},
-  {"s": "police", "r": "arrested", "o": "burglar"},
-  {"s": "burglar", "r": "on suspicion of", "o": "stolen cats"},
-  {"s": "Robert", "r": "smoothed", "o": "ruffled golden feathers"},
-  {"s": "Anthea", "r": "spoke", "o": "Oh, begin at the beginning!"}
+  {"s": "Jane", "r": "said", "o": "Yes, glad"},
+  {"s": "Jane", "r": "wanted", "o": "everything to be real; no fancy things"},
+  {"s": "Anthea", "r": "said", "o": "I don’t like being obliged to keep things from mother"},
+  {"s": "Anthea", "r": "felt", "o": "selfish and mean"},
+  {"s": "Cyril", "r": "said", "o": "If we could only get the mater to believe it, we might take her to the jolliest places"},
+  {"s": "Cyril", "r": "stated", "o": "we’ve just got to be selfish and mean"},
+  {"s": "Anthea", "r": "said", "o": "I KNOW it isn’t, but I FEEL it is"},
+  {"s": "Robert", "r": "said", "o": "It’s worse; if you knew it and didn’t feel it, it wouldn’t matter so much"},
+  {"s": "Robert", "r": "said", "o": "We’re going to-morrow, anyhow"},
+  {"s": "Robert", "r": "urged", "o": "Don’t waste the day in saying how horrid it is to keep secrets from mother"},
+  {"s": "Anthea", "r": "tried", "o": "to give mother the secret"},
+  {"s": "mother", "r": "refused", "o": "to take Anthea's secret"},
+  {"s": "Robert", "r": "proposed", "o": "to get on the carpet and have a jolly good wish"}
 ]
 
 ==================================================
 
 
 Valid JSON
-Cyril sibling Robert
-Cyril burst into the room
-Robert burst into the room
-Phoenix spoke What ails ye both?
-Phoenix comment story-telling was quite impossible if people would come interrupting like that
-Cyril spoke Oh, do shut up, for any sake!
-Robert spoke Squirrel doesn’t mean to be a beast. It’s only that the MOST AWFUL thing has happened, and stories don’t seem to matter so much.
-Robert spoke Don’t be cross. You won’t be when you’ve heard what’s happened.
-Cyril spoke The most awful thing you can possibly think of.
-burglar arrested by police
-police arrested burglar
-burglar on suspicion of stolen cats
-Robert smoothed ruffled golden feathers
-Anthea spoke Oh, begin at the beginning!
+Jane said Yes, glad
+Jane wanted everything to be real; no fancy things
+Anthea said I don’t like being obliged to keep things from mother
+Anthea felt selfish and mean
+Cyril said If we could only get the mater to believe it, we might take her to the jolliest places
+Cyril stated we’ve just got to be selfish and mean
+Anthea said I KNOW it isn’t, but I FEEL it is
+Robert said It’s worse; if you knew it and didn’t feel it, it wouldn’t matter so much
+Robert said We’re going to-morrow, anyhow
+Robert urged Don’t waste the day in saying how horrid it is to keep secrets from mother
+Anthea tried to give mother the secret
+mother refused to take Anthea's secret
+Robert proposed to get on the carpet and have a jolly good wish
 
 Most relevant nodes:
   node_name  edge_count
-0    Robert           5
-1     Cyril           4
-2   burglar           3
+0    Anthea           4
+1    Robert           4
+2      Jane           2
 
 Triples which best represent the graph:
-Robert smoothed ruffled_golden_feathers
-Robert spoke Don_t_be_cross__You_won_t_be_when_you_ve_heard_what_s_happened_
-Robert spoke Squirrel_doesn_t_mean_to_be_a_beast__It_s_only_that_the_MOST_AWFUL_thing_has_happened__and_stories_don_t_seem_to_matter_so_much_
-Robert burst_into the_room
-Cyril spoke The_most_awful_thing_you_can_possibly_think_of_
-Cyril spoke Oh__do_shut_up__for_any_sake_
-Cyril burst_into the_room
-Cyril sibling Robert
-burglar on_suspicion_of stolen_cats
-burglar arrested_by police
+Anthea tried to_give_mother_the_secret
+Anthea said I_KNOW_it_isn_t__but_I_FEEL_it_is
+Anthea felt selfish_and_mean
+Anthea said I_don_t_like_being_obliged_to_keep_things_from_mother
+Robert proposed to_get_on_the_carpet_and_have_a_jolly_good_wish
+Robert urged Don_t_waste_the_day_in_saying_how_horrid_it_is_to_keep_secrets_from_mother
+Robert said We_re_going_to_morrow__anyhow
+Robert said It_s_worse__if_you_knew_it_and_didn_t_feel_it__it_wouldn_t_matter_so_much
+Jane wanted everything_to_be_real__no_fancy_things
+Jane said Yes__glad
 
 
 Generated summary:
-Robert smooths his ruffled golden feathers as he and his sibling Cyril burst into a room in distress. He tries to reassure Cyril, saying he’ll explain what happened and that the most awful thing has occurred. Cyril replies that it’s the most awful thing imaginable and tells him to shut up. A burglar suspected of stealing cats is arrested by the police.
-POST failed: 400
-{"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"errors":{"summary":["The summary field is required."],"$.BookID":["The JSON value could not be converted to System.String. Path: $.BookID | LineNumber: 0 | BytePositionInLine: 12."]},"traceId":"00-93601dbde33a38c50a752c9835fabb01-a12603204e756193-00"}
+Anthea struggles with a secret she wants to share with her mother, acknowledging an inner conflict: she knows it isn’t right but feels it strongly, and she feels selfish and mean for being obliged to withhold things from her mother. Robert pushes for openness, proposing a frank discussion and urging not to dwell on secrets from mother; he also says tomorrow will come anyway and that knowing something without feeling it wouldn’t matter much. Jane desires reality and simplicity, rejecting fanciness, and she expresses agreement with a positive sentiment.
+POST succeeded
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Anthea struggles with a secret she wants to share with her mother, acknowledging an inner conflict: she knows it isn’t right but feels it strongly, and she feels selfish and mean for being obliged to withhold things from her mother. Robert pushes for openness, proposing a frank discussion and urging not to dwell on secrets from mother; he also says tomorrow will come anyway and that knowing something without feeling it wouldn’t matter much. Jane desires reality and simplicity, rejecting fanciness, and she expresses agreement with a positive sentiment.', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
 
 Output sent to web app.

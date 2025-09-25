@@ -34,7 +34,7 @@ def create_summary_payload(book_id, book_title, summary, metrics=None):
         metrics = generate_default_metrics()
     
     return {
-        "BookID": book_id,
+        "BookID": str(book_id),
         "BookTitle": book_title,
         "SummaryText": summary,
         "Metrics": metrics,
@@ -62,7 +62,7 @@ def post_payload(payload):
 def post_example_results():
     """Post example results using default parameter values"""
     return post_basic_output(
-        "book-42", 
+        "book-42",
         "Example Book", 
         "This is an AI-generated summary of the entire book. It captures the key plot points and themes.",
         # Override some defaults with example values
