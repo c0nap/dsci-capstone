@@ -1,5 +1,6 @@
 from src.setup import Session
 from components.book_conversion import Book, Chunk, EPUBToTEI, Story, ParagraphStreamTEI
+from components.metrics import post_example_results
 import pandas as pd
 import random
 import traceback
@@ -301,3 +302,4 @@ if __name__ == "__main__":
     #chunk_single()
     #process_single()
     graph_triple_files()
+    post_example_results()

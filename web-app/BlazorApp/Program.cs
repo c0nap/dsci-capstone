@@ -1,4 +1,6 @@
 using BlazorApp.Components;
+using BlazorApp.Hubs;
+using Microsoft.AspNetCore.Components.Server;
 using Neo4j.Driver;
 using Syncfusion.Blazor;
 
@@ -7,8 +9,20 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-
 builder.Services.AddSyncfusionBlazor();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
+builder.Services.AddSignalR();
+
+// Kestrel listen on all interfaces
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5055);
+});
+
 
 // Register Neo4j Driver
 builder.Services.AddSingleton<IDriver>(provider =>
@@ -35,13 +49,15 @@ if (!app.Environment.IsDevelopment()) {
 }
 
 app.UseHttpsRedirection();
-
-app.UseStaticFiles(); // Syncfusion.Blazor in App.Razor
-
 app.UseAntiforgery();
+
+app.UseStaticFiles();  // Syncfusion.Blazor resources in App.Razor
+app.UseWebSockets();  // SignalR requirement
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+app.MapControllers();
+app.MapHub<MetricsHub>("/metricshub");
 
 app.Run();

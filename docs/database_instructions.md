@@ -132,3 +132,5 @@ ip addr show eth0
 ```bash
 telnet <ip> 7687
 ```
+
+8. To allow HTTP requests from WSL to reach Blazor app, find local IP from PowerShell with `ipconfig`, and test the connection from WSL using `curl http://<local_ip>:5055/metrics`. In Blazor, listening for all IPs is generally unsafe, so Windows Firewall may try to block it. Allowing only on Private networks is fine. If you press Cancel accidentally and need to reverse it, open Windows Firewall -> Inbound Rules, and allow BlazorApp.
