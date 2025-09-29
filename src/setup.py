@@ -12,7 +12,8 @@ class Session:
     """Stores active database connections and configuration settings.
     @details
         - This class implements Singleton design, so only one session can be created.
-        - However, the session config can still be updated using the normal constructor."""
+        - However, the session config can still be updated using the normal constructor.
+    """
 
     # TODO: this is bad design ^
     _instance = None
@@ -28,7 +29,8 @@ class Session:
         @details
             - The relational database connector is created using a Factory Method, choosing mysql or postgres based on the .env file.
             - The document database connector is created normally since mongo is the only supported option.
-            - The graph database connector is created normally since neo4j is the only supported option."""
+            - The graph database connector is created normally since neo4j is the only supported option.
+        """
         ## Enables or disables the components from printing debug info.
         self.verbose = verbose
         ## Stores RDF-compliant semantic triples.

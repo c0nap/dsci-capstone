@@ -36,14 +36,16 @@ class Log:
     def success_manage_db(database_name: str, managed: str):
         """Prints a success message when a new database is created or dropped.
         @param database_name  The name of the target database.
-        @param managed  Past-tense verb representing the database operation performed."""
+        @param managed  Past-tense verb representing the database operation performed.
+        """
         Log.success(f'{managed} database "{database_name}"')
 
     def fail_manage_db(connection_string: str, database_name: str, manage: str):
         """Prints a failure message when database creation or deletion fails.
         @param connection_string  The database connector which had the error.
         @param database_name  The name of the database which could not be created or dropped.
-        @param manage  Present-tense verb representing the database operation performed."""
+        @param manage  Present-tense verb representing the database operation performed.
+        """
         Log.fail(
             f'Failed to {manage} database "{database_name}" on connection {connection_string}'
         )

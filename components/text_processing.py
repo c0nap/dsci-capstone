@@ -48,8 +48,6 @@ class RelationExtractor:
         return out
 
 
-
-
 from langchain_openai import ChatOpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
@@ -63,6 +61,7 @@ class LLMConnector(Connector):
     """Connector for prompting and returning LLM output (raw text/JSON) via LangChain.
     @note  The method @ref components.text_processing.LLMConnector.execute_query simplifies the prompt process.
     """
+
     # TODO: we may want various models with different configurations
 
     def __init__(

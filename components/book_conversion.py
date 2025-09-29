@@ -17,11 +17,12 @@ sentencizer = nlp.add_pipe("sentencizer")
 
 class Chunk:
     """Lightweight container for a span of story text.
-        @details
-            - Carries positional metadata so downstream consumers can reconstruct context.
-            - Filter by story_id to fetch all chunks for a particular story.
-            - Use story_percent and chapter_percent to quickly sort chunks by intended order.
-            - Use book_id, chapter_number, line_start, and line_end to locate this chunk within source material."""
+    @details
+        - Carries positional metadata so downstream consumers can reconstruct context.
+        - Filter by story_id to fetch all chunks for a particular story.
+        - Use story_percent and chapter_percent to quickly sort chunks by intended order.
+        - Use book_id, chapter_number, line_start, and line_end to locate this chunk within source material.
+    """
 
     def __init__(
         self,
@@ -45,7 +46,8 @@ class Chunk:
         @param story_percent  Approximate progress through the whole story [0.0, 100.0].
         @param chapter_percent  Approximate progress through the current segment [0.0, 100.0].
         @param max_chunk_length  Max allowed characters (<= 0 means "no limit").
-        @throws ValueError  if text exceeds max_chunk_length when max_chunk_length > 0."""
+        @throws ValueError  if text exceeds max_chunk_length when max_chunk_length > 0.
+        """
         self.text: str = text
         self.book_id: int = book_id
         self.chapter_number: int = chapter_number
@@ -217,7 +219,8 @@ class ParagraphStreamTEI(StoryStreamAdapter):
         @param story_id  ID for this story (may be same as book_id).
         @param allowed_chapters  A list of valid chapter titles. Must exactly match the contents of head.
         @param start_inclusive  (Optional) Unique string representing the start of the book.
-        @param end_inclusive  (Optional) Unique string representing the end of the book."""
+        @param end_inclusive  (Optional) Unique string representing the end of the book.
+        """
         self.tei_path = tei_path
         self.book_id = book_id
         self.story_id = story_id
@@ -382,14 +385,13 @@ class BookFactory(ABC):
 
 class EPUBToTEI:
     """Converts EPUB files to XML format (TEI specification).
-    @details  Takes an EPUB book file and converts it to TEI in order to represent its chapter hierarchy."""
+    @details  Takes an EPUB book file and converts it to TEI in order to represent its chapter hierarchy.
+    """
 
     xml_namespace = {"tei": "http://www.tei-c.org/ns/1.0"}
     encoding = "utf-8"
 
-    def __init__(
-        self, epub_path, save_pandoc=False, save_tei=True
-    ):
+    def __init__(self, epub_path, save_pandoc=False, save_tei=True):
         """Initialize the converter.
         @param epub_path  String containing the relative path to an EPUB file.
         @param save_pandoc  Flag to save the intermediate Pandoc output to .tei.xml
@@ -454,7 +456,6 @@ class EPUBToTEI:
         """Replace all `lb` tags with newline characters in TEI."""
         return re.sub(r"<lb\s*/?>", " ", content)
 
-
     # Paragraph handling has been moved to ParagraphStreamTEI.
     # def _normalize_paragraphs(self, content: str) -> str:
     #   """Remove raw newlines inside <p> tags, collapsing them to spaces."""
@@ -469,7 +470,6 @@ class EPUBToTEI:
     #       text = re.sub(r"\s*\n\s*", " ", text)  # collapse line breaks
 
     #   return etree.tostring(root, encoding=self.encoding).decode(self.encoding)
-
 
     # def print_chapters(self, limit: int = 100):
     #     """Old debug method: print chapter names with snippet."""

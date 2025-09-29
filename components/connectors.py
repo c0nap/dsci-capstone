@@ -93,7 +93,8 @@ class DatabaseConnector(Connector):
         """Read connection settings from the .env file.
         @param DB  The prefix of fetched database credentials.
         @param database_name  The name of the database to connect to.
-        @param route_db_name  Whether to use the database name in the connection string."""
+        @param route_db_name  Whether to use the database name in the connection string.
+        """
         self.db_type = DB
         # The .env file contains multiple credentials.
         # Here we select environment variables corresponding to our database engine.
@@ -108,7 +109,8 @@ class DatabaseConnector(Connector):
     def change_database(self, new_database: str, route_db_name: bool = True):
         """Update the connection URI to reference a different database in the same engine.
         @param new_database  The name of the database to connect to.
-        @param route_db_name  Whether to use the database name in the connection string."""
+        @param route_db_name  Whether to use the database name in the connection string.
+        """
         self.database_name = new_database
         if route_db_name:
             self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"

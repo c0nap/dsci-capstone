@@ -12,7 +12,8 @@ class GraphConnector(DatabaseConnector):
     """Connector for Neo4j (graph database).
     @details
         - Uses neomodel to abstract some operations, but raw CQL is required for many tasks.
-        - Neo4j does not support multiple logical databases in community edition, so we emulate them using a `database_id` property on nodes."""
+        - Neo4j does not support multiple logical databases in community edition, so we emulate them using a `database_id` property on nodes.
+    """
 
     def __init__(self, verbose=False):
         """Creates a new Neo4j connector.

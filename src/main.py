@@ -14,18 +14,14 @@ def convert_single():
     """Converts one EPUB file to TEI format."""
     print("\n\nCHAPTERS for book 1: FAIRY TALES")
     epub_file_1 = "./datasets/examples/nested-fairy-tales.epub"
-    converter = EPUBToTEI(
-        epub_file_1, save_pandoc=True, save_tei=True
-    )
+    converter = EPUBToTEI(epub_file_1, save_pandoc=True, save_tei=True)
     converter.convert_to_tei()
     converter.clean_tei()
     converter.print_chapters(200)
 
     print("\n\nCHAPTERS for book 2: MYTHS")
     epub_file_2 = "./datasets/examples/nested-myths.epub"
-    converter = EPUBToTEI(
-        epub_file_2, save_pandoc=True, save_tei=True
-    )
+    converter = EPUBToTEI(epub_file_2, save_pandoc=True, save_tei=True)
     converter.convert_to_tei()
     converter.clean_tei()
     converter.print_chapters(200)
@@ -213,10 +209,10 @@ def chunk_single():
 def test_relation_extraction():
     """Runs REBEL on a basic example; used for debugging."""
     from components.text_processing import RelationExtractor
+
     sample_text = "Alice met Bob in the forest. Bob then went to the village."
     extractor = RelationExtractor(model_name="Babelscape/rebel-large")
     print(extractor.extract(sample_text))
-
 
 
 def process_single():
@@ -433,9 +429,7 @@ def full_pipeline(
     print(f"\n{'='*50}")
     print(f"Processing: {epub_path}")
 
-    converter = EPUBToTEI(
-        epub_path, save_pandoc=False, save_tei=True
-    )
+    converter = EPUBToTEI(epub_path, save_pandoc=False, save_tei=True)
     converter.convert_to_tei()
     converter.clean_tei()
     tei_path = converter.tei_path
