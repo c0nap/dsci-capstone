@@ -15,3 +15,6 @@ Data Science Capstone - Patrick Conan
   
 5. The execution order of overridden tasks can be tricky. Be careful when moving code between these functions: `OnInitializedAsync`, `OnAfterRenderAsync`, and `OnDiagramCreated`
 
+6. Syncfusion has a watermark banner by default. This can be removed by creating a free account and applying for a [Community License](https://www.syncfusion.com/products/communitylicense) or activating the 30-day trial. Once created, navigate to Downloads & Keys, and paste your private key into `appsettings.json` in Blazor.
+
+7. Using the latest release of SignalR broke the project just from import - fixed by downgrading to v9.0.9. If an error does occur with SignalR, it can break interactivity across the entire site.

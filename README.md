@@ -102,19 +102,15 @@ Create OpenAI and HuggingFace API keys, and copy them into `OPENAI_API_KEY` and 
 
 ---
 
-## 3 - Modules
+## 3 - Additional Information
 
-#### Generating Documentation with Doxygen
+#### Code Documentation with Doxygen
 
-[External Guide](https://www.woolseyworkshop.com/2020/06/25/documenting-python-programs-with-doxygen/)
+Pre-compiled code diagrams can be accessed from `docs/html/annotated.html`. We discuss our process in more detail [here](docs/code_style.md).
 
-```bash
-sudo apt install doxygen
-sudo apt install graphviz
-cd docs
-doxygen -g  # Next: Configure the generated doxyfile with settings from the Guide link
-doxygen     # Generate the HTML and LaTeX
-```
+#### Database Connections / Network Troubleshooting
+
+We have also compiled a [detailed guide](docs/database_instructions.md) addressing issues found when connecting the various components.
 
 #### Web Application
 
