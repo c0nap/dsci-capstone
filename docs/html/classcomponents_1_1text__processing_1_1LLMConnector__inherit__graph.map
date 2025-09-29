@@ -1,0 +1,7 @@
+<map id="LLMConnector" name="LLMConnector">
+<area shape="rect" id="Node000001" title="Connector for prompting and returning LLM output (raw text/JSON) via LangChain." alt="" coords="5,152,120,177"/>
+<area shape="rect" id="Node000002" href="$classcomponents_1_1connectors_1_1Connector.html" title="Abstract base class for external connectors." alt="" coords="19,79,107,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="65,118,65,152,60,152,60,118"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="38,5,87,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="65,44,65,79,60,79,60,44"/>
+</map>

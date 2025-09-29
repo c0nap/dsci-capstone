@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['relational_5fdb_0',['relational_db',['../classsrc_1_1setup_1_1Session.html#a1d35d1ef8dc6359e6b80f3d3f731d4d1',1,'src.setup.Session.relational_db'],['../namespacetests_1_1test__components.html#a5ea5e768d27c7f8a2d975951e3aab74a',1,'tests.test_components.relational_db()']]],
-  ['relationalconnector_1',['RelationalConnector',['../classconnectors_1_1RelationalConnector.html',1,'connectors']]],
-  ['reset_2',['reset',['../classsrc_1_1setup_1_1Session.html#aecbc052233262275fc20a8ee8dfb8a47',1,'src::setup::Session']]]
+  ['name_0',['name',['../classBlazorApp_1_1Models_1_1PRF1Metric.html#a7ee9065718e6628dc7791b756fa6c0f9',1,'BlazorApp.Models.PRF1Metric.Name'],['../classBlazorApp_1_1Models_1_1ScalarMetric.html#a7ee9065718e6628dc7791b756fa6c0f9',1,'BlazorApp.Models.ScalarMetric.Name']]],
+  ['navmenu_2erazor_1',['NavMenu.razor',['../NavMenu_8razor.html',1,'']]],
+  ['nlp_2',['nlp',['../namespacecomponents_1_1book__conversion.html#ae4da58908fdf601e762be19c30d1e336',1,'components.book_conversion.nlp'],['../namespacecomponents_1_1text__processing.html#ae4da58908fdf601e762be19c30d1e336',1,'components.text_processing.nlp']]]
 ];

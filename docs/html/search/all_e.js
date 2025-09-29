@@ -1,10 +1,20 @@
 var searchData=
 [
-  ['test_5fcomponents_2epy_0',['test_components.py',['../test__components_8py.html',1,'']]],
-  ['test_5fconnection_1',['test_connection',['../classconnectors_1_1Connector.html#a6444c5903715e26fb20cca4d3e52a4f2',1,'connectors.Connector.test_connection()'],['../classconnectors_1_1RelationalConnector.html#a5719074dd9cdb56d259418d9bab07f74',1,'connectors.RelationalConnector.test_connection()']]],
-  ['test_5frelational_2',['test_relational',['../namespacetests_1_1test__components.html#a54ef4a30bf760f68cfa14953569e8975',1,'tests::test_components']]],
-  ['test_5fsql_5fexamples_3',['test_sql_examples',['../namespacetests_1_1test__components.html#af49f8b2ea72d8b8d7de4fd1c5df9d12b',1,'tests::test_components']]],
-  ['tests_4',['tests',['../namespacetests.html',1,'']]],
-  ['tests_3a_3atest_5fcomponents_5',['test_components',['../namespacetests_1_1test__components.html',1,'tests']]],
-  ['text_5fprocessing_2epy_6',['text_processing.py',['../text__processing_8py.html',1,'']]]
+  ['pandoc_5fxml_5fpath_0',['pandoc_xml_path',['../classcomponents_1_1book__conversion_1_1EPUBToTEI.html#a9c6490b7ca8d81e8a1566d632aeaa1e1',1,'components::book_conversion::EPUBToTEI']]],
+  ['paragraphstreamtei_1',['ParagraphStreamTEI',['../classcomponents_1_1book__conversion_1_1ParagraphStreamTEI.html',1,'components::book_conversion']]],
+  ['password_2',['password',['../classcomponents_1_1connectors_1_1DatabaseConnector.html#a9dbb300e28bc21c8dab41b01883918eb',1,'components::connectors::DatabaseConnector']]],
+  ['port_3',['port',['../classcomponents_1_1connectors_1_1DatabaseConnector.html#af8fb0f45ee0195c7422a49e6a8d72369',1,'components::connectors::DatabaseConnector']]],
+  ['post_4',['Post',['../classBlazorApp_1_1Controllers_1_1MetricsController.html#a92fb89fefb51cfdc31edde0b75f386d1',1,'BlazorApp::Controllers::MetricsController']]],
+  ['post_5fbasic_5foutput_5',['post_basic_output',['../namespacecomponents_1_1metrics.html#a22b7c0b6fdd268c18638ec923cca370f',1,'components::metrics']]],
+  ['post_5fexample_5fresults_6',['post_example_results',['../namespacecomponents_1_1metrics.html#a8407ad33e02fdab0b4aa460a5d443bfd',1,'components::metrics']]],
+  ['post_5fpayload_7',['post_payload',['../namespacecomponents_1_1metrics.html#a20f18c33e640aa8788f708836498b2f6',1,'components::metrics']]],
+  ['postgresconnector_8',['postgresConnector',['../classcomponents_1_1connectors_1_1postgresConnector.html',1,'components::connectors']]],
+  ['pre_5fcompute_5fsegments_9',['pre_compute_segments',['../classcomponents_1_1book__conversion_1_1ParagraphStreamTEI.html#a7174bd9e0835539d64382b48fe407eeb',1,'components::book_conversion::ParagraphStreamTEI']]],
+  ['pre_5fsplit_5fchunks_10',['pre_split_chunks',['../classcomponents_1_1book__conversion_1_1Story.html#a48ba97f44aabe45cdcd0666a197b2978',1,'components::book_conversion::Story']]],
+  ['precision_11',['Precision',['../classBlazorApp_1_1Models_1_1PRF1Metric.html#a07e3a7d09e1f636766e8c4f7dc852540',1,'BlazorApp::Models::PRF1Metric']]],
+  ['prf1metric_12',['PRF1Metric',['../classBlazorApp_1_1Models_1_1PRF1Metric.html',1,'BlazorApp::Models']]],
+  ['prf1metric_2ecs_13',['PRF1Metric.cs',['../PRF1Metric_8cs.html',1,'']]],
+  ['prf1metrics_14',['PRF1Metrics',['../classBlazorApp_1_1Models_1_1SummaryMetrics.html#a11ebf381798aa7a6ec72c3d189727d64',1,'BlazorApp::Models::SummaryMetrics']]],
+  ['print_5ftriples_15',['print_triples',['../classcomponents_1_1fact__storage_1_1GraphConnector.html#ae05800da26d74b93c6a8c7769eab68c8',1,'components::fact_storage::GraphConnector']]],
+  ['process_5fsingle_16',['process_single',['../namespacesrc_1_1main.html#a4fa977b996cafc6e20965beb036b73a8',1,'src::main']]]
 ];

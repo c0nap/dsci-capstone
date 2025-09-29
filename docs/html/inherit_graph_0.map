@@ -1,15 +1,25 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" title=" " alt="" coords="5,56,55,81"/>
-<area shape="rect" id="Node000001" href="$classconnectors_1_1Connector.html" title="Read environment variables at compile time." alt="" coords="103,56,191,81"/>
-<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="68,66,102,66,102,71,68,71"/>
-<area shape="rect" id="Node000002" href="$classconnectors_1_1DatabaseConnector.html" title=" " alt="" coords="239,31,389,56"/>
-<area shape="poly" id="edge2_Node000001_Node000002" title=" " alt="" coords="204,57,238,52,239,57,205,63"/>
-<area shape="rect" id="Node000006" href="$classconnectors_1_1LLMConnector.html" title=" " alt="" coords="257,80,371,105"/>
-<area shape="poly" id="edge6_Node000001_Node000006" title=" " alt="" coords="205,74,257,82,256,87,204,80"/>
-<area shape="rect" id="Node000003" href="$classconnectors_1_1RelationalConnector.html" title=" " alt="" coords="437,31,592,56"/>
-<area shape="poly" id="edge3_Node000002_Node000003" title=" " alt="" coords="403,41,437,41,437,46,403,46"/>
-<area shape="rect" id="Node000004" href="$classconnectors_1_1mysqlConnector.html" title=" " alt="" coords="648,5,776,31"/>
-<area shape="poly" id="edge4_Node000003_Node000004" title=" " alt="" coords="605,29,647,24,648,29,606,34"/>
-<area shape="rect" id="Node000005" href="$classconnectors_1_1postgresConnector.html" title=" " alt="" coords="640,55,784,80"/>
-<area shape="poly" id="edge5_Node000003_Node000005" title=" " alt="" coords="606,52,640,56,639,61,605,57"/>
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,55,55,80"/>
+<area shape="rect" id="Node000001" href="$classcomponents_1_1book__conversion_1_1BookFactory.html" title=" " alt="" coords="129,5,231,31"/>
+<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="67,52,102,39,137,28,138,33,104,45,69,57"/>
+<area shape="rect" id="Node000002" href="$classcomponents_1_1book__conversion_1_1StoryStreamAdapter.html" title=" " alt="" coords="103,55,257,80"/>
+<area shape="poly" id="edge2_Node000000_Node000002" title=" " alt="" coords="69,65,102,65,102,70,69,70"/>
+<area shape="rect" id="Node000005" href="$classcomponents_1_1connectors_1_1Connector.html" title="Abstract base class for external connectors." alt="" coords="136,104,224,129"/>
+<area shape="poly" id="edge5_Node000000_Node000005" title=" " alt="" coords="69,77,104,89,141,101,140,106,102,94,67,82"/>
+<area shape="rect" id="Node000003" href="$classcomponents_1_1book__conversion_1_1BookStream.html" title=" " alt="" coords="331,5,434,31"/>
+<area shape="poly" id="edge3_Node000002_Node000003" title=" " alt="" coords="245,49,330,28,332,33,247,54"/>
+<area shape="rect" id="Node000004" href="$classcomponents_1_1book__conversion_1_1ParagraphStreamTEI.html" title="Streams paragraphs from a TEI file as Chunk objects." alt="" coords="305,55,460,80"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="271,65,305,65,305,70,271,70"/>
+<area shape="rect" id="Node000006" href="$classcomponents_1_1connectors_1_1DatabaseConnector.html" title="Abstract base class for database engine connectors." alt="" coords="307,104,458,129"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="238,114,307,114,307,119,238,119"/>
+<area shape="rect" id="Node000011" href="$classcomponents_1_1text__processing_1_1LLMConnector.html" title="Connector for prompting and returning LLM output (raw text/JSON) via LangChain." alt="" coords="325,153,440,179"/>
+<area shape="poly" id="edge11_Node000005_Node000011" title=" " alt="" coords="238,128,330,151,329,156,237,133"/>
+<area shape="rect" id="Node000007" href="$classcomponents_1_1connectors_1_1RelationalConnector.html" title="Connector for relational databases (MySQL, PostgreSQL)." alt="" coords="508,80,663,105"/>
+<area shape="poly" id="edge7_Node000006_Node000007" title=" " alt="" coords="472,103,507,99,508,104,472,109"/>
+<area shape="rect" id="Node000010" href="$classcomponents_1_1fact__storage_1_1GraphConnector.html" title="Connector for Neo4j (graph database)." alt="" coords="522,129,649,155"/>
+<area shape="poly" id="edge10_Node000006_Node000010" title=" " alt="" coords="472,125,522,131,522,137,472,130"/>
+<area shape="rect" id="Node000008" href="$classcomponents_1_1connectors_1_1mysqlConnector.html" title="A relational database connector configured for MySQL." alt="" coords="719,56,847,81"/>
+<area shape="poly" id="edge8_Node000007_Node000008" title=" " alt="" coords="676,79,718,74,719,79,677,84"/>
+<area shape="rect" id="Node000009" href="$classcomponents_1_1connectors_1_1postgresConnector.html" title="A relational database connector configured for PostgreSQL." alt="" coords="711,105,855,131"/>
+<area shape="poly" id="edge9_Node000007_Node000009" title=" " alt="" coords="677,102,711,106,710,111,676,107"/>
 </map>

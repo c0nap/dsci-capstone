@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['session_0',['session',['../namespacetests_1_1test__components.html#a912187b9bad05f8454864cc5eef14395',1,'tests::test_components']]],
-  ['setup_1',['setup',['../classsrc_1_1setup_1_1Session.html#a55917f1c1705cff6027de163d6822f8a',1,'src::setup::Session']]],
-  ['success_2',['success',['../classsrc_1_1util_1_1Log.html#a96348829ace552e6a573529ea08a1b96',1,'src::util::Log']]],
-  ['success_5fmanage_5fdb_3',['success_manage_db',['../classsrc_1_1util_1_1Log.html#a52de5442a5e82155a5e99a87afd60df9',1,'src::util::Log']]]
+  ['onconnectedasync_0',['OnConnectedAsync',['../classBlazorApp_1_1Hubs_1_1MetricsHub.html#a0654d6a2eca11864ce30495a757738f1',1,'BlazorApp::Hubs::MetricsHub']]],
+  ['ondisconnectedasync_1',['OnDisconnectedAsync',['../classBlazorApp_1_1Hubs_1_1MetricsHub.html#af44d7441403cddaf7610ec38b0751f8d',1,'BlazorApp::Hubs::MetricsHub']]],
+  ['output_5fsingle_2',['output_single',['../namespacesrc_1_1main.html#a4d2a898ba2c9efcc7740c1ae32f27c9f',1,'src::main']]]
 ];

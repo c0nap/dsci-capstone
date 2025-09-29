@@ -1,0 +1,201 @@
+\doxysection{LLMConnector Class Reference}
+\hypertarget{classcomponents_1_1text__processing_1_1LLMConnector}{}\label{classcomponents_1_1text__processing_1_1LLMConnector}\index{LLMConnector@{LLMConnector}}
+
+
+Connector for prompting and returning LLM output (raw text/\+JSON) via Lang\+Chain.  
+
+
+
+
+Inheritance diagram for LLMConnector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=166pt]{classcomponents_1_1text__processing_1_1LLMConnector__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for LLMConnector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=166pt]{classcomponents_1_1text__processing_1_1LLMConnector__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_a83084c9accd8fbf7ff742d2a2fbc51d4}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, float \mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_ab67dc6cccbf6aeaeeeef8690bacd403c}{temperature}}=0, str \mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_a274109f4c7a67e4a6ff75b589c5941a1}{system\+\_\+prompt}}="{}You are a helpful assistant."{})
+\begin{DoxyCompactList}\small\item\em Initialize the connector. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_a4b932925866bd1eaa25215c8a58eba2a}{configure}} (self)
+\begin{DoxyCompactList}\small\item\em Initialize the Lang\+Chain LLM using environment credentials. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_a4278bce7d48c257297600834c89ab633}{test\+\_\+connection}} (self)
+\begin{DoxyCompactList}\small\item\em Send a trivial prompt to verify LLM connectivity. \end{DoxyCompactList}\item 
+str \mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_abbafff005fa747f14dc920184d259e9d}{execute\+\_\+full\+\_\+query}} (self, str \mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_a274109f4c7a67e4a6ff75b589c5941a1}{system\+\_\+prompt}}, str human\+\_\+prompt)
+\begin{DoxyCompactList}\small\item\em Send a single prompt to the LLM with separate system and human instructions. \end{DoxyCompactList}\item 
+str \mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_aeb8c458ce18aefb4edc79be9bdb2adc1}{execute\+\_\+query}} (self, str query)
+\begin{DoxyCompactList}\small\item\em Send a single prompt through the connection and return raw LLM output. \end{DoxyCompactList}\item 
+str \mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_a9c2165f9b42bcf48b8003371ba5134f8}{execute\+\_\+file}} (self, str filename)
+\begin{DoxyCompactList}\small\item\em Run a single prompt from a file. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_aa4f7e1d166d82a812e6b3d28096a1d85}{model\+\_\+name}}
+\item 
+\mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_ab67dc6cccbf6aeaeeeef8690bacd403c}{temperature}}
+\item 
+\mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_a274109f4c7a67e4a6ff75b589c5941a1}{system\+\_\+prompt}}
+\item 
+\mbox{\hyperlink{classcomponents_1_1text__processing_1_1LLMConnector_aed9627a701a67a30232bd37718e3dd8f}{llm}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Connector for prompting and returning LLM output (raw text/\+JSON) via Lang\+Chain. 
+
+\begin{DoxyNote}{Note}
+The method \doxylink{classcomponents_1_1text__processing_1_1LLMConnector_aeb8c458ce18aefb4edc79be9bdb2adc1}{components.\+text\+\_\+processing.\+LLMConnector.\+execute\+\_\+query} simplifies the prompt process. 
+\end{DoxyNote}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classcomponents_1_1text__processing_1_1LLMConnector_a83084c9accd8fbf7ff742d2a2fbc51d4}\label{classcomponents_1_1text__processing_1_1LLMConnector_a83084c9accd8fbf7ff742d2a2fbc51d4} 
+\index{LLMConnector@{LLMConnector}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!LLMConnector@{LLMConnector}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{float }]{temperature = {\ttfamily 0},  }\item[{str }]{system\+\_\+prompt = {\ttfamily "{}You~are~a~helpful~assistant."{}} }\end{DoxyParamCaption})}
+
+
+
+Initialize the connector. 
+
+\begin{DoxyNote}{Note}
+Model name is specified in the .env file. 
+\end{DoxyNote}
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classcomponents_1_1text__processing_1_1LLMConnector_a4b932925866bd1eaa25215c8a58eba2a}\label{classcomponents_1_1text__processing_1_1LLMConnector_a4b932925866bd1eaa25215c8a58eba2a} 
+\index{LLMConnector@{LLMConnector}!configure@{configure}}
+\index{configure@{configure}!LLMConnector@{LLMConnector}}
+\doxysubsubsection{\texorpdfstring{configure()}{configure()}}
+{\footnotesize\ttfamily configure (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Initialize the Lang\+Chain LLM using environment credentials. 
+
+Reads\+:
+\begin{DoxyItemize}
+\item OPENAI\+\_\+\+API\+\_\+\+KEY from .env for authentication
+\item LLM\+\_\+\+MODEL and LLM\+\_\+\+TEMPERATURE to override defaults 
+\end{DoxyItemize}
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1Connector_a6be10f792be4aba21f4bc7c2bf5ae185}{Connector}}.
+
+\Hypertarget{classcomponents_1_1text__processing_1_1LLMConnector_a9c2165f9b42bcf48b8003371ba5134f8}\label{classcomponents_1_1text__processing_1_1LLMConnector_a9c2165f9b42bcf48b8003371ba5134f8} 
+\index{LLMConnector@{LLMConnector}!execute\_file@{execute\_file}}
+\index{execute\_file@{execute\_file}!LLMConnector@{LLMConnector}}
+\doxysubsubsection{\texorpdfstring{execute\_file()}{execute\_file()}}
+{\footnotesize\ttfamily  str execute\+\_\+file (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{filename }\end{DoxyParamCaption})}
+
+
+
+Run a single prompt from a file. 
+
+Reads the entire file as a single string and sends it to execute\+\_\+query. 
+\begin{DoxyParams}{Parameters}
+{\em filename} & Path to the prompt file (.txt) \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Raw LLM response as a string. 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1Connector_a0e2dfda09f922f47ab1cf3f0c28a086c}{Connector}}.
+
+\Hypertarget{classcomponents_1_1text__processing_1_1LLMConnector_abbafff005fa747f14dc920184d259e9d}\label{classcomponents_1_1text__processing_1_1LLMConnector_abbafff005fa747f14dc920184d259e9d} 
+\index{LLMConnector@{LLMConnector}!execute\_full\_query@{execute\_full\_query}}
+\index{execute\_full\_query@{execute\_full\_query}!LLMConnector@{LLMConnector}}
+\doxysubsubsection{\texorpdfstring{execute\_full\_query()}{execute\_full\_query()}}
+{\footnotesize\ttfamily  str execute\+\_\+full\+\_\+query (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{system\+\_\+prompt,  }\item[{str}]{human\+\_\+prompt }\end{DoxyParamCaption})}
+
+
+
+Send a single prompt to the LLM with separate system and human instructions. 
+
+\Hypertarget{classcomponents_1_1text__processing_1_1LLMConnector_aeb8c458ce18aefb4edc79be9bdb2adc1}\label{classcomponents_1_1text__processing_1_1LLMConnector_aeb8c458ce18aefb4edc79be9bdb2adc1} 
+\index{LLMConnector@{LLMConnector}!execute\_query@{execute\_query}}
+\index{execute\_query@{execute\_query}!LLMConnector@{LLMConnector}}
+\doxysubsubsection{\texorpdfstring{execute\_query()}{execute\_query()}}
+{\footnotesize\ttfamily  str execute\+\_\+query (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{query }\end{DoxyParamCaption})}
+
+
+
+Send a single prompt through the connection and return raw LLM output. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em query} & A single string prompt to send to the LLM. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Raw LLM response as a string. 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1Connector_a5b7425f9d6f96d4abd3cce185f8ce744}{Connector}}.
+
+\Hypertarget{classcomponents_1_1text__processing_1_1LLMConnector_a4278bce7d48c257297600834c89ab633}\label{classcomponents_1_1text__processing_1_1LLMConnector_a4278bce7d48c257297600834c89ab633} 
+\index{LLMConnector@{LLMConnector}!test\_connection@{test\_connection}}
+\index{test\_connection@{test\_connection}!LLMConnector@{LLMConnector}}
+\doxysubsubsection{\texorpdfstring{test\_connection()}{test\_connection()}}
+{\footnotesize\ttfamily test\+\_\+connection (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Send a trivial prompt to verify LLM connectivity. 
+
+\begin{DoxyReturn}{Returns}
+Whether the prompt executed successfully. 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1Connector_a6444c5903715e26fb20cca4d3e52a4f2}{Connector}}.
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classcomponents_1_1text__processing_1_1LLMConnector_aed9627a701a67a30232bd37718e3dd8f}\label{classcomponents_1_1text__processing_1_1LLMConnector_aed9627a701a67a30232bd37718e3dd8f} 
+\index{LLMConnector@{LLMConnector}!llm@{llm}}
+\index{llm@{llm}!LLMConnector@{LLMConnector}}
+\doxysubsubsection{\texorpdfstring{llm}{llm}}
+{\footnotesize\ttfamily llm}
+
+\Hypertarget{classcomponents_1_1text__processing_1_1LLMConnector_aa4f7e1d166d82a812e6b3d28096a1d85}\label{classcomponents_1_1text__processing_1_1LLMConnector_aa4f7e1d166d82a812e6b3d28096a1d85} 
+\index{LLMConnector@{LLMConnector}!model\_name@{model\_name}}
+\index{model\_name@{model\_name}!LLMConnector@{LLMConnector}}
+\doxysubsubsection{\texorpdfstring{model\_name}{model\_name}}
+{\footnotesize\ttfamily model\+\_\+name}
+
+\Hypertarget{classcomponents_1_1text__processing_1_1LLMConnector_a274109f4c7a67e4a6ff75b589c5941a1}\label{classcomponents_1_1text__processing_1_1LLMConnector_a274109f4c7a67e4a6ff75b589c5941a1} 
+\index{LLMConnector@{LLMConnector}!system\_prompt@{system\_prompt}}
+\index{system\_prompt@{system\_prompt}!LLMConnector@{LLMConnector}}
+\doxysubsubsection{\texorpdfstring{system\_prompt}{system\_prompt}}
+{\footnotesize\ttfamily system\+\_\+prompt}
+
+\Hypertarget{classcomponents_1_1text__processing_1_1LLMConnector_ab67dc6cccbf6aeaeeeef8690bacd403c}\label{classcomponents_1_1text__processing_1_1LLMConnector_ab67dc6cccbf6aeaeeeef8690bacd403c} 
+\index{LLMConnector@{LLMConnector}!temperature@{temperature}}
+\index{temperature@{temperature}!LLMConnector@{LLMConnector}}
+\doxysubsubsection{\texorpdfstring{temperature}{temperature}}
+{\footnotesize\ttfamily temperature}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/mnt/c/dsci-\/cap/capstone/components/\mbox{\hyperlink{text__processing_8py}{text\+\_\+processing.\+py}}\end{DoxyCompactItemize}

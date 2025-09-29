@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['relational_5fdb_0',['relational_db',['../namespacetests_1_1test__components.html#a5ea5e768d27c7f8a2d975951e3aab74a',1,'tests::test_components']]],
-  ['reset_1',['reset',['../classsrc_1_1setup_1_1Session.html#aecbc052233262275fc20a8ee8dfb8a47',1,'src::setup::Session']]]
+  ['metricscontroller_0',['MetricsController',['../classBlazorApp_1_1Controllers_1_1MetricsController.html#a62d4c838cdab73f9ae29c4aa755d6072',1,'BlazorApp::Controllers::MetricsController']]],
+  ['metricshub_1',['MetricsHub',['../classBlazorApp_1_1Hubs_1_1MetricsHub.html#a5b1da7d0d132b7d0b163df5ca70dbe1c',1,'BlazorApp::Hubs::MetricsHub']]]
 ];

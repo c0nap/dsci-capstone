@@ -1,29 +1,35 @@
 \doxysection{Log Class Reference}
 \hypertarget{classsrc_1_1util_1_1Log}{}\label{classsrc_1_1util_1_1Log}\index{Log@{Log}}
+
+
+The Log class standardizes console output.  
+
+
 \doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
 \mbox{\hyperlink{classsrc_1_1util_1_1Log_a96348829ace552e6a573529ea08a1b96}{success}} (str msg="{}"{})
-\begin{DoxyCompactList}\small\item\em These functions can be used to print the standard prefix before your own print(), or a message can be specified. \end{DoxyCompactList}\item 
+\begin{DoxyCompactList}\small\item\em A success message begins with a Green Plus. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classsrc_1_1util_1_1Log_a22fb24590379a124e8f266c6b0b2c5ca}{fail}} (str msg="{}"{})
-\item 
+\begin{DoxyCompactList}\small\item\em A failure message begins with a Red X. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classsrc_1_1util_1_1Log_adfed697f8abd6ab739b4d79685f0144c}{file\+\_\+read\+\_\+failure}} (str filename)
-\item 
+\begin{DoxyCompactList}\small\item\em Prints a failure message when a file cannot be opened. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classsrc_1_1util_1_1Log_ac50b4fb4e7be0ffa7ce84828c07eb568}{connect\+\_\+success}} (str database\+\_\+name)
-\item 
+\begin{DoxyCompactList}\small\item\em Prints a failure message when a database connection fails. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classsrc_1_1util_1_1Log_ad5255bd77e0bbefbb53719435165befa}{connect\+\_\+fail}} (str connection\+\_\+string)
-\item 
+\begin{DoxyCompactList}\small\item\em Prints a failure message when a database connection fails. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classsrc_1_1util_1_1Log_a52de5442a5e82155a5e99a87afd60df9}{success\+\_\+manage\+\_\+db}} (str database\+\_\+name, str managed)
-\item 
+\begin{DoxyCompactList}\small\item\em Prints a success message when a new database is created or dropped. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classsrc_1_1util_1_1Log_af0b1193b8756345bbc1b419c0b2c1b36}{fail\+\_\+manage\+\_\+db}} (str connection\+\_\+string, str database\+\_\+name, str manage)
-\item 
+\begin{DoxyCompactList}\small\item\em Prints a failure message when database creation or deletion fails. \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classsrc_1_1util_1_1Log_a5671f23e0a563c737a8363804aedaefa}{incorrect\+\_\+result}} (observed, expected)
-\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em Prints a failure message when a value is not what we expected. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classsrc_1_1util_1_1Log_a5f7dfcce35f680dace8105e7d5bf8eba}{warn\+\_\+parse}} (str trace, str expected\+\_\+type, str bad\+\_\+value)
+\begin{DoxyCompactList}\small\item\em Prints a failure message when parsing fails. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \doxysubsection{Detailed Description}
-\begin{DoxyVerb}The Log class standardizes console output.\end{DoxyVerb}
- 
+The Log class standardizes console output. 
 
 \doxysubsection{Member Function Documentation}
 \Hypertarget{classsrc_1_1util_1_1Log_ad5255bd77e0bbefbb53719435165befa}\label{classsrc_1_1util_1_1Log_ad5255bd77e0bbefbb53719435165befa} 
@@ -32,51 +38,97 @@
 \doxysubsubsection{\texorpdfstring{connect\_fail()}{connect\_fail()}}
 {\footnotesize\ttfamily connect\+\_\+fail (\begin{DoxyParamCaption}\item[{str}]{connection\+\_\+string }\end{DoxyParamCaption})}
 
-\begin{DoxyVerb}Prints a failure message when a database connection fails.
-@param connection_string  The connection string which caused the error.\end{DoxyVerb}
- \Hypertarget{classsrc_1_1util_1_1Log_ac50b4fb4e7be0ffa7ce84828c07eb568}\label{classsrc_1_1util_1_1Log_ac50b4fb4e7be0ffa7ce84828c07eb568} 
+
+
+Prints a failure message when a database connection fails. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em connection\+\_\+string} & The connection string which caused the error. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classsrc_1_1util_1_1Log_ac50b4fb4e7be0ffa7ce84828c07eb568}\label{classsrc_1_1util_1_1Log_ac50b4fb4e7be0ffa7ce84828c07eb568} 
 \index{Log@{Log}!connect\_success@{connect\_success}}
 \index{connect\_success@{connect\_success}!Log@{Log}}
 \doxysubsubsection{\texorpdfstring{connect\_success()}{connect\_success()}}
 {\footnotesize\ttfamily connect\+\_\+success (\begin{DoxyParamCaption}\item[{str}]{database\+\_\+name }\end{DoxyParamCaption})}
 
-\begin{DoxyVerb}Prints a failure message when a database connection fails.
-@param database_name  The name of the database which was connected to.\end{DoxyVerb}
- \Hypertarget{classsrc_1_1util_1_1Log_a22fb24590379a124e8f266c6b0b2c5ca}\label{classsrc_1_1util_1_1Log_a22fb24590379a124e8f266c6b0b2c5ca} 
+
+
+Prints a failure message when a database connection fails. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em database\+\_\+name} & The name of the database which was connected to. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classsrc_1_1util_1_1Log_a22fb24590379a124e8f266c6b0b2c5ca}\label{classsrc_1_1util_1_1Log_a22fb24590379a124e8f266c6b0b2c5ca} 
 \index{Log@{Log}!fail@{fail}}
 \index{fail@{fail}!Log@{Log}}
 \doxysubsubsection{\texorpdfstring{fail()}{fail()}}
 {\footnotesize\ttfamily fail (\begin{DoxyParamCaption}\item[{str }]{msg = {\ttfamily "{}"{}} }\end{DoxyParamCaption})}
 
-\begin{DoxyVerb}A failure message begins with a Red X.
-@param msg  The message to print.\end{DoxyVerb}
- \Hypertarget{classsrc_1_1util_1_1Log_af0b1193b8756345bbc1b419c0b2c1b36}\label{classsrc_1_1util_1_1Log_af0b1193b8756345bbc1b419c0b2c1b36} 
+
+
+A failure message begins with a Red X. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em msg} & The message to print. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classsrc_1_1util_1_1Log_af0b1193b8756345bbc1b419c0b2c1b36}\label{classsrc_1_1util_1_1Log_af0b1193b8756345bbc1b419c0b2c1b36} 
 \index{Log@{Log}!fail\_manage\_db@{fail\_manage\_db}}
 \index{fail\_manage\_db@{fail\_manage\_db}!Log@{Log}}
 \doxysubsubsection{\texorpdfstring{fail\_manage\_db()}{fail\_manage\_db()}}
 {\footnotesize\ttfamily fail\+\_\+manage\+\_\+db (\begin{DoxyParamCaption}\item[{str}]{connection\+\_\+string,  }\item[{str}]{database\+\_\+name,  }\item[{str}]{manage }\end{DoxyParamCaption})}
 
-\begin{DoxyVerb}Prints a failure message when database creation or deletion fails.
-@param connection_string  The database connector which had the error.
-@param database_name  The name of the database which could not be created or dropped.\end{DoxyVerb}
- \Hypertarget{classsrc_1_1util_1_1Log_adfed697f8abd6ab739b4d79685f0144c}\label{classsrc_1_1util_1_1Log_adfed697f8abd6ab739b4d79685f0144c} 
+
+
+Prints a failure message when database creation or deletion fails. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em connection\+\_\+string} & The database connector which had the error. \\
+\hline
+{\em database\+\_\+name} & The name of the database which could not be created or dropped. \\
+\hline
+{\em manage} & Present-\/tense verb representing the database operation performed. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classsrc_1_1util_1_1Log_adfed697f8abd6ab739b4d79685f0144c}\label{classsrc_1_1util_1_1Log_adfed697f8abd6ab739b4d79685f0144c} 
 \index{Log@{Log}!file\_read\_failure@{file\_read\_failure}}
 \index{file\_read\_failure@{file\_read\_failure}!Log@{Log}}
 \doxysubsubsection{\texorpdfstring{file\_read\_failure()}{file\_read\_failure()}}
 {\footnotesize\ttfamily file\+\_\+read\+\_\+failure (\begin{DoxyParamCaption}\item[{str}]{filename }\end{DoxyParamCaption})}
 
-\begin{DoxyVerb}Prints a failure message when a file cannot be opened.
-@param filename  The file which caused the error.\end{DoxyVerb}
- \Hypertarget{classsrc_1_1util_1_1Log_a5671f23e0a563c737a8363804aedaefa}\label{classsrc_1_1util_1_1Log_a5671f23e0a563c737a8363804aedaefa} 
+
+
+Prints a failure message when a file cannot be opened. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & The file which caused the error. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classsrc_1_1util_1_1Log_a5671f23e0a563c737a8363804aedaefa}\label{classsrc_1_1util_1_1Log_a5671f23e0a563c737a8363804aedaefa} 
 \index{Log@{Log}!incorrect\_result@{incorrect\_result}}
 \index{incorrect\_result@{incorrect\_result}!Log@{Log}}
 \doxysubsubsection{\texorpdfstring{incorrect\_result()}{incorrect\_result()}}
 {\footnotesize\ttfamily incorrect\+\_\+result (\begin{DoxyParamCaption}\item[{}]{observed,  }\item[{}]{expected }\end{DoxyParamCaption})}
 
-\begin{DoxyVerb}Prints a failure message when database creation or deletion fails.
-@param observed  The value to check (must be same type as 'expected').
-@param expected  The correct value (can be any printable type).\end{DoxyVerb}
- \Hypertarget{classsrc_1_1util_1_1Log_a96348829ace552e6a573529ea08a1b96}\label{classsrc_1_1util_1_1Log_a96348829ace552e6a573529ea08a1b96} 
+
+
+Prints a failure message when a value is not what we expected. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em observed} & The value to check (must be same type as \textquotesingle{}expected\textquotesingle{}). \\
+\hline
+{\em expected} & The correct value (can be any printable type). \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classsrc_1_1util_1_1Log_a96348829ace552e6a573529ea08a1b96}\label{classsrc_1_1util_1_1Log_a96348829ace552e6a573529ea08a1b96} 
 \index{Log@{Log}!success@{success}}
 \index{success@{success}!Log@{Log}}
 \doxysubsubsection{\texorpdfstring{success()}{success()}}
@@ -84,19 +136,50 @@
 
 
 
-These functions can be used to print the standard prefix before your own print(), or a message can be specified. 
+A success message begins with a Green Plus. 
 
-\begin{DoxyVerb}A success message begins with a Green Plus.
-@param msg  The message to print.\end{DoxyVerb}
- \Hypertarget{classsrc_1_1util_1_1Log_a52de5442a5e82155a5e99a87afd60df9}\label{classsrc_1_1util_1_1Log_a52de5442a5e82155a5e99a87afd60df9} 
+
+\begin{DoxyParams}{Parameters}
+{\em msg} & The message to print. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classsrc_1_1util_1_1Log_a52de5442a5e82155a5e99a87afd60df9}\label{classsrc_1_1util_1_1Log_a52de5442a5e82155a5e99a87afd60df9} 
 \index{Log@{Log}!success\_manage\_db@{success\_manage\_db}}
 \index{success\_manage\_db@{success\_manage\_db}!Log@{Log}}
 \doxysubsubsection{\texorpdfstring{success\_manage\_db()}{success\_manage\_db()}}
 {\footnotesize\ttfamily success\+\_\+manage\+\_\+db (\begin{DoxyParamCaption}\item[{str}]{database\+\_\+name,  }\item[{str}]{managed }\end{DoxyParamCaption})}
 
-\begin{DoxyVerb}Prints a success message when a new database is created or dropped.
-@param database_name  The name of the target database.\end{DoxyVerb}
- 
+
+
+Prints a success message when a new database is created or dropped. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em database\+\_\+name} & The name of the target database. \\
+\hline
+{\em managed} & Past-\/tense verb representing the database operation performed. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classsrc_1_1util_1_1Log_a5f7dfcce35f680dace8105e7d5bf8eba}\label{classsrc_1_1util_1_1Log_a5f7dfcce35f680dace8105e7d5bf8eba} 
+\index{Log@{Log}!warn\_parse@{warn\_parse}}
+\index{warn\_parse@{warn\_parse}!Log@{Log}}
+\doxysubsubsection{\texorpdfstring{warn\_parse()}{warn\_parse()}}
+{\footnotesize\ttfamily warn\+\_\+parse (\begin{DoxyParamCaption}\item[{str}]{trace,  }\item[{str}]{expected\+\_\+type,  }\item[{str}]{bad\+\_\+value }\end{DoxyParamCaption})}
+
+
+
+Prints a failure message when parsing fails. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em trace} & Alias for the object to be converted. \\
+\hline
+{\em expected\+\_\+type} & The type we are trying to convert to. \\
+\hline
+{\em bad\+\_\+value} & Actual target value to be converted. \\
+\hline
+\end{DoxyParams}
+
 
 The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 

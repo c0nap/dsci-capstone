@@ -82,14 +82,19 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a912187b9bad05f8454864cc5eef14395" id="r_a912187b9bad05f8454864cc5eef14395"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetests_1_1test__components.html#a912187b9bad05f8454864cc5eef14395">session</a> ()</td></tr>
+<tr class="memdesc:a912187b9bad05f8454864cc5eef14395"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fixture to create session.  <br /></td></tr>
 <tr class="separator:a912187b9bad05f8454864cc5eef14395"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5ea5e768d27c7f8a2d975951e3aab74a" id="r_a5ea5e768d27c7f8a2d975951e3aab74a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetests_1_1test__components.html#a5ea5e768d27c7f8a2d975951e3aab74a">relational_db</a> (<a class="el" href="namespacetests_1_1test__components.html#a912187b9bad05f8454864cc5eef14395">session</a>)</td></tr>
+<tr class="memdesc:a5ea5e768d27c7f8a2d975951e3aab74a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fixture to get relational database connection.  <br /></td></tr>
 <tr class="separator:a5ea5e768d27c7f8a2d975951e3aab74a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a54ef4a30bf760f68cfa14953569e8975" id="r_a54ef4a30bf760f68cfa14953569e8975"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetests_1_1test__components.html#a54ef4a30bf760f68cfa14953569e8975">test_relational</a> (<a class="el" href="namespacetests_1_1test__components.html#a5ea5e768d27c7f8a2d975951e3aab74a">relational_db</a>)</td></tr>
+<tr class="memdesc:a54ef4a30bf760f68cfa14953569e8975"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tests if the relational database is working correctly.  <br /></td></tr>
 <tr class="separator:a54ef4a30bf760f68cfa14953569e8975"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af49f8b2ea72d8b8d7de4fd1c5df9d12b" id="r_af49f8b2ea72d8b8d7de4fd1c5df9d12b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetests_1_1test__components.html#af49f8b2ea72d8b8d7de4fd1c5df9d12b">test_sql_examples</a> (<a class="el" href="namespacetests_1_1test__components.html#a5ea5e768d27c7f8a2d975951e3aab74a">relational_db</a>)</td></tr>
+<tr class="memdesc:af49f8b2ea72d8b8d7de4fd1c5df9d12b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run queries from test files.  <br /></td></tr>
 <tr class="separator:af49f8b2ea72d8b8d7de4fd1c5df9d12b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a126e57295dde6653fdb8d4da00831f8b" id="r_a126e57295dde6653fdb8d4da00831f8b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacetests_1_1test__components.html#a126e57295dde6653fdb8d4da00831f8b">_test_sql_file</a> (<a class="el" href="namespacetests_1_1test__components.html#a5ea5e768d27c7f8a2d975951e3aab74a">relational_db</a>, str filename, bool expect_df, str df_header=&quot;&quot;)</td></tr>
+<tr class="memdesc:a126e57295dde6653fdb8d4da00831f8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run queries from a local file through the database.  <br /></td></tr>
 <tr class="separator:a126e57295dde6653fdb8d4da00831f8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
@@ -138,10 +143,18 @@ Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<pre class="fragment">Run queries from a local file through t
-    @param filename  The name of a .sql file.
-    @param expect_df  Whether to throw an error if the queries fail to return a DataFrame.
-    @param df_header  (Optional) A string to print before displaying the DataFrame.</pre> 
+
+<p>Run queries from a local file through the database. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">relational_db</td><td>Fixture corresponding to the current session's relational database. </td></tr>
+    <tr><td class="paramname">filename</td><td>The name of a .sql file. </td></tr>
+    <tr><td class="paramname">expect_df</td><td>Whether to throw an error if the queries fail to return a DataFrame. </td></tr>
+    <tr><td class="paramname">df_header</td><td>(Optional) A string to print before displaying the DataFrame. </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a id="a5ea5e768d27c7f8a2d975951e3aab74a" name="a5ea5e768d27c7f8a2d975951e3aab74a"></a>
@@ -159,7 +172,9 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment">Fixture to get relational database connection.</pre> 
+
+<p>Fixture to get relational database connection. </p>
+
 </div>
 </div>
 <a id="a912187b9bad05f8454864cc5eef14395" name="a912187b9bad05f8454864cc5eef14395"></a>
@@ -176,7 +191,9 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment">Fixture to create session.</pre> 
+
+<p>Fixture to create session. </p>
+
 </div>
 </div>
 <a id="a54ef4a30bf760f68cfa14953569e8975" name="a54ef4a30bf760f68cfa14953569e8975"></a>
@@ -194,7 +211,10 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment">Database connectors have internal tests, so use those instead.</pre> 
+
+<p>Tests if the relational database is working correctly. </p>
+<dl class="section note"><dt>Note</dt><dd>Database connectors have internal tests, so use those instead. </dd></dl>
+
 </div>
 </div>
 <a id="af49f8b2ea72d8b8d7de4fd1c5df9d12b" name="af49f8b2ea72d8b8d7de4fd1c5df9d12b"></a>
@@ -212,7 +232,9 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment"> </pre> 
+
+<p>Run queries from test files. </p>
+
 </div>
 </div>
 </div><!-- contents -->

@@ -1,12 +1,16 @@
 var searchData=
 [
-  ['change_5fdatabase_0',['change_database',['../classconnectors_1_1DatabaseConnector.html#a8324a210c025797f0c8a0550191b4088',1,'connectors::DatabaseConnector']]],
-  ['configure_1',['configure',['../classconnectors_1_1Connector.html#a6be10f792be4aba21f4bc7c2bf5ae185',1,'connectors.Connector.configure()'],['../classconnectors_1_1DatabaseConnector.html#a6be10f792be4aba21f4bc7c2bf5ae185',1,'connectors.DatabaseConnector.configure()']]],
-  ['connect_5ffail_2',['connect_fail',['../classsrc_1_1util_1_1Log.html#ad5255bd77e0bbefbb53719435165befa',1,'src::util::Log']]],
-  ['connect_5fsuccess_3',['connect_success',['../classsrc_1_1util_1_1Log.html#ac50b4fb4e7be0ffa7ce84828c07eb568',1,'src::util::Log']]],
-  ['connection_5fstring_4',['connection_string',['../classconnectors_1_1DatabaseConnector.html#af687e8c8c8ee35024630bcec03fa5c54',1,'connectors.DatabaseConnector.connection_string'],['../classconnectors_1_1RelationalConnector.html#af687e8c8c8ee35024630bcec03fa5c54',1,'connectors.RelationalConnector.connection_string']]],
-  ['connector_5',['Connector',['../classconnectors_1_1Connector.html',1,'connectors']]],
-  ['connectors_6',['connectors',['../namespaceconnectors.html',1,'']]],
-  ['connectors_2epy_7',['connectors.py',['../connectors_8py.html',1,'']]],
-  ['create_5fdatabase_8',['create_database',['../classconnectors_1_1DatabaseConnector.html#a8d3de5cf1bae7566fc0b746bc46419fe',1,'connectors.DatabaseConnector.create_database()'],['../classconnectors_1_1RelationalConnector.html#a8d3de5cf1bae7566fc0b746bc46419fe',1,'connectors.RelationalConnector.create_database()']]]
+  ['blazorapp_0',['BlazorApp',['../namespaceBlazorApp.html',1,'']]],
+  ['blazorapp_3a_3acontrollers_1',['Controllers',['../namespaceBlazorApp_1_1Controllers.html',1,'BlazorApp']]],
+  ['blazorapp_3a_3ahubs_2',['Hubs',['../namespaceBlazorApp_1_1Hubs.html',1,'BlazorApp']]],
+  ['blazorapp_3a_3amodels_3',['Models',['../namespaceBlazorApp_1_1Models.html',1,'BlazorApp']]],
+  ['book_4',['book',['../classcomponents_1_1book__conversion_1_1Book.html',1,'Book'],['../classcomponents_1_1book__conversion_1_1BookStream.html#a0cd3c8a744c5e96ac5e11050f16f3476',1,'components.book_conversion.BookStream.book']]],
+  ['book_5fchapters_5',['book_chapters',['../namespacesrc_1_1main.html#a05a80fd14583b0bf00764d01affea49d',1,'src::main']]],
+  ['book_5fconversion_2epy_6',['book_conversion.py',['../book__conversion_8py.html',1,'']]],
+  ['book_5fid_7',['book_id',['../classcomponents_1_1book__conversion_1_1ParagraphStreamTEI.html#abcde1a52c04fe3fd612602f10a54c293',1,'components.book_conversion.ParagraphStreamTEI.book_id'],['../namespacesrc_1_1main.html#abcde1a52c04fe3fd612602f10a54c293',1,'src.main.book_id']]],
+  ['book_5ftitle_8',['book_title',['../namespacesrc_1_1main.html#a44e3f5a8436f7f8e52597a50c2be71b7',1,'src::main']]],
+  ['bookfactory_9',['BookFactory',['../classcomponents_1_1book__conversion_1_1BookFactory.html',1,'components::book_conversion']]],
+  ['bookid_10',['BookID',['../classBlazorApp_1_1Models_1_1SummaryData.html#a9d4a7e838eb2758fe54c408392ecf42e',1,'BlazorApp::Models::SummaryData']]],
+  ['bookstream_11',['BookStream',['../classcomponents_1_1book__conversion_1_1BookStream.html',1,'components::book_conversion']]],
+  ['booktitle_12',['BookTitle',['../classBlazorApp_1_1Models_1_1SummaryData.html#aea9e4b74d7d0a3ccaea5602429931570',1,'BlazorApp::Models::SummaryData']]]
 ];
