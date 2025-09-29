@@ -1,0 +1,614 @@
+﻿@page "/Graph"
+@rendermode InteractiveServer
+
+@using Syncfusion.Blazor.Diagram
+@using Syncfusion.Blazor.Buttons
+@using Neo4j.Driver
+@using Microsoft.Msagl.Core.Geometry.Curves
+@using Microsoft.Msagl.Core.Layout
+@using Microsoft.Msagl.Layout.Layered
+
+@inject IDriver Neo4jDriver
+@inject ILogger<Graph> Logger
+
+<PageTitle>Graph</PageTitle>
+
+<h3>Neo4j Graph Visualization</h3>
+
+<div style="display:flex; height:80vh;">
+    <div style="flex:1; border:1px solid gray;" @ref="diagramContainer"
+         @onwheel="OnWheelScroll" @onwheel:preventDefault="true"
+         @onmousemove="OnMouseMove">
+        <SfDiagramComponent @ref="DiagramRef"
+                            Height="100%"
+                            Width="100%"
+                            Nodes="@nodes"
+                            Connectors="@connectors"
+                            ScrollChanged="@OnScrollChanged"
+                            SelectionChanged="@OnSelectionChanged"
+                            InteractionController="@(DiagramInteractions.ZoomPan | DiagramInteractions.SingleSelect)"
+                            Created="@OnDiagramCreated">
+
+            @* Enable Interactive Pan and Zoom *@
+            <ScrollSettings CurrentZoom="@currentZoom"
+                            MinZoom="0.2"
+                            MaxZoom="5.0"
+                            HorizontalOffset="@horizontalOffset"
+                            VerticalOffset="@verticalOffset"
+                            EnableAutoScroll="true"
+                            ScrollLimit="ScrollLimitMode.Infinity">
+            </ScrollSettings>
+
+            @* Enable snap to grid for better node positioning *@
+            <SnapSettings Constraints="SnapConstraints.ShowLines">
+            </SnapSettings>
+
+        </SfDiagramComponent>
+    </div>
+
+    <div style="width:300px; padding:10px; border-left:1px solid gray;">
+        <h4>Layout Controls</h4>
+        <div style="margin-bottom:15px;">
+            <SfButton Content="Apply MSAGL Layout" CssClass="e-success e-small" OnClick="@ApplyMSAGLLayout"/>
+            <SfButton Content="Random Layout" CssClass="e-warning e-small" OnClick="@ApplyRandomLayout"/>
+        </div>
+
+        <h4>Zoom & Pan Controls</h4>
+        <div style="margin-bottom:15px;">
+            <SfButton Content="Zoom In" CssClass="e-primary e-small" OnClick="@ZoomIn"/>
+            <SfButton Content="Zoom Out" CssClass="e-primary e-small" OnClick="@ZoomOut"/>
+            <SfButton Content="Fit to Page" CssClass="e-success e-small" OnClick="@FitToPage"/>
+            <SfButton Content="Reset" CssClass="e-danger e-small" OnClick="@ResetView"/>
+        </div>
+
+        <h4>Current Status</h4>
+        <div style="margin-bottom:15px;">
+            <p><strong>Zoom:</strong> @currentZoom.ToString("F2")x</p>
+            <p><strong>Pan X:</strong> @horizontalOffset.ToString("F0")px</p>
+            <p><strong>Pan Y:</strong> @verticalOffset.ToString("F0")px</p>
+            <p>
+                <strong>Layout:</strong> @currentLayoutType
+            </p>
+        </div>
+
+        <h4>Selected Item</h4>
+        <pre style="background:#f5f5f5; padding:10px; border-radius:4px;">@selectedInfo</pre>
+
+        <h4>Debug Info</h4>
+        <p>
+            <strong>Nodes:</strong> @nodes.Count
+        </p>
+        <p>
+            <strong>Connectors:</strong> @connectors.Count
+        </p>
+        <p>
+            <strong>Loaded:</strong> @isDataLoaded
+        </p>
+        <p>
+            <strong>Diagram Ready:</strong> @isDiagramReady
+        </p>
+
+        <details>
+            <summary>Node Details</summary>
+            <div style="max-height:200px; overflow-y:auto;">
+                @foreach (var node in nodes) {
+                    if (node.ID is null)
+                        continue;
+                    <p style="font-size:12px; margin:2px 0;">
+                        @node.ID - (@node.OffsetX.ToString("F0"), @node.OffsetY.ToString("F0"))
+                    </p>
+                }
+            </div>
+        </details>
+    </div>
+</div>
+
+@code {
+    private SfDiagramComponent? DiagramRef;
+    private ElementReference diagramContainer;
+    private double lastCursorX = 0;
+    private double lastCursorY = 0;
+    private readonly DiagramObjectCollection<Syncfusion.Blazor.Diagram.Node> nodes = new();
+    private readonly DiagramObjectCollection<Connector> connectors = new();
+
+    private string selectedInfo = "Click a node or connector to view details";
+    private double currentZoom = 1.0;
+    private double horizontalOffset = 0;
+    private double verticalOffset = 0;
+    private string currentLayoutType = "None";
+    private bool isDataLoaded = false;
+    private bool isDiagramReady = false;
+    private bool hasAppliedInitialLayout = false;
+
+    private readonly Dictionary<string, (string label, List<string> properties)> nodeData = new();
+
+    protected override Task OnInitializedAsync() {
+        //Logger.LogInformation("Component initializing...");
+        // Don't load data here - wait for after render to avoid JS interop issues
+        return Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (firstRender && !isDataLoaded) {
+            //Logger.LogInformation("First render - loading graph data...");
+            await LoadGraphFromNeo4j();
+            isDataLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnDiagramCreated() {
+        isDiagramReady = true;
+
+        // Apply layout only once after diagram is ready and data is loaded
+        if (isDataLoaded && !hasAppliedInitialLayout && nodes.Count > 0) {
+            //Logger.LogInformation("Applying initial MSAGL layout...");
+            await Task.Delay(100); // Small delay to ensure diagram is fully initialized
+            await ApplyMSAGLLayout();
+            hasAppliedInitialLayout = true;
+
+            // Fit to page after layout
+            await Task.Delay(100);
+            FitToPage();
+        }
+    }
+
+    private async Task LoadGraphFromNeo4j() {
+        var session = Neo4jDriver.AsyncSession();
+        var processedNodes = new HashSet<string>();
+        var processedRelationships = new HashSet<string>();
+        var connectionTracker = new Dictionary<string, List<(string relType, string relId, bool isReverse)>>();
+
+        try {
+            //Logger.LogInformation("Running Cypher query...");
+            var result = await session.RunAsync(@"
+                MATCH (n)-[r]->(m)
+                RETURN n, r, m
+                LIMIT 50
+            ");
+            var records = await result.ToListAsync();
+            //Logger.LogInformation("Fetched {Count} results.", records.Count);
+
+            // Clear existing collections
+            nodes.Clear();
+            connectors.Clear();
+            nodeData.Clear();
+
+            foreach (var record in records) {
+                var n1Node = record["n"].As<INode>();
+                var n2Node = record["m"].As<INode>();
+                var rel = record["r"].As<IRelationship>();
+
+                // Process source node
+                if (!processedNodes.Contains(n1Node.ElementId)) {
+                    var node1 = CreateNodeFromNeo4j(n1Node);
+                    nodes.Add(node1);
+                    processedNodes.Add(n1Node.ElementId);
+                }
+
+                // Process target node
+                if (!processedNodes.Contains(n2Node.ElementId)) {
+                    var node2 = CreateNodeFromNeo4j(n2Node);
+                    nodes.Add(node2);
+                    processedNodes.Add(n2Node.ElementId);
+                }
+
+                // Track bidirectional connections for better routing
+                var connectionKey = GetConnectionKey(n1Node.ElementId, n2Node.ElementId);
+                if (!connectionTracker.ContainsKey(connectionKey))
+                    connectionTracker[connectionKey] = new List<(string, string, bool)>();
+
+                connectionTracker[connectionKey].Add((rel.Type, rel.ElementId, false));
+
+                // Process relationship
+                var relationshipKey = $"{n1Node.ElementId}-{rel.Type}-{n2Node.ElementId}";
+                processedRelationships.Add(relationshipKey);
+            }
+
+            // Create connectors with bidirectional awareness
+            foreach (var (connectionKey, relationships) in connectionTracker) {
+                var parts = connectionKey.Split('|');
+                var nodeId1 = parts[0];
+                var nodeId2 = parts[1];
+
+                for (var i = 0; i < relationships.Count; i++) {
+                    var (relType, relId, _) = relationships[i];
+                    var connector = CreateConnectorFromNeo4j(nodeId1, nodeId2, relType, relId, i, relationships.Count);
+                    connectors.Add(connector);
+                }
+            }
+
+            Logger.LogInformation("Created {NodeCount} nodes and {ConnectorCount} relations.", nodes.Count, connectors.Count);
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Error loading graph from Neo4j: {Message}", ex.Message);
+        }
+        finally {
+            await session.CloseAsync();
+        }
+    }
+
+    private string GetNodeLabel(INode neoNode, int maxLength = 20) {
+        // Get name property or fallback to first label
+        var label = neoNode.Properties.TryGetValue("name", out var property)
+            ? property?.ToString()
+            : neoNode.Labels.FirstOrDefault();
+
+        // Fallback if null or whitespace
+        label = string.IsNullOrWhiteSpace(label) ? "<MISSING NAME>" : label.Trim();
+
+        // Truncate if too long
+        if (label.Length > maxLength)
+            label = label[..(maxLength - 3)] + "...";
+
+        return label;
+    }
+
+    private Syncfusion.Blazor.Diagram.Node CreateNodeFromNeo4j(INode neoNode) {
+        // Use the "name" property as the label if it exists
+        var label = GetNodeLabel(neoNode);
+
+        var properties = neoNode.Properties
+            .Select(kvp => $"{kvp.Key}: {kvp.Value}")
+            .ToList();
+
+        nodeData[neoNode.ElementId] = (label, properties);
+
+        return new Syncfusion.Blazor.Diagram.Node()
+        { ID = neoNode.ElementId,
+          OffsetX = GetRandomPosition(100, 800),
+          OffsetY = GetRandomPosition(100, 600),
+          Width = 140,
+          Height = 40,
+          Shape = new BasicShape()
+          { Type = NodeShapes.Basic,
+            Shape = NodeBasicShapes.Rectangle,
+            CornerRadius = 20 },
+          Style = new ShapeStyle()
+          { Fill = GetNodeColor(label),
+            StrokeColor = "#333333",
+            StrokeWidth = 2 },
+          Annotations = new DiagramObjectCollection<ShapeAnnotation>()
+          { new ShapeAnnotation
+            { Content = label,
+              Style = new TextStyle()
+              { Color = "black",
+                Bold = true,
+                FontSize = 12,
+                TextAlign = TextAlign.Center } } } };
+    }
+
+    private Connector CreateConnectorFromNeo4j(string sourceId, string targetId, string relationshipType, string relationshipId, int connectionIndex, int totalConnections) {
+        // Note: relationshipId parameter kept for future use but not currently utilized
+
+        // Calculate offset for multiple connections between same nodes
+        var baseOffset = 0.0;
+        if (totalConnections > 1) {
+            // Distribute connections with different curvatures
+            var offsetRange = 60.0; // Maximum offset in pixels
+            baseOffset = (connectionIndex - (totalConnections - 1) / 2.0) * (offsetRange / Math.Max(totalConnections - 1, 1));
+        }
+
+        var connector = new Connector()
+        { ID = $"conn_{sourceId}_{targetId}_{relationshipType}_{connectionIndex}",
+          SourceID = sourceId,
+          TargetID = targetId,
+          Type = ConnectorSegmentType.Bezier,
+          Style = new ShapeStyle()
+          { StrokeColor = GetConnectorColor(connectionIndex),
+            StrokeWidth = 2 },
+          TargetDecorator = new DecoratorSettings()
+          { Shape = DecoratorShape.Arrow,
+            Style = new ShapeStyle()
+            { Fill = GetConnectorColor(connectionIndex), StrokeColor = GetConnectorColor(connectionIndex) } },
+          Annotations = new DiagramObjectCollection<PathAnnotation>()
+          { new PathAnnotation()
+            { Content = relationshipType,
+              Style = new TextStyle()
+              { Color = "#333333",
+                FontSize = 10,
+                Bold = true },
+              // Offset annotation position for multiple connections
+              Offset = totalConnections > 1 ? 0.5 + (connectionIndex * 0.1) : 0.5,
+              Alignment = AnnotationAlignment.Center } } };
+
+        // Apply bezier control point offset for curved routing
+        if (Math.Abs(baseOffset) > 1) {
+            connector.Segments = new DiagramObjectCollection<ConnectorSegment>
+            { new BezierSegment()
+              { Type = ConnectorSegmentType.Bezier,
+                // These control points create the curve offset
+                Point1 = new DiagramPoint()
+                { X = baseOffset, Y = -Math.Abs(baseOffset) },
+                Point2 = new DiagramPoint()
+                { X = -baseOffset, Y = -Math.Abs(baseOffset) } } };
+        }
+
+        return connector;
+    }
+
+    private string GetConnectorColor(int index) {
+        var colors = new[]
+        { "#6495ED", "#FF6B6B", "#4ECDC4", "#96CEB4", "#FFEAA7", "#DDA0DD" };
+        return colors[index % colors.Length];
+    }
+
+    private string GetConnectionKey(string nodeId1, string nodeId2) {
+        // Create consistent key regardless of direction for bidirectional tracking
+        return string.Compare(nodeId1, nodeId2, StringComparison.Ordinal) < 0
+            ? $"{nodeId1}|{nodeId2}"
+            : $"{nodeId2}|{nodeId1}";
+    }
+
+    private string GetNodeColor(string label) {
+        // Generate colors based on node labels
+        var colors = new[]
+        { "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#98D8C8" };
+        var hash = label.GetHashCode();
+        return colors[Math.Abs(hash) % colors.Length];
+    }
+
+    private static readonly Random _random = new();
+
+    private double GetRandomPosition(int min, int max) {
+        return _random.Next(min, max);
+    }
+
+    #region MSAGL Layout Integration
+
+    private async Task ApplyMSAGLLayout() {
+        if (nodes.Count == 0) {
+            Logger.LogWarning("No nodes to layout with MSAGL.");
+            return;
+        }
+
+        try {
+            //Logger.LogInformation("Applying MSAGL layout to {NodeCount} nodes...", nodes.Count);
+
+            // Create MSAGL geometry graph
+            var geometryGraph = new GeometryGraph();
+            var nodeMap = new Dictionary<string, Microsoft.Msagl.Core.Layout.Node>();
+
+            // Add nodes to MSAGL graph
+            foreach (var syncNode in nodes) {
+                if (syncNode.ID is null || syncNode.Width is null || syncNode.Height is null) continue;
+
+                var msaglNode = new Microsoft.Msagl.Core.Layout.Node(
+                    CurveFactory.CreateRectangle((double)syncNode.Width, (double)syncNode.Height, new Microsoft.Msagl.Core.Geometry.Point()),
+                    syncNode.ID);
+
+                geometryGraph.Nodes.Add(msaglNode);
+                nodeMap[syncNode.ID] = msaglNode;
+            }
+
+            // Add edges to MSAGL graph
+            foreach (var connector in connectors) {
+                if (connector.SourceID == null || connector.TargetID == null) continue;
+
+                if (!nodeMap.TryGetValue(connector.SourceID, out var sourceNode) ||
+                    !nodeMap.TryGetValue(connector.TargetID, out var targetNode)) continue;
+                var edge = new Edge(sourceNode, targetNode);
+                geometryGraph.Edges.Add(edge);
+            }
+
+            // Configure and run MSAGL layout
+            var layoutSettings = new SugiyamaLayoutSettings
+            { Transformation = PlaneTransformation.Rotation(Math.PI / 2), // Rotate for better fit
+              NodeSeparation = 80, // Increase separation to reduce overlap
+              LayerSeparation = 100, // Vertical separation between layers
+              MinNodeWidth = 140,
+              MinNodeHeight = 40 };
+
+            var layoutEngine = new LayeredLayout(geometryGraph, layoutSettings);
+            layoutEngine.Run();
+
+            // Apply calculated positions back to Syncfusion nodes
+            foreach (var syncNode in nodes) {
+                if (syncNode.ID is null) continue;
+                if (!nodeMap.TryGetValue(syncNode.ID, out var msaglNode)) continue;
+                syncNode.OffsetX = msaglNode.Center.X;
+                syncNode.OffsetY = msaglNode.Center.Y;
+            }
+
+            currentLayoutType = "MSAGL Layered";
+            //Logger.LogInformation("MSAGL layout applied successfully.");
+
+            // Force diagram refresh
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Error applying MSAGL layout: {Message}", ex.Message);
+            currentLayoutType = "MSAGL Failed";
+        }
+    }
+
+    private async Task ApplyRandomLayout() {
+        //Logger.LogInformation("Applying random layout...");
+
+        foreach (var node in nodes) {
+            if (node.ID is null) continue;
+            node.OffsetX = GetRandomPosition(100, 1200);
+            node.OffsetY = GetRandomPosition(100, 800);
+        }
+
+        currentLayoutType = "Random";
+        await InvokeAsync(StateHasChanged);
+    }
+
+    #endregion
+
+    #region Event Handlers
+
+    private void OnSelectionChanged(Syncfusion.Blazor.Diagram.SelectionChangedEventArgs args) {
+        try {
+            var selected = args.NewValue?.Count > 0 ? args.NewValue : args.OldValue;
+            if (selected == null || selected.Count == 0) {
+                selectedInfo = "Click a node or connector to view details";
+            }
+            else {
+                var item = selected[0];
+                var typeName = item.GetType().Name;
+                //Logger.LogInformation("SelectionChanged: runtime type = {Type}", typeName);
+
+                if (item is Syncfusion.Blazor.Diagram.Node
+                    { ID: not null } node) {
+                    selectedInfo = nodeData.TryGetValue(node.ID, out var d)
+                        ? $"Node: {d.label}\nID: {node.ID}\nProperties:\n{string.Join("\n", d.properties)}"
+                        : $"Node: {node.ID}";
+                }
+                else if (item is Connector connector) {
+                    selectedInfo = $"Connector: {connector.ID}\nFrom: {connector.SourceID}\nTo: {connector.TargetID}";
+                }
+                else {
+                    selectedInfo = $"Selected type: {typeName}";
+                }
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "OnSelectionChanged error: {Message}", ex.Message);
+        }
+    }
+
+
+    private void OnScrollChanged(ScrollChangedEventArgs args) {
+        try {
+            // Update current values when user pans/zooms via mouse
+            if (DiagramRef?.ScrollSettings == null) return;
+            currentZoom = DiagramRef.ScrollSettings.CurrentZoom;
+            horizontalOffset = DiagramRef.ScrollSettings.HorizontalOffset;
+            verticalOffset = DiagramRef.ScrollSettings.VerticalOffset;
+            StateHasChanged();
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Error in OnScrollChanged: {Message}", ex.Message);
+        }
+    }
+
+    private void OnMouseMove(MouseEventArgs e) {
+        // Track cursor position relative to the diagram container
+        lastCursorX = e.OffsetX;
+        lastCursorY = e.OffsetY;
+    }
+
+    private void OnWheelScroll(WheelEventArgs e) {
+        try {
+            if (DiagramRef == null) return;
+            // Create focus point at current cursor position
+            var focusPoint = new DiagramPoint()
+            { X = lastCursorX, Y = lastCursorY };
+
+            // Handle zoom with Ctrl + scroll
+            if (e.CtrlKey && e.DeltaY != 0) {
+                var zoomFactor = e.DeltaY > 0 ? 0.9 : 1.1;
+                var newZoom = Math.Max(0.2, Math.Min(5.0, currentZoom * zoomFactor));
+                DiagramRef.Zoom(newZoom / currentZoom, focusPoint);
+            }
+            // Handle horizontal pan with Shift + scroll
+            else if (e.ShiftKey && e.DeltaY != 0) {
+                var panAmount = e.DeltaY > 0 ? 30 : -30;
+                DiagramRef.Pan(panAmount, 0);
+            }
+            // Handle vertical pan with regular scroll
+            else if (!e.CtrlKey && !e.ShiftKey && e.DeltaY != 0) {
+                var panAmount = e.DeltaY > 0 ? 30 : -30;
+                DiagramRef.Pan(0, panAmount);
+            }
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Error in OnWheelScroll: {Message}", ex.Message);
+        }
+    }
+
+    #endregion
+
+    #region Zoom and Pan Controls
+
+    private void ZoomIn() {
+        if (DiagramRef != null) {
+            var newZoom = Math.Min(currentZoom + 0.25, 5.0);
+            DiagramRef.Zoom(newZoom / currentZoom, null);
+            //Logger.LogInformation($"Zoom set to {newZoom}.");
+        }
+    }
+
+    private void ZoomOut() {
+        if (DiagramRef == null) return;
+        var newZoom = Math.Max(currentZoom - 0.25, 0.2);
+        DiagramRef.Zoom(newZoom / currentZoom, null);
+        //Logger.LogInformation($"Zoom set to {newZoom}.");
+    }
+
+    private void FitToPage() {
+        if (DiagramRef != null && nodes.Count > 0) {
+            try {
+                // Filter nodes with valid positions and dimensions, and non-null IDs
+                var validNodes = nodes.Where(n => n.ID != null && n.OffsetX != 0 && n.OffsetY != 0 && n is
+                { Width: > 0, Height: > 0 }).ToList();
+
+                if (validNodes.Count == 0) {
+                    // Fallback to built-in method if no valid nodes
+                    DiagramRef.FitToPage();
+                    return;
+                }
+
+                // Calculate bounds of all valid nodes - use .Value to get non-nullable values
+                var minX = validNodes.Min(n => n.OffsetX - n.Width!.Value / 2.0);
+                var maxX = validNodes.Max(n => n.OffsetX + n.Width!.Value / 2.0);
+                var minY = validNodes.Min(n => n.OffsetY - n.Height!.Value / 2.0);
+                var maxY = validNodes.Max(n => n.OffsetY + n.Height!.Value / 2.0);
+
+                var contentWidth = maxX - minX;
+                var contentHeight = maxY - minY;
+                var centerX = minX + contentWidth / 2.0;
+                var centerY = minY + contentHeight / 2.0;
+
+                // Get diagram viewport size (approximate)
+                var viewportWidth = 800.0; // Approximate based on flex:1
+                var viewportHeight = 600.0; // Approximate based on 80vh
+
+                // Calculate zoom to fit content with padding
+                var padding = 50.0;
+                var zoomX = (viewportWidth - padding) / contentWidth;
+                var zoomY = (viewportHeight - padding) / contentHeight;
+                var targetZoom = Math.Min(Math.Min(zoomX, zoomY), 5.0);
+                targetZoom = Math.Max(targetZoom, 0.2);
+
+                // Apply zoom
+                var centerPoint = new DiagramPoint()
+                { X = viewportWidth / 2.0, Y = viewportHeight / 2.0 };
+                DiagramRef.Zoom(targetZoom / currentZoom, null);
+
+                // Center the content
+                var offsetX = -centerX * targetZoom + viewportWidth / 2.0;
+                var offsetY = -centerY * targetZoom + viewportHeight / 2.0;
+
+                DiagramRef.Pan(offsetX - horizontalOffset, offsetY - verticalOffset);
+
+                //Logger.LogInformation($"Fit to page: zoom={targetZoom:F2}, center=({centerX:F0}, {centerY:F0})");
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex, "Error in FitToPage: {Message}", ex.Message);
+                // Fallback to built-in method
+                DiagramRef.FitToPage();
+            }
+        }
+    }
+
+    private void ResetView() {
+        if (DiagramRef != null) {
+            try {
+                DiagramRef.Zoom(1.0 / currentZoom, null);
+                DiagramRef.Pan(-horizontalOffset, -verticalOffset);
+                currentLayoutType = "Reset";
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex, "Error in ResetView: {Message}", ex.Message);
+            }
+        }
+    }
+
+    #endregion
+
+}

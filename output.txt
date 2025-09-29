@@ -1,0 +1,178 @@
+
+
+==================================================
+Processing: ./datasets/examples/trilogy-wishes-2.epub
+
+=== STORY SUMMARY ===
+Total chunks: 254
+
+Chunk details:
+  index: Chunk(len=1451, book=2, chapter=8, story=1, lines=[1624,1648], story%=24.856, chapter%=61.577)
+
+Without an instant’s hesitation the four children turned and ran back along the forest path; the only pause was Anthea’s. She stood back to let Cyril pass, because he was carrying the Lamb, who screamed with delight. (He had not whooping-coughed a single once since the carpet landed him on the island.)
+‘Gee-up, Squirrel; gee-gee,’ he shouted, and Cyril did gee-up. The path was a shorter cut to the beach than the creeper-covered way by which they had come, and almost directly they saw through the trees the shining blue-and-gold-and-opal of sand and sea.
+‘Stick to it,’ cried Cyril, breathlessly.
+They did stick to it; they tore down the sands—they could hear behind them as they ran the patter of feet which they knew, too well, were copper-coloured.
+The sands were golden and opal-coloured—and BARE. There were wreaths of tropic seaweed, there were rich tropic shells of the kind you would not buy in the Kentish Town Road under at least fifteen pence a pair. There were turtles basking lumpily on the water’s edge—but no cook, no clothes, and no carpet.
+‘On, on! Into the sea!’ gasped Cyril. ‘They MUST hate water. I’ve—heard—savages always—dirty.’
+Their feet were splashing in the warm shallows before his breathless words were ended. The calm baby-waves were easy to go through. It is warm work running for your life in the tropics, and the coolness of the water was delicious. They were up to their arm-pits now, and Jane was up to her chin.
+
+NLP output:
+('Anthea', 'part of', 'four children')
+('Cyril', 'owner of', 'Lamb')
+('Lamb', 'owned by', 'Cyril')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('Gee-up, Squirrel; gee-gee,’ he shouted', 'performer', 'Cyril')
+('beach', 'part of', 'sea')
+('Stick to it', 'author', 'Cyril')
+('copper-coloured', 'facet of', 'feet')
+('opal', 'subclass of', 'golden')
+('Town Road', 'located in the administrative territorial entity', 'Kentish')
+('no clothes', 'different from', 'carpet')
+('carpet', 'different from', 'no clothes')
+('On', 'followed by', 'On, on!')
+('On, on!', 'follows', 'On')
+('Into the sea!', 'main subject', 'sea')
+('Gasped', 'author', 'Cyril')
+('water', 'said to be the same as', 'MUST hate water')
+('MUST hate water', 'said to be the same as', 'water')
+('I’ve—heard—savages always—dirty', 'has part', 'I’ve—heard—savages always—dirty')
+('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
+('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
+('Henry Wadsworth Longfellow', 'notable work', 'The Merchant of Venice')
+('The Merchant of Venice', 'author', 'Henry Wadsworth Longfellow')
+('baby-waves', 'subclass of', 'calm')
+('tropical', 'has part', 'tropics')
+('tropics', 'subclass of', 'tropical')
+('Jane', 'instance of', 'arm-pits')
+
+
+    LLM prompt:
+You are a helpful assistant that converts semantic triples into structured JSON.
+Here are some semantic triples extracted from a story chunk:
+('Anthea', 'part of', 'four children')
+('Cyril', 'owner of', 'Lamb')
+('Lamb', 'owned by', 'Cyril')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('Gee-up, Squirrel; gee-gee,’ he shouted', 'performer', 'Cyril')
+('beach', 'part of', 'sea')
+('Stick to it', 'author', 'Cyril')
+('copper-coloured', 'facet of', 'feet')
+('opal', 'subclass of', 'golden')
+('Town Road', 'located in the administrative territorial entity', 'Kentish')
+('no clothes', 'different from', 'carpet')
+('carpet', 'different from', 'no clothes')
+('On', 'followed by', 'On, on!')
+('On, on!', 'follows', 'On')
+('Into the sea!', 'main subject', 'sea')
+('Gasped', 'author', 'Cyril')
+('water', 'said to be the same as', 'MUST hate water')
+('MUST hate water', 'said to be the same as', 'water')
+('I’ve—heard—savages always—dirty', 'has part', 'I’ve—heard—savages always—dirty')
+('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
+('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
+('Henry Wadsworth Longfellow', 'notable work', 'The Merchant of Venice')
+('The Merchant of Venice', 'author', 'Henry Wadsworth Longfellow')
+('baby-waves', 'subclass of', 'calm')
+('tropical', 'has part', 'tropics')
+('tropics', 'subclass of', 'tropical')
+('Jane', 'instance of', 'arm-pits')
+
+And here is the original text:
+Without an instant’s hesitation the four children turned and ran back along the forest path; the only pause was Anthea’s. She stood back to let Cyril pass, because he was carrying the Lamb, who screamed with delight. (He had not whooping-coughed a single once since the carpet landed him on the island.)
+‘Gee-up, Squirrel; gee-gee,’ he shouted, and Cyril did gee-up. The path was a shorter cut to the beach than the creeper-covered way by which they had come, and almost directly they saw through the trees the shining blue-and-gold-and-opal of sand and sea.
+‘Stick to it,’ cried Cyril, breathlessly.
+They did stick to it; they tore down the sands—they could hear behind them as they ran the patter of feet which they knew, too well, were copper-coloured.
+The sands were golden and opal-coloured—and BARE. There were wreaths of tropic seaweed, there were rich tropic shells of the kind you would not buy in the Kentish Town Road under at least fifteen pence a pair. There were turtles basking lumpily on the water’s edge—but no cook, no clothes, and no carpet.
+‘On, on! Into the sea!’ gasped Cyril. ‘They MUST hate water. I’ve—heard—savages always—dirty.’
+Their feet were splashing in the warm shallows before his breathless words were ended. The calm baby-waves were easy to go through. It is warm work running for your life in the tropics, and the coolness of the water was delicious. They were up to their arm-pits now, and Jane was up to her chin.
+
+Output JSON with keys: s (subject), r (relation), o (object).
+Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
+
+    LLM output:
+[
+  {"s": "Anthea", "r": "part of", "o": "four children"},
+  {"s": "Cyril", "r": "owner of", "o": "Lamb"},
+  {"s": "Lamb", "r": "owned by", "o": "Cyril"},
+  {"s": "George Orwell", "r": "notable work", "o": "Nineteen Eighty-Four"},
+  {"s": "Nineteen Eighty-Four", "r": "author", "o": "Orwell"},
+  {"s": "Cyril", "r": "shouted", "o": "Gee-up, Squirrel; gee-gee"},
+  {"s": "Cyril", "r": "said", "o": "Stick to it"},
+  {"s": "feet", "r": "were", "o": "copper-coloured"},
+  {"s": "no clothes", "r": "present in", "o": "the scene"},
+  {"s": "carpet", "r": "present in", "o": "the scene"},
+  {"s": "Anthea", "r": "paused", "o": "to let Cyril pass"},
+  {"s": "Anthea", "r": "stood back to let", "o": "Cyril pass"},
+  {"s": "Cyril", "r": "carried", "o": "the Lamb"},
+  {"s": "Lamb", "r": "screamed with delight", "o": "delight"},
+  {"s": "carpet", "r": "landed", "o": "Lamb on the island"},
+  {"s": "On", "r": "followed by", "o": "On, on!"},
+  {"s": "On, on!", "r": "follows", "o": "On"},
+  {"s": "Into the sea!", "r": "main subject", "o": "sea"},
+  {"s": "Cyril", "r": "gasped", "o": "Into the sea!"},
+  {"s": "water", "r": "said to be the same as", "o": "MUST hate water"},
+  {"s": "MUST hate water", "r": "said to be the same as", "o": "water"},
+  {"s": "baby-waves", "r": "described as", "o": "calm"},
+  {"s": "sand", "r": "were", "o": "golden and opal-coloured"},
+  {"s": "turtles", "r": "basked on", "o": "water's edge"},
+  {"s": "they", "r": "were up to their arm-pits in", "o": "water"},
+  {"s": "Jane", "r": "was up to", "o": "her chin in water"}
+]
+
+==================================================
+
+
+Valid JSON
+Anthea part of four children
+Cyril owner of Lamb
+Lamb owned by Cyril
+George Orwell notable work Nineteen Eighty-Four
+Nineteen Eighty-Four author Orwell
+Cyril shouted Gee-up, Squirrel; gee-gee
+Cyril said Stick to it
+feet were copper-coloured
+no clothes present in the scene
+carpet present in the scene
+Anthea paused to let Cyril pass
+Anthea stood back to let Cyril pass
+Cyril carried the Lamb
+Lamb screamed with delight delight
+carpet landed Lamb on the island
+On followed by On, on!
+On, on! follows On
+Into the sea! main subject sea
+Cyril gasped Into the sea!
+water said to be the same as MUST hate water
+MUST hate water said to be the same as water
+baby-waves described as calm
+sand were golden and opal-coloured
+turtles basked on water's edge
+they were up to their arm-pits in water
+Jane was up to her chin in water
+
+Most relevant nodes:
+  node_name  edge_count
+0     Cyril           6
+1      Lamb           3
+2     water           3
+
+Triples which best represent the graph:
+Cyril gasped Into_the_sea_
+Cyril carried the_Lamb
+Cyril said Stick_to_it
+Cyril shouted Gee_up__Squirrel__gee_gee
+Cyril owner_of Lamb
+Lamb screamed_with_delight delight
+Lamb owned_by Cyril
+water said_to_be_the_same_as MUST_hate_water
+
+
+Generated summary:
+Cyril gasped as he went into the sea and carried a Lamb that he owns. The Lamb screamed with delight. Cyril affirmed his ownership of the Lamb, urged someone to “Stick to it,” and shouted “Gee up, Squirrel, gee-gee.”
+POST succeeded
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Cyril gasped as he went into the sea and carried a Lamb that he owns. The Lamb screamed with delight. Cyril affirmed his ownership of the Lamb, urged someone to “Stick to it,” and shouted “Gee up, Squirrel, gee-gee.”', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
+
+Output sent to web app.

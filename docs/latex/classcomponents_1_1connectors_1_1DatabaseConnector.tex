@@ -1,0 +1,433 @@
+\doxysection{Database\+Connector Class Reference}
+\hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector}{}\label{classcomponents_1_1connectors_1_1DatabaseConnector}\index{DatabaseConnector@{DatabaseConnector}}
+
+
+Abstract base class for database engine connectors.  
+
+
+
+
+Inheritance diagram for Database\+Connector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classcomponents_1_1connectors_1_1DatabaseConnector__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Database\+Connector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=193pt]{classcomponents_1_1connectors_1_1DatabaseConnector__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aac066d3a007eb967f768e8000d845753}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aa9e289eddb591991c9bc7321dc5b186b}{verbose}}=False)
+\begin{DoxyCompactList}\small\item\em Initialize the connector. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a25e2ca9a3b294b6179d73d177efa8b5f}{configure}} (self, str DB, str \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}}, bool route\+\_\+db\+\_\+name=True)
+\begin{DoxyCompactList}\small\item\em Read connection settings from the .env file. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_afc35f1889dd4bc77cf496e015e48b2ea}{change\+\_\+database}} (self, str new\+\_\+database, bool route\+\_\+db\+\_\+name=True)
+\begin{DoxyCompactList}\small\item\em Update the connection URI to reference a different database in the same engine. \end{DoxyCompactList}\item 
+Data\+Frame \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a7154ca8ff15ba3ccf1a813b74876edd0}{execute\+\_\+query}} (self, str query)
+\begin{DoxyCompactList}\small\item\em Send a single command through the connection. \end{DoxyCompactList}\item 
+List\mbox{[}Data\+Frame\mbox{]} \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_ac53b71501a8ad701234117e668372b45}{execute\+\_\+combined}} (self, str multi\+\_\+query)
+\begin{DoxyCompactList}\small\item\em Run several database commands in sequence. \end{DoxyCompactList}\item 
+List\mbox{[}Data\+Frame\mbox{]} \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_afa45efe732bf9dc7db6e665a11a628e7}{execute\+\_\+file}} (self, str filename)
+\begin{DoxyCompactList}\small\item\em Run several database commands from a file. \end{DoxyCompactList}\item 
+Data\+Frame \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_ac3e7151adc2767a7609ee0a3505ff225}{get\+\_\+dataframe}} (self, str name)
+\begin{DoxyCompactList}\small\item\em Automatically generate a query for the specified resource. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a8d3de5cf1bae7566fc0b746bc46419fe}{create\+\_\+database}} (self, str \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}})
+\begin{DoxyCompactList}\small\item\em Use the current database connection to create a sibling database in this engine. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a2ce2385e5656f0d268a958de8c6cb52a}{drop\+\_\+database}} (self, str \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}}="{}"{})
+\begin{DoxyCompactList}\small\item\em Delete all data stored in a particular database. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classcomponents_1_1connectors_1_1Connector}{Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{classcomponents_1_1connectors_1_1Connector_a6444c5903715e26fb20cca4d3e52a4f2}{test\+\_\+connection}} (self)
+\begin{DoxyCompactList}\small\item\em Establish a basic connection to the database. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_ade713bacd446db85cbacd6617a61a20d}{db\+\_\+type}}
+\begin{DoxyCompactList}\small\item\em The common name for the type of database as observed in the .env prefixes (MYSQL, POSTGRES, MONGO, or NEO4J). \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_ad6d85692a1c9f8e96dcff4556f263810}{db\+\_\+engine}}
+\begin{DoxyCompactList}\small\item\em The protocol specifying the database type, syntax is usually dialect+driver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a0adcbe0e0e6f64a29b1d205ede9632c1}{username}}
+\begin{DoxyCompactList}\small\item\em The username used to access the database. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a9dbb300e28bc21c8dab41b01883918eb}{password}}
+\begin{DoxyCompactList}\small\item\em The password used to access the database. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a832ddc04754e8a43d4f3c6165b1294a7}{host}}
+\begin{DoxyCompactList}\small\item\em The IP address where the database service is hosted. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_af8fb0f45ee0195c7422a49e6a8d72369}{port}}
+\begin{DoxyCompactList}\small\item\em The port number where the database service is hosted. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}}
+\begin{DoxyCompactList}\small\item\em The collection being modified by this connector (Optional since Neo4j does not have one). \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_af687e8c8c8ee35024630bcec03fa5c54}{connection\+\_\+string}}
+\begin{DoxyCompactList}\small\item\em URI of the database connection\+: syntax is engine\+://username\+:password@host\+:port/database. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aa9e289eddb591991c9bc7321dc5b186b}{verbose}}
+\begin{DoxyCompactList}\small\item\em Whether to print debug messages. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_abf425f0d46449a2375a03a6c85c70b61}{\+\_\+is\+\_\+single\+\_\+query}} (self, str query)
+\begin{DoxyCompactList}\small\item\em Checks if a string contains multiple queries. \end{DoxyCompactList}\item 
+List\mbox{[}str\mbox{]} \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_ad2130d33be4d41c012f714e9dfb824a3}{\+\_\+split\+\_\+combined}} (self, str multi\+\_\+query)
+\begin{DoxyCompactList}\small\item\em Checks if a string contains multiple queries. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Abstract base class for database engine connectors. 
+
+Derived classes should implement\+:
+\begin{DoxyItemize}
+\item \doxylink{classcomponents_1_1connectors_1_1DatabaseConnector_aac066d3a007eb967f768e8000d845753}{components.\+connectors.\+Database\+Connector.\+\_\+\+\_\+init\+\_\+\+\_\+}
+\item \doxylink{classcomponents_1_1connectors_1_1Connector_a6444c5903715e26fb20cca4d3e52a4f2}{components.\+connectors.\+Database\+Connector.\+test\+\_\+connection}
+\item \doxylink{classcomponents_1_1connectors_1_1DatabaseConnector_a7154ca8ff15ba3ccf1a813b74876edd0}{components.\+connectors.\+Database\+Connector.\+execute\+\_\+query}
+\item \doxylink{classcomponents_1_1connectors_1_1DatabaseConnector_ad2130d33be4d41c012f714e9dfb824a3}{components.\+connectors.\+Database\+Connector.\+\_\+split\+\_\+combined}
+\item \doxylink{classcomponents_1_1connectors_1_1DatabaseConnector_ac3e7151adc2767a7609ee0a3505ff225}{components.\+connectors.\+Database\+Connector.\+get\+\_\+dataframe}
+\item \doxylink{classcomponents_1_1connectors_1_1DatabaseConnector_a8d3de5cf1bae7566fc0b746bc46419fe}{components.\+connectors.\+Database\+Connector.\+create\+\_\+database}
+\item \doxylink{classcomponents_1_1connectors_1_1DatabaseConnector_a2ce2385e5656f0d268a958de8c6cb52a}{components.\+connectors.\+Database\+Connector.\+drop\+\_\+database} 
+\end{DoxyItemize}
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_aac066d3a007eb967f768e8000d845753}\label{classcomponents_1_1connectors_1_1DatabaseConnector_aac066d3a007eb967f768e8000d845753} 
+\index{DatabaseConnector@{DatabaseConnector}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{verbose = {\ttfamily False} }\end{DoxyParamCaption})}
+
+
+
+Initialize the connector. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em verbose} & Whether to print debug messages. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyNote}{Note}
+Attributes will be set to None until \doxylink{classcomponents_1_1connectors_1_1DatabaseConnector_a25e2ca9a3b294b6179d73d177efa8b5f}{components.\+connectors.\+Database\+Connector.\+configure()} is called. 
+\end{DoxyNote}
+
+
+Reimplemented in \mbox{\hyperlink{classcomponents_1_1connectors_1_1RelationalConnector_a907a22b4044d88c776841cd2af237fbf}{Relational\+Connector}}, \mbox{\hyperlink{classcomponents_1_1connectors_1_1mysqlConnector_aac066d3a007eb967f768e8000d845753}{mysql\+Connector}}, \mbox{\hyperlink{classcomponents_1_1connectors_1_1postgresConnector_aac066d3a007eb967f768e8000d845753}{postgres\+Connector}}, and \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_aac066d3a007eb967f768e8000d845753}{Graph\+Connector}}.
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_abf425f0d46449a2375a03a6c85c70b61}\label{classcomponents_1_1connectors_1_1DatabaseConnector_abf425f0d46449a2375a03a6c85c70b61} 
+\index{DatabaseConnector@{DatabaseConnector}!\_is\_single\_query@{\_is\_single\_query}}
+\index{\_is\_single\_query@{\_is\_single\_query}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{\_is\_single\_query()}{\_is\_single\_query()}}
+{\footnotesize\ttfamily  bool \+\_\+is\+\_\+single\+\_\+query (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{query }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Checks if a string contains multiple queries. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em query} & A single or combined query string. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Whether the query is single (true) or combined (false). 
+\end{DoxyReturn}
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_ad2130d33be4d41c012f714e9dfb824a3}\label{classcomponents_1_1connectors_1_1DatabaseConnector_ad2130d33be4d41c012f714e9dfb824a3} 
+\index{DatabaseConnector@{DatabaseConnector}!\_split\_combined@{\_split\_combined}}
+\index{\_split\_combined@{\_split\_combined}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{\_split\_combined()}{\_split\_combined()}}
+{\footnotesize\ttfamily  List\mbox{[}str\mbox{]} \+\_\+split\+\_\+combined (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{multi\+\_\+query }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Checks if a string contains multiple queries. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em multi\+\_\+query} & A string containing multiple queries. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+A list of single-\/query strings. 
+\end{DoxyReturn}
+
+
+Reimplemented in \mbox{\hyperlink{classcomponents_1_1connectors_1_1RelationalConnector_ad2130d33be4d41c012f714e9dfb824a3}{Relational\+Connector}}, and \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_ad2130d33be4d41c012f714e9dfb824a3}{Graph\+Connector}}.
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_afc35f1889dd4bc77cf496e015e48b2ea}\label{classcomponents_1_1connectors_1_1DatabaseConnector_afc35f1889dd4bc77cf496e015e48b2ea} 
+\index{DatabaseConnector@{DatabaseConnector}!change\_database@{change\_database}}
+\index{change\_database@{change\_database}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{change\_database()}{change\_database()}}
+{\footnotesize\ttfamily change\+\_\+database (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{new\+\_\+database,  }\item[{bool }]{route\+\_\+db\+\_\+name = {\ttfamily True} }\end{DoxyParamCaption})}
+
+
+
+Update the connection URI to reference a different database in the same engine. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em new\+\_\+database} & The name of the database to connect to. \\
+\hline
+{\em route\+\_\+db\+\_\+name} & Whether to use the database name in the connection string. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_a25e2ca9a3b294b6179d73d177efa8b5f}\label{classcomponents_1_1connectors_1_1DatabaseConnector_a25e2ca9a3b294b6179d73d177efa8b5f} 
+\index{DatabaseConnector@{DatabaseConnector}!configure@{configure}}
+\index{configure@{configure}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{configure()}{configure()}}
+{\footnotesize\ttfamily configure (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{DB,  }\item[{str}]{database\+\_\+name,  }\item[{bool }]{route\+\_\+db\+\_\+name = {\ttfamily True} }\end{DoxyParamCaption})}
+
+
+
+Read connection settings from the .env file. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em DB} & The prefix of fetched database credentials. \\
+\hline
+{\em database\+\_\+name} & The name of the database to connect to. \\
+\hline
+{\em route\+\_\+db\+\_\+name} & Whether to use the database name in the connection string. \\
+\hline
+\end{DoxyParams}
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1Connector_a6be10f792be4aba21f4bc7c2bf5ae185}{Connector}}.
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_a8d3de5cf1bae7566fc0b746bc46419fe}\label{classcomponents_1_1connectors_1_1DatabaseConnector_a8d3de5cf1bae7566fc0b746bc46419fe} 
+\index{DatabaseConnector@{DatabaseConnector}!create\_database@{create\_database}}
+\index{create\_database@{create\_database}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{create\_database()}{create\_database()}}
+{\footnotesize\ttfamily create\+\_\+database (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{database\+\_\+name }\end{DoxyParamCaption})}
+
+
+
+Use the current database connection to create a sibling database in this engine. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em database\+\_\+name} & The name of the new database to create. \\
+\hline
+\end{DoxyParams}
+
+
+Reimplemented in \mbox{\hyperlink{classcomponents_1_1connectors_1_1RelationalConnector_a8d3de5cf1bae7566fc0b746bc46419fe}{Relational\+Connector}}, and \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_a8d3de5cf1bae7566fc0b746bc46419fe}{Graph\+Connector}}.
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_a2ce2385e5656f0d268a958de8c6cb52a}\label{classcomponents_1_1connectors_1_1DatabaseConnector_a2ce2385e5656f0d268a958de8c6cb52a} 
+\index{DatabaseConnector@{DatabaseConnector}!drop\_database@{drop\_database}}
+\index{drop\_database@{drop\_database}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{drop\_database()}{drop\_database()}}
+{\footnotesize\ttfamily drop\+\_\+database (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str }]{database\+\_\+name = {\ttfamily "{}"{}} }\end{DoxyParamCaption})}
+
+
+
+Delete all data stored in a particular database. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em database\+\_\+name} & The name of an existing database. \\
+\hline
+\end{DoxyParams}
+
+
+Reimplemented in \mbox{\hyperlink{classcomponents_1_1connectors_1_1RelationalConnector_a2ce2385e5656f0d268a958de8c6cb52a}{Relational\+Connector}}, and \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_a2ce2385e5656f0d268a958de8c6cb52a}{Graph\+Connector}}.
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_ac53b71501a8ad701234117e668372b45}\label{classcomponents_1_1connectors_1_1DatabaseConnector_ac53b71501a8ad701234117e668372b45} 
+\index{DatabaseConnector@{DatabaseConnector}!execute\_combined@{execute\_combined}}
+\index{execute\_combined@{execute\_combined}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{execute\_combined()}{execute\_combined()}}
+{\footnotesize\ttfamily  List\mbox{[}Data\+Frame\mbox{]} execute\+\_\+combined (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{multi\+\_\+query }\end{DoxyParamCaption})}
+
+
+
+Run several database commands in sequence. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em multi\+\_\+query} & A string containing multiple queries. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+A list of query results converted to Data\+Frames. 
+\end{DoxyReturn}
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_afa45efe732bf9dc7db6e665a11a628e7}\label{classcomponents_1_1connectors_1_1DatabaseConnector_afa45efe732bf9dc7db6e665a11a628e7} 
+\index{DatabaseConnector@{DatabaseConnector}!execute\_file@{execute\_file}}
+\index{execute\_file@{execute\_file}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{execute\_file()}{execute\_file()}}
+{\footnotesize\ttfamily  List\mbox{[}Data\+Frame\mbox{]} execute\+\_\+file (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{filename }\end{DoxyParamCaption})}
+
+
+
+Run several database commands from a file. 
+
+\begin{DoxyNote}{Note}
+Loads the entire file into memory at once. 
+\end{DoxyNote}
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & The path to a specified query file (.sql, .cql, .json). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Whether the query was performed successfully. 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1Connector_a0e2dfda09f922f47ab1cf3f0c28a086c}{Connector}}.
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_a7154ca8ff15ba3ccf1a813b74876edd0}\label{classcomponents_1_1connectors_1_1DatabaseConnector_a7154ca8ff15ba3ccf1a813b74876edd0} 
+\index{DatabaseConnector@{DatabaseConnector}!execute\_query@{execute\_query}}
+\index{execute\_query@{execute\_query}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{execute\_query()}{execute\_query()}}
+{\footnotesize\ttfamily  Data\+Frame execute\+\_\+query (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{query }\end{DoxyParamCaption})}
+
+
+
+Send a single command through the connection. 
+
+\begin{DoxyNote}{Note}
+If a result is returned, it will be converted to a Data\+Frame. 
+\end{DoxyNote}
+
+\begin{DoxyParams}{Parameters}
+{\em query} & A single query to perform on the database. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Data\+Frame containing the result of the query, or None 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1Connector_a5b7425f9d6f96d4abd3cce185f8ce744}{Connector}}.
+
+
+
+Reimplemented in \mbox{\hyperlink{classcomponents_1_1connectors_1_1RelationalConnector_a7154ca8ff15ba3ccf1a813b74876edd0}{Relational\+Connector}}, and \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_a7154ca8ff15ba3ccf1a813b74876edd0}{Graph\+Connector}}.
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_ac3e7151adc2767a7609ee0a3505ff225}\label{classcomponents_1_1connectors_1_1DatabaseConnector_ac3e7151adc2767a7609ee0a3505ff225} 
+\index{DatabaseConnector@{DatabaseConnector}!get\_dataframe@{get\_dataframe}}
+\index{get\_dataframe@{get\_dataframe}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{get\_dataframe()}{get\_dataframe()}}
+{\footnotesize\ttfamily  Data\+Frame get\+\_\+dataframe (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{name }\end{DoxyParamCaption})}
+
+
+
+Automatically generate a query for the specified resource. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & The name of an existing table or collection in the database. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Data\+Frame containing the requested data, or None 
+\end{DoxyReturn}
+
+
+Reimplemented in \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_a5221962dd1ce0d62ab21023b818d1ac9}{Graph\+Connector}}, and \mbox{\hyperlink{classcomponents_1_1connectors_1_1RelationalConnector_ac3e7151adc2767a7609ee0a3505ff225}{Relational\+Connector}}.
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_af687e8c8c8ee35024630bcec03fa5c54}\label{classcomponents_1_1connectors_1_1DatabaseConnector_af687e8c8c8ee35024630bcec03fa5c54} 
+\index{DatabaseConnector@{DatabaseConnector}!connection\_string@{connection\_string}}
+\index{connection\_string@{connection\_string}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{connection\_string}{connection\_string}}
+{\footnotesize\ttfamily connection\+\_\+string}
+
+
+
+URI of the database connection\+: syntax is engine\+://username\+:password@host\+:port/database. 
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}\label{classcomponents_1_1connectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c} 
+\index{DatabaseConnector@{DatabaseConnector}!database\_name@{database\_name}}
+\index{database\_name@{database\_name}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{database\_name}{database\_name}}
+{\footnotesize\ttfamily database\+\_\+name}
+
+
+
+The collection being modified by this connector (Optional since Neo4j does not have one). 
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_ad6d85692a1c9f8e96dcff4556f263810}\label{classcomponents_1_1connectors_1_1DatabaseConnector_ad6d85692a1c9f8e96dcff4556f263810} 
+\index{DatabaseConnector@{DatabaseConnector}!db\_engine@{db\_engine}}
+\index{db\_engine@{db\_engine}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{db\_engine}{db\_engine}}
+{\footnotesize\ttfamily db\+\_\+engine}
+
+
+
+The protocol specifying the database type, syntax is usually dialect+driver. 
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_ade713bacd446db85cbacd6617a61a20d}\label{classcomponents_1_1connectors_1_1DatabaseConnector_ade713bacd446db85cbacd6617a61a20d} 
+\index{DatabaseConnector@{DatabaseConnector}!db\_type@{db\_type}}
+\index{db\_type@{db\_type}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{db\_type}{db\_type}}
+{\footnotesize\ttfamily db\+\_\+type}
+
+
+
+The common name for the type of database as observed in the .env prefixes (MYSQL, POSTGRES, MONGO, or NEO4J). 
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_a832ddc04754e8a43d4f3c6165b1294a7}\label{classcomponents_1_1connectors_1_1DatabaseConnector_a832ddc04754e8a43d4f3c6165b1294a7} 
+\index{DatabaseConnector@{DatabaseConnector}!host@{host}}
+\index{host@{host}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{host}{host}}
+{\footnotesize\ttfamily host}
+
+
+
+The IP address where the database service is hosted. 
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_a9dbb300e28bc21c8dab41b01883918eb}\label{classcomponents_1_1connectors_1_1DatabaseConnector_a9dbb300e28bc21c8dab41b01883918eb} 
+\index{DatabaseConnector@{DatabaseConnector}!password@{password}}
+\index{password@{password}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{password}{password}}
+{\footnotesize\ttfamily password}
+
+
+
+The password used to access the database. 
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_af8fb0f45ee0195c7422a49e6a8d72369}\label{classcomponents_1_1connectors_1_1DatabaseConnector_af8fb0f45ee0195c7422a49e6a8d72369} 
+\index{DatabaseConnector@{DatabaseConnector}!port@{port}}
+\index{port@{port}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{port}{port}}
+{\footnotesize\ttfamily port}
+
+
+
+The port number where the database service is hosted. 
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_a0adcbe0e0e6f64a29b1d205ede9632c1}\label{classcomponents_1_1connectors_1_1DatabaseConnector_a0adcbe0e0e6f64a29b1d205ede9632c1} 
+\index{DatabaseConnector@{DatabaseConnector}!username@{username}}
+\index{username@{username}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{username}{username}}
+{\footnotesize\ttfamily username}
+
+
+
+The username used to access the database. 
+
+\Hypertarget{classcomponents_1_1connectors_1_1DatabaseConnector_aa9e289eddb591991c9bc7321dc5b186b}\label{classcomponents_1_1connectors_1_1DatabaseConnector_aa9e289eddb591991c9bc7321dc5b186b} 
+\index{DatabaseConnector@{DatabaseConnector}!verbose@{verbose}}
+\index{verbose@{verbose}!DatabaseConnector@{DatabaseConnector}}
+\doxysubsubsection{\texorpdfstring{verbose}{verbose}}
+{\footnotesize\ttfamily verbose}
+
+
+
+Whether to print debug messages. 
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/mnt/c/dsci-\/cap/capstone/components/\mbox{\hyperlink{connectors_8py}{connectors.\+py}}\end{DoxyCompactItemize}

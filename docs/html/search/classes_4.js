@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['postgresconnector_0',['postgresConnector',['../classconnectors_1_1postgresConnector.html',1,'connectors']]]
+  ['graphconnector_0',['GraphConnector',['../classcomponents_1_1fact__storage_1_1GraphConnector.html',1,'components::fact_storage']]]
 ];

@@ -1,0 +1,17 @@
+<map id="Connector" name="Connector">
+<area shape="rect" id="Node000001" title="Abstract base class for external connectors." alt="" coords="267,79,355,104"/>
+<area shape="rect" id="Node000003" href="$classcomponents_1_1connectors_1_1DatabaseConnector.html" title="Abstract base class for database engine connectors." alt="" coords="157,152,307,177"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="290,115,247,154,243,150,286,111"/>
+<area shape="rect" id="Node000008" href="$classcomponents_1_1text__processing_1_1LLMConnector.html" title="Connector for prompting and returning LLM output (raw text/JSON) via LangChain." alt="" coords="332,152,447,177"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="335,111,378,150,375,154,332,115"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="286,5,335,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="313,44,313,79,308,79,308,44"/>
+<area shape="rect" id="Node000004" href="$classcomponents_1_1connectors_1_1RelationalConnector.html" title="Connector for relational databases (MySQL, PostgreSQL)." alt="" coords="72,225,227,251"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="210,188,165,227,161,223,207,184"/>
+<area shape="rect" id="Node000007" href="$classcomponents_1_1fact__storage_1_1GraphConnector.html" title="Connector for Neo4j (graph database)." alt="" coords="251,225,378,251"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="257,184,303,223,299,227,254,188"/>
+<area shape="rect" id="Node000005" href="$classcomponents_1_1connectors_1_1mysqlConnector.html" title="A relational database connector configured for MySQL." alt="" coords="5,299,133,324"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="128,262,84,300,81,296,125,258"/>
+<area shape="rect" id="Node000006" href="$classcomponents_1_1connectors_1_1postgresConnector.html" title="A relational database connector configured for PostgreSQL." alt="" coords="157,299,301,324"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="174,258,218,296,214,300,170,262"/>
+</map>

@@ -1,0 +1,12 @@
+book_id,story_id,epub_path,title_key,author_key,language_key,date_key,start_string,end_string,tei_path,chapters
+1,1,datasets/examples/trilogy-wishes-1.epub,Title,Author,Language,Release date,,But I must say no more.,datasets/examples/trilogy-wishes-1.tei,"CHAPTER 1 BEAUTIFUL AS THE DAY
+CHAPTER 2 GOLDEN GUINEAS
+CHAPTER 3 BEING WANTED
+CHAPTER 4 WINGS
+CHAPTER 5 NO WINGS
+CHAPTER 6 A CASTLE AND NO DINNER
+CHAPTER 7 A SIEGE AND BED
+CHAPTER 8 BIGGER THAN THE BAKER'S BOY
+CHAPTER 9 GROWN UP
+CHAPTER 10 SCALPS
+CHAPTER 11 THE LAST WISH"

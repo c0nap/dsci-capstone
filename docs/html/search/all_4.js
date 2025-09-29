@@ -1,6 +1,9 @@
 var searchData=
 [
-  ['execute_5fcombined_0',['execute_combined',['../classconnectors_1_1DatabaseConnector.html#ac53b71501a8ad701234117e668372b45',1,'connectors::DatabaseConnector']]],
-  ['execute_5ffile_1',['execute_file',['../classconnectors_1_1Connector.html#a0e2dfda09f922f47ab1cf3f0c28a086c',1,'connectors.Connector.execute_file()'],['../classconnectors_1_1DatabaseConnector.html#afa45efe732bf9dc7db6e665a11a628e7',1,'connectors.DatabaseConnector.execute_file()']]],
-  ['execute_5fquery_2',['execute_query',['../classconnectors_1_1Connector.html#a5b7425f9d6f96d4abd3cce185f8ce744',1,'connectors.Connector.execute_query()'],['../classconnectors_1_1DatabaseConnector.html#a7154ca8ff15ba3ccf1a813b74876edd0',1,'connectors.DatabaseConnector.execute_query()'],['../classconnectors_1_1RelationalConnector.html#a7154ca8ff15ba3ccf1a813b74876edd0',1,'connectors.RelationalConnector.execute_query()']]]
+  ['database_5fname_0',['database_name',['../classcomponents_1_1connectors_1_1DatabaseConnector.html#aaa0ffd8cdad125c22be209e5cce9ee9c',1,'components::connectors::DatabaseConnector']]],
+  ['databaseconnector_1',['DatabaseConnector',['../classcomponents_1_1connectors_1_1DatabaseConnector.html',1,'components::connectors']]],
+  ['date_5fkey_2',['date_key',['../classcomponents_1_1book__conversion_1_1Book.html#aaaa9266b61903eedcb153decb6d0332c',1,'components::book_conversion::Book']]],
+  ['db_5fengine_3',['db_engine',['../classcomponents_1_1connectors_1_1DatabaseConnector.html#ad6d85692a1c9f8e96dcff4556f263810',1,'components::connectors::DatabaseConnector']]],
+  ['db_5ftype_4',['db_type',['../classcomponents_1_1connectors_1_1DatabaseConnector.html#ade713bacd446db85cbacd6617a61a20d',1,'components::connectors::DatabaseConnector']]],
+  ['drop_5fdatabase_5',['drop_database',['../classcomponents_1_1connectors_1_1DatabaseConnector.html#a2ce2385e5656f0d268a958de8c6cb52a',1,'components.connectors.DatabaseConnector.drop_database()'],['../classcomponents_1_1connectors_1_1RelationalConnector.html#a2ce2385e5656f0d268a958de8c6cb52a',1,'components.connectors.RelationalConnector.drop_database()'],['../classcomponents_1_1fact__storage_1_1GraphConnector.html#a2ce2385e5656f0d268a958de8c6cb52a',1,'components.fact_storage.GraphConnector.drop_database()']]]
 ];

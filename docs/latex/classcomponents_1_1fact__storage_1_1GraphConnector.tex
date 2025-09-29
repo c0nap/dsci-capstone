@@ -1,0 +1,303 @@
+\doxysection{Graph\+Connector Class Reference}
+\hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector}{}\label{classcomponents_1_1fact__storage_1_1GraphConnector}\index{GraphConnector@{GraphConnector}}
+
+
+Connector for Neo4j (graph database).  
+
+
+
+
+Inheritance diagram for Graph\+Connector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=193pt]{classcomponents_1_1fact__storage_1_1GraphConnector__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Graph\+Connector\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=193pt]{classcomponents_1_1fact__storage_1_1GraphConnector__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_aac066d3a007eb967f768e8000d845753}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aa9e289eddb591991c9bc7321dc5b186b}{verbose}}=False)
+\begin{DoxyCompactList}\small\item\em Creates a new Neo4j connector. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_a5719074dd9cdb56d259418d9bab07f74}{test\+\_\+connection}} (self, print\+\_\+results=False)
+\begin{DoxyCompactList}\small\item\em Establish a basic connection to the Neo4j database. \end{DoxyCompactList}\item 
+Data\+Frame \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_a7154ca8ff15ba3ccf1a813b74876edd0}{execute\+\_\+query}} (self, str query)
+\begin{DoxyCompactList}\small\item\em Send a single Cypher query to Neo4j. \end{DoxyCompactList}\item 
+Data\+Frame \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_a5221962dd1ce0d62ab21023b818d1ac9}{get\+\_\+dataframe}} (self, str label)
+\begin{DoxyCompactList}\small\item\em Return all nodes of a given label, filtered by database\+\_\+id. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_a8d3de5cf1bae7566fc0b746bc46419fe}{create\+\_\+database}} (self, str \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}})
+\begin{DoxyCompactList}\small\item\em Create a pseudo-\/database by clearing nodes with the same database\+\_\+id. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_a2ce2385e5656f0d268a958de8c6cb52a}{drop\+\_\+database}} (self, str \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}}="{}"{})
+\begin{DoxyCompactList}\small\item\em Delete all nodes with the given database\+\_\+id. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_a5861c1357639b6c13fa392d3bd7fa0a2}{add\+\_\+triple}} (self, str subject, str relation, str object\+\_\+)
+\begin{DoxyCompactList}\small\item\em Add a semantic triple to the graph using raw Cypher. \end{DoxyCompactList}\item 
+Data\+Frame \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_a6dce8a16fdd5290fbb52fb299a4d6e07}{get\+\_\+edge\+\_\+counts}} (self, int top\+\_\+n=10)
+\begin{DoxyCompactList}\small\item\em Return node names and their edge counts, ordered by edge count descending. \end{DoxyCompactList}\item 
+pd.\+Data\+Frame \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_ad1c93a22ae86f1efe049207c51df71c4}{get\+\_\+all\+\_\+triples}} (self)
+\begin{DoxyCompactList}\small\item\em Return all triples in the current pseudo-\/database as a pandas Data\+Frame. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_ae05800da26d74b93c6a8c7769eab68c8}{print\+\_\+triples}} (self, int max\+\_\+rows=20, int max\+\_\+col\+\_\+width=50)
+\begin{DoxyCompactList}\small\item\em Print all nodes and edges in the current pseudo-\/database with row/column formatting. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector}{Database\+Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a25e2ca9a3b294b6179d73d177efa8b5f}{configure}} (self, str DB, str \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}}, bool route\+\_\+db\+\_\+name=True)
+\begin{DoxyCompactList}\small\item\em Read connection settings from the .env file. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_afc35f1889dd4bc77cf496e015e48b2ea}{change\+\_\+database}} (self, str new\+\_\+database, bool route\+\_\+db\+\_\+name=True)
+\begin{DoxyCompactList}\small\item\em Update the connection URI to reference a different database in the same engine. \end{DoxyCompactList}\item 
+List\mbox{[}Data\+Frame\mbox{]} \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_ac53b71501a8ad701234117e668372b45}{execute\+\_\+combined}} (self, str multi\+\_\+query)
+\begin{DoxyCompactList}\small\item\em Run several database commands in sequence. \end{DoxyCompactList}\item 
+List\mbox{[}Data\+Frame\mbox{]} \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_afa45efe732bf9dc7db6e665a11a628e7}{execute\+\_\+file}} (self, str filename)
+\begin{DoxyCompactList}\small\item\em Run several database commands from a file. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_af687e8c8c8ee35024630bcec03fa5c54}{connection\+\_\+string}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector}{Database\+Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_ade713bacd446db85cbacd6617a61a20d}{db\+\_\+type}}
+\begin{DoxyCompactList}\small\item\em The common name for the type of database as observed in the .env prefixes (MYSQL, POSTGRES, MONGO, or NEO4J). \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_ad6d85692a1c9f8e96dcff4556f263810}{db\+\_\+engine}}
+\begin{DoxyCompactList}\small\item\em The protocol specifying the database type, syntax is usually dialect+driver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a0adcbe0e0e6f64a29b1d205ede9632c1}{username}}
+\begin{DoxyCompactList}\small\item\em The username used to access the database. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a9dbb300e28bc21c8dab41b01883918eb}{password}}
+\begin{DoxyCompactList}\small\item\em The password used to access the database. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a832ddc04754e8a43d4f3c6165b1294a7}{host}}
+\begin{DoxyCompactList}\small\item\em The IP address where the database service is hosted. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_af8fb0f45ee0195c7422a49e6a8d72369}{port}}
+\begin{DoxyCompactList}\small\item\em The port number where the database service is hosted. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aaa0ffd8cdad125c22be209e5cce9ee9c}{database\+\_\+name}}
+\begin{DoxyCompactList}\small\item\em The collection being modified by this connector (Optional since Neo4j does not have one). \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_af687e8c8c8ee35024630bcec03fa5c54}{connection\+\_\+string}}
+\begin{DoxyCompactList}\small\item\em URI of the database connection\+: syntax is engine\+://username\+:password@host\+:port/database. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aa9e289eddb591991c9bc7321dc5b186b}{verbose}}
+\begin{DoxyCompactList}\small\item\em Whether to print debug messages. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+List\mbox{[}str\mbox{]} \mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_ad2130d33be4d41c012f714e9dfb824a3}{\+\_\+split\+\_\+combined}} (self, str multi\+\_\+query)
+\begin{DoxyCompactList}\small\item\em Splits combined CQL queries by semicolons. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions inherited from \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector}{Database\+Connector}}}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_abf425f0d46449a2375a03a6c85c70b61}{\+\_\+is\+\_\+single\+\_\+query}} (self, str query)
+\begin{DoxyCompactList}\small\item\em Checks if a string contains multiple queries. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classcomponents_1_1fact__storage_1_1GraphConnector_afcf80ddc5caa50b6b84516b00b0cade6}{\+\_\+specific\+\_\+queries}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Connector for Neo4j (graph database). 
+
+
+\begin{DoxyItemize}
+\item Uses neomodel to abstract some operations, but raw CQL is required for many tasks.
+\item Neo4j does not support multiple logical databases in community edition, so we emulate them using a {\ttfamily database\+\_\+id} property on nodes. 
+\end{DoxyItemize}
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_aac066d3a007eb967f768e8000d845753}\label{classcomponents_1_1fact__storage_1_1GraphConnector_aac066d3a007eb967f768e8000d845753} 
+\index{GraphConnector@{GraphConnector}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily \+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{verbose = {\ttfamily False} }\end{DoxyParamCaption})}
+
+
+
+Creates a new Neo4j connector. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em verbose} & Whether to print success and failure messages. \\
+\hline
+\end{DoxyParams}
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_aac066d3a007eb967f768e8000d845753}{Database\+Connector}}.
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_ad2130d33be4d41c012f714e9dfb824a3}\label{classcomponents_1_1fact__storage_1_1GraphConnector_ad2130d33be4d41c012f714e9dfb824a3} 
+\index{GraphConnector@{GraphConnector}!\_split\_combined@{\_split\_combined}}
+\index{\_split\_combined@{\_split\_combined}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{\_split\_combined()}{\_split\_combined()}}
+{\footnotesize\ttfamily  List\mbox{[}str\mbox{]} \+\_\+split\+\_\+combined (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{multi\+\_\+query }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}}
+
+
+
+Splits combined CQL queries by semicolons. 
+
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_ad2130d33be4d41c012f714e9dfb824a3}{Database\+Connector}}.
+
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_a5861c1357639b6c13fa392d3bd7fa0a2}\label{classcomponents_1_1fact__storage_1_1GraphConnector_a5861c1357639b6c13fa392d3bd7fa0a2} 
+\index{GraphConnector@{GraphConnector}!add\_triple@{add\_triple}}
+\index{add\_triple@{add\_triple}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{add\_triple()}{add\_triple()}}
+{\footnotesize\ttfamily add\+\_\+triple (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{subject,  }\item[{str}]{relation,  }\item[{str}]{object\+\_\+ }\end{DoxyParamCaption})}
+
+
+
+Add a semantic triple to the graph using raw Cypher. 
+
+
+\begin{DoxyEnumerate}
+\item Finds nodes by exact match on {\ttfamily name} and {\ttfamily database\+\_\+id}.
+\item Creates a relationship between them with the given label. 
+\end{DoxyEnumerate}\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_a8d3de5cf1bae7566fc0b746bc46419fe}\label{classcomponents_1_1fact__storage_1_1GraphConnector_a8d3de5cf1bae7566fc0b746bc46419fe} 
+\index{GraphConnector@{GraphConnector}!create\_database@{create\_database}}
+\index{create\_database@{create\_database}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{create\_database()}{create\_database()}}
+{\footnotesize\ttfamily create\+\_\+database (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{database\+\_\+name }\end{DoxyParamCaption})}
+
+
+
+Create a pseudo-\/database by clearing nodes with the same database\+\_\+id. 
+
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a8d3de5cf1bae7566fc0b746bc46419fe}{Database\+Connector}}.
+
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_a2ce2385e5656f0d268a958de8c6cb52a}\label{classcomponents_1_1fact__storage_1_1GraphConnector_a2ce2385e5656f0d268a958de8c6cb52a} 
+\index{GraphConnector@{GraphConnector}!drop\_database@{drop\_database}}
+\index{drop\_database@{drop\_database}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{drop\_database()}{drop\_database()}}
+{\footnotesize\ttfamily drop\+\_\+database (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str }]{database\+\_\+name = {\ttfamily "{}"{}} }\end{DoxyParamCaption})}
+
+
+
+Delete all nodes with the given database\+\_\+id. 
+
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a2ce2385e5656f0d268a958de8c6cb52a}{Database\+Connector}}.
+
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_a7154ca8ff15ba3ccf1a813b74876edd0}\label{classcomponents_1_1fact__storage_1_1GraphConnector_a7154ca8ff15ba3ccf1a813b74876edd0} 
+\index{GraphConnector@{GraphConnector}!execute\_query@{execute\_query}}
+\index{execute\_query@{execute\_query}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{execute\_query()}{execute\_query()}}
+{\footnotesize\ttfamily  Data\+Frame execute\+\_\+query (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{query }\end{DoxyParamCaption})}
+
+
+
+Send a single Cypher query to Neo4j. 
+
+\begin{DoxyNote}{Note}
+If a result is returned, it will be converted to a Data\+Frame. 
+\end{DoxyNote}
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_a7154ca8ff15ba3ccf1a813b74876edd0}{Database\+Connector}}.
+
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_ad1c93a22ae86f1efe049207c51df71c4}\label{classcomponents_1_1fact__storage_1_1GraphConnector_ad1c93a22ae86f1efe049207c51df71c4} 
+\index{GraphConnector@{GraphConnector}!get\_all\_triples@{get\_all\_triples}}
+\index{get\_all\_triples@{get\_all\_triples}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{get\_all\_triples()}{get\_all\_triples()}}
+{\footnotesize\ttfamily  pd.\+Data\+Frame get\+\_\+all\+\_\+triples (\begin{DoxyParamCaption}\item[{}]{self }\end{DoxyParamCaption})}
+
+
+
+Return all triples in the current pseudo-\/database as a pandas Data\+Frame. 
+
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_a5221962dd1ce0d62ab21023b818d1ac9}\label{classcomponents_1_1fact__storage_1_1GraphConnector_a5221962dd1ce0d62ab21023b818d1ac9} 
+\index{GraphConnector@{GraphConnector}!get\_dataframe@{get\_dataframe}}
+\index{get\_dataframe@{get\_dataframe}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{get\_dataframe()}{get\_dataframe()}}
+{\footnotesize\ttfamily  Data\+Frame get\+\_\+dataframe (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{str}]{label }\end{DoxyParamCaption})}
+
+
+
+Return all nodes of a given label, filtered by database\+\_\+id. 
+
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1DatabaseConnector_ac3e7151adc2767a7609ee0a3505ff225}{Database\+Connector}}.
+
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_a6dce8a16fdd5290fbb52fb299a4d6e07}\label{classcomponents_1_1fact__storage_1_1GraphConnector_a6dce8a16fdd5290fbb52fb299a4d6e07} 
+\index{GraphConnector@{GraphConnector}!get\_edge\_counts@{get\_edge\_counts}}
+\index{get\_edge\_counts@{get\_edge\_counts}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{get\_edge\_counts()}{get\_edge\_counts()}}
+{\footnotesize\ttfamily  Data\+Frame get\+\_\+edge\+\_\+counts (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{int }]{top\+\_\+n = {\ttfamily 10} }\end{DoxyParamCaption})}
+
+
+
+Return node names and their edge counts, ordered by edge count descending. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em top\+\_\+n} & Number of top nodes to return (by edge count). Default is 10. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Data\+Frame with columns\+: node\+\_\+name, edge\+\_\+count 
+\end{DoxyReturn}
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_ae05800da26d74b93c6a8c7769eab68c8}\label{classcomponents_1_1fact__storage_1_1GraphConnector_ae05800da26d74b93c6a8c7769eab68c8} 
+\index{GraphConnector@{GraphConnector}!print\_triples@{print\_triples}}
+\index{print\_triples@{print\_triples}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{print\_triples()}{print\_triples()}}
+{\footnotesize\ttfamily print\+\_\+triples (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{int }]{max\+\_\+rows = {\ttfamily 20},  }\item[{int }]{max\+\_\+col\+\_\+width = {\ttfamily 50} }\end{DoxyParamCaption})}
+
+
+
+Print all nodes and edges in the current pseudo-\/database with row/column formatting. 
+
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_a5719074dd9cdb56d259418d9bab07f74}\label{classcomponents_1_1fact__storage_1_1GraphConnector_a5719074dd9cdb56d259418d9bab07f74} 
+\index{GraphConnector@{GraphConnector}!test\_connection@{test\_connection}}
+\index{test\_connection@{test\_connection}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{test\_connection()}{test\_connection()}}
+{\footnotesize\ttfamily  bool test\+\_\+connection (\begin{DoxyParamCaption}\item[{}]{self,  }\item[{}]{print\+\_\+results = {\ttfamily False} }\end{DoxyParamCaption})}
+
+
+
+Establish a basic connection to the Neo4j database. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em print\+\_\+results} & Whether to display the retrieved test Data\+Frames \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Whether the connection test was successful. 
+\end{DoxyReturn}
+
+
+Reimplemented from \mbox{\hyperlink{classcomponents_1_1connectors_1_1Connector_a6444c5903715e26fb20cca4d3e52a4f2}{Connector}}.
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_afcf80ddc5caa50b6b84516b00b0cade6}\label{classcomponents_1_1fact__storage_1_1GraphConnector_afcf80ddc5caa50b6b84516b00b0cade6} 
+\index{GraphConnector@{GraphConnector}!\_specific\_queries@{\_specific\_queries}}
+\index{\_specific\_queries@{\_specific\_queries}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{\_specific\_queries}{\_specific\_queries}}
+{\footnotesize\ttfamily \+\_\+specific\+\_\+queries\hspace{0.3cm}{\ttfamily [protected]}}
+
+\Hypertarget{classcomponents_1_1fact__storage_1_1GraphConnector_af687e8c8c8ee35024630bcec03fa5c54}\label{classcomponents_1_1fact__storage_1_1GraphConnector_af687e8c8c8ee35024630bcec03fa5c54} 
+\index{GraphConnector@{GraphConnector}!connection\_string@{connection\_string}}
+\index{connection\_string@{connection\_string}!GraphConnector@{GraphConnector}}
+\doxysubsubsection{\texorpdfstring{connection\_string}{connection\_string}}
+{\footnotesize\ttfamily connection\+\_\+string}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/mnt/c/dsci-\/cap/capstone/components/\mbox{\hyperlink{fact__storage_8py}{fact\+\_\+storage.\+py}}\end{DoxyCompactItemize}

@@ -79,29 +79,43 @@ $(function() {
   <div class="headertitle"><div class="title">Log Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>The Log class standardizes console output.  
+ <a href="classsrc_1_1util_1_1Log.html#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a96348829ace552e6a573529ea08a1b96" id="r_a96348829ace552e6a573529ea08a1b96"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a96348829ace552e6a573529ea08a1b96">success</a> (str msg=&quot;&quot;)</td></tr>
-<tr class="memdesc:a96348829ace552e6a573529ea08a1b96"><td class="mdescLeft">&#160;</td><td class="mdescRight">These functions can be used to print the standard prefix before your own print(), or a message can be specified.  <br /></td></tr>
+<tr class="memdesc:a96348829ace552e6a573529ea08a1b96"><td class="mdescLeft">&#160;</td><td class="mdescRight">A success message begins with a Green Plus.  <br /></td></tr>
 <tr class="separator:a96348829ace552e6a573529ea08a1b96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a22fb24590379a124e8f266c6b0b2c5ca" id="r_a22fb24590379a124e8f266c6b0b2c5ca"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a22fb24590379a124e8f266c6b0b2c5ca">fail</a> (str msg=&quot;&quot;)</td></tr>
+<tr class="memdesc:a22fb24590379a124e8f266c6b0b2c5ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">A failure message begins with a Red X.  <br /></td></tr>
 <tr class="separator:a22fb24590379a124e8f266c6b0b2c5ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adfed697f8abd6ab739b4d79685f0144c" id="r_adfed697f8abd6ab739b4d79685f0144c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#adfed697f8abd6ab739b4d79685f0144c">file_read_failure</a> (str filename)</td></tr>
+<tr class="memdesc:adfed697f8abd6ab739b4d79685f0144c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints a failure message when a file cannot be opened.  <br /></td></tr>
 <tr class="separator:adfed697f8abd6ab739b4d79685f0144c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac50b4fb4e7be0ffa7ce84828c07eb568" id="r_ac50b4fb4e7be0ffa7ce84828c07eb568"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#ac50b4fb4e7be0ffa7ce84828c07eb568">connect_success</a> (str database_name)</td></tr>
+<tr class="memdesc:ac50b4fb4e7be0ffa7ce84828c07eb568"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints a failure message when a database connection fails.  <br /></td></tr>
 <tr class="separator:ac50b4fb4e7be0ffa7ce84828c07eb568"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5255bd77e0bbefbb53719435165befa" id="r_ad5255bd77e0bbefbb53719435165befa"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#ad5255bd77e0bbefbb53719435165befa">connect_fail</a> (str connection_string)</td></tr>
+<tr class="memdesc:ad5255bd77e0bbefbb53719435165befa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints a failure message when a database connection fails.  <br /></td></tr>
 <tr class="separator:ad5255bd77e0bbefbb53719435165befa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52de5442a5e82155a5e99a87afd60df9" id="r_a52de5442a5e82155a5e99a87afd60df9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a52de5442a5e82155a5e99a87afd60df9">success_manage_db</a> (str database_name, str managed)</td></tr>
+<tr class="memdesc:a52de5442a5e82155a5e99a87afd60df9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints a success message when a new database is created or dropped.  <br /></td></tr>
 <tr class="separator:a52de5442a5e82155a5e99a87afd60df9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af0b1193b8756345bbc1b419c0b2c1b36" id="r_af0b1193b8756345bbc1b419c0b2c1b36"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#af0b1193b8756345bbc1b419c0b2c1b36">fail_manage_db</a> (str connection_string, str database_name, str manage)</td></tr>
+<tr class="memdesc:af0b1193b8756345bbc1b419c0b2c1b36"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints a failure message when database creation or deletion fails.  <br /></td></tr>
 <tr class="separator:af0b1193b8756345bbc1b419c0b2c1b36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5671f23e0a563c737a8363804aedaefa" id="r_a5671f23e0a563c737a8363804aedaefa"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a5671f23e0a563c737a8363804aedaefa">incorrect_result</a> (observed, expected)</td></tr>
+<tr class="memdesc:a5671f23e0a563c737a8363804aedaefa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints a failure message when a value is not what we expected.  <br /></td></tr>
 <tr class="separator:a5671f23e0a563c737a8363804aedaefa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5f7dfcce35f680dace8105e7d5bf8eba" id="r_a5f7dfcce35f680dace8105e7d5bf8eba"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a5f7dfcce35f680dace8105e7d5bf8eba">warn_parse</a> (str trace, str expected_type, str bad_value)</td></tr>
+<tr class="memdesc:a5f7dfcce35f680dace8105e7d5bf8eba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints a failure message when parsing fails.  <br /></td></tr>
+<tr class="separator:a5f7dfcce35f680dace8105e7d5bf8eba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><pre class="fragment">The Log class standardizes console output.</pre> </div><h2 class="groupheader">Member Function Documentation</h2>
+<div class="textblock"><p>The Log class standardizes console output. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="ad5255bd77e0bbefbb53719435165befa" name="ad5255bd77e0bbefbb53719435165befa"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad5255bd77e0bbefbb53719435165befa">&#9670;&#160;</a></span>connect_fail()</h2>
 
@@ -117,8 +131,15 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment">Prints a failure message when a database connection fails.
-@param connection_string  The connection string which caused the error.</pre> 
+
+<p>Prints a failure message when a database connection fails. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">connection_string</td><td>The connection string which caused the error. </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a id="ac50b4fb4e7be0ffa7ce84828c07eb568" name="ac50b4fb4e7be0ffa7ce84828c07eb568"></a>
@@ -136,8 +157,15 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment">Prints a failure message when a database connection fails.
-@param database_name  The name of the database which was connected to.</pre> 
+
+<p>Prints a failure message when a database connection fails. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">database_name</td><td>The name of the database which was connected to. </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a id="a22fb24590379a124e8f266c6b0b2c5ca" name="a22fb24590379a124e8f266c6b0b2c5ca"></a>
@@ -155,8 +183,15 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment">A failure message begins with a Red X.
-@param msg  The message to print.</pre> 
+
+<p>A failure message begins with a Red X. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">msg</td><td>The message to print. </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a id="af0b1193b8756345bbc1b419c0b2c1b36" name="af0b1193b8756345bbc1b419c0b2c1b36"></a>
@@ -190,9 +225,17 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment">Prints a failure message when database creation or deletion fails.
-@param connection_string  The database connector which had the error.
-@param database_name  The name of the database which could not be created or dropped.</pre> 
+
+<p>Prints a failure message when database creation or deletion fails. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">connection_string</td><td>The database connector which had the error. </td></tr>
+    <tr><td class="paramname">database_name</td><td>The name of the database which could not be created or dropped. </td></tr>
+    <tr><td class="paramname">manage</td><td>Present-tense verb representing the database operation performed. </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a id="adfed697f8abd6ab739b4d79685f0144c" name="adfed697f8abd6ab739b4d79685f0144c"></a>
@@ -210,8 +253,15 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment">Prints a failure message when a file cannot be opened.
-@param filename  The file which caused the error.</pre> 
+
+<p>Prints a failure message when a file cannot be opened. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">filename</td><td>The file which caused the error. </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a id="a5671f23e0a563c737a8363804aedaefa" name="a5671f23e0a563c737a8363804aedaefa"></a>
@@ -239,9 +289,16 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment">Prints a failure message when database creation or deletion fails.
-@param observed  The value to check (must be same type as 'expected').
-@param expected  The correct value (can be any printable type).</pre> 
+
+<p>Prints a failure message when a value is not what we expected. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">observed</td><td>The value to check (must be same type as 'expected'). </td></tr>
+    <tr><td class="paramname">expected</td><td>The correct value (can be any printable type). </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a id="a96348829ace552e6a573529ea08a1b96" name="a96348829ace552e6a573529ea08a1b96"></a>
@@ -260,9 +317,14 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>These functions can be used to print the standard prefix before your own print(), or a message can be specified. </p>
-<pre class="fragment">A success message begins with a Green Plus.
-@param msg  The message to print.</pre> 
+<p>A success message begins with a Green Plus. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">msg</td><td>The message to print. </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a id="a52de5442a5e82155a5e99a87afd60df9" name="a52de5442a5e82155a5e99a87afd60df9"></a>
@@ -290,8 +352,60 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<pre class="fragment">Prints a success message when a new database is created or dropped.
-@param database_name  The name of the target database.</pre> 
+
+<p>Prints a success message when a new database is created or dropped. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">database_name</td><td>The name of the target database. </td></tr>
+    <tr><td class="paramname">managed</td><td>Past-tense verb representing the database operation performed. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a5f7dfcce35f680dace8105e7d5bf8eba" name="a5f7dfcce35f680dace8105e7d5bf8eba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f7dfcce35f680dace8105e7d5bf8eba">&#9670;&#160;</a></span>warn_parse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">warn_parse </td>
+          <td>(</td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>trace</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>expected_type</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>bad_value</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Prints a failure message when parsing fails. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">trace</td><td>Alias for the object to be converted. </td></tr>
+    <tr><td class="paramname">expected_type</td><td>The type we are trying to convert to. </td></tr>
+    <tr><td class="paramname">bad_value</td><td>Actual target value to be converted. </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>

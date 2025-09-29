@@ -1,0 +1,101 @@
+\doxysection{Metrics\+Controller Class Reference}
+\hypertarget{classBlazorApp_1_1Controllers_1_1MetricsController}{}\label{classBlazorApp_1_1Controllers_1_1MetricsController}\index{MetricsController@{MetricsController}}
+
+
+Inheritance diagram for Metrics\+Controller\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=181pt]{classBlazorApp_1_1Controllers_1_1MetricsController__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for Metrics\+Controller\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=314pt]{classBlazorApp_1_1Controllers_1_1MetricsController__coll__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController_a62d4c838cdab73f9ae29c4aa755d6072}{Metrics\+Controller}} (ILogger$<$ \mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController}{Metrics\+Controller}} $>$ logger, IHub\+Context$<$ \mbox{\hyperlink{classBlazorApp_1_1Hubs_1_1MetricsHub}{Metrics\+Hub}} $>$ hub\+Context)
+\item 
+async Task$<$ IAction\+Result $>$ \mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController_a92fb89fefb51cfdc31edde0b75f386d1}{Post}} (\mbox{[}From\+Body\mbox{]} \mbox{\hyperlink{classBlazorApp_1_1Models_1_1SummaryData}{Summary\+Data}} summary)
+\item 
+IAction\+Result \mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController_a173681be77c5cdaef7727cd15acec369}{Get\+Index}} (int id)
+\item 
+IAction\+Result \mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController_a69a72678ffa13e14adb0ca3fe73a24c5}{Get\+All}} ()
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+readonly ILogger$<$ \mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController}{Metrics\+Controller}} $>$ \mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController_a2f50b00bf914604c194565193ea1f6aa}{\+\_\+logger}}
+\item 
+readonly IHub\+Context$<$ \mbox{\hyperlink{classBlazorApp_1_1Hubs_1_1MetricsHub}{Metrics\+Hub}} $>$ \mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController_a0b7565378378a143e58e3eebd3b6f36e}{\+\_\+hub\+Context}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static readonly List$<$ \mbox{\hyperlink{classBlazorApp_1_1Models_1_1SummaryData}{Summary\+Data}} $>$ \mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController_a57f836d754ef42b8931adf750c4c14be}{Summaries}} = new()
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classBlazorApp_1_1Controllers_1_1MetricsController_a62d4c838cdab73f9ae29c4aa755d6072}\label{classBlazorApp_1_1Controllers_1_1MetricsController_a62d4c838cdab73f9ae29c4aa755d6072} 
+\index{MetricsController@{MetricsController}!MetricsController@{MetricsController}}
+\index{MetricsController@{MetricsController}!MetricsController@{MetricsController}}
+\doxysubsubsection{\texorpdfstring{MetricsController()}{MetricsController()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController}{Metrics\+Controller}} (\begin{DoxyParamCaption}\item[{ILogger$<$ \mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController}{Metrics\+Controller}} $>$}]{logger,  }\item[{IHub\+Context$<$ \mbox{\hyperlink{classBlazorApp_1_1Hubs_1_1MetricsHub}{Metrics\+Hub}} $>$}]{hub\+Context }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classBlazorApp_1_1Controllers_1_1MetricsController_a69a72678ffa13e14adb0ca3fe73a24c5}\label{classBlazorApp_1_1Controllers_1_1MetricsController_a69a72678ffa13e14adb0ca3fe73a24c5} 
+\index{MetricsController@{MetricsController}!GetAll@{GetAll}}
+\index{GetAll@{GetAll}!MetricsController@{MetricsController}}
+\doxysubsubsection{\texorpdfstring{GetAll()}{GetAll()}}
+{\footnotesize\ttfamily IAction\+Result Get\+All (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\Hypertarget{classBlazorApp_1_1Controllers_1_1MetricsController_a173681be77c5cdaef7727cd15acec369}\label{classBlazorApp_1_1Controllers_1_1MetricsController_a173681be77c5cdaef7727cd15acec369} 
+\index{MetricsController@{MetricsController}!GetIndex@{GetIndex}}
+\index{GetIndex@{GetIndex}!MetricsController@{MetricsController}}
+\doxysubsubsection{\texorpdfstring{GetIndex()}{GetIndex()}}
+{\footnotesize\ttfamily IAction\+Result Get\+Index (\begin{DoxyParamCaption}\item[{int}]{id }\end{DoxyParamCaption})}
+
+\Hypertarget{classBlazorApp_1_1Controllers_1_1MetricsController_a92fb89fefb51cfdc31edde0b75f386d1}\label{classBlazorApp_1_1Controllers_1_1MetricsController_a92fb89fefb51cfdc31edde0b75f386d1} 
+\index{MetricsController@{MetricsController}!Post@{Post}}
+\index{Post@{Post}!MetricsController@{MetricsController}}
+\doxysubsubsection{\texorpdfstring{Post()}{Post()}}
+{\footnotesize\ttfamily async Task$<$ IAction\+Result $>$ Post (\begin{DoxyParamCaption}\item[{\mbox{[}\+From\+Body\mbox{]} \mbox{\hyperlink{classBlazorApp_1_1Models_1_1SummaryData}{Summary\+Data}}}]{summary }\end{DoxyParamCaption})}
+
+
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classBlazorApp_1_1Controllers_1_1MetricsController_a0b7565378378a143e58e3eebd3b6f36e}\label{classBlazorApp_1_1Controllers_1_1MetricsController_a0b7565378378a143e58e3eebd3b6f36e} 
+\index{MetricsController@{MetricsController}!\_hubContext@{\_hubContext}}
+\index{\_hubContext@{\_hubContext}!MetricsController@{MetricsController}}
+\doxysubsubsection{\texorpdfstring{\_hubContext}{\_hubContext}}
+{\footnotesize\ttfamily readonly IHub\+Context$<$\mbox{\hyperlink{classBlazorApp_1_1Hubs_1_1MetricsHub}{Metrics\+Hub}}$>$ \+\_\+hub\+Context\hspace{0.3cm}{\ttfamily [private]}}
+
+\Hypertarget{classBlazorApp_1_1Controllers_1_1MetricsController_a2f50b00bf914604c194565193ea1f6aa}\label{classBlazorApp_1_1Controllers_1_1MetricsController_a2f50b00bf914604c194565193ea1f6aa} 
+\index{MetricsController@{MetricsController}!\_logger@{\_logger}}
+\index{\_logger@{\_logger}!MetricsController@{MetricsController}}
+\doxysubsubsection{\texorpdfstring{\_logger}{\_logger}}
+{\footnotesize\ttfamily readonly ILogger$<$\mbox{\hyperlink{classBlazorApp_1_1Controllers_1_1MetricsController}{Metrics\+Controller}}$>$ \+\_\+logger\hspace{0.3cm}{\ttfamily [private]}}
+
+\Hypertarget{classBlazorApp_1_1Controllers_1_1MetricsController_a57f836d754ef42b8931adf750c4c14be}\label{classBlazorApp_1_1Controllers_1_1MetricsController_a57f836d754ef42b8931adf750c4c14be} 
+\index{MetricsController@{MetricsController}!Summaries@{Summaries}}
+\index{Summaries@{Summaries}!MetricsController@{MetricsController}}
+\doxysubsubsection{\texorpdfstring{Summaries}{Summaries}}
+{\footnotesize\ttfamily readonly List$<$\mbox{\hyperlink{classBlazorApp_1_1Models_1_1SummaryData}{Summary\+Data}}$>$ Summaries = new()\hspace{0.3cm}{\ttfamily [static]}, {\ttfamily [private]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/mnt/c/dsci-\/cap/capstone/web-\/app/\+Blazor\+App/\+Controllers/\mbox{\hyperlink{MetricsController_8cs}{Metrics\+Controller.\+cs}}\end{DoxyCompactItemize}

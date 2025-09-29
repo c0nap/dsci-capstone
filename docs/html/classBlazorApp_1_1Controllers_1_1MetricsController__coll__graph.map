@@ -1,0 +1,7 @@
+<map id="MetricsController" name="MetricsController">
+<area shape="rect" id="Node000001" title=" " alt="" coords="81,93,216,119"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,124,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="88,39,139,91,135,95,84,43"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="148,5,317,31"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="214,43,162,95,158,91,210,39"/>
+</map>

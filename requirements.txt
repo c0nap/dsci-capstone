@@ -8,3 +8,12 @@ typing
 psycopg2-binary
 pytest
 pytest-order
+pypandoc
+lxml
+spacy
+torch
+transformers
+openai
+langchain
+langchain_openai
+neomodel

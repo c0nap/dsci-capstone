@@ -1,0 +1,148 @@
+﻿@page "/Metrics"
+@rendermode InteractiveServer
+
+@using BlazorApp.Models
+@using BlazorApp.Hubs
+@using Microsoft.AspNetCore.SignalR.Client;
+@inject HttpClient Http
+@inject ILogger<Graph> Logger
+@inject NavigationManager Navigation
+
+<PageTitle>Metrics</PageTitle>
+
+<h2>Book Summary</h2>
+<h4>@summary.BookTitle</h4>
+<p>@summary.SummaryText</p>
+
+<hr/>
+
+<h3>Evaluation Metrics</h3>
+
+<h4>P/R/F1 Metrics</h4>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Metric</th>
+        <th>Precision</th>
+        <th>Recall</th>
+        <th>F1</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var metric in summary.Metrics.PRF1Metrics) {
+        <tr>
+            <td>@metric.Name</td>
+            <td>@metric.Precision</td>
+            <td>@metric.Recall</td>
+            <td>@metric.F1Score</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<h4>Scalar Metrics</h4>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Metric</th>
+        <th>Value</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var metric in summary.Metrics.ScalarMetrics) {
+        <tr>
+            <td>@metric.Name</td>
+            <td>@metric.Value</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<h4>QA Results</h4>
+<p>
+    <strong>Average QA Accuracy:</strong> @summary.Metrics.QA.AverageAccuracy.ToString("P2")
+</p>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Question</th>
+        <th>Gold Answer</th>
+        <th>Generated Answer</th>
+        <th>Correct?</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var qa in summary.Metrics.QA.QAItems) {
+        <tr>
+            <td>@qa.Question</td>
+            <td>@qa.GoldAnswer</td>
+            <td>@qa.GeneratedAnswer</td>
+            <td>@(qa.IsCorrect == true ? "✔️" : "❌")</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    private SummaryData summary = GetDefaultSummary();
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync() {
+        //Logger.LogInformation("=== OnInitializedAsync START ===");
+
+        // Connect to hub
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/metricshub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        //Logger.LogInformation("Hub connection builder created");
+
+        // Set up event handler
+        hubConnection.On<SummaryData>("ReceiveUpdate", async (updatedSummary) => {
+            Logger.LogInformation($"!!! HUB MESSAGE RECEIVED !!! BookID: {updatedSummary.BookID}");
+
+            await InvokeAsync(() => {
+                summary = updatedSummary;
+                StateHasChanged();
+                //Logger.LogInformation("UI updated from SignalR");
+            });
+        });
+
+        // Add connection state change handlers
+        hubConnection.Closed += async (error) => {
+            //Logger.LogError($"SignalR connection CLOSED: {error?.Message ?? "No error"}");
+        };
+
+        hubConnection.Reconnecting += async (error) => {
+            //Logger.LogWarning($"SignalR connection RECONNECTING: {error?.Message ?? "No error"}");
+        };
+
+        hubConnection.Reconnected += async (connectionId) => {
+            //Logger.LogInformation($"SignalR connection RECONNECTED with ID: {connectionId}");
+        };
+
+        //Logger.LogInformation("About to start hub connection...");
+
+        try {
+            await hubConnection.StartAsync();
+            //Logger.LogInformation($"Hub connection started successfully. State: {hubConnection.State}");
+        }
+        catch (Exception ex) {
+            //Logger.LogError(ex, "Failed to start hub connection");
+            throw;
+        }
+
+        //Logger.LogInformation("=== OnInitializedAsync END ===");
+    }
+
+
+    private static SummaryData GetDefaultSummary() {
+        return new SummaryData
+        { BookTitle = "UNKNOWN",
+          SummaryText = "No summary has been posted yet.",
+          Metrics = SummaryMetrics.GetDefault() };
+    }
+
+}
