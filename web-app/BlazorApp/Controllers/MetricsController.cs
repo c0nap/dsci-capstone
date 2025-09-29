@@ -14,15 +14,13 @@ public class MetricsController : ControllerBase
 
     private static readonly List<SummaryData> Summaries = new();
 
-    public MetricsController(ILogger<MetricsController> logger, IHubContext<MetricsHub> hubContext)
-    {
+    public MetricsController(ILogger<MetricsController> logger, IHubContext<MetricsHub> hubContext) {
         _logger = logger;
         _hubContext = hubContext;
     }
 
     [HttpPost]
-    public async Task<IActionResult> Post([FromBody] SummaryData summary)
-    {
+    public async Task<IActionResult> Post([FromBody] SummaryData summary) {
         Summaries.Add(summary);
         _logger.LogInformation("POST received for BookID: {BookID}", summary.BookID);
 
@@ -31,12 +29,12 @@ public class MetricsController : ControllerBase
         await _hubContext.Clients.All.SendAsync("ReceiveUpdate", summary);
         //_logger.LogInformation("Hub update sent.");
 
-        return CreatedAtAction(nameof(GetIndex), new { id = Summaries.Count - 1 }, summary);
+        return CreatedAtAction(nameof(GetIndex), new
+        { id = Summaries.Count - 1 }, summary);
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetIndex(int id)
-    {
+    public IActionResult GetIndex(int id) {
         if (id < 0 || id >= Summaries.Count)
             return NotFound();
         return Ok(Summaries[id]);

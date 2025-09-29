@@ -11,26 +11,19 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddSyncfusionBlazor();
 builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    });
+    .AddJsonOptions(options => { options.JsonSerializerOptions.PropertyNameCaseInsensitive = true; });
 builder.Services.AddSignalR();
 
 // Kestrel listen on all interfaces
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenAnyIP(5055);
-});
+builder.WebHost.ConfigureKestrel(options => { options.ListenAnyIP(5055); });
 
 
 // Register Neo4j Driver
-builder.Services.AddSingleton<IDriver>(provider =>
-{
+builder.Services.AddSingleton<IDriver>(provider => {
     var uri = builder.Configuration.GetConnectionString("Neo4j") ?? "bolt://localhost:7687";
     var user = builder.Configuration["Neo4j:Username"] ?? "neo4j";
     var password = builder.Configuration["Neo4j:Password"] ?? "password";
-    
+
     return GraphDatabase.Driver(uri, AuthTokens.Basic(user, password));
 });
 
@@ -51,8 +44,8 @@ if (!app.Environment.IsDevelopment()) {
 app.UseHttpsRedirection();
 app.UseAntiforgery();
 
-app.UseStaticFiles();  // Syncfusion.Blazor resources in App.Razor
-app.UseWebSockets();  // SignalR requirement
+app.UseStaticFiles(); // Syncfusion.Blazor resources in App.Razor
+app.UseWebSockets(); // SignalR requirement
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
