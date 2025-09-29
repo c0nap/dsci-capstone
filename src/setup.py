@@ -11,8 +11,8 @@ load_dotenv(".env")
 class Session:
     """Stores active database connections and configuration settings.
     @details
-    	- This class implements Singleton design, so only one session can be created.
-    	- However, the session config can still be updated using the normal constructor."""
+        - This class implements Singleton design, so only one session can be created.
+        - However, the session config can still be updated using the normal constructor."""
 
     # TODO: this is bad design ^
     _instance = None
@@ -26,9 +26,9 @@ class Session:
     def __init__(self, verbose=False):
         """Initializes the session using the .env file.
         @details
-        	- The relational database connector is created using a Factory Method, choosing mysql or postgres based on the .env file.
-        	- The document database connector is created normally since mongo is the only supported option.
-        	- The graph database connector is created normally since neo4j is the only supported option."""
+            - The relational database connector is created using a Factory Method, choosing mysql or postgres based on the .env file.
+            - The document database connector is created normally since mongo is the only supported option.
+            - The graph database connector is created normally since neo4j is the only supported option."""
         ## Enables or disables the components from printing debug info.
         self.verbose = verbose
         ## Stores RDF-compliant semantic triples.
@@ -89,15 +89,15 @@ class Session:
         # Test query execution
         self.graph_db.execute_query(
             f"""
-		CREATE (n:Person {{name:'Alice', database_id:'{working_database}'}})
-		RETURN n
-		"""
+        CREATE (n:Person {{name:'Alice', database_id:'{working_database}'}})
+        RETURN n
+        """
         )
         self.graph_db.execute_query(
             f"""
-		CREATE (n:Person {{name:'Bob', database_id:'{working_database}'}})
-		RETURN n
-		"""
+        CREATE (n:Person {{name:'Bob', database_id:'{working_database}'}})
+        RETURN n
+        """
         )
 
         # Test retrieving nodes as DataFrame

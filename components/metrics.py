@@ -129,7 +129,7 @@ def post_example_results():
 
 def post_basic_output(book_id, book_title, summary, **kwargs):
     """Send book information and a summary to the web app.
-	@param book_id  Integer book identifier
+    @param book_id  Integer book identifier
     @param book_title  Book title
     @param summary  Summary text string
     @param **kwargs  Any other metric parameters to override defaults (e.g., rouge_f1=0.75)

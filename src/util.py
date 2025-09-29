@@ -55,15 +55,15 @@ class Log:
         Log.fail(f"Incorrect result: Expected {expected}, got {observed}")
 
     def warn_parse(trace: str, expected_type: str, bad_value: str):
-    	"""Prints a failure message when parsing fails.
-    	@param trace  Alias for the object to be converted.
-    	@param expected_type  The type we are trying to convert to.
-    	@param bad_value  Actual target value to be converted."""
+        """Prints a failure message when parsing fails.
+        @param trace  Alias for the object to be converted.
+        @param expected_type  The type we are trying to convert to.
+        @param bad_value  Actual target value to be converted."""
         Log.fail(
             f"Could not convert {trace} with value {bad_value} to type {expected_type}"
         )
 
 
 def all_none(*args):
-	"""Checks if all provided args are None."""
+    """Checks if all provided args are None."""
     return all(arg is None for arg in args)

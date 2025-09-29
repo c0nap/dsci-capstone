@@ -81,7 +81,7 @@ class LLMConnector(Connector):
     def configure(self):
         """Initialize the LangChain LLM using environment credentials.
         @details
-        	Reads:
+            Reads:
                 - OPENAI_API_KEY from .env for authentication
                 - LLM_MODEL and LLM_TEMPERATURE to override defaults"""
         self.model_name = os.getenv("LLM_MODEL")
@@ -113,7 +113,7 @@ class LLMConnector(Connector):
 
     def execute_query(self, query: str) -> str:
         """Send a single prompt through the connection and return raw LLM output.
-		@param query  A single string prompt to send to the LLM.
+        @param query  A single string prompt to send to the LLM.
         @return Raw LLM response as a string."""
         return self.execute_full_query(self.system_prompt, query)
 
