@@ -11,6 +11,7 @@ session = Session(verbose=False)
 
 
 def convert_single():
+	"""Converts one EPUB file to TEI format."""
     print("\n\nCHAPTERS for book 1: FAIRY TALES")
     epub_file_1 = "./datasets/examples/nested-fairy-tales.epub"
     converter = EPUBToTEI(
@@ -31,6 +32,8 @@ def convert_single():
 
 
 def convert_from_csv():
+	"""Converts several EPUB files to TEI format.
+	@note  Files are specified as rows in a CSV which contains parsing instructions."""
     try:
         df = pd.read_csv("datasets/books.csv")
     except FileNotFoundError:
@@ -172,6 +175,11 @@ end = "But I must say no more."
 
 
 def chunk_single():
+	"""Creates a Story and many Chunks from a TEI file.
+	@details
+		Requires hard-coded specificaitons
+			- List of all chapter names.
+			- Optional start / end strings."""
     chaps = [line.strip() for line in chapters.splitlines() if line.strip()]
     reader = ParagraphStreamTEI(
         tei,
@@ -203,7 +211,17 @@ def chunk_single():
         print()
 
 
+def test_relation_extraction():
+	"""Runs REBEL on a basic example; used for debugging."""
+	from components.text_processing import RelationExtractor
+    sample_text = "Alice met Bob in the forest. Bob then went to the village."
+    extractor = RelationExtractor(model_name="Babelscape/rebel-large")
+    print(extractor.extract(sample_text))
+
+
+
 def process_single():
+	"""Uses NLP and LLM to process an existing TEI file."""
     from components.text_processing import RelationExtractor, LLMConnector
 
     try:
@@ -306,6 +324,7 @@ triple_files = [
 
 
 def graph_triple_files():
+	"""Loads JSON into Neo4j to test the Blazor graph page."""
     for json_path in triple_files:
         print(f"\n{'='*50}")
         print(f"Processing: {json_path}")
@@ -330,6 +349,7 @@ response_files = ["./datasets/triples/chunk-160_story-1.txt"]
 
 
 def output_single():
+	"""Generates a summary from triples stored in JSON, and posts data to Blazor."""
     from components.text_processing import LLMConnector
 
     json_path = triple_files[0]
@@ -399,6 +419,15 @@ def output_single():
 def full_pipeline(
     epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title
 ):
+	"""Connects all components to convert an EPUB file to a book summary.
+	@details
+		Data conversions
+			- EPUB file
+			- XML (TEI)
+			- JSON triples (NLP & LLM)
+			- Neo4j graph database
+			- Output summary
+			- Blazor graph and metrics pages"""
     from components.text_processing import RelationExtractor, LLMConnector
 
     # convert EPUB file

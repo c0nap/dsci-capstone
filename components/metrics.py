@@ -1,6 +1,7 @@
 import requests
 
 # REST API endpoint
+# TODO: move to .env
 url = "http://172.30.48.1:5055/api/metrics"
 
 
@@ -80,7 +81,7 @@ def create_summary_payload(book_id, book_title, summary, metrics=None):
 
 
 def post_payload(payload):
-    """Verify and post any given payload to the API"""
+    """Verify and post any given payload using the requests API."""
     try:
         response = requests.post(url, json=payload)
 
@@ -99,7 +100,7 @@ def post_payload(payload):
 
 
 def post_example_results():
-    """Post example results using default parameter values"""
+    """Send placeholder values to the web app."""
     return post_basic_output(
         "book-42",
         "Example Book",
@@ -127,13 +128,11 @@ def post_example_results():
 
 
 def post_basic_output(book_id, book_title, summary, **kwargs):
-    """Post basic output with customizable default metrics to the API
-
-    Args:
-        book_id: Book identifier
-        book_title: Book title
-        summary: Summary text
-        **kwargs: Any metric parameters to override defaults (e.g., rouge_f1=0.75)
+    """Send book information and a summary to the web app.
+	@param book_id  Integer book identifier
+    @param book_title  Book title
+    @param summary  Summary text string
+    @param **kwargs  Any other metric parameters to override defaults (e.g., rouge_f1=0.75)
     """
     metrics = generate_default_metrics(**kwargs)
     payload = create_summary_payload(book_id, book_title, summary, metrics)

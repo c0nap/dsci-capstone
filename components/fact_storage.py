@@ -10,16 +10,13 @@ import pandas as pd
 
 class GraphConnector(DatabaseConnector):
     """Connector for Neo4j (graph database).
-    Uses neomodel to abstract some operations, but raw CQL is required for many tasks.
-    Neo4j does not support multiple logical databases in community edition,
-    so we emulate them using a `database_id` property on nodes.
-    """
+    @details
+        - Uses neomodel to abstract some operations, but raw CQL is required for many tasks.
+        - Neo4j does not support multiple logical databases in community edition, so we emulate them using a `database_id` property on nodes."""
 
     def __init__(self, verbose=False):
-        """Creates a new Neo4j connector. Use @ref from_env instead.
-        @param verbose  Whether to print success and failure messages.
-        @param specific_queries  A list of helpful CQL queries for testing.
-        """
+        """Creates a new Neo4j connector.
+        @param verbose  Whether to print success and failure messages."""
         super().__init__(verbose)
         super().configure("NEO4J", database_name="default", route_database=False)
 
@@ -35,8 +32,7 @@ class GraphConnector(DatabaseConnector):
     def test_connection(self, print_results=False) -> bool:
         """Establish a basic connection to the Neo4j database.
         @param print_results  Whether to display the retrieved test DataFrames
-        @return  Whether the connection test was successful.
-        """
+        @return  Whether the connection test was successful."""
         try:
             # Run the hard-coded queries
             for q in self._specific_queries:
@@ -55,8 +51,7 @@ class GraphConnector(DatabaseConnector):
 
     def execute_query(self, query: str) -> DataFrame:
         """Send a single Cypher query to Neo4j.
-        If a result is returned, it will be converted to a DataFrame.
-        """
+        @note  If a result is returned, it will be converted to a DataFrame."""
         super().execute_query(query)
         try:
             results, meta = db.cypher_query(query)
@@ -75,10 +70,10 @@ class GraphConnector(DatabaseConnector):
     def get_dataframe(self, label: str) -> DataFrame:
         """Return all nodes of a given label, filtered by database_id."""
         query = f"""
-		MATCH (n:{label})
-		WHERE n.database_id = '{self.database_name}'
-		RETURN n
-		"""
+        MATCH (n:{label})
+        WHERE n.database_id = '{self.database_name}'
+        RETURN n
+        """
         return self.execute_query(query)
 
     def create_database(self, database_name: str):
@@ -100,10 +95,9 @@ class GraphConnector(DatabaseConnector):
 
     def add_triple(self, subject: str, relation: str, object_: str):
         """Add a semantic triple to the graph using raw Cypher.
-
-        1. Finds nodes by exact match on `name` and `database_id`.
-        2. Creates a relationship between them with the given label.
-        """
+        @details
+            1. Finds nodes by exact match on `name` and `database_id`.
+            2. Creates a relationship between them with the given label."""
 
         # Keep only letters, numbers, underscores
         relation = re.sub(r"[^A-Za-z0-9_]", "_", relation)
@@ -111,11 +105,11 @@ class GraphConnector(DatabaseConnector):
         object_ = re.sub(r"[^A-Za-z0-9_]", "_", object_)
 
         query = f"""
-		MERGE (from_node {{name: '{subject}', database_id: '{self.database_name}'}})
-		MERGE (to_node {{name: '{object_}', database_id: '{self.database_name}'}})
-		MERGE (from_node)-[r:{relation}]->(to_node)
-		RETURN from_node, r, to_node
-		"""
+        MERGE (from_node {{name: '{subject}', database_id: '{self.database_name}'}})
+        MERGE (to_node {{name: '{object_}', database_id: '{self.database_name}'}})
+        MERGE (from_node)-[r:{relation}]->(to_node)
+        RETURN from_node, r, to_node
+        """
 
         try:
             df = self.execute_query(query)
@@ -129,22 +123,18 @@ class GraphConnector(DatabaseConnector):
 
     def get_edge_counts(self, top_n: int = 10) -> DataFrame:
         """Return node names and their edge counts, ordered by edge count descending.
-
-        Args:
-                top_n: Number of top nodes to return (by edge count). Default is 10.
-
-        Returns:
-                DataFrame with columns: node_name, edge_count
+        @param top_n  Number of top nodes to return (by edge count). Default is 10.
+        @return  DataFrame with columns: node_name, edge_count
         """
         query = f"""
-		MATCH (n)
-		WHERE n.database_id = '{self.database_name}'
-		OPTIONAL MATCH (n)-[r]-()
-		WITH n.name as node_name, count(r) as edge_count
-		ORDER BY edge_count DESC, rand()
-		LIMIT {top_n}
-		RETURN node_name, edge_count
-		"""
+        MATCH (n)
+        WHERE n.database_id = '{self.database_name}'
+        OPTIONAL MATCH (n)-[r]-()
+        WITH n.name as node_name, count(r) as edge_count
+        ORDER BY edge_count DESC, rand()
+        LIMIT {top_n}
+        RETURN node_name, edge_count
+        """
         return self.execute_query(query)
 
     def get_all_triples(self) -> pd.DataFrame:
@@ -152,9 +142,9 @@ class GraphConnector(DatabaseConnector):
         db_id = self.database_name
 
         query = f"""
-		MATCH (a {{database_id: '{db_id}'}})-[r]->(b {{database_id: '{db_id}'}})
-		RETURN a.name AS subject, type(r) AS relation, b.name AS object
-		"""
+        MATCH (a {{database_id: '{db_id}'}})-[r]->(b {{database_id: '{db_id}'}})
+        RETURN a.name AS subject, type(r) AS relation, b.name AS object
+        """
 
         df = self.execute_query(query)
         # Ensure we always return a DataFrame with the 3 desired columns

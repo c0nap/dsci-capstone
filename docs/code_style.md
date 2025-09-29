@@ -8,13 +8,17 @@ Doxygen is an external tool which automatically generates code documentation. We
 
 ### Guidelines for Understanding Doxygen-Style Code
 
-#### Quick Tips
+#### Project Notes
 
 - Docstrings are the preferred way to specify class signatures. Some useful tags are `@brief`, `@details`, `@param`, `@return`, `@raises`, and `@ref`.
 
 - Attributes defined in `__init__` can use Doxygen-style inline comments `##` before the declaration or alternatively a docstring after it.
 
 - Low-level implemetation comments should not be given to Doxygen. Keep those as normal Python comments, or leave a note in the method header.
+
+- Since `AUTOBRIEF` is enabled, you may omit `@brief` for the first line in a docstring. The convention in this project is to take advantage of `AUTOBRIEF` to enhance code readability. We additionally put an extra space between the tag and its text description, _e.g._ `param x  An integer`, and prefer condensed docstrings, _i.e._ minimal whitespace with triple-quotes placed on the same line as text.
+
+- In Python, `@ref` requires a fully-qualified method name. Even if `from_env()` is contained within the same class or file, Doxygen requires something like `@ref components.connectors.RelationalConnector.from_env`.
 
 - In this project, all Python code is formatted using `black .` before merging code into main. This will break legacy-style Doxygen blocks such as `#** #* ... #*`.
 
@@ -99,19 +103,24 @@ doxygen -g
 Preferences used in our setup:
 
 - `PROJECT_NAME`           = "Data Science Capstone Project"
+- `INPUT`                  = ../src ../components ../tests ../web-app
+- `RECURSIVE`              = YES
 - `JAVADOC_AUTOBRIEF`      = YES
 - `OPTIMIZE_OUTPUT_JAVA`   = YES
+- `PYTHON_DOCSTRING`       = NO
+- `HIDE_SCOPE_NAMES`       = YES
 - `EXTRACT_ALL`            = YES
 - `EXTRACT_PRIVATE`        = YES
 - `EXTRACT_STATIC`         = YES
-- `HIDE_SCOPE_NAMES`       = YES
-- `INPUT`                  = ../src ../components ../tests ../web-app
+
 
 #### 4. Generate the HTML and LaTeX folders
+
+If these folders already exist, you must delete their contents first.
 
 ```bash
 doxygen
 ```
 
-Open `annotated.html` in your Chrome browser to view the generated documentation.
+Open `annotated.html` with your Chrome browser to view the generated documentation pages.
 

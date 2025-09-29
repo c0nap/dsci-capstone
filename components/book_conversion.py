@@ -211,9 +211,7 @@ class Story:
 
 
 class ParagraphStreamTEI(StoryStreamAdapter):
-    """
-    Streams paragraphs from a TEI file as Chunk objects, including line_start / line_end metadata.
-    """
+    """Streams paragraphs from a TEI file as Chunk objects."""
 
     xml_namespace = {"tei": "http://www.tei-c.org/ns/1.0"}
     encoding = "utf-8"
@@ -227,11 +225,13 @@ class ParagraphStreamTEI(StoryStreamAdapter):
         start_inclusive: str = "",
         end_inclusive: str = "",
     ):
-        """
-        @param tei_path: Path to an existing TEI XML file.
-        @param book_id: ID for this book.
-        @param story_id: ID for this story (may be same as book_id).
-        """
+        """Create a ParagraphStreamTEI object.
+        @param tei_path  Path to an existing TEI XML file.
+        @param book_id  ID for this book.
+        @param story_id  ID for this story (may be same as book_id).
+        @param allowed_chapters  A list of valid chapter titles. Must exactly match the contents of head.
+        @param start_inclusive  (Optional) Unique string representing the start of the book.
+        @param end_inclusive  (Optional) Unique string representing the end of the book."""
         self.tei_path = tei_path
         self.book_id = book_id
         self.story_id = story_id
@@ -254,14 +254,15 @@ class ParagraphStreamTEI(StoryStreamAdapter):
             yield chunk
 
     def pre_compute_segments(self) -> List[Chunk]:
-        """
-        Yields Chunk objects for each paragraph (<p>) in the TEI file.
-        Uses etree Element.sourceline to approximate start/end line in TEI.
-        Supports optional start_inclusive / end_inclusive boundaries to slice text and stop iteration.
-        Computes progress percentages using character counts:
-          - story_percent: progress through the entire story
-          - chapter_percent: progress through the current chapter
-        Populates self.chunks so they can be streamed as requested by interface
+        """Splits the target book into paragraphs.
+        @details
+        	Yields Chunk objects for each paragraph (<p>) in the TEI file.
+        	Uses etree Element.sourceline to approximate start/end line in TEI.
+        	Supports optional start_inclusive / end_inclusive boundaries to slice text and stop iteration.
+        	Computes progress percentages using character counts:
+          		- story_percent: progress through the entire story
+          		- chapter_percent: progress through the current chapter
+       		Populates self.chunks so they can be streamed as requested by interface
         """
         book_chunks = []
         chapter_counter = 0
@@ -394,27 +395,29 @@ class BookFactory(ABC):
 
 
 class EPUBToTEI:
-    """
-    Reads book files as EPUB, converts to TEI (XML) to extract chapter hierarchy, then save as clean TXT.
-    """
+    """Converts EPUB files to XML format (TEI specification).
+    @details  Takes an EPUB book file and converts it to TEI in order to represent its chapter hierarchy."""
 
     xml_namespace = {"tei": "http://www.tei-c.org/ns/1.0"}
     encoding = "utf-8"
 
     def __init__(
-        self, epub_path, chapter_div_type="level2", save_pandoc=False, save_tei=True
+        self, epub_path, save_pandoc=False, save_tei=True
     ):
+    	"""Initialize the converter.
+    	@param epub_path  String containing the relative path to an EPUB file.
+        @param save_pandoc  Flag to save the intermediate Pandoc output to .tei.xml
+		@param save_tei  Flag to save the final TEI file as .tei"""
         self.epub_path = epub_path
         self.save_pandoc = save_pandoc
         self.pandoc_xml_path = epub_path.replace(".epub", "_pandoc.tei.xml")
         self.save_tei = save_tei
         self.tei_path = epub_path.replace(".epub", ".tei")
-        self.chapter_div_type = chapter_div_type
         self.raw_tei_content = None
         self.clean_tei_content = None
 
     def convert_to_tei(self):
-        """Convert EPUB → TEI string (via Pandoc)."""
+        """Uses Pandoc to draft a TEI string from EPUB."""
         if self.save_pandoc:
             pypandoc.convert_file(
                 self.epub_path, "tei", outputfile=self.pandoc_xml_path
@@ -446,17 +449,14 @@ class EPUBToTEI:
             )
 
     def _sanitize_ids(self, content: str) -> str:
-        """
-        Sanitize XML IDs in the TEI content to ensure they are valid and consistent.
-
-        Pandoc sometimes generates invalid or non-unique @xml:id attributes
-        (e.g., containing spaces, punctuation, or mixed casing). Since we rely
-        on these IDs as dictionary keys / anchors, we sanitize them using a
-        regex to enforce alphanumeric/underscore/dash format.
-
-        @param content: The raw TEI XML string possibly containing invalid xml:id attributes.
-        @return: A TEI XML string with valid NCNames, prefixed with 'id_'.
-        """
+        """Sanitize XML IDs in the TEI content to ensure they are valid and consistent.
+		@details
+        	Pandoc sometimes generates invalid or non-unique `xml:id` attributes
+        	(e.g., containing spaces, punctuation, or mixed casing). Since we rely
+        	on these IDs as dictionary keys / anchors, we sanitize them using a
+        	regex to enforce alphanumeric/underscore/dash format.
+        @param content  The raw TEI XML string possibly containing invalid xml:id attributes.
+        @return  A TEI XML string with valid NCNames, prefixed with 'id_'."""
 
         def repl(m):
             val = re.sub(r"[^a-zA-Z0-9_-]", "_", m.group(1))
@@ -465,13 +465,11 @@ class EPUBToTEI:
         return re.sub(r'xml:id="([^"]+)"', repl, content)
 
     def _prune_bad_tags(self, content: str) -> str:
-        """
-        Replace all <lb/> tags with newline characters in TEI.
-        """
+        """Replace all `lb` tags with newline characters in TEI."""
         return re.sub(r"<lb\s*/?>", " ", content)
 
-        ## Paragraph handling has been moved to ParagraphStreamTEI.
 
+    # Paragraph handling has been moved to ParagraphStreamTEI.
     # def _normalize_paragraphs(self, content: str) -> str:
     # 	"""Remove raw newlines inside <p> tags, collapsing them to spaces."""
     # 	if self.save_tei:
@@ -486,31 +484,30 @@ class EPUBToTEI:
 
     # 	return etree.tostring(root, encoding=self.encoding).decode(self.encoding)
 
-    def print_chapters(self, limit: int = 100):
-        """Debug method: print chapter names + snippet."""
-        if self.save_tei:
-            root = etree.parse(self.tei_path).getroot()
-        else:
-            root = etree.fromstring(self.clean_tei_content.encode(self.encoding))
 
-        print(f"{'-'*60}")
-        for div in root.findall(
-            f".//tei:div[@type='{self.chapter_div_type}']", self.xml_namespace
-        ):
-            head = div.find("tei:head", self.xml_namespace)
-            chapter_name = (head.text or "Untitled").strip()
-            paragraphs = [
-                p.text.strip()
-                for p in div.findall("tei:p", self.xml_namespace)
-                if p.text
-            ]
-            chapter_text = " ".join(paragraphs)
-            snippet = (
-                (chapter_text[:limit] + "...")
-                if len(chapter_text) > limit
-                else chapter_text
-            )
-            print(f"Chapter: {chapter_name}\nText: {snippet}\n{'-'*60}")
+    # def print_chapters(self, limit: int = 100):
+    #     """Old debug method: print chapter names with snippet."""
+    #     if self.save_tei:
+    #         root = etree.parse(self.tei_path).getroot()
+    #     else:
+    #         root = etree.fromstring(self.clean_tei_content.encode(self.encoding))
+
+    #     print(f"{'-'*60}")
+    #     for div in root.findall(".//tei:div"):
+    #         head = div.find("tei:head", self.xml_namespace)
+    #         chapter_name = (head.text or "Untitled").strip()
+    #         paragraphs = [
+    #             p.text.strip()
+    #             for p in div.findall("tei:p", self.xml_namespace)
+    #             if p.text
+    #         ]
+    #         chapter_text = " ".join(paragraphs)
+    #         snippet = (
+    #             (chapter_text[:limit] + "...")
+    #             if len(chapter_text) > limit
+    #             else chapter_text
+    #         )
+    #         print(f"Chapter: {chapter_name}\nText: {snippet}\n{'-'*60}")
 
 
 ### Outdated code ###
@@ -519,387 +516,387 @@ class EPUBToTEI:
 # Manual data annotation:
 # Edit chapter start / end lines via CSV
 # Move *** START key down to just before the first chapter
-class Book1:
-    def __init__(
-        self,
-        filename: str,
-        encoding: str = "utf-8",
-        chapter_delimiter_count: int = 4,
-        chapter_heading_end_count: int = 2,
-        section_delimiter_count: int = 4,
-        book_start_line: int = -1,
-        book_end_line: int = -1,
-        max_chunk_length: int = 500,
-        title_key: str = "Title:",
-        author_key: str = "Author:",
-        language_key: str = "Language:",
-        date_key: str = "Release date:",
-    ):
-        self.filename = filename
-        self.encoding = encoding
-        self.chapter_delimiter_count: str = chapter_delimiter_count
-        self.chapter_heading_end_count: str = chapter_heading_end_count
-        self.section_delimiter_count: str = section_delimiter_count
-        self.book_start_line: int = book_start_line
-        self.book_end_line: int = book_end_line
-        self.max_chunk_length: int = max_chunk_length
+# class Book1:
+#     def __init__(
+#         self,
+#         filename: str,
+#         encoding: str = "utf-8",
+#         chapter_delimiter_count: int = 4,
+#         chapter_heading_end_count: int = 2,
+#         section_delimiter_count: int = 4,
+#         book_start_line: int = -1,
+#         book_end_line: int = -1,
+#         max_chunk_length: int = 500,
+#         title_key: str = "Title:",
+#         author_key: str = "Author:",
+#         language_key: str = "Language:",
+#         date_key: str = "Release date:",
+#     ):
+#         self.filename = filename
+#         self.encoding = encoding
+#         self.chapter_delimiter_count: str = chapter_delimiter_count
+#         self.chapter_heading_end_count: str = chapter_heading_end_count
+#         self.section_delimiter_count: str = section_delimiter_count
+#         self.book_start_line: int = book_start_line
+#         self.book_end_line: int = book_end_line
+#         self.max_chunk_length: int = max_chunk_length
 
-        self.title_key = title_key
-        self.author_key = author_key
-        self.language_key = language_key
-        self.date_key = date_key
-        self.title: str = None
-        self.author: str = None
-        self.language: str = None
-        self.release_date: datetime.date = None
-        self.total_chars: int = 0
+#         self.title_key = title_key
+#         self.author_key = author_key
+#         self.language_key = language_key
+#         self.date_key = date_key
+#         self.title: str = None
+#         self.author: str = None
+#         self.language: str = None
+#         self.release_date: datetime.date = None
+#         self.total_chars: int = 0
 
-        self.chapter_info_df = pd.DataFrame(
-            columns=["chapter_name", "num_chars", "line_start", "line_end"]
-        )
-        base_filename = os.path.splitext(self.filename)[0]
-        chapter_csv_filename = f"{base_filename}_chapters.csv"
-        found_chapter_file = os.path.exists(chapter_csv_filename)
-        if found_chapter_file:
-            print("Chapter info CSV found. Loading data.")
-            self.chapter_info_df = pd.read_csv(chapter_csv_filename)
-            self.pre_scan(
-                extract_chapters=False
-            )  # Run pre_scan without extracting chapters
-        else:
-            print("Chapter info CSV not found. Performing full pre-scan.")
-            self.pre_scan(extract_chapters=True)
+#         self.chapter_info_df = pd.DataFrame(
+#             columns=["chapter_name", "num_chars", "line_start", "line_end"]
+#         )
+#         base_filename = os.path.splitext(self.filename)[0]
+#         chapter_csv_filename = f"{base_filename}_chapters.csv"
+#         found_chapter_file = os.path.exists(chapter_csv_filename)
+#         if found_chapter_file:
+#             print("Chapter info CSV found. Loading data.")
+#             self.chapter_info_df = pd.read_csv(chapter_csv_filename)
+#             self.pre_scan(
+#                 extract_chapters=False
+#             )  # Run pre_scan without extracting chapters
+#         else:
+#             print("Chapter info CSV not found. Performing full pre-scan.")
+#             self.pre_scan(extract_chapters=True)
 
-    def pre_scan(self, extract_chapters: bool = True):
-        """
-        Performs a single, unified pass to capture all metadata and chapter info.
-        """
-        in_book_content = False
-        self.total_chars = 0
-        line_number = 0
+#     def pre_scan(self, extract_chapters: bool = True):
+#         """
+#         Performs a single, unified pass to capture all metadata and chapter info.
+#         """
+#         in_book_content = False
+#         self.total_chars = 0
+#         line_number = 0
 
-        chapter_data = []
-        current_chapter_name = "NULL"
-        current_chapter_line_start = -1
-        chapter_chars_count = 0
-        blank_lines_count = 0
+#         chapter_data = []
+#         current_chapter_name = "NULL"
+#         current_chapter_line_start = -1
+#         chapter_chars_count = 0
+#         blank_lines_count = 0
 
-        with open(self.filename, "r", encoding=self.encoding) as f:
-            for line in f:
+#         with open(self.filename, "r", encoding=self.encoding) as f:
+#             for line in f:
 
-                # State control logic
-                line_number += 1
-                if line_number == self.book_start_line and not in_book_content:
-                    in_book_content = True
-                if line_number == self.book_end_line and in_book_content:
-                    in_book_content = False
-                    break
+#                 # State control logic
+#                 line_number += 1
+#                 if line_number == self.book_start_line and not in_book_content:
+#                     in_book_content = True
+#                 if line_number == self.book_end_line and in_book_content:
+#                     in_book_content = False
+#                     break
 
-                # Metadata extraction
-                if not in_book_content:  # header
-                    if self.title_key in line:
-                        self.title = line.split(self.title_key, 1)[1].strip()
-                    elif self.author_key in line:
-                        self.author = line.split(self.author_key, 1)[1].strip()
-                    elif self.language_key in line:
-                        self.language = line.split(self.language_key, 1)[1].strip()
-                    elif self.date_key in line:
-                        self.release_date = line.split(self.date_key, 1)[1].strip()
-                        self.release_date = re.sub(
-                            r"\[.*?\]", "", self.release_date
-                        ).strip()
-                        try:
-                            parsed_date = datetime.strptime(
-                                self.release_date, "%B %d, %Y"
-                            ).date()
-                            self.release_date = parsed_date
-                        except ValueError:
-                            self.release_date = None
-                            Log.warn_parse(
-                                "Book.release_date", self.release_date, "Date"
-                            )
+#                 # Metadata extraction
+#                 if not in_book_content:  # header
+#                     if self.title_key in line:
+#                         self.title = line.split(self.title_key, 1)[1].strip()
+#                     elif self.author_key in line:
+#                         self.author = line.split(self.author_key, 1)[1].strip()
+#                     elif self.language_key in line:
+#                         self.language = line.split(self.language_key, 1)[1].strip()
+#                     elif self.date_key in line:
+#                         self.release_date = line.split(self.date_key, 1)[1].strip()
+#                         self.release_date = re.sub(
+#                             r"\[.*?\]", "", self.release_date
+#                         ).strip()
+#                         try:
+#                             parsed_date = datetime.strptime(
+#                                 self.release_date, "%B %d, %Y"
+#                             ).date()
+#                             self.release_date = parsed_date
+#                         except ValueError:
+#                             self.release_date = None
+#                             Log.warn_parse(
+#                                 "Book.release_date", self.release_date, "Date"
+#                             )
 
-                # Chapter extraction
-                if in_book_content:
-                    self.total_chars += len(line.rstrip("\n"))
+#                 # Chapter extraction
+#                 if in_book_content:
+#                     self.total_chars += len(line.rstrip("\n"))
 
-                    if extract_chapters:
-                        # Accumulate blank lines
-                        if not line.strip():
-                            blank_lines_count += 1
-                        else:
-                            # Reached a non-blank line
-                            if blank_lines_count >= self.chapter_delimiter_count:
-                                if chapter_chars_count > 0:
-                                    max_name_length = 60
-                                    if len(current_chapter_name) > max_name_length:
-                                        current_chapter_name = (
-                                            current_chapter_name[:max_name_length]
-                                            + "..."
-                                        )
-                                    chapter_data.append(
-                                        {
-                                            "chapter_name": current_chapter_name,
-                                            "num_chars": chapter_chars_count,
-                                            "line_start": current_chapter_line_start,
-                                            "line_end": line_number
-                                            - blank_lines_count
-                                            - 1,
-                                        }
-                                    )
+#                     if extract_chapters:
+#                         # Accumulate blank lines
+#                         if not line.strip():
+#                             blank_lines_count += 1
+#                         else:
+#                             # Reached a non-blank line
+#                             if blank_lines_count >= self.chapter_delimiter_count:
+#                                 if chapter_chars_count > 0:
+#                                     max_name_length = 60
+#                                     if len(current_chapter_name) > max_name_length:
+#                                         current_chapter_name = (
+#                                             current_chapter_name[:max_name_length]
+#                                             + "..."
+#                                         )
+#                                     chapter_data.append(
+#                                         {
+#                                             "chapter_name": current_chapter_name,
+#                                             "num_chars": chapter_chars_count,
+#                                             "line_start": current_chapter_line_start,
+#                                             "line_end": line_number
+#                                             - blank_lines_count
+#                                             - 1,
+#                                         }
+#                                     )
 
-                                chapter_chars_count = 0
-                                current_chapter_line_start = line_number
-                                if "Chapter" in line or line.strip().isupper():
-                                    section_num = 1
-                                    current_chapter_name = (
-                                        line.strip() + f"_{section_num}"
-                                    )
-                                else:
-                                    base_chapter_name = chapter_data[-1][
-                                        "chapter_name"
-                                    ].split("_")[0]
-                                    section_num += 1
-                                    current_chapter_name = (
-                                        base_chapter_name + f"_{section_num}"
-                                    )
+#                                 chapter_chars_count = 0
+#                                 current_chapter_line_start = line_number
+#                                 if "Chapter" in line or line.strip().isupper():
+#                                     section_num = 1
+#                                     current_chapter_name = (
+#                                         line.strip() + f"_{section_num}"
+#                                     )
+#                                 else:
+#                                     base_chapter_name = chapter_data[-1][
+#                                         "chapter_name"
+#                                     ].split("_")[0]
+#                                     section_num += 1
+#                                     current_chapter_name = (
+#                                         base_chapter_name + f"_{section_num}"
+#                                     )
 
-                            chapter_chars_count += len(line)
-                            blank_lines_count = 0
+#                             chapter_chars_count += len(line)
+#                             blank_lines_count = 0
 
-        # Save the DataFrame if extraction was requested and data was found
-        if extract_chapters and chapter_data:
-            self.chapter_info_df = pd.DataFrame(chapter_data)
-            base_filename = os.path.splitext(self.filename)[0]
-            chapter_csv_filename = f"{base_filename}_chapters.csv"
-            self.chapter_info_df.to_csv(chapter_csv_filename, index=False)
+#         # Save the DataFrame if extraction was requested and data was found
+#         if extract_chapters and chapter_data:
+#             self.chapter_info_df = pd.DataFrame(chapter_data)
+#             base_filename = os.path.splitext(self.filename)[0]
+#             chapter_csv_filename = f"{base_filename}_chapters.csv"
+#             self.chapter_info_df.to_csv(chapter_csv_filename, index=False)
 
-    def debug_pre_scan(self):
-        """
-        Prints the metadata and chapter information to help debug the pre-scan process.
-        """
-        print("--- Starting Pre-scan Debugging ---")
-        print(f"Book Filename: {self.filename}")
-        print("\n### Metadata ###")
-        print(f"Title: {self.title}")
-        print(f"Author: {self.author}")
-        print(f"Language: {self.language}")
-        print(f"Release Date: {self.release_date}")
-        print(f"Book Start Line: {self.book_start_line}")
-        print(f"Book End Line: {self.book_end_line}")
-        print(f"Total Characters in Book Content: {self.total_chars}")
+#     def debug_pre_scan(self):
+#         """
+#         Prints the metadata and chapter information to help debug the pre-scan process.
+#         """
+#         print("--- Starting Pre-scan Debugging ---")
+#         print(f"Book Filename: {self.filename}")
+#         print("\n### Metadata ###")
+#         print(f"Title: {self.title}")
+#         print(f"Author: {self.author}")
+#         print(f"Language: {self.language}")
+#         print(f"Release Date: {self.release_date}")
+#         print(f"Book Start Line: {self.book_start_line}")
+#         print(f"Book End Line: {self.book_end_line}")
+#         print(f"Total Characters in Book Content: {self.total_chars}")
 
-        print("\n### Chapter Information ###")
-        if not self.chapter_info_df.empty:
-            print(self.chapter_info_df)
-        else:
-            print("No chapter information found.")
+#         print("\n### Chapter Information ###")
+#         if not self.chapter_info_df.empty:
+#             print(self.chapter_info_df)
+#         else:
+#             print("No chapter information found.")
 
-        print("\n--- Pre-scan Debugging Complete ---")
+#         print("\n--- Pre-scan Debugging Complete ---")
 
-    def read_chunks(self) -> Iterator[Chunk]:
-        """
-        A simplified generator that yields memory-efficient Chunks from the book file.
-        It processes the book line by line, maintaining state for chunking.
-        """
-        line_num = 0
-        cumulative_chars = 0
-        current_chapter_index = 0
-        current_chapter_chars = 0
-        section = 0
-        in_book_content = False
+#     def read_chunks(self) -> Iterator[Chunk]:
+#         """
+#         A simplified generator that yields memory-efficient Chunks from the book file.
+#         It processes the book line by line, maintaining state for chunking.
+#         """
+#         line_num = 0
+#         cumulative_chars = 0
+#         current_chapter_index = 0
+#         current_chapter_chars = 0
+#         section = 0
+#         in_book_content = False
 
-        section_name, total_chapter_chars = self.chapter_info_df[current_chapter_index]
+#         section_name, total_chapter_chars = self.chapter_info_df[current_chapter_index]
 
-        paragraph_buffer = []
-        current_paragraph_start_line = 0
-        blank_count = 0
+#         paragraph_buffer = []
+#         current_paragraph_start_line = 0
+#         blank_count = 0
 
-        with open(self.filename, "r", encoding=self.encoding) as f:
-            for line in f:
-                line_num += 1
+#         with open(self.filename, "r", encoding=self.encoding) as f:
+#             for line in f:
+#                 line_num += 1
 
-                # Skip to the start of the book content
-                if not in_book_content:
-                    if self.book_start_key in line:
-                        in_book_content = True
-                    continue
+#                 # Skip to the start of the book content
+#                 if not in_book_content:
+#                     if self.book_start_key in line:
+#                         in_book_content = True
+#                     continue
 
-                # Stop at the end of the book content
-                if self.book_end_key in line:
-                    break
+#                 # Stop at the end of the book content
+#                 if self.book_end_key in line:
+#                     break
 
-                line_stripped = line.strip()
+#                 line_stripped = line.strip()
 
-                if not line_stripped:
-                    blank_count += 1
-                else:
-                    # Process the previous paragraph if there were blank lines
-                    if blank_count > 0 and paragraph_buffer:
-                        # Form the paragraph text
-                        paragraph_text = " ".join(paragraph_buffer).strip()
+#                 if not line_stripped:
+#                     blank_count += 1
+#                 else:
+#                     # Process the previous paragraph if there were blank lines
+#                     if blank_count > 0 and paragraph_buffer:
+#                         # Form the paragraph text
+#                         paragraph_text = " ".join(paragraph_buffer).strip()
 
-                        if len(paragraph_text) > 0:
-                            # Check for chapter break (4+ blank lines)
-                            if blank_count >= 3:
-                                # Yield the last chunk of the previous chapter
-                                if paragraph_text:
-                                    yield from self._process_and_yield_chunks(
-                                        paragraph_text,
-                                        current_paragraph_start_line,
-                                        line_num - blank_count,
-                                        cumulative_chars - len(line),
-                                        section_name,
-                                        current_chapter_chars - len(line),
-                                        total_chapter_chars,
-                                        section,
-                                    )
+#                         if len(paragraph_text) > 0:
+#                             # Check for chapter break (4+ blank lines)
+#                             if blank_count >= 3:
+#                                 # Yield the last chunk of the previous chapter
+#                                 if paragraph_text:
+#                                     yield from self._process_and_yield_chunks(
+#                                         paragraph_text,
+#                                         current_paragraph_start_line,
+#                                         line_num - blank_count,
+#                                         cumulative_chars - len(line),
+#                                         section_name,
+#                                         current_chapter_chars - len(line),
+#                                         total_chapter_chars,
+#                                         section,
+#                                     )
 
-                                # Update to the next chapter's metadata
-                                current_chapter_index += 1
-                                if current_chapter_index < len(self.chapter_info_df):
-                                    section_name, total_chapter_chars = (
-                                        self.chapter_info_df[current_chapter_index]
-                                    )
-                                    current_chapter_chars = 0
+#                                 # Update to the next chapter's metadata
+#                                 current_chapter_index += 1
+#                                 if current_chapter_index < len(self.chapter_info_df):
+#                                     section_name, total_chapter_chars = (
+#                                         self.chapter_info_df[current_chapter_index]
+#                                     )
+#                                     current_chapter_chars = 0
 
-                                section = 0
+#                                 section = 0
 
-                            # Check for section break (2 blank lines, typically)
-                            elif blank_count == 2:
-                                # Yield the current chunk and increment section index
-                                if paragraph_text:
-                                    yield from self._process_and_yield_chunks(
-                                        paragraph_text,
-                                        current_paragraph_start_line,
-                                        line_num - blank_count,
-                                        cumulative_chars - len(line),
-                                        section_name,
-                                        current_chapter_chars - len(line),
-                                        total_chapter_chars,
-                                        section,
-                                    )
-                                section += 1
+#                             # Check for section break (2 blank lines, typically)
+#                             elif blank_count == 2:
+#                                 # Yield the current chunk and increment section index
+#                                 if paragraph_text:
+#                                     yield from self._process_and_yield_chunks(
+#                                         paragraph_text,
+#                                         current_paragraph_start_line,
+#                                         line_num - blank_count,
+#                                         cumulative_chars - len(line),
+#                                         section_name,
+#                                         current_chapter_chars - len(line),
+#                                         total_chapter_chars,
+#                                         section,
+#                                     )
+#                                 section += 1
 
-                            else:  # Regular paragraph break (1 blank line)
-                                yield from self._process_and_yield_chunks(
-                                    paragraph_text,
-                                    current_paragraph_start_line,
-                                    line_num - blank_count,
-                                    cumulative_chars - len(line),
-                                    section_name,
-                                    current_chapter_chars - len(line),
-                                    total_chapter_chars,
-                                    section,
-                                )
+#                             else:  # Regular paragraph break (1 blank line)
+#                                 yield from self._process_and_yield_chunks(
+#                                     paragraph_text,
+#                                     current_paragraph_start_line,
+#                                     line_num - blank_count,
+#                                     cumulative_chars - len(line),
+#                                     section_name,
+#                                     current_chapter_chars - len(line),
+#                                     total_chapter_chars,
+#                                     section,
+#                                 )
 
-                    # Reset buffer and start a new paragraph
-                    paragraph_buffer = [line_stripped]
-                    current_paragraph_start_line = line_num
-                    blank_count = 0
+#                     # Reset buffer and start a new paragraph
+#                     paragraph_buffer = [line_stripped]
+#                     current_paragraph_start_line = line_num
+#                     blank_count = 0
 
-                cumulative_chars += len(line)
-                current_chapter_chars += len(line)
+#                 cumulative_chars += len(line)
+#                 current_chapter_chars += len(line)
 
-            # Yield any remaining content after the loop ends
-            if paragraph_buffer:
-                paragraph_text = " ".join(paragraph_buffer).strip()
-                if len(paragraph_text) > 0:
-                    yield from self._process_and_yield_chunks(
-                        paragraph_text,
-                        current_paragraph_start_line,
-                        line_num,
-                        cumulative_chars,
-                        section_name,
-                        current_chapter_chars,
-                        total_chapter_chars,
-                        section,
-                    )
+#             # Yield any remaining content after the loop ends
+#             if paragraph_buffer:
+#                 paragraph_text = " ".join(paragraph_buffer).strip()
+#                 if len(paragraph_text) > 0:
+#                     yield from self._process_and_yield_chunks(
+#                         paragraph_text,
+#                         current_paragraph_start_line,
+#                         line_num,
+#                         cumulative_chars,
+#                         section_name,
+#                         current_chapter_chars,
+#                         total_chapter_chars,
+#                         section,
+#                     )
 
-    def _process_and_yield_chunks(
-        self,
-        text: str,
-        line_start: int,
-        line_end: int,
-        current_book_chars: int,
-        chapter_name: str,
-        current_chapter_chars: int,
-        total_chapter_chars: int,
-        section: int,
-    ) -> Iterator[Chunk]:
-        """Helper method to handle the logic of chunking and yielding."""
-        # Split a large paragraph into multiple chunks if needed
-        if len(text) > self.max_chunk_length:
-            sentences = re.split(r"(?<=[.!?])\s+", text)
-            current_chunk_text = ""
-            for sentence in sentences:
-                if len(current_chunk_text) + len(sentence) + 1 > self.max_chunk_length:
-                    if current_chunk_text:
-                        yield self._create_chunk(
-                            current_chunk_text.strip(),
-                            line_start,
-                            line_end,
-                            current_book_chars,
-                            current_chapter_chars,
-                            chapter_name,
-                            total_chapter_chars,
-                            section,
-                        )
-                        section += 1
-                    current_chunk_text = sentence.strip() + " "
-                else:
-                    current_chunk_text += sentence.strip() + " "
+#     def _process_and_yield_chunks(
+#         self,
+#         text: str,
+#         line_start: int,
+#         line_end: int,
+#         current_book_chars: int,
+#         chapter_name: str,
+#         current_chapter_chars: int,
+#         total_chapter_chars: int,
+#         section: int,
+#     ) -> Iterator[Chunk]:
+#         """Helper method to handle the logic of chunking and yielding."""
+#         # Split a large paragraph into multiple chunks if needed
+#         if len(text) > self.max_chunk_length:
+#             sentences = re.split(r"(?<=[.!?])\s+", text)
+#             current_chunk_text = ""
+#             for sentence in sentences:
+#                 if len(current_chunk_text) + len(sentence) + 1 > self.max_chunk_length:
+#                     if current_chunk_text:
+#                         yield self._create_chunk(
+#                             current_chunk_text.strip(),
+#                             line_start,
+#                             line_end,
+#                             current_book_chars,
+#                             current_chapter_chars,
+#                             chapter_name,
+#                             total_chapter_chars,
+#                             section,
+#                         )
+#                         section += 1
+#                     current_chunk_text = sentence.strip() + " "
+#                 else:
+#                     current_chunk_text += sentence.strip() + " "
 
-            if current_chunk_text:
-                yield self._create_chunk(
-                    current_chunk_text.strip(),
-                    line_start,
-                    line_end,
-                    current_book_chars,
-                    current_chapter_chars,
-                    chapter_name,
-                    total_chapter_chars,
-                    section,
-                )
-        else:
-            # If it fits, merge with the next one. Otherwise, yield a single chunk.
-            yield self._create_chunk(
-                text,
-                line_start,
-                line_end,
-                current_book_chars,
-                current_chapter_chars,
-                chapter_name,
-                total_chapter_chars,
-                section,
-            )
+#             if current_chunk_text:
+#                 yield self._create_chunk(
+#                     current_chunk_text.strip(),
+#                     line_start,
+#                     line_end,
+#                     current_book_chars,
+#                     current_chapter_chars,
+#                     chapter_name,
+#                     total_chapter_chars,
+#                     section,
+#                 )
+#         else:
+#             # If it fits, merge with the next one. Otherwise, yield a single chunk.
+#             yield self._create_chunk(
+#                 text,
+#                 line_start,
+#                 line_end,
+#                 current_book_chars,
+#                 current_chapter_chars,
+#                 chapter_name,
+#                 total_chapter_chars,
+#                 section,
+#             )
 
-    def _create_chunk(
-        self,
-        text: str,
-        line_start: int,
-        line_end: int,
-        total_book_chars: int,
-        chapter_chars: int,
-        chapter_name: str,
-        total_chapter_chars: int,
-        section: int,
-    ) -> Chunk:
-        """Helper to create a single Chunk object with calculated percentages."""
-        return Chunk(
-            text=text,
-            chapter=chapter_name,
-            section=section,
-            line_start=line_start,
-            line_end=line_end,
-            story_percent=(
-                (total_book_chars / self.total_book_chars) * 100
-                if self.total_book_chars > 0
-                else 0
-            ),
-            segment_percent=(
-                (chapter_chars / total_chapter_chars) * 100
-                if total_chapter_chars > 0
-                else 0
-            ),
-        )
+#     def _create_chunk(
+#         self,
+#         text: str,
+#         line_start: int,
+#         line_end: int,
+#         total_book_chars: int,
+#         chapter_chars: int,
+#         chapter_name: str,
+#         total_chapter_chars: int,
+#         section: int,
+#     ) -> Chunk:
+#         """Helper to create a single Chunk object with calculated percentages."""
+#         return Chunk(
+#             text=text,
+#             chapter=chapter_name,
+#             section=section,
+#             line_start=line_start,
+#             line_end=line_end,
+#             story_percent=(
+#                 (total_book_chars / self.total_book_chars) * 100
+#                 if self.total_book_chars > 0
+#                 else 0
+#             ),
+#             segment_percent=(
+#                 (chapter_chars / total_chapter_chars) * 100
+#                 if total_chapter_chars > 0
+#                 else 0
+#             ),
+#         )
