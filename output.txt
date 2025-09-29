@@ -7,150 +7,172 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 Total chunks: 254
 
 Chunk details:
-  index: Chunk(len=1458, book=2, chapter=11, story=1, lines=[3058,3083], story%=46.471, chapter%=1.815)
+  index: Chunk(len=1451, book=2, chapter=8, story=1, lines=[1624,1648], story%=24.856, chapter%=61.577)
 
-‘Yes, glad,’ said Jane. ‘I don’t want any more things to happen just now. I feel like you do when you’ve been to three parties in a week—like we did at granny’s once—and extras in between, toys and chocs and things like that. I want everything to be just real, and no fancy things happening at all.’ ‘I don’t like being obliged to keep things from mother,’ said Anthea. ‘I don’t know why, but it makes me feel selfish and mean.’
-‘If we could only get the mater to believe it, we might take her to the jolliest places,’ said Cyril, thoughtfully. ‘As it is, we’ve just got to be selfish and mean—if it is that—but I don’t feel it is.’
-‘I KNOW it isn’t, but I FEEL it is,’ said Anthea, ‘and that’s just as bad.’
-‘It’s worse,’ said Robert; ‘if you knew it and didn’t feel it, it wouldn’t matter so much.’
-‘That’s being a hardened criminal, father says,’ put in Cyril, and he picked up mother’s letter and wiped its corners with his handkerchief, to whose colour a trifle of bacon-fat and marmalade made but little difference.
-‘We’re going to-morrow, anyhow,’ said Robert. ‘Don’t,’ he added, with a good-boy expression on his face—‘don’t let’s be ungrateful for our blessings; don’t let’s waste the day in saying how horrid it is to keep secrets from mother, when we all know Anthea tried all she knew to give her the secret, and she wouldn’t take it. Let’s get on the carpet and have a jolly good wish. You’ll have time enough to repent of things all next week.’
+Without an instant’s hesitation the four children turned and ran back along the forest path; the only pause was Anthea’s. She stood back to let Cyril pass, because he was carrying the Lamb, who screamed with delight. (He had not whooping-coughed a single once since the carpet landed him on the island.)
+‘Gee-up, Squirrel; gee-gee,’ he shouted, and Cyril did gee-up. The path was a shorter cut to the beach than the creeper-covered way by which they had come, and almost directly they saw through the trees the shining blue-and-gold-and-opal of sand and sea.
+‘Stick to it,’ cried Cyril, breathlessly.
+They did stick to it; they tore down the sands—they could hear behind them as they ran the patter of feet which they knew, too well, were copper-coloured.
+The sands were golden and opal-coloured—and BARE. There were wreaths of tropic seaweed, there were rich tropic shells of the kind you would not buy in the Kentish Town Road under at least fifteen pence a pair. There were turtles basking lumpily on the water’s edge—but no cook, no clothes, and no carpet.
+‘On, on! Into the sea!’ gasped Cyril. ‘They MUST hate water. I’ve—heard—savages always—dirty.’
+Their feet were splashing in the warm shallows before his breathless words were ended. The calm baby-waves were easy to go through. It is warm work running for your life in the tropics, and the coolness of the water was delicious. They were up to their arm-pits now, and Jane was up to her chin.
 
 NLP output:
-('Jane', 'spouse', 'John')
-('John', 'spouse', 'Jane')
-('2008 Summer Olympics', 'point in time', '2008')
-('chocs', 'subclass of', 'toys')
-('Real', 'opposite of', 'Fancy')
-('Fancy', 'opposite of', 'Real')
-('Anthea', 'mother', 'mother')
-('mother', 'child', 'Anthea')
-('selfish', 'said to be the same as', 'mean')
-('mean', 'said to be the same as', 'selfish')
-('the mater', 'owned by', 'Cyril')
-('Cyril', 'owner of', 'the mater')
+('Anthea', 'part of', 'four children')
+('Cyril', 'owner of', 'Lamb')
+('Lamb', 'owned by', 'Cyril')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('I KNOW it isn’t, but I FEEL it is', 'performer', 'Anthea')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'Cymbeline', 'notable work')
-('William Shakespeare', 'Cymbeline', 'author')
-('William Shakespeare', 'Cymbeline', 'author')
-('father', 'spouse', 'mother')
-('mother', 'spouse', 'father')
-('We’re going to-morrow', 'characters', 'Robert')
-('Robert', 'present in work', 'We’re going to-morrow')
-('Don’t let’t let’s waste the day in saying how horrid it is to keep secrets from mother', 'characters', 'Anthea')
-('Anthea', 'present in work', 'Don’t let’t let’s waste the day in saying how horrid it is to keep secrets from mother')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'George Orwell')
-('Jesus', 'present in work', 'New Testament')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('Gee-up, Squirrel; gee-gee,’ he shouted', 'performer', 'Cyril')
+('beach', 'part of', 'sea')
+('Stick to it', 'author', 'Cyril')
+('copper-coloured', 'facet of', 'feet')
+('opal', 'subclass of', 'golden')
+('Town Road', 'located in the administrative territorial entity', 'Kentish')
+('no clothes', 'different from', 'carpet')
+('carpet', 'different from', 'no clothes')
+('On', 'followed by', 'On, on!')
+('On, on!', 'follows', 'On')
+('Into the sea!', 'main subject', 'sea')
+('Gasped', 'author', 'Cyril')
+('water', 'said to be the same as', 'MUST hate water')
+('MUST hate water', 'said to be the same as', 'water')
+('I’ve—heard—savages always—dirty', 'has part', 'I’ve—heard—savages always—dirty')
+('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
+('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
+('Henry Wadsworth Longfellow', 'notable work', 'The Merchant of Venice')
+('The Merchant of Venice', 'author', 'Henry Wadsworth Longfellow')
+('baby-waves', 'subclass of', 'calm')
+('tropical', 'has part', 'tropics')
+('tropics', 'subclass of', 'tropical')
+('Jane', 'instance of', 'arm-pits')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('Jane', 'spouse', 'John')
-('John', 'spouse', 'Jane')
-('2008 Summer Olympics', 'point in time', '2008')
-('chocs', 'subclass of', 'toys')
-('Real', 'opposite of', 'Fancy')
-('Fancy', 'opposite of', 'Real')
-('Anthea', 'mother', 'mother')
-('mother', 'child', 'Anthea')
-('selfish', 'said to be the same as', 'mean')
-('mean', 'said to be the same as', 'selfish')
-('the mater', 'owned by', 'Cyril')
-('Cyril', 'owner of', 'the mater')
+('Anthea', 'part of', 'four children')
+('Cyril', 'owner of', 'Lamb')
+('Lamb', 'owned by', 'Cyril')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('I KNOW it isn’t, but I FEEL it is', 'performer', 'Anthea')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'Cymbeline', 'notable work')
-('William Shakespeare', 'Cymbeline', 'author')
-('William Shakespeare', 'Cymbeline', 'author')
-('father', 'spouse', 'mother')
-('mother', 'spouse', 'father')
-('We’re going to-morrow', 'characters', 'Robert')
-('Robert', 'present in work', 'We’re going to-morrow')
-('Don’t let’t let’s waste the day in saying how horrid it is to keep secrets from mother', 'characters', 'Anthea')
-('Anthea', 'present in work', 'Don’t let’t let’s waste the day in saying how horrid it is to keep secrets from mother')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'George Orwell')
-('Jesus', 'present in work', 'New Testament')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('Gee-up, Squirrel; gee-gee,’ he shouted', 'performer', 'Cyril')
+('beach', 'part of', 'sea')
+('Stick to it', 'author', 'Cyril')
+('copper-coloured', 'facet of', 'feet')
+('opal', 'subclass of', 'golden')
+('Town Road', 'located in the administrative territorial entity', 'Kentish')
+('no clothes', 'different from', 'carpet')
+('carpet', 'different from', 'no clothes')
+('On', 'followed by', 'On, on!')
+('On, on!', 'follows', 'On')
+('Into the sea!', 'main subject', 'sea')
+('Gasped', 'author', 'Cyril')
+('water', 'said to be the same as', 'MUST hate water')
+('MUST hate water', 'said to be the same as', 'water')
+('I’ve—heard—savages always—dirty', 'has part', 'I’ve—heard—savages always—dirty')
+('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
+('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
+('Henry Wadsworth Longfellow', 'notable work', 'The Merchant of Venice')
+('The Merchant of Venice', 'author', 'Henry Wadsworth Longfellow')
+('baby-waves', 'subclass of', 'calm')
+('tropical', 'has part', 'tropics')
+('tropics', 'subclass of', 'tropical')
+('Jane', 'instance of', 'arm-pits')
 
 And here is the original text:
-‘Yes, glad,’ said Jane. ‘I don’t want any more things to happen just now. I feel like you do when you’ve been to three parties in a week—like we did at granny’s once—and extras in between, toys and chocs and things like that. I want everything to be just real, and no fancy things happening at all.’ ‘I don’t like being obliged to keep things from mother,’ said Anthea. ‘I don’t know why, but it makes me feel selfish and mean.’
-‘If we could only get the mater to believe it, we might take her to the jolliest places,’ said Cyril, thoughtfully. ‘As it is, we’ve just got to be selfish and mean—if it is that—but I don’t feel it is.’
-‘I KNOW it isn’t, but I FEEL it is,’ said Anthea, ‘and that’s just as bad.’
-‘It’s worse,’ said Robert; ‘if you knew it and didn’t feel it, it wouldn’t matter so much.’
-‘That’s being a hardened criminal, father says,’ put in Cyril, and he picked up mother’s letter and wiped its corners with his handkerchief, to whose colour a trifle of bacon-fat and marmalade made but little difference.
-‘We’re going to-morrow, anyhow,’ said Robert. ‘Don’t,’ he added, with a good-boy expression on his face—‘don’t let’s be ungrateful for our blessings; don’t let’s waste the day in saying how horrid it is to keep secrets from mother, when we all know Anthea tried all she knew to give her the secret, and she wouldn’t take it. Let’s get on the carpet and have a jolly good wish. You’ll have time enough to repent of things all next week.’
+Without an instant’s hesitation the four children turned and ran back along the forest path; the only pause was Anthea’s. She stood back to let Cyril pass, because he was carrying the Lamb, who screamed with delight. (He had not whooping-coughed a single once since the carpet landed him on the island.)
+‘Gee-up, Squirrel; gee-gee,’ he shouted, and Cyril did gee-up. The path was a shorter cut to the beach than the creeper-covered way by which they had come, and almost directly they saw through the trees the shining blue-and-gold-and-opal of sand and sea.
+‘Stick to it,’ cried Cyril, breathlessly.
+They did stick to it; they tore down the sands—they could hear behind them as they ran the patter of feet which they knew, too well, were copper-coloured.
+The sands were golden and opal-coloured—and BARE. There were wreaths of tropic seaweed, there were rich tropic shells of the kind you would not buy in the Kentish Town Road under at least fifteen pence a pair. There were turtles basking lumpily on the water’s edge—but no cook, no clothes, and no carpet.
+‘On, on! Into the sea!’ gasped Cyril. ‘They MUST hate water. I’ve—heard—savages always—dirty.’
+Their feet were splashing in the warm shallows before his breathless words were ended. The calm baby-waves were easy to go through. It is warm work running for your life in the tropics, and the coolness of the water was delicious. They were up to their arm-pits now, and Jane was up to her chin.
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s": "Jane", "r": "said", "o": "Yes, glad"},
-  {"s": "Jane", "r": "wanted", "o": "everything to be real; no fancy things"},
-  {"s": "Anthea", "r": "said", "o": "I don’t like being obliged to keep things from mother"},
-  {"s": "Anthea", "r": "felt", "o": "selfish and mean"},
-  {"s": "Cyril", "r": "said", "o": "If we could only get the mater to believe it, we might take her to the jolliest places"},
-  {"s": "Cyril", "r": "stated", "o": "we’ve just got to be selfish and mean"},
-  {"s": "Anthea", "r": "said", "o": "I KNOW it isn’t, but I FEEL it is"},
-  {"s": "Robert", "r": "said", "o": "It’s worse; if you knew it and didn’t feel it, it wouldn’t matter so much"},
-  {"s": "Robert", "r": "said", "o": "We’re going to-morrow, anyhow"},
-  {"s": "Robert", "r": "urged", "o": "Don’t waste the day in saying how horrid it is to keep secrets from mother"},
-  {"s": "Anthea", "r": "tried", "o": "to give mother the secret"},
-  {"s": "mother", "r": "refused", "o": "to take Anthea's secret"},
-  {"s": "Robert", "r": "proposed", "o": "to get on the carpet and have a jolly good wish"}
+  {"s": "Anthea", "r": "part of", "o": "four children"},
+  {"s": "Cyril", "r": "owner of", "o": "Lamb"},
+  {"s": "Lamb", "r": "owned by", "o": "Cyril"},
+  {"s": "George Orwell", "r": "notable work", "o": "Nineteen Eighty-Four"},
+  {"s": "Nineteen Eighty-Four", "r": "author", "o": "Orwell"},
+  {"s": "Cyril", "r": "shouted", "o": "Gee-up, Squirrel; gee-gee"},
+  {"s": "Cyril", "r": "said", "o": "Stick to it"},
+  {"s": "feet", "r": "were", "o": "copper-coloured"},
+  {"s": "no clothes", "r": "present in", "o": "the scene"},
+  {"s": "carpet", "r": "present in", "o": "the scene"},
+  {"s": "Anthea", "r": "paused", "o": "to let Cyril pass"},
+  {"s": "Anthea", "r": "stood back to let", "o": "Cyril pass"},
+  {"s": "Cyril", "r": "carried", "o": "the Lamb"},
+  {"s": "Lamb", "r": "screamed with delight", "o": "delight"},
+  {"s": "carpet", "r": "landed", "o": "Lamb on the island"},
+  {"s": "On", "r": "followed by", "o": "On, on!"},
+  {"s": "On, on!", "r": "follows", "o": "On"},
+  {"s": "Into the sea!", "r": "main subject", "o": "sea"},
+  {"s": "Cyril", "r": "gasped", "o": "Into the sea!"},
+  {"s": "water", "r": "said to be the same as", "o": "MUST hate water"},
+  {"s": "MUST hate water", "r": "said to be the same as", "o": "water"},
+  {"s": "baby-waves", "r": "described as", "o": "calm"},
+  {"s": "sand", "r": "were", "o": "golden and opal-coloured"},
+  {"s": "turtles", "r": "basked on", "o": "water's edge"},
+  {"s": "they", "r": "were up to their arm-pits in", "o": "water"},
+  {"s": "Jane", "r": "was up to", "o": "her chin in water"}
 ]
 
 ==================================================
 
 
 Valid JSON
-Jane said Yes, glad
-Jane wanted everything to be real; no fancy things
-Anthea said I don’t like being obliged to keep things from mother
-Anthea felt selfish and mean
-Cyril said If we could only get the mater to believe it, we might take her to the jolliest places
-Cyril stated we’ve just got to be selfish and mean
-Anthea said I KNOW it isn’t, but I FEEL it is
-Robert said It’s worse; if you knew it and didn’t feel it, it wouldn’t matter so much
-Robert said We’re going to-morrow, anyhow
-Robert urged Don’t waste the day in saying how horrid it is to keep secrets from mother
-Anthea tried to give mother the secret
-mother refused to take Anthea's secret
-Robert proposed to get on the carpet and have a jolly good wish
+Anthea part of four children
+Cyril owner of Lamb
+Lamb owned by Cyril
+George Orwell notable work Nineteen Eighty-Four
+Nineteen Eighty-Four author Orwell
+Cyril shouted Gee-up, Squirrel; gee-gee
+Cyril said Stick to it
+feet were copper-coloured
+no clothes present in the scene
+carpet present in the scene
+Anthea paused to let Cyril pass
+Anthea stood back to let Cyril pass
+Cyril carried the Lamb
+Lamb screamed with delight delight
+carpet landed Lamb on the island
+On followed by On, on!
+On, on! follows On
+Into the sea! main subject sea
+Cyril gasped Into the sea!
+water said to be the same as MUST hate water
+MUST hate water said to be the same as water
+baby-waves described as calm
+sand were golden and opal-coloured
+turtles basked on water's edge
+they were up to their arm-pits in water
+Jane was up to her chin in water
 
 Most relevant nodes:
   node_name  edge_count
-0    Anthea           4
-1    Robert           4
-2      Jane           2
+0     Cyril           6
+1      Lamb           3
+2     water           3
 
 Triples which best represent the graph:
-Anthea tried to_give_mother_the_secret
-Anthea said I_KNOW_it_isn_t__but_I_FEEL_it_is
-Anthea felt selfish_and_mean
-Anthea said I_don_t_like_being_obliged_to_keep_things_from_mother
-Robert proposed to_get_on_the_carpet_and_have_a_jolly_good_wish
-Robert urged Don_t_waste_the_day_in_saying_how_horrid_it_is_to_keep_secrets_from_mother
-Robert said We_re_going_to_morrow__anyhow
-Robert said It_s_worse__if_you_knew_it_and_didn_t_feel_it__it_wouldn_t_matter_so_much
-Jane wanted everything_to_be_real__no_fancy_things
-Jane said Yes__glad
+Cyril gasped Into_the_sea_
+Cyril carried the_Lamb
+Cyril said Stick_to_it
+Cyril shouted Gee_up__Squirrel__gee_gee
+Cyril owner_of Lamb
+Lamb screamed_with_delight delight
+Lamb owned_by Cyril
+water said_to_be_the_same_as MUST_hate_water
 
 
 Generated summary:
-Anthea struggles with a secret she wants to share with her mother, acknowledging an inner conflict: she knows it isn’t right but feels it strongly, and she feels selfish and mean for being obliged to withhold things from her mother. Robert pushes for openness, proposing a frank discussion and urging not to dwell on secrets from mother; he also says tomorrow will come anyway and that knowing something without feeling it wouldn’t matter much. Jane desires reality and simplicity, rejecting fanciness, and she expresses agreement with a positive sentiment.
+Cyril gasped as he went into the sea and carried a Lamb that he owns. The Lamb screamed with delight. Cyril affirmed his ownership of the Lamb, urged someone to “Stick to it,” and shouted “Gee up, Squirrel, gee-gee.”
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Anthea struggles with a secret she wants to share with her mother, acknowledging an inner conflict: she knows it isn’t right but feels it strongly, and she feels selfish and mean for being obliged to withhold things from her mother. Robert pushes for openness, proposing a frank discussion and urging not to dwell on secrets from mother; he also says tomorrow will come anyway and that knowing something without feeling it wouldn’t matter much. Jane desires reality and simplicity, rejecting fanciness, and she expresses agreement with a positive sentiment.', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Cyril gasped as he went into the sea and carried a Lamb that he owns. The Lamb screamed with delight. Cyril affirmed his ownership of the Lamb, urged someone to “Stick to it,” and shouted “Gee up, Squirrel, gee-gee.”', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
 
 Output sent to web app.
