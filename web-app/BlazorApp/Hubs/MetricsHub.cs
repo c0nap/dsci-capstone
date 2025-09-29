@@ -20,13 +20,13 @@ public class MetricsHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        _logger?.LogInformation($"Client connected");
+        //_logger?.LogInformation($"Client connected");
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger?.LogInformation($"Client disconnected");
+        //_logger?.LogInformation($"Client disconnected");
         await base.OnDisconnectedAsync(exception);
     }
 }

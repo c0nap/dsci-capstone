@@ -114,7 +114,7 @@
 
     protected override Task OnInitializedAsync()
     {
-        Logger.LogInformation("Component initializing...");
+        //Logger.LogInformation("Component initializing...");
         // Don't load data here - wait for after render to avoid JS interop issues
         return Task.CompletedTask;
     }
@@ -123,7 +123,7 @@
     {
         if (firstRender && !isDataLoaded)
         {
-            Logger.LogInformation("First render - loading graph data...");
+            //Logger.LogInformation("First render - loading graph data...");
             await LoadGraphFromNeo4j();
             isDataLoaded = true;
             StateHasChanged();
@@ -132,13 +132,12 @@
 
     private async Task OnDiagramCreated()
     {
-        Logger.LogInformation("Diagram created callback fired.");
         isDiagramReady = true;
         
         // Apply layout only once after diagram is ready and data is loaded
         if (isDataLoaded && !hasAppliedInitialLayout && nodes.Count > 0)
         {
-            Logger.LogInformation("Applying initial MSAGL layout...");
+            //Logger.LogInformation("Applying initial MSAGL layout...");
             await Task.Delay(100); // Small delay to ensure diagram is fully initialized
             await ApplyMSAGLLayout();
             hasAppliedInitialLayout = true;
@@ -158,14 +157,14 @@
 
         try
         {
-            Logger.LogInformation("Running Cypher query...");
+            //Logger.LogInformation("Running Cypher query...");
             var result = await session.RunAsync(@"
                 MATCH (n)-[r]->(m)
                 RETURN n, r, m
                 LIMIT 50
             ");
             var records = await result.ToListAsync();
-            Logger.LogInformation("Fetched {Count} results.", records.Count);
+            //Logger.LogInformation("Fetched {Count} results.", records.Count);
             
             // Clear existing collections
             nodes.Clear();
@@ -401,7 +400,7 @@
 
         try
         {
-            Logger.LogInformation("Applying MSAGL layout to {NodeCount} nodes...", nodes.Count);
+            //Logger.LogInformation("Applying MSAGL layout to {NodeCount} nodes...", nodes.Count);
             
             // Create MSAGL geometry graph
             var geometryGraph = new GeometryGraph();
@@ -454,7 +453,7 @@
             }
 
             currentLayoutType = "MSAGL Layered";
-            Logger.LogInformation("MSAGL layout applied successfully.");
+            //Logger.LogInformation("MSAGL layout applied successfully.");
             
             // Force diagram refresh
             await InvokeAsync(StateHasChanged);
@@ -468,7 +467,7 @@
 
     private async Task ApplyRandomLayout()
     {
-        Logger.LogInformation("Applying random layout...");
+        //Logger.LogInformation("Applying random layout...");
         
         foreach (var node in nodes)
         {
@@ -498,7 +497,7 @@
             {
                 var item = selected[0];
                 var typeName = item.GetType().Name;
-                Logger.LogInformation("SelectionChanged: runtime type = {Type}", typeName);
+                //Logger.LogInformation("SelectionChanged: runtime type = {Type}", typeName);
 
                 if (item is Syncfusion.Blazor.Diagram.Node
                     { ID: not null } node)
@@ -592,7 +591,7 @@
         {
             var newZoom = Math.Min(currentZoom + 0.25, 5.0);
             DiagramRef.Zoom(newZoom / currentZoom, null);
-            Logger.LogInformation($"Zoom set to {newZoom}.");
+            //Logger.LogInformation($"Zoom set to {newZoom}.");
         }
     }
 
@@ -600,7 +599,7 @@
         if (DiagramRef == null) return;
         var newZoom = Math.Max(currentZoom - 0.25, 0.2);
         DiagramRef.Zoom(newZoom / currentZoom, null);
-        Logger.LogInformation($"Zoom set to {newZoom}.");
+        //Logger.LogInformation($"Zoom set to {newZoom}.");
     }
 
     private void FitToPage()
@@ -651,7 +650,7 @@
                 
                 DiagramRef.Pan(offsetX - horizontalOffset, offsetY - verticalOffset);
 
-                Logger.LogInformation($"Fit to page: zoom={targetZoom:F2}, center=({centerX:F0}, {centerY:F0})");
+                //Logger.LogInformation($"Fit to page: zoom={targetZoom:F2}, center=({centerX:F0}, {centerY:F0})");
             }
             catch (Exception ex)
             {

@@ -27,9 +27,9 @@ public class MetricsController : ControllerBase
         _logger.LogInformation("POST received for BookID: {BookID}", summary.BookID);
 
         // Push update to all connected Blazor clients
-        _logger.LogInformation("Pushing update to Hub...");
+        //_logger.LogInformation("Pushing update to Hub...");
         await _hubContext.Clients.All.SendAsync("ReceiveUpdate", summary);
-        _logger.LogInformation("Hub update sent.");
+        //_logger.LogInformation("Hub update sent.");
 
         return CreatedAtAction(nameof(GetIndex), new { id = Summaries.Count - 1 }, summary);
     }

@@ -91,7 +91,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Logger.LogInformation("=== OnInitializedAsync START ===");
+        //Logger.LogInformation("=== OnInitializedAsync START ===");
         
         // Connect to hub
         hubConnection = new HubConnectionBuilder()
@@ -99,7 +99,7 @@
             .WithAutomaticReconnect()
             .Build();
     
-        Logger.LogInformation("Hub connection builder created");
+        //Logger.LogInformation("Hub connection builder created");
     
         // Set up event handler
         hubConnection.On<SummaryData>("ReceiveUpdate", async (updatedSummary) =>
@@ -110,38 +110,38 @@
             {
                 summary = updatedSummary;
                 StateHasChanged();
-                Logger.LogInformation("UI updated from SignalR");
+                //Logger.LogInformation("UI updated from SignalR");
             });
         });
     
         // Add connection state change handlers
         hubConnection.Closed += async (error) =>
         {
-            Logger.LogError($"SignalR connection CLOSED: {error?.Message ?? "No error"}");
+            //Logger.LogError($"SignalR connection CLOSED: {error?.Message ?? "No error"}");
         };
     
         hubConnection.Reconnecting += async (error) =>
         {
-            Logger.LogWarning($"SignalR connection RECONNECTING: {error?.Message ?? "No error"}");
+            //Logger.LogWarning($"SignalR connection RECONNECTING: {error?.Message ?? "No error"}");
         };
     
         hubConnection.Reconnected += async (connectionId) =>
         {
-            Logger.LogInformation($"SignalR connection RECONNECTED with ID: {connectionId}");
+            //Logger.LogInformation($"SignalR connection RECONNECTED with ID: {connectionId}");
         };
     
-        Logger.LogInformation("About to start hub connection...");
+        //Logger.LogInformation("About to start hub connection...");
 
         try {
             await hubConnection.StartAsync();
-            Logger.LogInformation($"Hub connection started successfully. State: {hubConnection.State}");
+            //Logger.LogInformation($"Hub connection started successfully. State: {hubConnection.State}");
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Failed to start hub connection");
+            //Logger.LogError(ex, "Failed to start hub connection");
             throw;
         }
 
-        Logger.LogInformation("=== OnInitializedAsync END ===");
+        //Logger.LogInformation("=== OnInitializedAsync END ===");
     }
 
 
