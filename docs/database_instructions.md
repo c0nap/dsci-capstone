@@ -53,7 +53,7 @@ DB_NAME in .env must be all lowercase for Postgres.
 Without these, you can’t fetch and trust Neo4j’s signing key or add an HTTPS repo.
 
 ```bash
-sudo apt install wget gnupg apt-transport-https
+sudo apt install -y wget gnupg apt-transport-https
 ```
 
 2. Add the GPG key
@@ -85,7 +85,7 @@ sudo apt update
 Now apt knows where to find the package and can verify its signature.
 
 ```bash
-sudo apt install neo4j
+sudo apt install -y neo4j
 ```
 
 ### First-time setup

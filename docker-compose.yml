@@ -1,0 +1,65 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:15
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # optional: only if you want host access
+
+  mongo:
+    image: mongo:6
+    env_file: 
+      - .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+
+  neo4j:
+    image: neo4j:5
+    env_file:
+      - .env
+    environment:
+      - NEO4J_AUTH=${NEO4J_AUTH} # format: neo4j/password
+    volumes:
+      - neo4j_data:/data
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+
+  blazor:
+    build:
+      context: .
+      dockerfile: Dockerfile.blazor
+    volumes:
+      - ./appsettings.Docker.json:/app/appsettings.Docker.json
+    environment:
+      - DOTNET_ENVIRONMENT=Docker
+    ports:
+      - "5000:5000"
+
+  python:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    env_file:
+      - .env        # primary (used for manual runs)
+      - .env.docker # overrides for container runs (last wins)
+
+
+# global declarations - easier to manage, back up, or reuse across containers.
+# references the volume names created & used by each container above.
+volumes:
+  postgres_data:
+  mongo_data:
+  neo4j_data:
