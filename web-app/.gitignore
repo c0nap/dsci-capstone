@@ -30,7 +30,8 @@ vcs.xml
 # Ignore environment-specific config with secrets
 # Keep a template (e.g., appSettings.json.example) in Git
 # =========================================
-appSettings.json
+appsettings.json
+appsettings.Docker.json
 appsettings.Development.json
 
 # =========================================

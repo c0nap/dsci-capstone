@@ -78,5 +78,37 @@ docker compose version
 
 ### Local Environment Settings
 
-This project uses `.env` (in conjunction with `.env.example` for WSL-centric connection strings, and `/web-app/BlazorApp/appsettings.json` (in conjunction with `appsettings.example.json`) for Windows-facing networking.
+This project uses `.env` (in conjunction with `.env.example` for WSL-centric connection strings, and `/web-app/BlazorApp/appsettings.json` (in conjunction with `appsettings.Example.json`) for Windows-centric networking.
+
+The CLI version of Docker runs on WSL, so the normal hostnames and IPs specified in `.env` should still work. The Blazor app expects IPs relative to Windows by default, so `appsettings.json` is reconfigured for WSL deployment. Similarly, the containers from Docker Desktop run from Windows. This is fine for the Blazor app, but hostnames in `.env` must be fixed. This process is automated by `make docker-env` and `make docker-appsettings` in the provided Makefile.
+
+The typical approach would be setting the values in `docker-compose.yml` as shown below. But this would likely break `load_dotenv(".env")` in Python, requiring extra handling logic.
+
+```yml
+services:
+
+  python:
+    ...
+    env_file:
+      - .env        # primary (used for manual runs)
+      - .env.docker # overrides for container runs (last wins)
+
+  blazor:
+    ...
+    volumes:
+      - ./appsettings.Docker.json:/web-app/BlazorApp/appsettings.Docker.json
+```
+
+As such, `.env` and `appsettings.json` are never modified by the program, and are just kept as ground-truth for manual runs of the pipeline. When deployed to Docker, these files are sent to their respective Docker containers, which automatically apply the necessary changes to convert between hostnames depending on the intended deployment and the observed operating system.
+
+---
+
+```bash
+make db-start-local
+```
+
+```bash
+make docker-detect
+```
+
 
