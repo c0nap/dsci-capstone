@@ -1,14 +1,30 @@
 # multi-stage build: build with sdk, run with runtime
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /src
-COPY ./BlazorApp/BlazorApp.csproj ./BlazorApp/
-# restore early to cache
-RUN dotnet restore ./BlazorApp/BlazorApp.csproj
-COPY ./BlazorApp/ ./BlazorApp/
-RUN dotnet publish ./BlazorApp/BlazorApp.csproj -c Release -o /app/publish
+
+# Enable relative paths - helpful name for container's root folder
+WORKDIR /web-app/BlazorApp
+
+# Copy .csproj & restore early to optimize dependency cache
+COPY BlazorApp.csproj .
+RUN dotnet restore ./BlazorApp.csproj
+
+# Convert appsettings.json to appsettings.Docker.json
+WORKDIR /web-app
+COPY Makefile .
+COPY web-app/BlazorApp/appsettings.json ./BlazorApp/appsettings.json
+RUN make docker-appsettings
+WORKDIR /web-app/BlazorApp
+RUN mv appsettings.Docker.json appsettings.json
+
+# Copy source code
+COPY web-app/BlazorApp ./BlazorApp/
+RUN dotnet publish ./BlazorApp/BlazorApp.csproj -c Release -o /web-app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
-WORKDIR /app
-ENV ASPNETCORE_URLS=http://+:5000
-COPY --from=build /app/publish .
+
+# Configure connection string
+ENV ASPNETCORE_URLS=http://+:5055
+
+# Run the app using dotnet
+COPY --from=build /web-app/publish .
 ENTRYPOINT ["dotnet", "BlazorApp.dll"]

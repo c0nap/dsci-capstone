@@ -1,20 +1,30 @@
-# Use a small python base, pin a minor version for reproducibility
+# Use a small python base, include the minor version for reproducibility
 FROM python:3.12-slim
 
-WORKDIR /app
+# Enable relative paths - helpful name for container's root folder
+WORKDIR /pipeline
+
 # Make Python stdout/stderr unbuffered so logs show immediately
 ENV PYTHONUNBUFFERED=1
 
-# Install system deps if any (keep minimal)
+# Install compilation dependencies, some Python packages may need these
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency list first to leverage build cache
 COPY requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application source
-COPY . .
+# Copy source code into thetainer (see .dockerignore)
+COPY src .
+COPY tests .
+COPY components .
+COPY datasets .
+
+# Merge host .env + .env.docker into /pipeline/.env
+COPY .env .
+COPY Makefile .
+RUN make docker-env
+RUN mv .env.docker .env
 
 # default command (change to your module path)
 CMD ["python", "-m", "src.main"]

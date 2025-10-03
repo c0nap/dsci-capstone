@@ -4,11 +4,9 @@ Data Science Capstone - Patrick Conan
 
 ### Introduction
 
-Docker can be used to run both the Python pipeline and Blazor Server simultaneously without juggling multiple entry points. The recommended setup installs Docker into WSL so our existing connection strings don't change. We also provide instructions for Docker Desktop, which is the typical solution but makes networking slightly more complex (must configure `.env.docker`).
+Docker can be used to run both the Python pipeline and Blazor Server simultaneously without juggling multiple entry points. The recommended setup installs Docker into WSL so our existing connection strings don't change. We also provide instructions for Docker Desktop, which is the typical solution but makes networking slightly more complex for this project (must configure `.env.docker` in addition to `.env`).
 
 ### Installing Docker in WSL (Ubuntu)
-
-See also: Neo4j installation
 
 1. Install prerequisites `apt-transport-https`, `curl`, `gnupg`, and `lsb-release`.
 
@@ -28,13 +26,13 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o 
 
 3. Add the Docker Community Edition repository
 
-By default, Ubuntu only knows about its own repos. Adding the Docker repo is like specifying which warehouse has the Docker software. Without it, apt won’t find the `docker-ce` package.
-
-This uses `lsb_release` to automatically fill in the URL with your Ubuntu version.
+By default, Ubuntu only knows about its own repos. Adding the Docker repo is like specifying which warehouse has the Docker software. Without it, apt won’t find `docker-ce` and related packages.
 
 ```bash
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
 ```
+
+This uses `lsb_release` to automatically fill in the URL with your Ubuntu version.
 
 4. Run `apt update` after adding the repo
 
@@ -72,8 +70,13 @@ docker compose version
 
 ### Installing Docker Desktop
 
+1. Download the Docker GUI app from the official (downloads page)[https://docs.docker.com/desktop/setup/install/windows-install/] or from Microsoft Store.
+
+2. Installation settings: Use WSL instead of Hyper-V, and disable legacy Windows containers (all containers are Linux-based in this project; even the Blazor app can be compiled this way).
+
+3. (Optional) Create a Docker account on their (website)[https://docs.docker.com/accounts/create-account/], open Docker Desktop, and sign in.
+
 ### Local Environment Settings
 
 This project uses `.env` (in conjunction with `.env.example` for WSL-centric connection strings, and `/web-app/BlazorApp/appsettings.json` (in conjunction with `appsettings.example.json`) for Windows-facing networking.
 
-The CLI version of Docker

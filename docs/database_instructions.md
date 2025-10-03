@@ -61,7 +61,7 @@ sudo apt install -y wget gnupg apt-transport-https
 Apt refuses to install packages from unknown sources. The GPG key tells apt to trust packages signed by Neo4j.
 
 ```bash
-wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo apt-key add -
+wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/neo4j-archive-keyring.gpg
 ```
 
 3. Add the Neo4j repository
@@ -69,7 +69,7 @@ wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo apt-key add -
 By default, Ubuntu only knows about Canonical’s repos. Adding the Neo4j repo is like specifying which warehouse has the Neo4j software. Without it, apt won’t find the `neo4j` package.
 
 ```bash
-echo "deb https://debian.neo4j.com stable 5" | sudo tee /etc/apt/sources.list.d/neo4j.list
+echo "deb [signed-by=/usr/share/keyrings/neo4j-archive-keyring.gpg] https://debian.neo4j.com stable 5" | sudo tee /etc/apt/sources.list.d/neo4j.list
 ```
 
 4. Run `apt update` after adding the repo
@@ -134,3 +134,14 @@ telnet <ip> 7687
 ```
 
 8. To allow HTTP requests from WSL to reach Blazor app, find local IP from PowerShell with `ipconfig`, and test the connection from WSL using `curl http://<local_ip>:5055/metrics`. In Blazor, listening for all IPs is generally unsafe, so Windows Firewall may try to block it. Allowing only on Private networks is fine. If you press Cancel accidentally and need to reverse it, open Windows Firewall -> Inbound Rules, and allow BlazorApp.
+
+
+### Network Hostnames Table
+
+| **Service Location**    | Docker Desktop (Windows) | docker-ce (WSL) |
+|-------------------------|--------------------------|-----------------|
+| **Native Windows**      | `host.docker.internal`   | `OS_LOCAL_IP`   |
+| **Native WSL**          | `WSL_LOCAL_IP`           | `localhost`     |
+| **Parallel Container**  | `service_name`           | `service_name`  |
+| **External Container**  | `WSL_LOCAL_IP`           | `OS_LOCAL_IP`   |
+| **Same Container**      | `localhost`              | `localhost`     |

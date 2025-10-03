@@ -41,20 +41,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.blazor
-    volumes:
-      - ./appsettings.Docker.json:/app/appsettings.Docker.json
     environment:
       - DOTNET_ENVIRONMENT=Docker
     ports:
-      - "5000:5000"
+      - "5055:5055"
 
   python:
     build:
       context: .
       dockerfile: Dockerfile.python
-    env_file:
-      - .env        # primary (used for manual runs)
-      - .env.docker # overrides for container runs (last wins)
 
 
 # global declarations - easier to manage, back up, or reuse across containers.
