@@ -172,26 +172,19 @@ To run tests instead of the full pipeline, append your command to the end to ove
 ```bash
 docker run --name container-python -it dsci-cap-img-python:latest pytest .
 ```
+- `-p 5055:5055` → must be used if the container wants to listen on a specific port.
+- `-d` → detach the container from the current shell (no logs).
 
-Our makefile simplifies this process by hard-coding these commands:
+Our makefile simplifies this process by hard-coding helpful commands:
 ```bash
-make docker-python [optional_command]
+make docker-python CMD="optional_command"
 ```
 ```bash
-make docker-test
+make docker-test     # Runs pytests instead of full pipeline
 ```
 ```bash
-make docker-blazor
+make docker-blazor   # Starts the Blazor Server
 ```
-
-
-```bash
-make docker-all
-```
-```bash
-make docker-all-dbs
-```
-
 
 #### 3. List containers or images
 ```bash
@@ -211,7 +204,7 @@ docker rmi dsci-cap-img-python:latest
 
 Instead of manually compiling & running individual Docker images, we can use Docker Compose to start several containers from pre-downloaded images.
 
-The default Python and Blazor container images are listed here so you can load our pre-configured environments into Docker.
+The default Python and Blazor container images are listed here so you can load our pre-configured environments into Docker via `ghcr.io/c0nap/image_name`.
 - `dsci-cap-img-python:latest`
 - `dsci-cap-img-blazor:latest`
 
@@ -220,25 +213,38 @@ These images can be downloaded from our GitHub Container Registry. Additional in
 <details>
   <summary><h4>Uploading a container image to GHCR</h4></summary>
 
-2. Start the database service.
 ```bash
-sudo service mysql start
+echo $GITHUB_TOKEN | docker login ghcr.io -u yourusername --password-stdin
 ```
+
+Send my image to the `c0nap` namespace:
+```bash
+docker push ghcr.io/c0nap/dsci-cap-img-blazor:latest
+```
+
+This is not linked to my repository by default.
 
 </details>
 
 
-#### 1. Download a Docker container image
+#### 1. Download the Docker container images
 ```bash
 docker pull ghcr.io/c0nap/dsci-cap-img-python:latest
 ```
-
+```bash
+docker pull ghcr.io/c0nap/dsci-cap-img-blazor:latest
+```
 
 #### 3. Run multiple containers together
 
 #### 
 
-
+```bash
+make docker-all
+```
+```bash
+make docker-all-dbs
+```
 
 
 

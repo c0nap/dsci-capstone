@@ -53,4 +53,11 @@ app.MapRazorComponents<App>()
 app.MapControllers();
 app.MapHub<MetricsHub>("/metricshub");
 
+// Debug for connection string target hostnames
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+var connStrings = app.Configuration.GetSection("ConnectionStrings").GetChildren();
+foreach (var cs in connStrings)  {
+    logger.LogInformation("Connecting to {Key} using connection string {Value}", cs.Key, cs.Value);
+}
+
 app.Run();

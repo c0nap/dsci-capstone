@@ -1,3 +1,6 @@
+# Connect the generated Docker image to this repository
+LABEL org.opencontainers.image.source="https://github.com/c0nap/dsci-capstone"
+
 # Use a small python base, include the minor version for reproducibility
 FROM python:3.12-slim
 
@@ -13,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 # Copy dependency list first to leverage build cache
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN apt-get update && apt-get install -y --no-install-recommends pandoc && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends pandoc make && rm -rf /var/lib/apt/lists/*
 
 
 # Copy source code into the container (optional .dockerignore)

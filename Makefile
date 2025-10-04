@@ -48,6 +48,44 @@ db-start-local:
 
 
 
+
+.PHONY: docker-python docker-test docker-blazor
+
+###############################################################################
+# Re-builds the Python container and runs it in the current shell.
+# Accepts optional entry-point override.
+###############################################################################
+docker-python:
+	# remove the container if it exists; silence errors if it doesn’t
+	docker rm -f container-python 2>/dev/null || true
+	# build image from dockerfile
+	docker build -f Dockerfile.python -t dsci-cap-img-python:latest .
+	# start in interactive mode, with optional arg
+	docker run --name container-python -it dsci-cap-img-python:latest $(CMD)
+
+# Runs pytest in a new Docker container
+docker-test:
+	make docker-python CMD="pytest ."
+
+# Starts the Blazor Server in a new Docker container
+docker-blazor:
+	# remove the container if it exists; silence errors if it doesn’t
+	docker rm -f container-blazor 2>/dev/null || true
+	# build image from dockerfile
+	docker build -f Dockerfile.blazor -t dsci-cap-img-blazor:latest .
+	# start container in same window
+	docker run --name container-blazor -p 5055:5055 dsci-cap-img-blazor:latest
+
+# Starts the Blazor Server in a new Docker container (detached)
+docker-blazor-silent:
+	# remove the container if it exists; silence errors if it doesn’t
+	docker rm -f container-blazor 2>/dev/null || true
+	# build image from dockerfile
+	docker build -f Dockerfile.blazor -t dsci-cap-img-blazor:latest .
+	# start container detached, so we can continue using this shell
+	docker run --name container-blazor -d -p 5055:5055 dsci-cap-img-blazor:latest
+
+
 # Helper functions used by the Dockerfiles
 # 	- Generates .env.docker and appsettings.Docker.json for containerized deployments
 # 	- Uses values from .env to swap hostnames inside Docker containers
