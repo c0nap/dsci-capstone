@@ -1,6 +1,66 @@
 version: "3.9"
 services:
-  db:
+
+  # Python backend container
+  python_service:
+    container_name: container-python
+    image: dsci-cap-img-python:latest
+    build:    # Fall back to building from scratch if image does not exist
+      context: .
+      dockerfile: Dockerfile.python
+
+  # Blazor server container, exposes port for HTTP and REST
+  blazor_service:
+    container_name: container-blazor
+    image: dsci-cap-img-blazor:latest
+    build:    # Fall back to building from scratch if image does not exist
+      context: .
+      dockerfile: Dockerfile.blazor
+    environment:
+      - DOTNET_ENVIRONMENT=Docker
+    ports:
+      - "5055:5055"
+
+
+  # Meta-service to orchestrate all DB containers at once
+  databases_service:
+    container_name: container-databases
+    image: alpine   # extremely small OS
+    command: ["sleep", "infinity"]
+    depends_on:
+      - mysql_service
+      - postgres_service
+      - mongo_service
+      - neo4j_service
+      
+
+  # MySQL container, volume persists data, port optional
+  mysql_service:
+    container_name: container-mysql
+    networks:      # DB containers will listen on this hostname for convenient access
+      default:     # attach to the default Compose network
+        aliases:   # does not replace service_name
+          - databases_service
+    image: mysql:8
+    env_file:
+      - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  # Postgres container, volume persists data, port optional
+  postgres_service:
+    container_name: container-postgres
+    networks:      # DB containers will listen on this hostname for convenient access
+      default:     # attach to the default Compose network
+        aliases:   # does not replace service_name
+          - databases_service
     image: postgres:15
     env_file:
       - .env
@@ -11,9 +71,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432" # optional: only if you want host access
+      - "5432:5432"
 
-  mongo:
+  # MongoDB container, volume persists data, port optional
+  mongo_service:
+    container_name: container-mongo
+    networks:      # DB containers will listen on this hostname for convenient access
+      default:     # attach to the default Compose network
+        aliases:   # does not replace service_name
+          - databases_service
     image: mongo:6
     env_file: 
       - .env
@@ -25,36 +91,27 @@ services:
     ports:
       - "27017:27017"
 
-  neo4j:
+  # Neo4j container, exposes HTTP and Bolt ports for UI and app connections
+  neo4j_service:
+    container_name: container-neo4j
+    networks:      # DB containers will listen on this hostname for convenient access
+      default:     # attach to the default Compose network
+        aliases:   # does not replace service_name
+          - databases_service
     image: neo4j:5
     env_file:
       - .env
     environment:
-      - NEO4J_AUTH=${NEO4J_AUTH} # format: neo4j/password
+      - NEO4J_AUTH=${NEO4J_AUTH}   # format: neo4j/password
     volumes:
       - neo4j_data:/data
     ports:
-      - "7474:7474"
-      - "7687:7687"
-
-  blazor:
-    build:
-      context: .
-      dockerfile: Dockerfile.blazor
-    environment:
-      - DOTNET_ENVIRONMENT=Docker
-    ports:
-      - "5055:5055"
-
-  python:
-    build:
-      context: .
-      dockerfile: Dockerfile.python
+      - "7474:7474"   # HTTP web UI
+      - "7687:7687"   # Bolt protocol for queries
 
 
-# global declarations - easier to manage, back up, or reuse across containers.
-# references the volume names created & used by each container above.
 volumes:
+  mysql_data:
   postgres_data:
   mongo_data:
   neo4j_data:

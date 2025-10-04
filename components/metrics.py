@@ -1,4 +1,6 @@
 import requests
+import os
+from dotenv import load_dotenv
 
 # Read environment variables at compile time
 load_dotenv(".env")

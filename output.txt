@@ -1,3 +1,40 @@
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker rm container-python
+container-python
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker build -f Dockerfile.python -t dsci-cap-img-python:latest .
+[+] Building 18.7s (20/20) FINISHED                                                                      docker:default
+ => [internal] load build definition from Dockerfile.python                                                        0.1s
+ => => transferring dockerfile: 1.09kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.5s
+ => [auth] library/python:pull token for registry-1.docker.io                                                      0.0s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 79B                                                                                   0.0s
+ => [ 1/14] FROM docker.io/library/python:3.12-slim@sha256:47ae396f09c1303b8653019811a8498470603d7ffefc29cb07c88f  0.0s
+ => => resolve docker.io/library/python:3.12-slim@sha256:47ae396f09c1303b8653019811a8498470603d7ffefc29cb07c88f1f  0.0s
+ => [internal] load build context                                                                                  0.3s
+ => => transferring context: 3.15kB                                                                                0.3s
+ => CACHED [ 2/14] WORKDIR /pipeline                                                                               0.0s
+ => CACHED [ 3/14] RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /va  0.0s
+ => CACHED [ 4/14] COPY requirements.txt .                                                                         0.0s
+ => CACHED [ 5/14] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
+ => [ 6/14] RUN apt-get update && apt-get install -y --no-install-recommends pandoc && rm -rf /var/lib/apt/lists/  8.5s
+ => [ 7/14] COPY src/ src/                                                                                         0.1s
+ => [ 8/14] COPY tests/ tests/                                                                                     0.1s
+ => [ 9/14] COPY components/ components/                                                                           0.1s
+ => [10/14] COPY datasets/ datasets/                                                                               0.1s
+ => [11/14] COPY .env .                                                                                            0.1s
+ => [12/14] COPY Makefile .                                                                                        0.0s
+ => [13/14] RUN make docker-env                                                                                    0.4s
+ => [14/14] RUN mv .env.docker .env                                                                                0.5s
+ => exporting to image                                                                                             7.7s
+ => => exporting layers                                                                                            6.3s
+ => => exporting manifest sha256:090846255c0a013301b250734645deca93159749d466ffcd31798daa16b8bda4                  0.0s
+ => => exporting config sha256:9de9bf1ce3769c7d502fdcc40df5618f8aefe7f817fcdae77205098bccd3a39c                    0.0s
+ => => exporting attestation manifest sha256:388cfe612fdf13893a8426a6988a31bb5d8107227a34a58efb5875046152e54b      0.0s
+ => => exporting manifest list sha256:89e28ab3914b2e73be253d8e0c88c4370025a1528f919120f670cf4b8e89696f             0.0s
+ => => naming to docker.io/library/dsci-cap-img-python:latest                                                      0.0s
+ => => unpacking to docker.io/library/dsci-cap-img-python:latest                                                   1.3s
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker run --name container-python -it dsci-cap-img-python:latest /bin/sh
+# python -m src.main
 
 
 ==================================================
@@ -5,174 +42,223 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 
 === STORY SUMMARY ===
 Total chunks: 254
+tokenizer_config.json: 1.23kB [00:00, 5.65MB/s]
+vocab.json: 798kB [00:00, 18.2MB/s]
+merges.txt: 456kB [00:00, 24.9MB/s]
+tokenizer.json: 1.36MB [00:00, 35.6MB/s]
+added_tokens.json: 100%|███████████████████████████████████████████████████████████████| 123/123 [00:00<00:00, 1.29MB/s]
+special_tokens_map.json: 100%|█████████████████████████████████████████████████████████| 344/344 [00:00<00:00, 3.69MB/s]
+config.json: 1.42kB [00:00, 8.71MB/s]
+model.safetensors: 100%|███████████████████████████████████████████████████████████| 1.63G/1.63G [01:10<00:00, 23.1MB/s]
 
 Chunk details:
-  index: Chunk(len=1451, book=2, chapter=8, story=1, lines=[1624,1648], story%=24.856, chapter%=61.577)
+  index: Chunk(len=1465, book=2, chapter=13, story=1, lines=[4035,4062], story%=62.552, chapter%=8.275)
 
-Without an instant’s hesitation the four children turned and ran back along the forest path; the only pause was Anthea’s. She stood back to let Cyril pass, because he was carrying the Lamb, who screamed with delight. (He had not whooping-coughed a single once since the carpet landed him on the island.)
-‘Gee-up, Squirrel; gee-gee,’ he shouted, and Cyril did gee-up. The path was a shorter cut to the beach than the creeper-covered way by which they had come, and almost directly they saw through the trees the shining blue-and-gold-and-opal of sand and sea.
-‘Stick to it,’ cried Cyril, breathlessly.
-They did stick to it; they tore down the sands—they could hear behind them as they ran the patter of feet which they knew, too well, were copper-coloured.
-The sands were golden and opal-coloured—and BARE. There were wreaths of tropic seaweed, there were rich tropic shells of the kind you would not buy in the Kentish Town Road under at least fifteen pence a pair. There were turtles basking lumpily on the water’s edge—but no cook, no clothes, and no carpet.
-‘On, on! Into the sea!’ gasped Cyril. ‘They MUST hate water. I’ve—heard—savages always—dirty.’
-Their feet were splashing in the warm shallows before his breathless words were ended. The calm baby-waves were easy to go through. It is warm work running for your life in the tropics, and the coolness of the water was delicious. They were up to their arm-pits now, and Jane was up to her chin.
+His voice was drowned in a wild burst of mewing and squeaking. And as soon as it died down all four children began to explain at once; and though the squeaking and mewing were not at their very loudest, yet there was quite enough of both to make it very hard for the policeman to understand a single word of any of the four wholly different explanations now poured out to him.
+‘Stow it,’ he said at last. ‘I’m a-goin’ into the next room in the execution of my duty. I’m a-goin’ to use my eyes—my ears have gone off their chumps, what with you and them cats.’
+And he pushed Robert aside, and strode through the door.
+‘Don’t say I didn’t warn you,’ said Robert.
+‘It’s tigers REALLY,’ said Jane. ‘Father said so. I wouldn’t go in, if I were you.’
+But the policeman was quite stony; nothing any one said seemed to make any difference to him. Some policemen are like this, I believe. He strode down the passage, and in another moment he would have been in the room with all the cats and all the rats (musk), but at that very instant a thin, sharp voice screamed from the street outside—
+‘Murder—murder! Stop thief!’
+The policeman stopped, with one regulation boot heavily poised in the air.
+‘Eh?’ he said.
+And again the shrieks sounded shrilly and piercingly from the dark street outside.
+‘Come on,’ said Robert. ‘Come and look after cats while somebody’s being killed outside.’ For Robert had an inside feeling that told him quite plainly WHO it was that was screaming.
 
 NLP output:
-('Anthea', 'part of', 'four children')
-('Cyril', 'owner of', 'Lamb')
-('Lamb', 'owned by', 'Cyril')
+('Mowing', 'subclass of', 'squeaking')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'William Shakespeare', 'author')
+('author', 'William Shakespeare', 'Cymbeline')
+('author', 'author', 'William Shakespeare')
+('Cymbeline', 'author', 'William Shakespeare')
+('William Shakespeare', 'William Shakespeare', 'author')
+('Cymbeline', 'Cymbeline', 'notable work')
+('notable work', 'William Shakespeare', 'Cymbeline')
+('author', 'author', 'William Shakespeare')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Cymbeline', 'author')
+('I’m a-goin’ into the next room', 'instance of', 'execution of my duty')
+('I’m a-goin’ to use my eyes—my ears have gone off their chumps', 'has cause', 'cats')
+('cats', 'has effect', 'I’m a-goin’ to use my eyes—my ears have gone off their chumps')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('Don’t say I didn’t warn you', 'author', 'Robert')
+('tiger', 'said to be the same as', 'REALLY')
+('REALLY', 'said to be the same as', 'tiger')
+('Father', 'said to be the same as', 'Father said so')
+('Father said so', 'said to be the same as', 'Father')
+('I wouldn’t go in', 'said to be the same as', 'I were you')
+('I were you', 'said to be the same as', 'I wouldn’t go in')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('followed by', 'George Orwell', 'Nineteen Eighty-Four')
+('author', 'follows', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'George Orwell')
+('police', 'has part', 'policeman')
+('Murder', 'has cause', 'murder')
+('Murder', 'has effect', 'Murder')
+('Stop thief!', 'main subject', 'thief')
+('Tony Blair', 'position held', 'Prime Minister')
+('Eh?', 'different from Eh', 'Eh')
+('different from', 'Eh?', 'Eh')
+('2008 Summer Olympics', 'point in time', '2008')
+("St. Paul's Cathedral", 'located in the administrative territorial entity', 'London')
+('London', 'capital of', 'England')
+('England', 'capital', 'London')
+('Robert', 'child', 'Robert')
+('Robert', 'father', 'Robert')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
 ('Nineteen Eighty-Four', 'author', 'Orwell')
-('Gee-up, Squirrel; gee-gee,’ he shouted', 'performer', 'Cyril')
-('beach', 'part of', 'sea')
-('Stick to it', 'author', 'Cyril')
-('copper-coloured', 'facet of', 'feet')
-('opal', 'subclass of', 'golden')
-('Town Road', 'located in the administrative territorial entity', 'Kentish')
-('no clothes', 'different from', 'carpet')
-('carpet', 'different from', 'no clothes')
-('On', 'followed by', 'On, on!')
-('On, on!', 'follows', 'On')
-('Into the sea!', 'main subject', 'sea')
-('Gasped', 'author', 'Cyril')
-('water', 'said to be the same as', 'MUST hate water')
-('MUST hate water', 'said to be the same as', 'water')
-('I’ve—heard—savages always—dirty', 'has part', 'I’ve—heard—savages always—dirty')
-('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
-('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
-('Henry Wadsworth Longfellow', 'notable work', 'The Merchant of Venice')
-('The Merchant of Venice', 'author', 'Henry Wadsworth Longfellow')
-('baby-waves', 'subclass of', 'calm')
-('tropical', 'has part', 'tropics')
-('tropics', 'subclass of', 'tropical')
-('Jane', 'instance of', 'arm-pits')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('Anthea', 'part of', 'four children')
-('Cyril', 'owner of', 'Lamb')
-('Lamb', 'owned by', 'Cyril')
+('Mowing', 'subclass of', 'squeaking')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'William Shakespeare', 'author')
+('author', 'William Shakespeare', 'Cymbeline')
+('author', 'author', 'William Shakespeare')
+('Cymbeline', 'author', 'William Shakespeare')
+('William Shakespeare', 'William Shakespeare', 'author')
+('Cymbeline', 'Cymbeline', 'notable work')
+('notable work', 'William Shakespeare', 'Cymbeline')
+('author', 'author', 'William Shakespeare')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Cymbeline', 'author')
+('I’m a-goin’ into the next room', 'instance of', 'execution of my duty')
+('I’m a-goin’ to use my eyes—my ears have gone off their chumps', 'has cause', 'cats')
+('cats', 'has effect', 'I’m a-goin’ to use my eyes—my ears have gone off their chumps')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('Don’t say I didn’t warn you', 'author', 'Robert')
+('tiger', 'said to be the same as', 'REALLY')
+('REALLY', 'said to be the same as', 'tiger')
+('Father', 'said to be the same as', 'Father said so')
+('Father said so', 'said to be the same as', 'Father')
+('I wouldn’t go in', 'said to be the same as', 'I were you')
+('I were you', 'said to be the same as', 'I wouldn’t go in')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('followed by', 'George Orwell', 'Nineteen Eighty-Four')
+('author', 'follows', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'George Orwell')
+('police', 'has part', 'policeman')
+('Murder', 'has cause', 'murder')
+('Murder', 'has effect', 'Murder')
+('Stop thief!', 'main subject', 'thief')
+('Tony Blair', 'position held', 'Prime Minister')
+('Eh?', 'different from Eh', 'Eh')
+('different from', 'Eh?', 'Eh')
+('2008 Summer Olympics', 'point in time', '2008')
+("St. Paul's Cathedral", 'located in the administrative territorial entity', 'London')
+('London', 'capital of', 'England')
+('England', 'capital', 'London')
+('Robert', 'child', 'Robert')
+('Robert', 'father', 'Robert')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
 ('Nineteen Eighty-Four', 'author', 'Orwell')
-('Gee-up, Squirrel; gee-gee,’ he shouted', 'performer', 'Cyril')
-('beach', 'part of', 'sea')
-('Stick to it', 'author', 'Cyril')
-('copper-coloured', 'facet of', 'feet')
-('opal', 'subclass of', 'golden')
-('Town Road', 'located in the administrative territorial entity', 'Kentish')
-('no clothes', 'different from', 'carpet')
-('carpet', 'different from', 'no clothes')
-('On', 'followed by', 'On, on!')
-('On, on!', 'follows', 'On')
-('Into the sea!', 'main subject', 'sea')
-('Gasped', 'author', 'Cyril')
-('water', 'said to be the same as', 'MUST hate water')
-('MUST hate water', 'said to be the same as', 'water')
-('I’ve—heard—savages always—dirty', 'has part', 'I’ve—heard—savages always—dirty')
-('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
-('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
-('Henry Wadsworth Longfellow', 'notable work', 'The Merchant of Venice')
-('The Merchant of Venice', 'author', 'Henry Wadsworth Longfellow')
-('baby-waves', 'subclass of', 'calm')
-('tropical', 'has part', 'tropics')
-('tropics', 'subclass of', 'tropical')
-('Jane', 'instance of', 'arm-pits')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
 
 And here is the original text:
-Without an instant’s hesitation the four children turned and ran back along the forest path; the only pause was Anthea’s. She stood back to let Cyril pass, because he was carrying the Lamb, who screamed with delight. (He had not whooping-coughed a single once since the carpet landed him on the island.)
-‘Gee-up, Squirrel; gee-gee,’ he shouted, and Cyril did gee-up. The path was a shorter cut to the beach than the creeper-covered way by which they had come, and almost directly they saw through the trees the shining blue-and-gold-and-opal of sand and sea.
-‘Stick to it,’ cried Cyril, breathlessly.
-They did stick to it; they tore down the sands—they could hear behind them as they ran the patter of feet which they knew, too well, were copper-coloured.
-The sands were golden and opal-coloured—and BARE. There were wreaths of tropic seaweed, there were rich tropic shells of the kind you would not buy in the Kentish Town Road under at least fifteen pence a pair. There were turtles basking lumpily on the water’s edge—but no cook, no clothes, and no carpet.
-‘On, on! Into the sea!’ gasped Cyril. ‘They MUST hate water. I’ve—heard—savages always—dirty.’
-Their feet were splashing in the warm shallows before his breathless words were ended. The calm baby-waves were easy to go through. It is warm work running for your life in the tropics, and the coolness of the water was delicious. They were up to their arm-pits now, and Jane was up to her chin.
+His voice was drowned in a wild burst of mewing and squeaking. And as soon as it died down all four children began to explain at once; and though the squeaking and mewing were not at their very loudest, yet there was quite enough of both to make it very hard for the policeman to understand a single word of any of the four wholly different explanations now poured out to him.
+‘Stow it,’ he said at last. ‘I’m a-goin’ into the next room in the execution of my duty. I’m a-goin’ to use my eyes—my ears have gone off their chumps, what with you and them cats.’
+And he pushed Robert aside, and strode through the door.
+‘Don’t say I didn’t warn you,’ said Robert.
+‘It’s tigers REALLY,’ said Jane. ‘Father said so. I wouldn’t go in, if I were you.’
+But the policeman was quite stony; nothing any one said seemed to make any difference to him. Some policemen are like this, I believe. He strode down the passage, and in another moment he would have been in the room with all the cats and all the rats (musk), but at that very instant a thin, sharp voice screamed from the street outside—
+‘Murder—murder! Stop thief!’
+The policeman stopped, with one regulation boot heavily poised in the air.
+‘Eh?’ he said.
+And again the shrieks sounded shrilly and piercingly from the dark street outside.
+‘Come on,’ said Robert. ‘Come and look after cats while somebody’s being killed outside.’ For Robert had an inside feeling that told him quite plainly WHO it was that was screaming.
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s": "Anthea", "r": "part of", "o": "four children"},
-  {"s": "Cyril", "r": "owner of", "o": "Lamb"},
-  {"s": "Lamb", "r": "owned by", "o": "Cyril"},
-  {"s": "George Orwell", "r": "notable work", "o": "Nineteen Eighty-Four"},
-  {"s": "Nineteen Eighty-Four", "r": "author", "o": "Orwell"},
-  {"s": "Cyril", "r": "shouted", "o": "Gee-up, Squirrel; gee-gee"},
-  {"s": "Cyril", "r": "said", "o": "Stick to it"},
-  {"s": "feet", "r": "were", "o": "copper-coloured"},
-  {"s": "no clothes", "r": "present in", "o": "the scene"},
-  {"s": "carpet", "r": "present in", "o": "the scene"},
-  {"s": "Anthea", "r": "paused", "o": "to let Cyril pass"},
-  {"s": "Anthea", "r": "stood back to let", "o": "Cyril pass"},
-  {"s": "Cyril", "r": "carried", "o": "the Lamb"},
-  {"s": "Lamb", "r": "screamed with delight", "o": "delight"},
-  {"s": "carpet", "r": "landed", "o": "Lamb on the island"},
-  {"s": "On", "r": "followed by", "o": "On, on!"},
-  {"s": "On, on!", "r": "follows", "o": "On"},
-  {"s": "Into the sea!", "r": "main subject", "o": "sea"},
-  {"s": "Cyril", "r": "gasped", "o": "Into the sea!"},
-  {"s": "water", "r": "said to be the same as", "o": "MUST hate water"},
-  {"s": "MUST hate water", "r": "said to be the same as", "o": "water"},
-  {"s": "baby-waves", "r": "described as", "o": "calm"},
-  {"s": "sand", "r": "were", "o": "golden and opal-coloured"},
-  {"s": "turtles", "r": "basked on", "o": "water's edge"},
-  {"s": "they", "r": "were up to their arm-pits in", "o": "water"},
-  {"s": "Jane", "r": "was up to", "o": "her chin in water"}
+  {"s": "His voice", "r": "was drowned in", "o": "a wild burst of mewing and squeaking"},
+  {"s": "the four children", "r": "began to explain at once", "o": "to the policeman"},
+  {"s": "the squeaking and mewing", "r": "were not", "o": "at their very loudest"},
+  {"s": "the policeman", "r": "couldn't understand", "o": "a single word of any of the four explanations"},
+  {"s": "policeman", "r": "said", "o": "Stow it"},
+  {"s": "policeman", "r": "said", "o": "I'm a-goin' into the next room in the execution of my duty"},
+  {"s": "policeman", "r": "said", "o": "I'm a-goin' to use my eyes—my ears have gone off their chumps, what with you and them cats"},
+  {"s": "policeman", "r": "pushed", "o": "Robert aside"},
+  {"s": "policeman", "r": "strode", "o": "through the door"},
+  {"s": "Robert", "r": "said", "o": "Don't say I didn't warn you"},
+  {"s": "Jane", "r": "said", "o": "It's tigers REALLY"},
+  {"s": "Jane", "r": "said", "o": "Father said so. I wouldn't go in, if I were you"},
+  {"s": "policeman", "r": "stood", "o": "stony; nothing anyone said seemed to make any difference to him"},
+  {"s": "policeman", "r": "strode down", "o": "the passage toward the room with all the cats and all the rats"},
+  {"s": "street outside", "r": "screamed", "o": "Murder—murder! Stop thief!"},
+  {"s": "policeman", "r": "stopped", "o": "with one regulation boot heavily poised in the air"},
+  {"s": "policeman", "r": "said", "o": "Eh?"},
+  {"s": "Robert", "r": "had", "o": "an inside feeling that told him quite plainly who it was that was screaming"}
 ]
 
 ==================================================
 
 
 Valid JSON
-Anthea part of four children
-Cyril owner of Lamb
-Lamb owned by Cyril
-George Orwell notable work Nineteen Eighty-Four
-Nineteen Eighty-Four author Orwell
-Cyril shouted Gee-up, Squirrel; gee-gee
-Cyril said Stick to it
-feet were copper-coloured
-no clothes present in the scene
-carpet present in the scene
-Anthea paused to let Cyril pass
-Anthea stood back to let Cyril pass
-Cyril carried the Lamb
-Lamb screamed with delight delight
-carpet landed Lamb on the island
-On followed by On, on!
-On, on! follows On
-Into the sea! main subject sea
-Cyril gasped Into the sea!
-water said to be the same as MUST hate water
-MUST hate water said to be the same as water
-baby-waves described as calm
-sand were golden and opal-coloured
-turtles basked on water's edge
-they were up to their arm-pits in water
-Jane was up to her chin in water
+His voice was drowned in a wild burst of mewing and squeaking
+the four children began to explain at once to the policeman
+the squeaking and mewing were not at their very loudest
+the policeman couldn't understand a single word of any of the four explanations
+policeman said Stow it
+policeman said I'm a-goin' into the next room in the execution of my duty
+policeman said I'm a-goin' to use my eyes—my ears have gone off their chumps, what with you and them cats
+policeman pushed Robert aside
+policeman strode through the door
+Robert said Don't say I didn't warn you
+Jane said It's tigers REALLY
+Jane said Father said so. I wouldn't go in, if I were you
+policeman stood stony; nothing anyone said seemed to make any difference to him
+policeman strode down the passage toward the room with all the cats and all the rats
+street outside screamed Murder—murder! Stop thief!
+policeman stopped with one regulation boot heavily poised in the air
+policeman said Eh?
+Robert had an inside feeling that told him quite plainly who it was that was screaming
 
 Most relevant nodes:
-  node_name  edge_count
-0     Cyril           6
-1      Lamb           3
-2     water           3
+   node_name  edge_count
+0  policeman           9
+1     Robert           2
+2       Jane           2
 
 Triples which best represent the graph:
-Cyril gasped Into_the_sea_
-Cyril carried the_Lamb
-Cyril said Stick_to_it
-Cyril shouted Gee_up__Squirrel__gee_gee
-Cyril owner_of Lamb
-Lamb screamed_with_delight delight
-Lamb owned_by Cyril
-water said_to_be_the_same_as MUST_hate_water
+policeman said Eh_
+policeman stopped with_one_regulation_boot_heavily_poised_in_the_air
+policeman strode_down the_passage_toward_the_room_with_all_the_cats_and_all_the_rats
+policeman stood stony__nothing_anyone_said_seemed_to_make_any_difference_to_him
+policeman strode through_the_door
+policeman pushed Robert_aside
+policeman said I_m_a_goin__to_use_my_eyes_my_ears_have_gone_off_their_chumps__what_with_you_and_them_cats
+policeman said I_m_a_goin__into_the_next_room_in_the_execution_of_my_duty
+policeman said Stow_it
+Robert had an_inside_feeling_that_told_him_quite_plainly_who_it_was_that_was_screaming
+Robert said Don_t_say_I_didn_t_warn_you
+Jane said Father_said_so__I_wouldn_t_go_in__if_I_were_you
+Jane said It_s_tigers_REALLY
 
 
 Generated summary:
-Cyril gasped as he went into the sea and carried a Lamb that he owns. The Lamb screamed with delight. Cyril affirmed his ownership of the Lamb, urged someone to “Stick to it,” and shouted “Gee up, Squirrel, gee-gee.”
+A policeman, impatient and determined, moves down a passage toward a room described as housing all the cats and all the rats. He stops with a boot raised, pushes Robert aside, and then strides through the door, declaring he will enter the next room to perform his duty and telling everyone to stop talking. Robert senses who is screaming and warns, "Don't say I didn't warn you." Jane says Father said not to go in and adds, "It's tigers, really."
+Sending payload to Blazor at http://172.30.48.1:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Cyril gasped as he went into the sea and carried a Lamb that he owns. The Lamb screamed with delight. Cyril affirmed his ownership of the Lamb, urged someone to “Stick to it,” and shouted “Gee up, Squirrel, gee-gee.”', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'A policeman, impatient and determined, moves down a passage toward a room described as housing all the cats and all the rats. He stops with a boot raised, pushes Robert aside, and then strides through the door, declaring he will enter the next room to perform his duty and telling everyone to stop talking. Robert senses who is screaming and warns, "Don\'t say I didn\'t warn you." Jane says Father said not to go in and adds, "It\'s tigers, really."', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
 
 Output sent to web app.
+# exit

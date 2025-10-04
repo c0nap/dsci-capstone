@@ -13,12 +13,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 # Copy dependency list first to leverage build cache
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && apt-get install -y --no-install-recommends pandoc && rm -rf /var/lib/apt/lists/*
 
-# Copy source code into thetainer (see .dockerignore)
-COPY src .
-COPY tests .
-COPY components .
-COPY datasets .
+
+# Copy source code into the container (optional .dockerignore)
+COPY src/ src/
+COPY tests/ tests/
+COPY components/ components/
+COPY datasets/ datasets/
+
 
 # Merge host .env + .env.docker into /pipeline/.env
 COPY .env .
@@ -26,5 +29,5 @@ COPY Makefile .
 RUN make docker-env
 RUN mv .env.docker .env
 
-# default command (change to your module path)
+# default command
 CMD ["python", "-m", "src.main"]

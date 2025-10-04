@@ -83,6 +83,19 @@ detect_system() {
 endef
 
 ###############################################################################
+# Detect whether Make is running in a Docker container
+###############################################################################
+define detect_container_fn
+detect_container() {
+	if [ -f /.dockerenv ] || grep -qa docker /proc/1/cgroup 2>/dev/null || grep -qa /docker/ /proc/self/mountinfo 2>/dev/null; then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+endef
+
+###############################################################################
 # Classify a hostname into a table row category; see map_service()
 ###############################################################################
 define classify_value_fn
@@ -90,12 +103,22 @@ classify_value() {
 	val="$$1"
 	os_ip="$$2"
 	wsl_ip="$$3"
+	in_container="$$4"
+	runtime="$$5"  # WSL or OS
+	
 	if [ "$$val" = "$$os_ip" ]; then
 		echo "Native OS"
 	elif [ "$$val" = "$$wsl_ip" ]; then
 		echo "Native WSL"
 	elif [ "$$val" = "localhost" ] || [ "$$val" = "127.0.0.1" ]; then
-		echo "Same Container"
+		# localhost means different things depending on where WE are running
+		if [ "$$in_container" = "false" ]; then
+			echo "Same Container"
+		elif [ "$$runtime" = "WSL" ]; then
+			echo "Native WSL"
+		else
+			echo "Native OS"
+		fi
 	elif echo "$$val" | grep -Eq '^[A-Za-z0-9_-]+$$'; then
 		echo "Parallel Container"
 	else
@@ -132,17 +155,14 @@ choose_mode() {
 endef
 
 ###############################################################################
-# Map a classification to the appropriate hostname based on column
+# Map a hostname based on a given value and row / column labels
 # Matches reference mapping table:
-# | Service Location    | Docker Desktop (desktop) | docker-ce (ce) |
+# | Service Location    | Docker Desktop (desktop) | docker-ce (ce)  |
 # | Native OS           | host.docker.internal     | OS_LOCAL_IP     |
-# | Native WSL          | WSL_LOCAL_IP             | localhost       |
+# | Native WSL          | WSL_LOCAL_IP             | WSL_LOCAL_IP    |
 # | Parallel Container  | service_name             | service_name    |
 # | External Container  | WSL_LOCAL_IP             | OS_LOCAL_IP     |
 # | Same Container      | localhost                | localhost       |
-###############################################################################
-###############################################################################
-# Map a classification to the appropriate hostname based on column
 ###############################################################################
 define map_service_fn
 map_service() {
@@ -163,7 +183,7 @@ map_service() {
 			if [ "$$mode" = "desktop" ]; then
 				echo "$$wsl_ip"
 			else
-				echo "localhost"
+				echo "$$wsl_ip"
 			fi
 			;;
 		"Parallel Container")
@@ -235,6 +255,7 @@ endef
 .PHONY: docker-detect
 docker-detect:
 	$(detect_system_fn)
+	$(detect_container_fn)
 	$(classify_value_fn)
 	$(choose_mode_fn)
 	@if [ ! -f "$(ENV_FILE)" ]; then \
@@ -246,13 +267,14 @@ docker-detect:
 	PY_SIDE=$$(awk -F= '/^PYTHON_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
 	BLAZ_SIDE=$$(awk -F= '/^BLAZOR_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
 	RUNTIME=$$(detect_system); \
+	IN_CONTAINER=$$(detect_container); \
 	if [ "$$PY_SIDE" = "OS" ] || [ "$$PY_SIDE" = "WSL" ]; then \
 		MODE=$$(choose_mode "$$RUNTIME" "$$PY_SIDE"); \
 	else \
 		PY_SIDE=UNKNOWN; \
 		MODE=$$(choose_mode "$$RUNTIME" "$$PY_SIDE"); \
 	fi; \
-	echo "Runtime: $$RUNTIME | PYTHON_SIDE: $$PY_SIDE | Column: $$MODE"; \
+	echo "Runtime: $$RUNTIME  |  PYTHON_SIDE: $$PY_SIDE  |  Column: $$MODE  |  In Container: $$IN_CONTAINER"; \
 	if [ "$(VERBOSE)" = "1" ]; then \
 		echo "	OS_LOCAL_IP=$$OS_IP, WSL_LOCAL_IP=$$WSL_IP"; \
 		echo "	detect_system says this container is running on $$RUNTIME"; \
@@ -276,6 +298,7 @@ docker-detect:
 .PHONY: docker-env
 docker-env:
 	$(detect_system_fn)
+	$(detect_container_fn)
 	$(classify_value_fn)
 	$(choose_mode_fn)
 	$(map_service_fn)
@@ -291,6 +314,7 @@ docker-env:
 	fi; \
 	PY_SIDE=$$(awk -F= '/^PYTHON_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
 	RUNTIME=$$(detect_system); \
+	IN_CONTAINER=$$(detect_container); \
 	if [ "$$PY_SIDE" = "OS" ] || [ "$$PY_SIDE" = "WSL" ]; then \
 		MODE=$$(choose_mode "$$RUNTIME" "$$PY_SIDE"); \
 	else \
@@ -312,7 +336,7 @@ docker-env:
 		# Resolve IP variables (e.g., ${OS_LOCAL_IP}) in the value \
 		VAL=$$(printf '%s' "$$VAL_RAW" | sed "s/\$${OS_LOCAL_IP}/$$OS_IP/g; s/\$${WSL_LOCAL_IP}/$$WSL_IP/g; s/\$$OS_LOCAL_IP/$$OS_IP/g; s/\$$WSL_LOCAL_IP/$$WSL_IP/g"); \
 		\
-		CLASS=$$(classify_value "$$VAL" "$$OS_IP" "$$WSL_IP"); \
+		CLASS=$$(classify_value "$$VAL" "$$OS_IP" "$$WSL_IP" "$$IN_CONTAINER" "$$RUNTIME"); \
 		MAPPED=$$(map_service "$$VAL" "$$CLASS" "$$MODE" "$$OS_IP" "$$WSL_IP"); \
 		\
 		if [ "$$MAPPED" = "**UNKNOWN**" ]; then \
@@ -368,6 +392,7 @@ docker-appsettings:
 	PY_SIDE=$$(awk -F= '/^PYTHON_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
 	BLAZ_SIDE=$$(awk -F= '/^BLAZOR_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
 	RUNTIME=$$(detect_system); \
+	IN_CONTAINER=$$(detect_container); \
 	\
 	if [ "$$BLAZ_SIDE" != "OS" ] && [ "$$BLAZ_SIDE" != "WSL" ]; then \
 		echo "ERROR: BLAZOR_SIDE must be 'WSL' or 'OS' (got $$BLAZ_SIDE)"; \
@@ -417,7 +442,7 @@ docker-appsettings:
 		JSON_HOST_VAL=$$(printf "%s" "$$JSON_HOST" | sed "s/\$${OS_LOCAL_IP}/$$OS_IP/g; s/\$${WSL_LOCAL_IP}/$$WSL_IP/g; s/\$$OS_LOCAL_IP/$$OS_IP/g; s/\$$WSL_LOCAL_IP/$$WSL_IP/g"); \
 		\
 		# 5. Choose the correct row in the hostname conversion table
-		ENV_CLASS=$$(classify_value "$$ENV_HOST_VAL" "$$OS_IP" "$$WSL_IP"); \
+		ENV_CLASS=$$(classify_value "$$ENV_HOST_VAL" "$$OS_IP" "$$WSL_IP" "$$IN_CONTAINER" "$$RUNTIME"); \
 		if [ "$$BLAZ_SIDE" != "$$PY_SIDE" ] && [ "$$ENV_CLASS" = "Same Container" ]; then \
 			# Manually override 
 			ENV_CLASS="Native $$PY_SIDE"; \
