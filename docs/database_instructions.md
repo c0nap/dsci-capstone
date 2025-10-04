@@ -136,12 +136,16 @@ telnet <ip> 7687
 8. To allow HTTP requests from WSL to reach Blazor app, find local IP from PowerShell with `ipconfig`, and test the connection from WSL using `curl http://<local_ip>:5055/metrics`. In Blazor, listening for all IPs is generally unsafe, so Windows Firewall may try to block it. Allowing only on Private networks is fine. If you press Cancel accidentally and need to reverse it, open Windows Firewall -> Inbound Rules, and allow BlazorApp.
 
 
-### Network Hostnames Table
+### Hostname Resolution
 
-| **Service Location**    | Docker Desktop (Windows) | docker-ce (WSL) |
-|-------------------------|--------------------------|-----------------|
-| **Native Windows**      | `host.docker.internal`   | `OS_LOCAL_IP`   |
-| **Native WSL**          | `WSL_LOCAL_IP`           | `localhost`     |
-| **Parallel Container**  | `service_name`           | `service_name`  |
-| **External Container**  | `WSL_LOCAL_IP`           | `OS_LOCAL_IP`   |
-| **Same Container**      | `localhost`              | `localhost`     |
+For a comprehensive guide on how to configure your `.env` values to work across Docker containers, please use our Hostname Reference Table in the [Docker Guide](docs/docker_setup.md).
+
+
+### Makefile Commands
+
+#### db-start-local
+Start only the `localhost` databases specified in `.env`
+```bash
+make db-start-local
+```
+
