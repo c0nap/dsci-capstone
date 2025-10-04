@@ -1,8 +1,12 @@
 import requests
 
+# Read environment variables at compile time
+load_dotenv(".env")
+
 # REST API endpoint
-# TODO: move to .env
-url = "http://172.30.48.1:5055/api/metrics"
+SYS = os.getenv("BLAZOR_SIDE")
+HOST = os.getenv(f"{SYS}_LOCAL_IP")
+url = f"http://{HOST}:5055/api/metrics"
 
 
 def generate_default_metrics(
@@ -83,6 +87,7 @@ def create_summary_payload(book_id, book_title, summary, metrics=None):
 def post_payload(payload):
     """Verify and post any given payload using the requests API."""
     try:
+        print(f"Sending payload to Blazor at {url}")
         response = requests.post(url, json=payload)
 
         if response.ok:  # handles 200–299
