@@ -1,8 +1,8 @@
-# Connect the generated Docker image to this repository
-LABEL org.opencontainers.image.source="https://github.com/c0nap/dsci-capstone"
-
 # multi-stage build: build with sdk, run with runtime
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+
+# Connect the generated Docker image to this repository
+LABEL org.opencontainers.image.source="https://github.com/c0nap/dsci-capstone"
 
 # Enable relative paths - helpful name for container's root folder
 WORKDIR /web-app/BlazorApp

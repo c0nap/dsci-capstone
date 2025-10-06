@@ -85,6 +85,22 @@ docker-blazor-silent:
 	# start container detached, so we can continue using this shell
 	docker run --name container-blazor -d -p 5055:5055 dsci-cap-img-blazor:latest
 
+# Pulls the latest container images from GHCR
+docker-pull:
+	docker pull ghcr.io/c0nap/dsci-cap-img-python:latest
+	docker pull ghcr.io/c0nap/dsci-cap-img-blazor:latest
+
+# Build the latest container images and attempt to push to this repository (wont work until authenticated using `docker login`)
+docker-publish:
+	# Python: build, tag, push
+	docker build -f Dockerfile.python -t dsci-cap-img-python:latest .
+	docker tag dsci-cap-img-python:latest ghcr.io/c0nap/dsci-cap-img-python:latest
+	docker push ghcr.io/c0nap/dsci-cap-img-python:latest
+	# Blazor: build, tag, push
+	docker build -f Dockerfile.blazor -t dsci-cap-img-blazor:latest .
+	docker tag dsci-cap-img-blazor:latest ghcr.io/c0nap/dsci-cap-img-blazor:latest
+	docker push ghcr.io/c0nap/dsci-cap-img-blazor:latest
+
 
 # Helper functions used by the Dockerfiles
 # 	- Generates .env.docker and appsettings.Docker.json for containerized deployments

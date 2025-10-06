@@ -213,16 +213,37 @@ These images can be downloaded from our GitHub Container Registry. Additional in
 <details>
   <summary><h4>Uploading a container image to GHCR</h4></summary>
 
+1. Generate a GitHub token (classic) by visiting https://github.com/settings/tokens
+
+2. Authenticate to GHCR (once). When prompted, enter your key as the password.
 ```bash
-echo $GITHUB_TOKEN | docker login ghcr.io -u yourusername --password-stdin
+docker login ghcr.io -u c0nap
 ```
 
-Send my image to the `c0nap` namespace:
+3. Images are not linked to this repository by default, so add the following line to Dockerfiles:
+```
+# Connect the generated Docker image to this repository
+LABEL org.opencontainers.image.source="https://github.com/c0nap/dsci-capstone"
+```
+
+4. Use the provided `make docker-publish`, or alternatively follow the remaining steps for each image.
+
+5. Re-build your image after changing the Dockerfile:
 ```bash
 docker push ghcr.io/c0nap/dsci-cap-img-blazor:latest
 ```
 
-This is not linked to my repository by default.
+6. Tag your container image so docker knows where to upload it
+```bash
+docker tag dsci-cap-img-python:latest ghcr.io/c0nap/dsci-cap-img-python:latest
+```
+
+7. Send your image to the `c0nap` namespace:
+```bash
+docker push ghcr.io/c0nap/dsci-cap-img-blazor:latest
+```
+
+
 
 </details>
 
