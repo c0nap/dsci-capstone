@@ -86,14 +86,15 @@ class DatabaseConnector(Connector):
         self.database_name = None
         ## URI of the database connection: syntax is engine://username:password@host:port/database.
         self.connection_string = None
+        ## Whether to use the database name in the connection string.
+        self._route_db_name = None
         ## Whether to print debug messages.
         self.verbose = verbose
 
-    def configure(self, DB: str, database_name: str, route_db_name: bool = True):
+    def configure(self, DB: str, database_name: str):
         """Read connection settings from the .env file.
         @param DB  The prefix of fetched database credentials.
         @param database_name  The name of the database to connect to.
-        @param route_db_name  Whether to use the database name in the connection string.
         """
         self.db_type = DB
         # The .env file contains multiple credentials.
@@ -104,15 +105,15 @@ class DatabaseConnector(Connector):
         self.host = os.getenv(f"{DB}_HOST")
         self.port = os.getenv(f"{DB}_PORT")
         # Condense the above variables into a connection string
-        self.change_database(database_name, route_db_name)
+        self.change_database(database_name)
 
-    def change_database(self, new_database: str, route_db_name: bool = True):
+    def change_database(self, new_database: str):
         """Update the connection URI to reference a different database in the same engine.
         @param new_database  The name of the database to connect to.
-        @param route_db_name  Whether to use the database name in the connection string.
+        @param _route_db_name  Whether to use the database name in the connection string.
         """
         self.database_name = new_database
-        if route_db_name:
+        if self._route_db_name:
             self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
         else:
             self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}"
@@ -227,9 +228,13 @@ class RelationalConnector(DatabaseConnector):
         @param default_database  The name of a database which always accepts connections.
         """
         super().__init__(verbose)
+        self._route_db_name = True
+        """@brief  Whether to use the database name in the connection string.
+        @note  MySQL and PostgreSQL both ask for this. We avoided using databases that don't fit this pattern."""
         engine = os.getenv("DB_ENGINE")
-        database = os.getenv("DB_NAME")  # blank "" for Neo4j
+        database = os.getenv("DB_NAME")
         super().configure(engine, database)
+
         self._specific_queries = specific_queries
         """@brief  Hard-coded queries which depend in the specific engine, and cannot be abstracted with SQLAlchemy.
         @note  This is set by derived classes e.g. 'mysqlConnector' for lanugage-sensitive syntax."""
