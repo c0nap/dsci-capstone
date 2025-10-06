@@ -67,21 +67,21 @@ class Session:
         """Sanity check for Neo4j GraphConnector."""
         # Test connection to default "database" (really just a database_id)
         default_database = "default"  # Neo4j community doesn’t have real DBs
-        self.graph_db.change_database(default_database)
+        self.graph_db.change_database(default_database, False)
         self.graph_db.test_connection()
         if self.verbose:
             print()
 
         # Test connection to working database ".env/DB_NAME" (stored as database_id)
         working_database = os.getenv("DB_NAME")
-        self.graph_db.change_database(working_database)
+        self.graph_db.change_database(working_database, False)
         already_exists = self.graph_db.test_connection(print_results=self.verbose)
 
         # Ensures the working database was created (pseudo)
         if not already_exists:
-            self.graph_db.change_database(default_database)
+            self.graph_db.change_database(default_database, False)
             self.graph_db.create_database(working_database)
-            self.graph_db.change_database(working_database)
+            self.graph_db.change_database(working_database, False)
             self.graph_db.test_connection(print_results=self.verbose)
 
         # Test database management explicitly

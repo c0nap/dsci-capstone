@@ -6,8 +6,7 @@ from dotenv import load_dotenv
 load_dotenv(".env")
 
 # REST API endpoint
-SYS = os.getenv("BLAZOR_SIDE")
-HOST = os.getenv(f"{SYS}_LOCAL_IP")
+HOST = os.getenv(f"BLAZOR_HOST")
 url = f"http://{HOST}:5055/api/metrics"
 
 

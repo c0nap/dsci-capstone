@@ -267,11 +267,29 @@ make docker-all
 make docker-all-dbs
 ```
 
+Delete all images
+```bash
+docker rmi -f $(docker images -aq)
+```
+
+```bash
+docker logs <container_name>
+```
 
 
+```bash
+docker network ls
+docker ps -a
+docker compose ps -a
+docker network ls | grep capstone
+docker inspect container-neo4j --format='{{range $net,$v := .NetworkSettings.Networks}}{{$net}} {{end}}'
 
+```
 
+NEO4J_HOST should remain as localhost even when swapping between python native WSL and in container.
 
+Docker Compose service_name
+Docker container-name
 
 
 

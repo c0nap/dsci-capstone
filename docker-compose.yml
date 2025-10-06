@@ -1,9 +1,10 @@
-version: "3.9"
 services:
 
   # Python backend container
   python_service:
     container_name: container-python
+    networks:
+      - default
     image: dsci-cap-img-python:latest
     build:    # Fall back to building from scratch if image does not exist
       context: .
@@ -12,6 +13,8 @@ services:
   # Blazor server container, exposes port for HTTP and REST
   blazor_service:
     container_name: container-blazor
+    networks:
+      - default
     image: dsci-cap-img-blazor:latest
     build:    # Fall back to building from scratch if image does not exist
       context: .
@@ -29,7 +32,7 @@ services:
     command: ["sleep", "infinity"]
     depends_on:
       - mysql_service
-      - postgres_service
+      - postgres_service  # redundant with mysql but no downside - use makefile to launch only one
       - mongo_service
       - neo4j_service
       
@@ -38,16 +41,14 @@ services:
   mysql_service:
     container_name: container-mysql
     networks:      # DB containers will listen on this hostname for convenient access
-      default:     # attach to the default Compose network
+      default:     # attach to our docker network
         aliases:   # does not replace service_name
           - databases_service
     image: mysql:8
-    env_file:
-      - .env
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_ROOT_PASSWORD=password   # not used, but required by MySQL installation
+      - MYSQL_DATABASE=${DB_NAME}
+      #- MYSQL_USER=${MYSQL_USERNAME}   # cannot be root
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
@@ -58,16 +59,14 @@ services:
   postgres_service:
     container_name: container-postgres
     networks:      # DB containers will listen on this hostname for convenient access
-      default:     # attach to the default Compose network
+      default:     # attach to our docker network
         aliases:   # does not replace service_name
           - databases_service
     image: postgres:15
-    env_file:
-      - .env
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_USER=${POSTGRES_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -77,14 +76,12 @@ services:
   mongo_service:
     container_name: container-mongo
     networks:      # DB containers will listen on this hostname for convenient access
-      default:     # attach to the default Compose network
+      default:     # attach to our docker network
         aliases:   # does not replace service_name
           - databases_service
     image: mongo:6
-    env_file: 
-      - .env
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
     volumes:
       - mongo_data:/data/db
@@ -95,14 +92,12 @@ services:
   neo4j_service:
     container_name: container-neo4j
     networks:      # DB containers will listen on this hostname for convenient access
-      default:     # attach to the default Compose network
+      default:     # attach to our docker network
         aliases:   # does not replace service_name
           - databases_service
     image: neo4j:5
-    env_file:
-      - .env
     environment:
-      - NEO4J_AUTH=${NEO4J_AUTH}   # format: neo4j/password
+      - NEO4J_AUTH=${NEO4J_USERNAME}/${NEO4J_PASSWORD}   # format: "username/password"
     volumes:
       - neo4j_data:/data
     ports:
@@ -115,3 +110,8 @@ volumes:
   postgres_data:
   mongo_data:
   neo4j_data:
+
+
+networks:  # declare our docker network globally
+  default:
+    name: capstone_default    # otherwise docker will auto-generate the name as "<parent_folder> + _default"

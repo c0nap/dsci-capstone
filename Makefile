@@ -1,49 +1,46 @@
-.PHONY: up down logs python logs-python db shell-blazor
-up:
-	docker compose up -d
-
-down:
-	docker compose down
-
-db:
-	docker compose up -d db
-
-python:
-	docker compose up python
-
-logs:
-	docker compose logs -f
-
-logs-python:
-	docker compose logs -f python
-
-shell-blazor:
-	docker compose exec blazor sh
-
-prune:
-	docker system prune -f
-
-
+###############################################################################
+.PHONY: db-start-local db-start-docker
 DATABASES = MYSQL POSTGRES MONGO NEO4J
 DB_SERVICES = mysql postgresql mongod neo4j
 BLAZOR_DB_KEYS = MySql PostgreSql MongoDb Neo4j PythonApi
 
-###############################################################################
-# Start only the 'localhost' databases specified in .env
-###############################################################################
-.PHONY: db-start-local
+# Start only the 'localhost' databases in .env  (on native WSL)
 db-start-local:
-	@echo "=== Checking local databases... ==="
+	@echo "Checking .env for localhost databases..."
 	@i=0; \
 	for db in $(DATABASES); do \
-		host=$$(grep "^$${db}_HOST=" .env | cut -d= -f2 | tr -d '\r\n'); \
+		# Grab host from .env ignoring comments and empty lines
+		host=$$(grep -E "^[^#]*^$${db}_HOST=" .env | cut -d= -f2 | tr -d '\r\n'); \
 		service=$$(echo $(DB_SERVICES) | cut -d' ' -f$$((i+1))); \
+		# Only start if host is exactly localhost
 		if [ "$$host" = "localhost" ]; then \
 			echo "=== Starting $$db ($$service)... ==="; \
 			sudo service $$service start; \
+		else \
+			echo "[Skipping line $$db ($$host)]"; \
 		fi; \
 		i=$$((i+1)); \
 	done
+
+# Start only the '_service' databases in .env  (on docker-ce)
+db-start-docker:
+	@echo "Checking .env for Docker databases..."
+	@i=0; \
+	for db in $(DATABASES); do \
+		# Grab host from .env ignoring comments and empty lines
+		host=$$(grep -E "^[^#]*^$${db}_HOST=" .env | cut -d= -f2 | tr -d '\r\n'); \
+		service=$$(echo $(DB_SERVICES) | cut -d' ' -f$$((i+1))); \
+		# Only start if host ends with _service
+		if echo "$$host" | grep -q '_service$$'; then \
+			echo "=== Starting $$db via Docker ($$service)... ==="; \
+			make docker-$$service; \
+		else \
+			echo "[Skipping line $$db ($$host)]"; \
+		fi; \
+		i=$$((i+1)); \
+	done
+
+
 
 
 
@@ -58,49 +55,139 @@ db-start-local:
 docker-python:
 	# remove the container if it exists; silence errors if it doesn’t
 	docker rm -f container-python 2>/dev/null || true
-	# build image from dockerfile
-	docker build -f Dockerfile.python -t dsci-cap-img-python:latest .
-	# start in interactive mode, with optional arg
-	docker run --name container-python -it dsci-cap-img-python:latest $(CMD)
-
-# Runs pytest in a new Docker container
-docker-test:
-	make docker-python CMD="pytest ."
+	# create container with optional args and entrypoint
+	docker create --name container-python dsci-cap-img-python:latest $(CMD)
+	# add a secondary network to container (docker compose compatible) and apply service_name as alias
+	make docker-network   # if does not exist
+	docker network connect --alias python_service capstone_default container-python
+	# use interactive shell by default; attaches to container logs
+	docker start $(if $(DETACHED),, -a -i) container-python
 
 # Starts the Blazor Server in a new Docker container
 docker-blazor:
 	# remove the container if it exists; silence errors if it doesn’t
 	docker rm -f container-blazor 2>/dev/null || true
-	# build image from dockerfile
-	docker build -f Dockerfile.blazor -t dsci-cap-img-blazor:latest .
-	# start container in same window
-	docker run --name container-blazor -p 5055:5055 dsci-cap-img-blazor:latest
+	# create container with optional args. no entrypoint allowed because not viable for blazor
+	docker create --name container-blazor -p 5055:5055 dsci-cap-img-blazor:latest
+	# add a secondary network to container (docker compose compatible) and apply service_name as alias
+	make docker-network   # if does not exist
+	docker network connect --alias blazor_service capstone_default container-blazor
+	# use interactive shell by default; attaches to container logs
+	docker start $(if $(DETACHED),, -a -i) container-blazor
 
-# Starts the Blazor Server in a new Docker container (detached)
+# Recompile container images so any source code changes will apply
+docker-python-dev:
+	make docker-build-python
+	make docker-python
+docker-blazor-dev:
+	make docker-build-blazor
+	make docker-blazor
+
+# Runs pytest in a new Docker container (instead of pipeline)
+docker-test:
+	make docker-python CMD="pytest ."
+# Runs pytest, but shows Python print statements at the expense of formatting
+docker-test-raw:
+	make docker-python CMD="python -m pytest -s ."
+	
+# Starts container detached (no output) so we can continue using shell
 docker-blazor-silent:
-	# remove the container if it exists; silence errors if it doesn’t
-	docker rm -f container-blazor 2>/dev/null || true
-	# build image from dockerfile
-	docker build -f Dockerfile.blazor -t dsci-cap-img-blazor:latest .
-	# start container detached, so we can continue using this shell
-	docker run --name container-blazor -d -p 5055:5055 dsci-cap-img-blazor:latest
+	make docker-blazor DETACHED=1
+docker-python-silent:
+	make docker-python DETACHED=1
 
-# Pulls the latest container images from GHCR
+# Pulls the latest container images from GHCR, and gives them identical names to locally-generated images
 docker-pull:
+	make docker-pull-python
+	make docker-pull-blazor
+docker-pull-python:
+	# Python: pull, rename to local, and delete old names
 	docker pull ghcr.io/c0nap/dsci-cap-img-python:latest
+	docker tag ghcr.io/c0nap/dsci-cap-img-python:latest dsci-cap-img-python:latest
+	docker rmi ghcr.io/c0nap/dsci-cap-img-python:latest
+docker-pull-blazor:
+	# Blazor: pull, rename to local, and delete old names
 	docker pull ghcr.io/c0nap/dsci-cap-img-blazor:latest
+	docker tag ghcr.io/c0nap/dsci-cap-img-blazor:latest dsci-cap-img-blazor:latest
+	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor
+
+
+	
+	
+
+# Creates the images locally using the latest Dockerfiles (for development)
+docker-build:
+	make docker-build-python
+	make docker-build-blazor
+docker-build-python:
+	docker build -f Dockerfile.python -t dsci-cap-img-python:latest .
+docker-build-blazor:
+	docker build -f Dockerfile.blazor -t dsci-cap-img-blazor:latest .
 
 # Build the latest container images and attempt to push to this repository (wont work until authenticated using `docker login`)
 docker-publish:
-	# Python: build, tag, push
-	docker build -f Dockerfile.python -t dsci-cap-img-python:latest .
+	make docker-publish-python
+	make docker-publish-blazor
+docker-publish-python:
+	# Python: tag for GHCR & push
+	make docker-build-python
 	docker tag dsci-cap-img-python:latest ghcr.io/c0nap/dsci-cap-img-python:latest
 	docker push ghcr.io/c0nap/dsci-cap-img-python:latest
-	# Blazor: build, tag, push
-	docker build -f Dockerfile.blazor -t dsci-cap-img-blazor:latest .
+docker-publish-blazor:
+	# Blazor: tag for GHCR & push
 	docker tag dsci-cap-img-blazor:latest ghcr.io/c0nap/dsci-cap-img-blazor:latest
 	docker push ghcr.io/c0nap/dsci-cap-img-blazor:latest
 
+
+# Deploy everything to docker and run the full pipeline
+docker-all:
+	make docker-all-dbs
+	make docker-blazor
+	make docker-python
+
+# Deploy everything to docker, but only run pytests
+docker-all-tests:
+	make docker-all-dbs
+	make docker-blazor
+	make docker-test
+
+
+# Starts a relational database, a document database, and a graph database in their own Docker containers
+docker-all-dbs:
+	make docker-mongo
+	make docker-neo4j
+	MAIN_DB=$$(awk -F= '/^DB_ENGINE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
+	if [ "$$MAIN_DB" = "MYSQL" ]; then \
+		make docker-mysql
+	elif [ "$$MAIN_DB" = "POSTGRES" ]; then \
+		make docker-postgres
+	else \
+		echo "ERROR: Could not start relational DB_ENGINE; expected MYSQL or POSTGRES, but received $$MAIN_DB."; \
+		exit 1; \
+	fi
+# Run containers for individual databases
+docker-mysql:
+	docker compose up -d mysql_service
+docker-postgres:
+	docker compose up -d postgres_service
+docker-mongo:
+	docker compose up -d mongo_service
+docker-neo4j:
+	docker compose up -d neo4j_service
+
+	
+docker-network:
+	# if network doesn't exist:
+	docker network inspect capstone_default >/dev/null 2>&1 || \
+	# create a new docker network, and tag to ensure it plays nicely with docker compose
+	docker network create \
+		--label com.docker.compose.network=default \
+		--label com.docker.compose.project=capstone \
+		capstone_default
+
+#env-default:
+
+#env-dummy:
 
 # Helper functions used by the Dockerfiles
 # 	- Generates .env.docker and appsettings.Docker.json for containerized deployments
