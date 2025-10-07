@@ -291,8 +291,25 @@ NEO4J_HOST should remain as localhost even when swapping between python native W
 Docker Compose service_name
 Docker container-name
 
+MySQL conditional logic - avoid using `docker compose up mysql_service`
 
+Volumes save your MySQL credentials too. If you later change .env with a new user / password, you MUST delete the existing volume (deletes saved data) or manually change the root password in container-mysql.
 
+`docker exec` lets us run commands inside a container as if we were localhost
+
+List root users & hostnames
+```bash
+docker exec container-mysql mysql -uroot -pconanp -e "SELECT user,
+ host FROM mysql.user WHERE user='root';"
+```
+
+```bash
+docker exec container-mysql mysql -uroot -ppassword -e "SELECT 1;"
+```
+
+```bash
+docker volume rm $(docker volume ls -q | grep mysql)
+```
 
 The CLI version of Docker runs on WSL, so the normal hostnames and IPs specified in `.env` should still work. The Blazor app expects IPs relative to Windows by default, so `appsettings.json` is reconfigured for WSL deployment. Similarly, the containers from Docker Desktop run from Windows. This is fine for the Blazor app, but hostnames in `.env` must be fixed. This process is automated by `make docker-env` and `make docker-appsettings` in the provided Makefile.
 

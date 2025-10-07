@@ -149,3 +149,47 @@ Start only the `localhost` databases specified in `.env`
 make db-start-local
 ```
 
+
+## Network Security
+
+### Overview
+
+Since this project contains components running on different systems, we generally allow databases to listen for ANY incoming connection to their port (all network interfaces _i.e._ 0.0.0.0). As seen above, Neo4j on WSL must listen on 0.0.0.0 to accept queries from our Blazor app running on Windows.
+
+This problem will spread as we scale in future versions; a remote Blazor server could run on a different machine & different network, and still want access to our local Neo4j installation.
+
+### Risks
+
+- Modern private Wi-Fi routers use NAT by default: all incoming connections from external hosts will be rejected, unless we explicitly port-forward. Public networks (e.g. McDonalds free wifi) may not do this.
+
+- If an attacker knows your public IP address, your computer may be exposed on your network, allowing free access to send commands through any open ports.
+
+- Windows firewall will block external connections but only for services running on Windows. WSL and Docker containers do not have this same level of protection.
+
+- Database credentials may feel inconsequential, but short or common passwords are very easy to brute-force.
+
+- When an attacker gains access to a service running on your machine with elevated permissions, there are usually ways to compromise the host system - stealing sensitive data from Windows, installing external malware, or deleting your files.
+
+### Our Unsafe Practices
+
+- Some native WSL databases are configured to listen on 0.0.0.0 (Neo4j).
+
+- Some docker containers will not function unless configured to listen on 0.0.0.0 (MySQL, PostgreSQL, Neo4j, MongoDB).
+
+- When running databases with Docker Compose, databases sometimes block superuser permissions if their connection is external, even if their credentials are correct. Our Makefile elevates `root@'%'` (the remote root user) to address this.
+
+### Precautions & Mitigation
+
+1. Use unique, long, random passwords and avoid default usernames.
+
+2. Run the main pipeline from a secure, private network - so home, school, or work.
+
+3. Do not leave database services running on the background when unused, and consider rotating credentials.
+
+4. Avoid everyday use of superuser accounts (`root`, `postgres`, `neo4j`), even if your existing database installation is configured this way. Create a dedicated user for the app and grant only the permissions it needs.
+
+5. Optionally check `docker-compose.yml` and `Makefile` for `0.0.0.0` and remove them. It may still work depending on your configuration.
+
+6. Instead of allowing full access to out-of-network machines, use a VPN to connect with the secured network remotely.
+
+

@@ -46,10 +46,12 @@ services:
           - databases_service
     image: mysql:8
     environment:
-      - MYSQL_ROOT_PASSWORD=password   # not used, but required by MySQL installation
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}  # not typically used, but required by MySQL installation
       - MYSQL_DATABASE=${DB_NAME}
-      #- MYSQL_USER=${MYSQL_USERNAME}   # cannot be root
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+
+      # makefile will set these environment variables appropriately
+      - MYSQL_USER=${DOCKER_MYSQL_USER:-}  # problem: cannot be root
+      - MYSQL_PASSWORD=${DOCKER_MYSQL_PASSWORD:-}
     volumes:
       - mysql_data:/var/lib/mysql
     ports:

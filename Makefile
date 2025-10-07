@@ -86,6 +86,9 @@ docker-blazor-dev:
 # Runs pytest in a new Docker container (instead of pipeline)
 docker-test:
 	make docker-python CMD="pytest ."
+docker-test-dev:
+	make docker-build-python
+	make docker-test
 # Runs pytest, but shows Python print statements at the expense of formatting
 docker-test-raw:
 	make docker-python CMD="python -m pytest -s ."
@@ -167,15 +170,38 @@ docker-all-dbs:
 	fi
 # Run containers for individual databases
 docker-mysql:
+	# Compatibility to use an existing mysql installation with username=root
+	DOCKER_MYSQL_USER=$$(awk -F= '/^MYSQL_USERNAME=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
+	MYSQL_PASSWORD=$$(awk -F= '/^MYSQL_PASSWORD=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
+	if [ "$$DOCKER_MYSQL_USER" = "root" ]; then \
+		DOCKER_MYSQL_USER=""; \
+		DOCKER_MYSQL_PASSWORD=""; \
+	else \
+		DOCKER_MYSQL_PASSWORD=$$MYSQL_PASSWORD; \
+	fi
+	# Reassign these variables on the same line as docker compose; gives .yml the values
+	DOCKER_MYSQL_USER="$(DOCKER_MYSQL_USER)" \
+	DOCKER_MYSQL_PASSWORD="$(DOCKER_MYSQL_PASSWORD)" \
 	docker compose up -d mysql_service
+	# Elevate non-local superuser
+	if [ "$$DOCKER_MYSQL_USER" = "root" ]; then \
+		# Wait until MySQL is accepting connections
+		until docker exec mysql_service mysqladmin ping -uroot -p"$$MYSQL_PASSWORD" --silent; do sleep 1; done
+		# Elevate root and allow external root logins
+		docker exec mysql_service mysql -uroot -p"$$MYSQL_PASSWORD" \
+			-e "ALTER USER 'root'@'%' IDENTIFIED BY '$$MYSQL_PASSWORD'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;"
+	fi
 docker-postgres:
 	docker compose up -d postgres_service
 docker-mongo:
 	docker compose up -d mongo_service
 docker-neo4j:
 	docker compose up -d neo4j_service
-
 	
+	
+
+
+
 docker-network:
 	# if network doesn't exist:
 	docker network inspect capstone_default >/dev/null 2>&1 || \
