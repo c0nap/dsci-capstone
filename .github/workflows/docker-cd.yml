@@ -1,4 +1,4 @@
-name: Docker CD (Deploy)
+name: CD with Docker
 
 on:
   push:
@@ -31,11 +31,17 @@ jobs:
       - name: Install make
         run: sudo apt-get update && sudo apt-get install -y make
 
-      - name: Create .env file with fake credentials
-        run: make env-dummy
+      - name: Create secrets files with fake credentials
+        run: |
+          make env-dummy
+          make appsettings-dummy
+        # ORDER MATTERS ^
 
-      - name: Build latest Docker images
-        run: make docker-build
+      - name: Pull outdated Docker images
+        run: make docker-pull || true  # Speeds up the build process; true just in case images dont exist yet
+
+      - name: Build latest Docker images for production
+        run: make docker-build-prod
 
       - name: Run all containers and tests
         run: make docker-all-tests

@@ -32,6 +32,7 @@ vcs.xml
 # =========================================
 appsettings.json
 appsettings.Docker.json
+appsettings.Dummy.json
 appsettings.Development.json
 
 # =========================================

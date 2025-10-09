@@ -130,6 +130,7 @@ celerybeat.pid
 # Environments
 .env
 .env.docker
+.env.dummy
 .venv
 env/
 venv/

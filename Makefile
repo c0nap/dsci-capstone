@@ -1,3 +1,5 @@
+MAKEFLAGS += --no-print-directory
+
 ###############################################################################
 .PHONY: db-start-local db-start-docker
 DATABASES = MYSQL POSTGRES MONGO NEO4J
@@ -56,7 +58,7 @@ docker-python:
 	# remove the container if it exists; silence errors if it doesn’t
 	docker rm -f container-python 2>/dev/null || true
 	# create container with optional args and entrypoint
-	docker create --name container-python dsci-cap-img-python:latest $(CMD)
+	docker create --name container-python dsci-cap-img-python-dev:latest $(CMD)
 	# add a secondary network to container (docker compose compatible) and apply service_name as alias
 	make docker-network   # if does not exist
 	docker network connect --alias python_service capstone_default container-python
@@ -68,7 +70,7 @@ docker-blazor:
 	# remove the container if it exists; silence errors if it doesn’t
 	docker rm -f container-blazor 2>/dev/null || true
 	# create container with optional args. no entrypoint allowed because not viable for blazor
-	docker create --name container-blazor -p 5055:5055 dsci-cap-img-blazor:latest
+	docker create --name container-blazor -p 5055:5055 dsci-cap-img-blazor-dev:latest
 	# add a secondary network to container (docker compose compatible) and apply service_name as alias
 	make docker-network   # if does not exist
 	docker network connect --alias blazor_service capstone_default container-blazor
@@ -77,17 +79,17 @@ docker-blazor:
 
 # Recompile container images so any source code changes will apply
 docker-python-dev:
-	make docker-build-python
+	make docker-build-dev-python || exit 1  # Stop if build fails
 	make docker-python
 docker-blazor-dev:
-	make docker-build-blazor
+	make docker-build-dev-blazor || exit 1  # Stop if build fails
 	make docker-blazor
 
 # Runs pytest in a new Docker container (instead of pipeline)
 docker-test:
 	make docker-python CMD="pytest ."
 docker-test-dev:
-	make docker-build-python
+	make docker-build-dev-python
 	make docker-test
 # Runs pytest, but shows Python print statements at the expense of formatting
 docker-test-raw:
@@ -105,41 +107,74 @@ docker-pull:
 	make docker-pull-blazor
 docker-pull-python:
 	# Python: pull, rename to local, and delete old names
-	docker pull ghcr.io/c0nap/dsci-cap-img-python:latest
-	docker tag ghcr.io/c0nap/dsci-cap-img-python:latest dsci-cap-img-python:latest
-	docker rmi ghcr.io/c0nap/dsci-cap-img-python:latest
+	docker pull ghcr.io/c0nap/dsci-cap-img-python-prod:latest
+	docker tag ghcr.io/c0nap/dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
+	# Remove the GHCR tagged alias (keeps local image)
+	docker rmi ghcr.io/c0nap/dsci-cap-img-python-prod:latest
 docker-pull-blazor:
 	# Blazor: pull, rename to local, and delete old names
-	docker pull ghcr.io/c0nap/dsci-cap-img-blazor:latest
-	docker tag ghcr.io/c0nap/dsci-cap-img-blazor:latest dsci-cap-img-blazor:latest
-	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor
+	docker pull ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
+	docker tag ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
+	# Remove the GHCR tagged alias (keeps local image)
+	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
 
 
 	
 	
 
 # Creates the images locally using the latest Dockerfiles (for development)
-docker-build:
-	make docker-build-python
-	make docker-build-blazor
-docker-build-python:
-	docker build -f Dockerfile.python -t dsci-cap-img-python:latest .
-docker-build-blazor:
-	docker build -f Dockerfile.blazor -t dsci-cap-img-blazor:latest .
+docker-build-dev:
+	make docker-build-dev-python
+	make docker-build-dev-blazor
+docker-build-dev-python:
+	docker build -f Dockerfile.python \
+		--build-arg ENV_FILE=".env" \
+		-t dsci-cap-img-python-dev:latest .
+docker-build-dev-blazor:
+	docker build -f Dockerfile.blazor \
+		--build-arg ENV_FILE=".env" \
+		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.json \
+		-t dsci-cap-img-blazor-dev:latest .
 
-# Build the latest container images and attempt to push to this repository (wont work until authenticated using `docker login`)
+# DO NOT USE
+# Risks sharing secrets - these are for automatic CI/CD
+docker-build-prod:
+	make docker-build-prod-python
+	make docker-build-prod-blazor
+docker-build-prod-python:
+	make env-dummy  # Generates .env.dummy from .env.example
+	docker build -f Dockerfile.python \
+		--build-arg ENV_FILE=".env.dummy" \
+		-t dsci-cap-img-python-prod:latest .
+docker-build-prod-blazor:
+	make env-dummy  # Generates .env.dummy from .env.example
+	make appsettings-dummy  # Generates appsettings.Dummy.json from .env.dummy and appsettings.Example.json
+	docker build -f Dockerfile.blazor \
+		--build-arg ENV_FILE=".env.dummy" \
+		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.Dummy.json \
+		-t dsci-cap-img-blazor-prod:latest .
+
+# DO NOT USE
+# Builds the latest container images, and attempt to push to this repository
+# wont work until authenticated using 'docker login'
 docker-publish:
 	make docker-publish-python
 	make docker-publish-blazor
 docker-publish-python:
+	make docker-build-prod-python || exit 1  # Stop if build fails
 	# Python: tag for GHCR & push
-	make docker-build-python
-	docker tag dsci-cap-img-python:latest ghcr.io/c0nap/dsci-cap-img-python:latest
-	docker push ghcr.io/c0nap/dsci-cap-img-python:latest
+	docker tag dsci-cap-img-python-prod:latest ghcr.io/c0nap/dsci-cap-img-python-prod:latest
+	docker push ghcr.io/c0nap/dsci-cap-img-python-prod:latest
+	# Remove the GHCR tagged alias (keeps local image)
+	docker rmi ghcr.io/c0nap/dsci-cap-img-python-prod:latest
 docker-publish-blazor:
+	make docker-build-prod-blazor || exit 1  # Stop if build fails
 	# Blazor: tag for GHCR & push
-	docker tag dsci-cap-img-blazor:latest ghcr.io/c0nap/dsci-cap-img-blazor:latest
-	docker push ghcr.io/c0nap/dsci-cap-img-blazor:latest
+	docker tag dsci-cap-img-blazor-prod:latest ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
+	docker push ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
+	# Remove the GHCR tagged alias (keeps local image)
+	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
+
 
 
 # Deploy everything to docker and run the full pipeline
@@ -235,105 +270,194 @@ docker-full-reset:
 	@echo "== Full Docker cleanup complete - all containers, images, volumes, and networks removed! =="
 
 
-.PHONY: env-dummy env-dummy-credentials env-hosts-default env-hosts-dev env-hosts-docker
-env-dummy:
-	@echo "Checking for existing .env file..."
-	@if [ -f .env ]; then \
-		echo "found .env file, aborting..."; \
+.PHONY: appsettings-dummy appsettings-credentials appsettings-hosts-default appsettings-hosts-docker
+appsettings-dummy:
+	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}; \
+	ENV_FILE=$${ENVF-.env.dummy}; \
+	echo "Generating dummy appsettings from appsettings.Example.json -> $$OUT_FILE..."; \
+	if [ -f "$$OUT_FILE" ] && [ "$$OUT_FILE" != "web-app/BlazorApp/appsettings.Dummy.json" ]; then \
+		echo "$$OUT_FILE already exists, aborting..."; \
 		exit 1; \
 	else \
-		echo ".env does not exist, creating .env..."; \
-		cp .env.example .env
-	fi
-	make env-hosts-docker CONFIRM="y"
-	make env-dummy-credentials CONFIRM="y"
+		echo "$$OUT_FILE does not exist, copying..."; \
+		cp web-app/BlazorApp/appsettings.Example.json "$$OUT_FILE"; \
+	fi; \
+	make appsettings-hosts-docker CONFIRMED="y" OUT="$$OUT_FILE" ENVF="$$ENV_FILE"; \
+	make appsettings-credentials CONFIRMED="y" OUT="$$OUT_FILE" ENVF="$$ENV_FILE"
 
-env-hosts-default:
-	@echo "Your .env hostnames will be overwritten with our default values."
-	@if [ "$$CONFIRM" = "y" ] || [ "$$CONFIRM" = "Y" ]; then \
+appsettings-hosts-default:
+	$(replace_host_fn)
+	$(replace_json_value_fn)
+	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}; \
+	ENV_FILE=$${ENVF-.env.dummy}; \
+	echo "Your hostnames in $$OUT_FILE will be overwritten with our default values."; \
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
 		response="y"; \
 	else \
 		read -p "Continue? [y/N] " response; \
-	fi
+	fi; \
 	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
-		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' .env; \
-		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=OS/' .env; \
-		sed -i '/^[^#]*MYSQL_HOST=/s/=.*/=localhost/' .env; \
-		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=localhost/' .env; \
-		sed -i '/^[^#]*MONGO_HOST=/s/=.*/=localhost/' .env; \
-		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=localhost/' .env; \
-		sed -i '/^[^#]*BLAZOR_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' .env; \
-		echo "Replaced .env hostnames (default)."; \
+		WSL_IP=$$(awk -F= '/^WSL_LOCAL_IP=/{print $$2}' $$ENV_FILE | tr -d '\r'); \
+		replace_host_in_connstring "web-app/BlazorApp/appsettings.json" "ConnectionStrings.Neo4j" "$$WSL_IP"; \
+		echo "Replaced hostnames in appsettings.json (default)."; \
+	else \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+
+appsettings-hosts-docker:
+	$(replace_host_fn)
+	$(replace_json_value_fn)
+	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}; \
+	ENV_FILE=$${ENVF-.env.dummy}; \
+	echo "Your hostnames in $$OUT_FILE will be overwritten with Docker service names."; \
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
+		response="y"; \
+	else \
+		read -p "Continue? [y/N] " response; \
+	fi; \
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
+		replace_host_in_connstring "web-app/BlazorApp/appsettings.json" "ConnectionStrings.Neo4j" "neo4j_service"; \
+		echo "Replaced hostnames in $$OUT_FILE (full docker)."; \
+	else \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+
+appsettings-credentials:
+	$(replace_json_value_fn)
+	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}; \
+	ENV_FILE=$${ENVF-.env.dummy}; \
+	echo "Your usernames and passwords in $$OUT_FILE will be overwritten with values from $$ENV_FILE file."; \
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
+		response="y"; \
+	else \
+		read -p "Continue? [y/N] " response; \
+	fi; \
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
+		neo4j_user=$$(awk -F= '/^NEO4J_USERNAME=/{print $$2}' $$ENV_FILE | tr -d '\r'); \
+		replace_json_value "web-app/BlazorApp/appsettings.json" "Neo4j.Username" "$$neo4j_user"; \
+		neo4j_password=$$(awk -F= '/^NEO4J_PASSWORD=/{print $$2}' $$ENV_FILE | tr -d '\r'); \
+		replace_json_value "web-app/BlazorApp/appsettings.json" "Neo4j.Password" "$$neo4j_password"; \
+		echo "Replaced credentials in $$OUT_FILE with values from $$ENV_FILE"; \
+	else \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+
+
+.PHONY: env-dummy env-dummy-credentials env-hosts-default env-hosts-dev env-hosts-docker
+env-dummy:
+	OUT_FILE=$${OUT-.env.dummy}; \
+	echo "Generating dummy .env from .env.example -> $$OUT_FILE..."; \
+	if [ -f "$$OUT_FILE" ] && [ "$$OUT_FILE" != ".env.dummy" ]; then \
+		echo "$$OUT_FILE already exists, aborting..."; \
+		exit 1; \
+	else \
+		echo "$$OUT_FILE does not exist, copying..."; \
+		cp .env.example "$$OUT_FILE"; \
+	fi; \
+	make env-hosts-docker CONFIRMED="y" OUT="$$OUT_FILE"; \
+	make env-dummy-credentials CONFIRMED="y" OUT="$$OUT_FILE"
+
+env-hosts-default:
+	OUT_FILE=$${OUT-.env.dummy}; \
+	echo "Your $$OUT_FILE hostnames will be overwritten with our default values."; \
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
+		response="y"; \
+	else \
+		read -p "Continue? [y/N] " response; \
+	fi; \
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
+		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' $$OUT_FILE; \
+		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=OS/' $$OUT_FILE; \
+		sed -i '/^[^#]*MYSQL_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
+		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
+		sed -i '/^[^#]*MONGO_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
+		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
+		sed -i '/^[^#]*BLAZOR_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE; \
+		echo "Replaced hostnames (default) in $$OUT_FILE."; \
 	else \
 		echo "Aborted."; \
 		exit 1; \
 	fi
 
 env-hosts-dev:
-	@echo "Your .env hostnames will be overwritten with our development values."
-	@if [ "$$CONFIRM" = "y" ] || [ "$$CONFIRM" = "Y" ]; then \
+	OUT_FILE=$${OUT-.env.dummy}; \
+	echo "Your $$OUT_FILE hostnames will be overwritten with our development values."; \
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
 		response="y"; \
 	else \
 		read -p "Continue? [y/N] " response; \
-	fi
+	fi; \
 	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
-		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' .env; \
-		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=OS/' .env; \
-		sed -i '/^[^#]*MYSQL_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' .env; \
-		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=localhost/' .env; \
-		sed -i '/^[^#]*MONGO_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' .env; \
-		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=localhost/' .env; \
-		sed -i '/^[^#]*BLAZOR_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' .env; \
-		sed -i '/^[^#]*OS_LOCAL_IP=/s/=.*/=172.30.48.1/' .env; \
-		sed -i '/^[^#]*WSL_LOCAL_IP=/s/=.*/=172.30.63.202/' .env; \
-		echo "Replaced .env hostnames and local IPs (dev)."; \
+		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' $$OUT_FILE; \
+		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=OS/' $$OUT_FILE; \
+		sed -i '/^[^#]*MYSQL_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE; \
+		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
+		sed -i '/^[^#]*MONGO_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE; \
+		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
+		sed -i '/^[^#]*BLAZOR_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE; \
+		sed -i '/^[^#]*OS_LOCAL_IP=/s/=.*/=172.30.48.1/' $$OUT_FILE; \
+		sed -i '/^[^#]*WSL_LOCAL_IP=/s/=.*/=172.30.63.202/' $$OUT_FILE; \
+		echo "Replaced hostnames and local IPs (dev) in $$OUT_FILE."; \
 	else \
 		echo "Aborted."; \
 		exit 1; \
 	fi
 
 env-hosts-docker:
-	@echo "Your .env hostnames will be overwritten with Docker service names."
-	@if [ "$$CONFIRM" = "y" ] || [ "$$CONFIRM" = "Y" ]; then \
+	OUT_FILE=$${OUT-.env.dummy}; \
+	echo "Your $$OUT_FILE hostnames will be overwritten with Docker service names."; \
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
 		response="y"; \
 	else \
 		read -p "Continue? [y/N] " response; \
-	fi
+	fi; \
 	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
-		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' .env; \
-		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=WSL/' .env; \
-		sed -i '/^[^#]*MYSQL_HOST=/s/=.*/=mysql_service/' .env; \
-		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=postgres_service/' .env; \
-		sed -i '/^[^#]*MONGO_HOST=/s/=.*/=mongo_service/' .env; \
-		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=neo4j_service/' .env; \
-		sed -i '/^[^#]*BLAZOR_HOST=/s/=.*/=blazor_service/' .env; \
-		echo "Replaced .env hostnames (full docker)."; \
+		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' $$OUT_FILE; \
+		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=WSL/' $$OUT_FILE; \
+		sed -i '/^[^#]*MYSQL_HOST=/s/=.*/=mysql_service/' $$OUT_FILE; \
+		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=postgres_service/' $$OUT_FILE; \
+		sed -i '/^[^#]*MONGO_HOST=/s/=.*/=mongo_service/' $$OUT_FILE; \
+		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=neo4j_service/' $$OUT_FILE; \
+		sed -i '/^[^#]*BLAZOR_HOST=/s/=.*/=blazor_service/' $$OUT_FILE; \
+		echo "Replaced hostnames (full docker) in $$OUT_FILE."; \
 	else \
 		echo "Aborted."; \
 		exit 1; \
 	fi
 
 env-dummy-credentials:
-	@echo "Your .env usernames and passwords will be overwritten with placeholders."
-	@if [ "$$CONFIRM" = "y" ] || [ "$$CONFIRM" = "Y" ]; then \
+	OUT_FILE=$${OUT-.env.dummy}; \
+	echo "Your $$OUT_FILE usernames and passwords will be overwritten with placeholders."; \
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
 		response="y"; \
 	else \
 		read -p "Continue? [y/N] " response; \
-	fi
+	fi; \
 	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
-		sed -i '/^[^#]*MYSQL_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' .env; \
-		sed -i '/^[^#]*MYSQL_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' .env; \
-		sed -i '/^[^#]*POSTGRES_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' .env; \
-		sed -i '/^[^#]*POSTGRES_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' .env; \
-		sed -i '/^[^#]*MONGO_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' .env; \
-		sed -i '/^[^#]*MONGO_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' .env; \
-		sed -i '/^[^#]*NEO4J_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' .env; \
-		sed -i '/^[^#]*NEO4J_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' .env; \
-		echo "Replaced .env credentials (placeholder values)"; \
+		sed -i '/^[^#]*MYSQL_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE; \
+		sed -i '/^[^#]*MYSQL_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE; \
+		sed -i '/^[^#]*POSTGRES_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE; \
+		sed -i '/^[^#]*POSTGRES_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE; \
+		sed -i '/^[^#]*MONGO_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE; \
+		sed -i '/^[^#]*MONGO_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE; \
+		sed -i '/^[^#]*NEO4J_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE; \
+		sed -i '/^[^#]*NEO4J_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE; \
+		echo "Replaced credentials (placeholder values) in $$OUT_FILE"; \
 	else \
 		echo "Aborted."; \
 		exit 1; \
 	fi
+
+
+# Deletes temporary env and appsettings files (to avoid clutter)
+make rm-env-appsettings:
+	rm -f -v .env.dummy
+	rm -f -v .env.docker
+	rm -f -v web-app/BlazorApp/appsettings.Dummy.json
+	rm -f -v web-app/BlazorApp/appsettings.Docker.json
 
 
 # Helper functions used by the Dockerfiles
@@ -503,39 +627,45 @@ map_service() {
 endef
 
 ###############################################################################
+# Replace a value in a JSON file using a dotted path key
+# Usage: replace_json_value "file.json" "ConnectionStrings.Neo4j" "bolt://newhost:7687"
+# Supports nested keys with dot notation (e.g., "Neo4j.Username")
+###############################################################################
+define replace_json_value_fn
+replace_json_value() {
+	file="$$1"; \
+	key_path="$$2"; \
+	new_value="$$3"; \
+	sed_escape() { \
+		printf '%s' "$$1" | sed -e 's/\\/\\\\/g' -e 's/@/\\@/g' -e 's/&/\\&/g'; \
+	}; \
+	new_value_escaped=$$(sed_escape "$$new_value"); \
+	last_key=$$(printf '%s' "$$key_path" | sed 's/.*\.//'); \
+	last_key_escaped=$$(sed_escape "$$last_key"); \
+	sed "s@\"$$last_key_escaped\"[[:space:]]*:[[:space:]]*\"[^\"]*\"@\"$$last_key_escaped\": \"$$new_value_escaped\"@g" "$$file" > "$$file.tmp" && mv "$$file.tmp" "$$file"; \
+}
+endef
+
+###############################################################################
 # Modify a connection string to swap out the hostname only
-# Portable sed-escaping and in-place-safe replacements (no -i, no .bak)
+# 
+# Pattern: s@bolt://[^:]*\(:[0-9][0-9]*\)@bolt://NEW_HOST\1@g
+#     Matches bolt:// + any non-colon chars (the host) + captures port (:7687)
+# Replaces with bolt://NEW_HOST + original port
 ###############################################################################
 define replace_host_fn
 replace_host_in_connstring() {
-	file="$$1"
-	orig="$$2"
-	new="$$3"
-	# escape for use in sed (delimiter '@'): backslashes, @, and &
-	sed_escape() {
-		printf '%s' "$$1" | sed -e 's/\\/\\\\/g' -e 's/@/\\@/g' -e 's/&/\\&/g'
-	}
-
-	orig_escaped=$$(sed_escape "$$orig")
-	new_escaped=$$(sed_escape "$$new")
-
-	# Use a safe temp file for in-place updates (portable)
-	tmp=$$(mktemp 2>/dev/null || printf '/tmp/.env.tmp.%s' "$$RANDOM")
-	
-	# Apply targeted replacement: bolt://host:port -> bolt://new:port
-	# Use '@' as the sed delimiter to avoid conflicts with '/' or ':' in hostnames
-	sed "s@bolt://$$orig_escaped\\(:[0-9][0-9]*\\)@bolt://$$new_escaped\\1@g" "$$file" > "$$tmp" || true
-
-	# Replace original file with tmp (preserve mode where possible)
-	if mv "$$tmp" "$$file" 2>/dev/null; then
-		:
-	else
-		# fallback: attempt to copy
-		cat "$$tmp" > "$$file" || true
-		rm -f "$$tmp" || true
-	fi
+	file="$$1"; \
+	key_path="$$2"; \
+	new_host="$$3"; \
+	last_key=$$(printf '%s' "$$key_path" | sed 's/.*\.//'); \
+	current_value=$$(grep "\"$$last_key\"" "$$file" | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | head -n 1); \
+	port=$$(printf '%s' "$$current_value" | sed 's/.*\(:[0-9][0-9]*\).*/\1/'); \
+	new_connstring="bolt://$$new_host$$port"; \
+	replace_json_value "$$file" "$$key_path" "$$new_connstring"; \
 }
 endef
+
 
 ###############################################################################
 # docker-detect: Verify settings used for hostname mapping (diagnostic only)
@@ -659,10 +789,12 @@ docker-env:
 .PHONY: docker-appsettings
 docker-appsettings:
 	$(detect_system_fn)
+	$(detect_container_fn)
 	$(classify_value_fn)
 	$(choose_mode_fn)
 	$(map_service_fn)
 	$(replace_host_fn)
+	$(replace_json_value_fn)
 	@if [ ! -f "$(ENV_FILE)" ]; then \
 		echo "ERROR: $(ENV_FILE) missing"; \
 		exit 1; \
@@ -757,6 +889,6 @@ docker-appsettings:
 		fi; \
 		\
 		# 8. Replace the host found in the JSON ($$JSON_HOST) with the final mapped value ($$FINAL_MAPPED) \
-		replace_host_in_connstring "$(APPSET_DOCKER)" "$$JSON_HOST" "$$FINAL_MAPPED"; \
+		replace_host_in_connstring "web-app/BlazorApp/appsettings.Docker.json" "ConnectionStrings.$(APPSET_DOCKER)" "$$FINAL_MAPPED"; \
 	done; \
 	echo "✓ Generated $(APPSET_DOCKER)"
