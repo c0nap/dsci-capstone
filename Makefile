@@ -232,7 +232,7 @@ docker-build-dev-blazor:
 # Risks sharing secrets if used improperly - these are for automatic CI/CD only
 ###############################################################################
 # DO NOT USE
-.PHONY: docker-build-prod docker-build-dev-python docker-build-prod-blazor
+.PHONY: docker-build-prod docker-build-dev-python docker-build-prod-blazor docker-retag-to-dev
 docker-build-prod:
 	make docker-build-prod-python
 	make docker-build-prod-blazor
@@ -248,7 +248,7 @@ docker-build-prod-blazor:
 		--build-arg ENV_FILE=".env.dummy" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.Dummy.json \
 		-t dsci-cap-img-blazor-prod:latest .
-docker-retag-prod:
+docker-retag-to-dev:
 	docker tag dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
 	docker tag dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
 	# keep the prod images - they will be used later in docker-publish
@@ -295,12 +295,12 @@ docker-network:
 	        capstone_default
 	    echo "Created new network 'capstone_default'"
 	else
-		echo "Network 'capstone_default' already exists; aborting..."
+		echo "Network 'capstone_default' already exists; continue..."
 	fi
 
 
 ###############################################################################
-.PHONY: docker-clean docker-delete docker-full-refresh
+.PHONY: docker-clean docker-delete-images docker-delete-volumes docker-delete docker-full-refresh
 # Stops and removes all docker containers and networks
 docker-clean:
 	echo "Stopping and removing Docker Compose services..."
@@ -314,11 +314,15 @@ docker-clean:
 	echo "=== Docker cleanup complete! ==="
 # Deletes all docker images and volumes
 docker-delete:
+	make docker-delete-images
+	make docker-delete-volumes
+	echo "=== Deleted persistent data from Docker. ==="
+docker-delete-images:
 	echo "Removing all images..."
 	docker images -q | xargs -r docker rmi -f || true
+docker-delete-volumes:
 	echo "Removing all volumes..."
 	docker volume ls -q | xargs -r docker volume rm || true
-	echo "=== Deleted persistent data from Docker. ==="
 # Deletes all docker data using the 2 above recipes
 docker-full-reset:
 	make docker-clean

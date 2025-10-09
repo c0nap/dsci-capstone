@@ -40,7 +40,7 @@ jobs:
       - name: Build latest Docker images for production
         run: |
           make docker-build-prod
-          make docker-retag-dev
+          make docker-retag-to-dev
 
       - name: Run all containers and tests
         run: make docker-all-tests  # Requires a dev-labelled image
