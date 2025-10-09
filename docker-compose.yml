@@ -5,20 +5,18 @@ services:
     container_name: container-python
     networks:
       - default
-    image: dsci-cap-img-python:latest
-    build:    # Fall back to building from scratch if image does not exist
-      context: .
-      dockerfile: Dockerfile.python
+    # Do NOT fall back to building from scratch if image does not exist
+    # ^ might revert, but compose will only use prod for now
+    image: dsci-cap-img-python-prod:latest
 
   # Blazor server container, exposes port for HTTP and REST
   blazor_service:
     container_name: container-blazor
     networks:
       - default
-    image: dsci-cap-img-blazor:latest
-    build:    # Fall back to building from scratch if image does not exist
-      context: .
-      dockerfile: Dockerfile.blazor
+    # Do NOT fall back to building from scratch if image does not exist
+    # ^ might revert, but compose will only use prod for now
+    image: dsci-cap-img-blazor-prod:latest
     environment:
       - DOTNET_ENVIRONMENT=Docker
     ports:
@@ -50,8 +48,9 @@ services:
       - MYSQL_DATABASE=${DB_NAME}
 
       # makefile will set these environment variables appropriately
-      - MYSQL_USER=${DOCKER_MYSQL_USER:-}  # problem: cannot be root
-      - MYSQL_PASSWORD=${DOCKER_MYSQL_PASSWORD:-}
+      # # look for shell variable DOCKER_* first, fallback to MYSQL_USERNAME from .env file
+      - MYSQL_USER=${DOCKER_MYSQL_USER:-${MYSQL_USERNAME}}  # problem: cannot be root
+      - MYSQL_PASSWORD=${DOCKER_MYSQL_PASSWORD:-${MYSQL_PASSWORD}}
     volumes:
       - mysql_data:/var/lib/mysql
     ports:

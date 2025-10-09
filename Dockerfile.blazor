@@ -29,7 +29,7 @@ COPY ${APPSET_FILE} ./web-app/BlazorApp/appsettings.json
 COPY ${ENV_FILE} .env
 
 # Generates appsettings.Docker.json with mapped hostnames
-RUN make docker-appsettings
+RUN make appsettings-docker
 WORKDIR /web-app/BlazorApp
 RUN mv appsettings.Docker.json appsettings.json
 

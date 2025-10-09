@@ -1,59 +1,71 @@
+# Keep output clean - dont echo commands in recipes
+.SILENT:
+
+# Keep output clean - dont notify for nested makes
 MAKEFLAGS += --no-print-directory
 
+# Run each recipe in a single shell so helper functions persist and local variables remain in scope
+.ONESHELL:
+
 ###############################################################################
-.PHONY: db-start-local db-start-docker
+.PHONY: db-start-local db-start-docker db-stop-local
 DATABASES = MYSQL POSTGRES MONGO NEO4J
 DB_SERVICES = mysql postgresql mongod neo4j
 BLAZOR_DB_KEYS = MySql PostgreSql MongoDb Neo4j PythonApi
 
 # Start only the 'localhost' databases in .env  (on native WSL)
 db-start-local:
-	@echo "Checking .env for localhost databases..."
-	@i=0; \
-	for db in $(DATABASES); do \
+	echo "Checking .env for localhost databases..."
+	i=0
+	for db in $(DATABASES); do
 		# Grab host from .env ignoring comments and empty lines
-		host=$$(grep -E "^[^#]*^$${db}_HOST=" .env | cut -d= -f2 | tr -d '\r\n'); \
-		service=$$(echo $(DB_SERVICES) | cut -d' ' -f$$((i+1))); \
+		host=$$(grep -E "^[^#]*^$${db}_HOST=" .env | cut -d= -f2 | tr -d '\r\n')
+		service=$$(echo $(DB_SERVICES) | cut -d' ' -f$$((i+1)))
 		# Only start if host is exactly localhost
-		if [ "$$host" = "localhost" ]; then \
-			echo "=== Starting $$db ($$service)... ==="; \
-			sudo service $$service start; \
-		else \
-			echo "[Skipping line $$db ($$host)]"; \
-		fi; \
-		i=$$((i+1)); \
+		if [ "$$host" = "localhost" ]; then
+			echo "=== Starting $$db ($$service)... ==="
+			sudo service $$service start
+		else
+			echo "[Skipping line $$db ($$host)]"
+		fi
+		i=$$((i+1))
 	done
 
 # Start only the '_service' databases in .env  (on docker-ce)
 db-start-docker:
-	@echo "Checking .env for Docker databases..."
-	@i=0; \
-	for db in $(DATABASES); do \
+	echo "Checking .env for Docker databases..."
+	i=0
+	for db in $(DATABASES); do 
 		# Grab host from .env ignoring comments and empty lines
-		host=$$(grep -E "^[^#]*^$${db}_HOST=" .env | cut -d= -f2 | tr -d '\r\n'); \
-		service=$$(echo $(DB_SERVICES) | cut -d' ' -f$$((i+1))); \
+		host=$$(grep -E "^[^#]*^$${db}_HOST=" .env | cut -d= -f2 | tr -d '\r\n')
+		service=$$(echo $(DB_SERVICES) | cut -d' ' -f$$((i+1)))
 		# Only start if host ends with _service
-		if echo "$$host" | grep -q '_service$$'; then \
-			echo "=== Starting $$db via Docker ($$service)... ==="; \
-			make docker-$$service; \
-		else \
-			echo "[Skipping line $$db ($$host)]"; \
-		fi; \
-		i=$$((i+1)); \
+		if echo "$$host" | grep -q '_service$$'; then
+			echo "=== Starting $$db via Docker ($$service)... ==="
+			make docker-$$service
+		else
+			echo "[Skipping line $$db ($$host)]"
+		fi
+		i=$$((i+1))
+	done
+
+# Stop database services running locally on native WSL
+db-stop-local:
+	i=0
+	for db_service in $(DB_SERVICES); do 
+		sudo service $$db_service stop
+		i=$$((i+1))
 	done
 
 
 
 
 
-
-
-.PHONY: docker-python docker-test docker-blazor
-
 ###############################################################################
 # Re-builds the Python container and runs it in the current shell.
-# Accepts optional entry-point override.
+# Accepts optional entry-point override.   make python DETACHED=0 CMD="pytest ."
 ###############################################################################
+.PHONY: docker-python docker-blazor
 docker-python:
 	# remove the container if it exists; silence errors if it doesn’t
 	docker rm -f container-python 2>/dev/null || true
@@ -77,7 +89,18 @@ docker-blazor:
 	# use interactive shell by default; attaches to container logs
 	docker start $(if $(DETACHED),, -a -i) container-blazor
 
-# Recompile container images so any source code changes will apply
+
+# Starts container detached (no output) so we can continue using shell
+docker-blazor-silent:
+	make docker-blazor DETACHED=1
+docker-python-silent:
+	make docker-python DETACHED=1
+
+
+###############################################################################
+# Recompile and launch containers so any source code changes will apply
+###############################################################################
+.PHONY: docker-python-dev docker-blazor-dev
 docker-python-dev:
 	make docker-build-dev-python || exit 1  # Stop if build fails
 	make docker-python
@@ -85,23 +108,92 @@ docker-blazor-dev:
 	make docker-build-dev-blazor || exit 1  # Stop if build fails
 	make docker-blazor
 
-# Runs pytest in a new Docker container (instead of pipeline)
+###############################################################################
+# Bypass the original pipeline and run pytests instead.
+###############################################################################
+.PHONY: docker-test docker-test-dev docker-test-raw docker-all-tests docker-all
+# Note: uses existing container images
 docker-test:
 	make docker-python CMD="pytest ."
+# Recompiles docker images for the latest source code
 docker-test-dev:
 	make docker-build-dev-python
 	make docker-test
-# Runs pytest, but shows Python print statements at the expense of formatting
+# Shows Python print statements at the expense of fancy pytest formatting
 docker-test-raw:
 	make docker-python CMD="python -m pytest -s ."
 	
-# Starts container detached (no output) so we can continue using shell
-docker-blazor-silent:
-	make docker-blazor DETACHED=1
-docker-python-silent:
-	make docker-python DETACHED=1
+# Deploy everything to docker, but only run pytests
+docker-all-tests:
+	make docker-all-dbs
+	make docker-blazor-silent
+	make docker-test
 
+# Deploy everything to docker and run the full pipeline
+docker-all:
+	make docker-all-dbs
+	make docker-blazor-silent
+	make docker-python
+
+
+
+
+###############################################################################
+# Starts a relational DB, a document DB, and a graph DB in their own Docker containers
+###############################################################################
+.PHONY: docker-all-dbs
+docker-all-dbs:
+	make docker-mongo
+	make docker-neo4j
+	MAIN_DB=$$(awk -F= '/^DB_ENGINE=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	if [ "$$MAIN_DB" = "MYSQL" ]; then
+		make docker-mysql
+	elif [ "$$MAIN_DB" = "POSTGRES" ]; then
+		make docker-postgres
+	else
+		echo "ERROR: Could not start relational DB_ENGINE; expected MYSQL or POSTGRES, but received $$MAIN_DB."
+		exit 1
+	fi
+
+###############################################################################
+# Create containers for individual databases
+###############################################################################
+.PHONY: docker-mysql docker-postgres docker-mongo docker-neo4j
+docker-mysql:
+	# Compatibility to use an existing mysql installation with username=root
+	DOCKER_MYSQL_USER=$$(awk -F= '/^MYSQL_USERNAME=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	MYSQL_PASSWORD=$$(awk -F= '/^MYSQL_PASSWORD=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	if [ "$$DOCKER_MYSQL_USER" = "root" ]; then
+		DOCKER_MYSQL_USER=""
+		DOCKER_MYSQL_PASSWORD=""
+	else
+		DOCKER_MYSQL_PASSWORD=$$MYSQL_PASSWORD
+	fi
+	# Reassign these variables on the same line as docker compose; gives .yml the values
+	DOCKER_MYSQL_USER="$(DOCKER_MYSQL_USER)" \
+	DOCKER_MYSQL_PASSWORD="$(DOCKER_MYSQL_PASSWORD)" \
+	docker compose up -d mysql_service
+	# Elevate non-local superuser
+	if [ "$$DOCKER_MYSQL_USER" = "root" ]; then
+		# Wait until MySQL is accepting connections
+		until docker exec mysql_service mysqladmin ping -uroot -p"$$MYSQL_PASSWORD" --silent; do sleep 1; done
+		# Elevate root and allow external root logins
+		docker exec mysql_service mysql -uroot -p"$$MYSQL_PASSWORD" \
+			-e "ALTER USER 'root'@'%' IDENTIFIED BY '$$MYSQL_PASSWORD'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;"
+	fi
+docker-postgres:
+	docker compose up -d postgres_service
+docker-mongo:
+	docker compose up -d mongo_service
+docker-neo4j:
+	docker compose up -d neo4j_service
+	
+	
+
+
+###############################################################################
 # Pulls the latest container images from GHCR, and gives them identical names to locally-generated images
+###############################################################################
 docker-pull:
 	make docker-pull-python
 	make docker-pull-blazor
@@ -118,11 +210,9 @@ docker-pull-blazor:
 	# Remove the GHCR tagged alias (keeps local image)
 	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
 
-
-	
-	
-
+###############################################################################
 # Creates the images locally using the latest Dockerfiles (for development)
+###############################################################################
 docker-build-dev:
 	make docker-build-dev-python
 	make docker-build-dev-blazor
@@ -136,8 +226,13 @@ docker-build-dev-blazor:
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.json \
 		-t dsci-cap-img-blazor-dev:latest .
 
+
+###############################################################################
+# Generates fake credentials for the production Docker images
+# Risks sharing secrets if used improperly - these are for automatic CI/CD only
+###############################################################################
 # DO NOT USE
-# Risks sharing secrets - these are for automatic CI/CD
+.PHONY: docker-build-prod docker-build-dev-python docker-build-prod-blazor
 docker-build-prod:
 	make docker-build-prod-python
 	make docker-build-prod-blazor
@@ -153,10 +248,17 @@ docker-build-prod-blazor:
 		--build-arg ENV_FILE=".env.dummy" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.Dummy.json \
 		-t dsci-cap-img-blazor-prod:latest .
+docker-retag-prod:
+	docker tag dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
+	docker tag dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
+	# keep the prod images - they will be used later in docker-publish
 
-# DO NOT USE
+###############################################################################
 # Builds the latest container images, and attempt to push to this repository
 # wont work until authenticated using 'docker login'
+###############################################################################
+# DO NOT USE
+.PHONY: docker-publish docker-publish-python docker-publish-blazor
 docker-publish:
 	make docker-publish-python
 	make docker-publish-blazor
@@ -177,298 +279,280 @@ docker-publish-blazor:
 
 
 
-# Deploy everything to docker and run the full pipeline
-docker-all:
-	make docker-all-dbs
-	make docker-blazor-silent
-	make docker-python
-
-# Deploy everything to docker, but only run pytests
-docker-all-tests:
-	make docker-all-dbs
-	make docker-blazor-silent
-	make docker-test
 
 
-# Starts a relational database, a document database, and a graph database in their own Docker containers
-docker-all-dbs:
-	make docker-mongo
-	make docker-neo4j
-	MAIN_DB=$$(awk -F= '/^DB_ENGINE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	if [ "$$MAIN_DB" = "MYSQL" ]; then \
-		make docker-mysql
-	elif [ "$$MAIN_DB" = "POSTGRES" ]; then \
-		make docker-postgres
-	else \
-		echo "ERROR: Could not start relational DB_ENGINE; expected MYSQL or POSTGRES, but received $$MAIN_DB."; \
-		exit 1; \
-	fi
-# Run containers for individual databases
-docker-mysql:
-	# Compatibility to use an existing mysql installation with username=root
-	DOCKER_MYSQL_USER=$$(awk -F= '/^MYSQL_USERNAME=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	MYSQL_PASSWORD=$$(awk -F= '/^MYSQL_PASSWORD=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	if [ "$$DOCKER_MYSQL_USER" = "root" ]; then \
-		DOCKER_MYSQL_USER=""; \
-		DOCKER_MYSQL_PASSWORD=""; \
-	else \
-		DOCKER_MYSQL_PASSWORD=$$MYSQL_PASSWORD; \
-	fi
-	# Reassign these variables on the same line as docker compose; gives .yml the values
-	DOCKER_MYSQL_USER="$(DOCKER_MYSQL_USER)" \
-	DOCKER_MYSQL_PASSWORD="$(DOCKER_MYSQL_PASSWORD)" \
-	docker compose up -d mysql_service
-	# Elevate non-local superuser
-	if [ "$$DOCKER_MYSQL_USER" = "root" ]; then \
-		# Wait until MySQL is accepting connections
-		until docker exec mysql_service mysqladmin ping -uroot -p"$$MYSQL_PASSWORD" --silent; do sleep 1; done
-		# Elevate root and allow external root logins
-		docker exec mysql_service mysql -uroot -p"$$MYSQL_PASSWORD" \
-			-e "ALTER USER 'root'@'%' IDENTIFIED BY '$$MYSQL_PASSWORD'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;"
-	fi
-docker-postgres:
-	docker compose up -d postgres_service
-docker-mongo:
-	docker compose up -d mongo_service
-docker-neo4j:
-	docker compose up -d neo4j_service
-	
-	
 
-
+###############################################################################
+# Create a new docker network if it doesn't exist yet
+# Add tags to ensure docker compose will recognize it
+###############################################################################
 .PHONY: docker-network
 docker-network:
-	# if network doesn't exist:
-	docker network inspect capstone_default >/dev/null 2>&1 || \
-	# create a new docker network, and tag to ensure it plays nicely with docker compose
-	docker network create \
-		--label com.docker.compose.network=default \
-		--label com.docker.compose.project=capstone \
-		capstone_default
+	if ! docker network inspect capstone_default >/dev/null 2>&1; then
+	    docker network create \
+	        --label com.docker.compose.network=default \
+	        --label com.docker.compose.project=capstone \
+	        capstone_default
+	    echo "Created new network 'capstone_default'"
+	else
+		echo "Network 'capstone_default' already exists; aborting..."
+	fi
 
 
+###############################################################################
 .PHONY: docker-clean docker-delete docker-full-refresh
+# Stops and removes all docker containers and networks
 docker-clean:
-	@echo "Stopping and removing Docker Compose services..."
+	echo "Stopping and removing Docker Compose services..."
 	docker compose down || true
-	@echo "Stopping all running containers..."
+	echo "Stopping all running containers..."
 	docker ps -q | xargs -r docker stop || true
-	@echo "Removing all containers..."
+	echo "Removing all containers..."
 	docker ps -aq | xargs -r docker rm || true
-	@echo "Removing all custom networks..."
+	echo "Removing all custom networks..."
 	docker network ls --filter type=custom -q | xargs -r docker network rm || true
-	@echo "Docker cleanup complete!"
+	echo "=== Docker cleanup complete! ==="
+# Deletes all docker images and volumes
 docker-delete:
-	@echo "Removing all images..."
+	echo "Removing all images..."
 	docker images -q | xargs -r docker rmi -f || true
-	@echo "Removing all volumes..."
+	echo "Removing all volumes..."
 	docker volume ls -q | xargs -r docker volume rm || true
-	@echo "Deleted persistent data from Docker."
+	echo "=== Deleted persistent data from Docker. ==="
+# Deletes all docker data using the 2 above recipes
 docker-full-reset:
 	make docker-clean
 	make docker-delete
-	@echo "== Full Docker cleanup complete - all containers, images, volumes, and networks removed! =="
+	echo "=== Full Docker cleanup complete - all containers, images, volumes, and networks removed! ==="
+###############################################################################
 
 
+
+
+
+###############################################################################
+# Creates a fake secrets file (appsettings.json) for safe docker image distribution.
+###############################################################################
 .PHONY: appsettings-dummy appsettings-credentials appsettings-hosts-default appsettings-hosts-docker
 appsettings-dummy:
-	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}; \
-	ENV_FILE=$${ENVF-.env.dummy}; \
-	echo "Generating dummy appsettings from appsettings.Example.json -> $$OUT_FILE..."; \
-	if [ -f "$$OUT_FILE" ] && [ "$$OUT_FILE" != "web-app/BlazorApp/appsettings.Dummy.json" ]; then \
-		echo "$$OUT_FILE already exists, aborting..."; \
-		exit 1; \
-	else \
-		echo "$$OUT_FILE does not exist, copying..."; \
-		cp web-app/BlazorApp/appsettings.Example.json "$$OUT_FILE"; \
-	fi; \
-	make appsettings-hosts-docker CONFIRMED="y" OUT="$$OUT_FILE" ENVF="$$ENV_FILE"; \
+	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}
+	ENV_FILE=$${ENVF-.env.dummy}
+	echo "Generating dummy appsettings from appsettings.Example.json -> $$OUT_FILE..."
+	if [ -f "$$OUT_FILE" ] && [ "$$OUT_FILE" != "web-app/BlazorApp/appsettings.Dummy.json" ]; then
+		echo "$$OUT_FILE already exists, aborting..."
+		exit 1
+	else
+		echo "$$OUT_FILE does not exist, copying..."
+		cp web-app/BlazorApp/appsettings.Example.json "$$OUT_FILE"
+	fi
+	make appsettings-hosts-docker CONFIRMED="y" OUT="$$OUT_FILE" ENVF="$$ENV_FILE"
 	make appsettings-credentials CONFIRMED="y" OUT="$$OUT_FILE" ENVF="$$ENV_FILE"
+	echo "✓ Generated $$OUT_FILE"
 
+# Replaces hostnames in appsettings.json with program defaults.
 appsettings-hosts-default:
 	$(replace_host_fn)
 	$(replace_json_value_fn)
-	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}; \
-	ENV_FILE=$${ENVF-.env.dummy}; \
-	echo "Your hostnames in $$OUT_FILE will be overwritten with our default values."; \
-	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
-		response="y"; \
-	else \
-		read -p "Continue? [y/N] " response; \
-	fi; \
-	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
-		WSL_IP=$$(awk -F= '/^WSL_LOCAL_IP=/{print $$2}' $$ENV_FILE | tr -d '\r'); \
-		replace_host_in_connstring "web-app/BlazorApp/appsettings.json" "ConnectionStrings.Neo4j" "$$WSL_IP"; \
-		echo "Replaced hostnames in appsettings.json (default)."; \
-	else \
-		echo "Aborted."; \
-		exit 1; \
+	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}
+	ENV_FILE=$${ENVF-.env.dummy}
+	echo "Your hostnames in $$OUT_FILE will be overwritten with our default values."
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then
+		response="y"
+	else
+		read -p "Continue? [y/N] " response
+	fi
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then
+		WSL_IP=$$(awk -F= '/^WSL_LOCAL_IP=/{print $$2}' $$ENV_FILE | tr -d '\r')
+		replace_host_in_connstring "web-app/BlazorApp/appsettings.json" "ConnectionStrings.Neo4j" "$$WSL_IP"
+		echo "Replaced hostnames in appsettings.json (default)."
+	else
+		echo "Aborted."
+		exit 1
 	fi
 
+# Replaces hostnames in appsettings.json with Docker-CE equivalents.
 appsettings-hosts-docker:
 	$(replace_host_fn)
 	$(replace_json_value_fn)
-	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}; \
-	ENV_FILE=$${ENVF-.env.dummy}; \
-	echo "Your hostnames in $$OUT_FILE will be overwritten with Docker service names."; \
-	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
-		response="y"; \
-	else \
-		read -p "Continue? [y/N] " response; \
-	fi; \
-	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
-		replace_host_in_connstring "web-app/BlazorApp/appsettings.json" "ConnectionStrings.Neo4j" "neo4j_service"; \
-		echo "Replaced hostnames in $$OUT_FILE (full docker)."; \
-	else \
-		echo "Aborted."; \
-		exit 1; \
+	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}
+	ENV_FILE=$${ENVF-.env.dummy}
+	echo "Your hostnames in $$OUT_FILE will be overwritten with Docker service names."
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then
+		response="y"
+	else
+		read -p "Continue? [y/N] " response
+	fi
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then
+		replace_host_in_connstring "web-app/BlazorApp/appsettings.json" "ConnectionStrings.Neo4j" "neo4j_service"
+		echo "Replaced hostnames in $$OUT_FILE (full docker)."
+	else
+		echo "Aborted."
+		exit 1
 	fi
 
+# Replaces usernames and passwords in appsettings.json with placeholder values.
 appsettings-credentials:
 	$(replace_json_value_fn)
-	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}; \
-	ENV_FILE=$${ENVF-.env.dummy}; \
-	echo "Your usernames and passwords in $$OUT_FILE will be overwritten with values from $$ENV_FILE file."; \
-	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
-		response="y"; \
-	else \
-		read -p "Continue? [y/N] " response; \
-	fi; \
-	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
-		neo4j_user=$$(awk -F= '/^NEO4J_USERNAME=/{print $$2}' $$ENV_FILE | tr -d '\r'); \
-		replace_json_value "web-app/BlazorApp/appsettings.json" "Neo4j.Username" "$$neo4j_user"; \
-		neo4j_password=$$(awk -F= '/^NEO4J_PASSWORD=/{print $$2}' $$ENV_FILE | tr -d '\r'); \
-		replace_json_value "web-app/BlazorApp/appsettings.json" "Neo4j.Password" "$$neo4j_password"; \
-		echo "Replaced credentials in $$OUT_FILE with values from $$ENV_FILE"; \
-	else \
-		echo "Aborted."; \
-		exit 1; \
+	OUT_FILE=$${OUT-web-app/BlazorApp/appsettings.Dummy.json}
+	ENV_FILE=$${ENVF-.env.dummy}
+	echo "Your usernames and passwords in $$OUT_FILE will be overwritten with values from $$ENV_FILE file."
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then
+		response="y"
+	else
+		read -p "Continue? [y/N] " response
+	fi
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then
+		neo4j_user=$$(awk -F= '/^NEO4J_USERNAME=/{print $$2}' $$ENV_FILE | tr -d '\r')
+		replace_json_value "web-app/BlazorApp/appsettings.json" "Neo4j.Username" "$$neo4j_user"
+		neo4j_password=$$(awk -F= '/^NEO4J_PASSWORD=/{print $$2}' $$ENV_FILE | tr -d '\r')
+		replace_json_value "web-app/BlazorApp/appsettings.json" "Neo4j.Password" "$$neo4j_password"
+		echo "Replaced credentials in $$OUT_FILE with values from $$ENV_FILE"
+	else
+		echo "Aborted."
+		exit 1
 	fi
 
 
+
+###############################################################################
+# Creates a fake secrets file (.env) for safe docker image distribution.
+###############################################################################
 .PHONY: env-dummy env-dummy-credentials env-hosts-default env-hosts-dev env-hosts-docker
 env-dummy:
-	OUT_FILE=$${OUT-.env.dummy}; \
-	echo "Generating dummy .env from .env.example -> $$OUT_FILE..."; \
-	if [ -f "$$OUT_FILE" ] && [ "$$OUT_FILE" != ".env.dummy" ]; then \
-		echo "$$OUT_FILE already exists, aborting..."; \
-		exit 1; \
-	else \
-		echo "$$OUT_FILE does not exist, copying..."; \
-		cp .env.example "$$OUT_FILE"; \
-	fi; \
-	make env-hosts-docker CONFIRMED="y" OUT="$$OUT_FILE"; \
+	OUT_FILE=$${OUT-.env.dummy}
+	echo "Generating dummy .env from .env.example -> $$OUT_FILE..."
+	if [ -f "$$OUT_FILE" ] && [ "$$OUT_FILE" != ".env.dummy" ]; then
+		echo "$$OUT_FILE already exists, aborting..."
+		exit 1
+	else
+		echo "$$OUT_FILE does not exist, copying..."
+		cp .env.example "$$OUT_FILE"
+	fi
+	make env-hosts-docker CONFIRMED="y" OUT="$$OUT_FILE"
 	make env-dummy-credentials CONFIRMED="y" OUT="$$OUT_FILE"
+	echo "✓ Generated $$OUT_FILE"
 
+# Replaces hostnames in .env with program defaults.
 env-hosts-default:
-	OUT_FILE=$${OUT-.env.dummy}; \
-	echo "Your $$OUT_FILE hostnames will be overwritten with our default values."; \
-	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
-		response="y"; \
-	else \
-		read -p "Continue? [y/N] " response; \
-	fi; \
-	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
-		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' $$OUT_FILE; \
-		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=OS/' $$OUT_FILE; \
-		sed -i '/^[^#]*MYSQL_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
-		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
-		sed -i '/^[^#]*MONGO_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
-		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
-		sed -i '/^[^#]*BLAZOR_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE; \
-		echo "Replaced hostnames (default) in $$OUT_FILE."; \
-	else \
-		echo "Aborted."; \
-		exit 1; \
+	OUT_FILE=$${OUT-.env.dummy}
+	echo "Your $$OUT_FILE hostnames will be overwritten with our default values."
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then
+		response="y"
+	else
+		read -p "Continue? [y/N] " response
+	fi
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then
+		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' $$OUT_FILE
+		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=OS/' $$OUT_FILE
+		sed -i '/^[^#]*MYSQL_HOST=/s/=.*/=localhost/' $$OUT_FILE
+		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=localhost/' $$OUT_FILE
+		sed -i '/^[^#]*MONGO_HOST=/s/=.*/=localhost/' $$OUT_FILE
+		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=localhost/' $$OUT_FILE
+		sed -i '/^[^#]*BLAZOR_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE
+		echo "Replaced hostnames (default) in $$OUT_FILE."
+	else
+		echo "Aborted."
+		exit 1
 	fi
 
+# Replaces hostnames in .env with dev values.
 env-hosts-dev:
-	OUT_FILE=$${OUT-.env.dummy}; \
-	echo "Your $$OUT_FILE hostnames will be overwritten with our development values."; \
-	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
-		response="y"; \
-	else \
-		read -p "Continue? [y/N] " response; \
-	fi; \
-	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
-		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' $$OUT_FILE; \
-		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=OS/' $$OUT_FILE; \
-		sed -i '/^[^#]*MYSQL_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE; \
-		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
-		sed -i '/^[^#]*MONGO_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE; \
-		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=localhost/' $$OUT_FILE; \
-		sed -i '/^[^#]*BLAZOR_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE; \
-		sed -i '/^[^#]*OS_LOCAL_IP=/s/=.*/=172.30.48.1/' $$OUT_FILE; \
-		sed -i '/^[^#]*WSL_LOCAL_IP=/s/=.*/=172.30.63.202/' $$OUT_FILE; \
-		echo "Replaced hostnames and local IPs (dev) in $$OUT_FILE."; \
-	else \
-		echo "Aborted."; \
-		exit 1; \
+	OUT_FILE=$${OUT-.env.dummy}
+	echo "Your $$OUT_FILE hostnames will be overwritten with our development values."
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then
+		response="y"
+	else
+		read -p "Continue? [y/N] " response
+	fi
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then
+		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' $$OUT_FILE
+		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=OS/' $$OUT_FILE
+		sed -i '/^[^#]*MYSQL_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE
+		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=localhost/' $$OUT_FILE
+		sed -i '/^[^#]*MONGO_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE
+		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=localhost/' $$OUT_FILE
+		sed -i '/^[^#]*BLAZOR_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' $$OUT_FILE
+		sed -i '/^[^#]*OS_LOCAL_IP=/s/=.*/=172.30.48.1/' $$OUT_FILE
+		sed -i '/^[^#]*WSL_LOCAL_IP=/s/=.*/=172.30.63.202/' $$OUT_FILE
+		echo "Replaced hostnames and local IPs (dev) in $$OUT_FILE."
+	else
+		echo "Aborted."
+		exit 1
 	fi
 
+# Replaces hostnames in .env with Docker-CE equivalents.
 env-hosts-docker:
-	OUT_FILE=$${OUT-.env.dummy}; \
-	echo "Your $$OUT_FILE hostnames will be overwritten with Docker service names."; \
-	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
-		response="y"; \
-	else \
-		read -p "Continue? [y/N] " response; \
-	fi; \
-	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
-		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' $$OUT_FILE; \
-		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=WSL/' $$OUT_FILE; \
-		sed -i '/^[^#]*MYSQL_HOST=/s/=.*/=mysql_service/' $$OUT_FILE; \
-		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=postgres_service/' $$OUT_FILE; \
-		sed -i '/^[^#]*MONGO_HOST=/s/=.*/=mongo_service/' $$OUT_FILE; \
-		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=neo4j_service/' $$OUT_FILE; \
-		sed -i '/^[^#]*BLAZOR_HOST=/s/=.*/=blazor_service/' $$OUT_FILE; \
-		echo "Replaced hostnames (full docker) in $$OUT_FILE."; \
-	else \
-		echo "Aborted."; \
-		exit 1; \
+	OUT_FILE=$${OUT-.env.dummy}
+	echo "Your $$OUT_FILE hostnames will be overwritten with Docker service names."
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then
+		response="y"
+	else
+		read -p "Continue? [y/N] " response
+	fi
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then
+		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' $$OUT_FILE
+		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=WSL/' $$OUT_FILE
+		sed -i '/^[^#]*MYSQL_HOST=/s/=.*/=mysql_service/' $$OUT_FILE
+		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=postgres_service/' $$OUT_FILE
+		sed -i '/^[^#]*MONGO_HOST=/s/=.*/=mongo_service/' $$OUT_FILE
+		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=neo4j_service/' $$OUT_FILE
+		sed -i '/^[^#]*BLAZOR_HOST=/s/=.*/=blazor_service/' $$OUT_FILE
+		echo "Replaced hostnames (full docker) in $$OUT_FILE."
+	else
+		echo "Aborted."
+		exit 1
 	fi
 
+# Replaces usernames and passwords in .env with placeholder values.
 env-dummy-credentials:
-	OUT_FILE=$${OUT-.env.dummy}; \
-	echo "Your $$OUT_FILE usernames and passwords will be overwritten with placeholders."; \
-	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then \
-		response="y"; \
-	else \
-		read -p "Continue? [y/N] " response; \
-	fi; \
-	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
-		sed -i '/^[^#]*MYSQL_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE; \
-		sed -i '/^[^#]*MYSQL_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE; \
-		sed -i '/^[^#]*POSTGRES_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE; \
-		sed -i '/^[^#]*POSTGRES_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE; \
-		sed -i '/^[^#]*MONGO_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE; \
-		sed -i '/^[^#]*MONGO_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE; \
-		sed -i '/^[^#]*NEO4J_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE; \
-		sed -i '/^[^#]*NEO4J_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE; \
-		echo "Replaced credentials (placeholder values) in $$OUT_FILE"; \
-	else \
-		echo "Aborted."; \
-		exit 1; \
+	OUT_FILE=$${OUT-.env.dummy}
+	echo "Your $$OUT_FILE usernames and passwords will be overwritten with placeholders."
+	if [ "$$CONFIRMED" = "y" ] || [ "$$CONFIRMED" = "Y" ]; then
+		response="y"
+	else
+		read -p "Continue? [y/N] " response
+	fi
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then
+		sed -i '/^[^#]*MYSQL_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE
+		sed -i '/^[^#]*MYSQL_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE
+		sed -i '/^[^#]*POSTGRES_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE
+		sed -i '/^[^#]*POSTGRES_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE
+		sed -i '/^[^#]*MONGO_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE
+		sed -i '/^[^#]*MONGO_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE
+		sed -i '/^[^#]*NEO4J_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' $$OUT_FILE
+		sed -i '/^[^#]*NEO4J_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' $$OUT_FILE
+		echo "Replaced credentials (placeholder values) in $$OUT_FILE"
+	else
+		echo "Aborted."
+		exit 1
 	fi
 
 
+
+
+###############################################################################
 # Deletes temporary env and appsettings files (to avoid clutter)
 make rm-env-appsettings:
 	rm -f -v .env.dummy
 	rm -f -v .env.docker
 	rm -f -v web-app/BlazorApp/appsettings.Dummy.json
 	rm -f -v web-app/BlazorApp/appsettings.Docker.json
+###############################################################################
 
 
-# Helper functions used by the Dockerfiles
+
+
+
+
+
+
+
+
+###############################################################################
+# Helper functions used by the Dockerfiles (make env-docker, env-appsettings)
 # 	- Generates .env.docker and appsettings.Docker.json for containerized deployments
 # 	- Uses values from .env to swap hostnames inside Docker containers
-
-# Run each recipe (function) in a single shell so helper functions and variables persist
-.ONESHELL:
-
-# Keep output clean - dont echo commands
-.SILENT:
+###############################################################################
 
 # File path variables (smaller footprint)
 ENV_FILE := .env
@@ -633,16 +717,16 @@ endef
 ###############################################################################
 define replace_json_value_fn
 replace_json_value() {
-	file="$$1"; \
-	key_path="$$2"; \
-	new_value="$$3"; \
-	sed_escape() { \
-		printf '%s' "$$1" | sed -e 's/\\/\\\\/g' -e 's/@/\\@/g' -e 's/&/\\&/g'; \
-	}; \
-	new_value_escaped=$$(sed_escape "$$new_value"); \
-	last_key=$$(printf '%s' "$$key_path" | sed 's/.*\.//'); \
-	last_key_escaped=$$(sed_escape "$$last_key"); \
-	sed "s@\"$$last_key_escaped\"[[:space:]]*:[[:space:]]*\"[^\"]*\"@\"$$last_key_escaped\": \"$$new_value_escaped\"@g" "$$file" > "$$file.tmp" && mv "$$file.tmp" "$$file"; \
+	file="$$1"
+	key_path="$$2"
+	new_value="$$3"
+	sed_escape() {
+		printf '%s' "$$1" | sed -e 's/\\/\\\\/g' -e 's/@/\\@/g' -e 's/&/\\&/g'
+	}
+	new_value_escaped=$$(sed_escape "$$new_value")
+	last_key=$$(printf '%s' "$$key_path" | sed 's/.*\.//')
+	last_key_escaped=$$(sed_escape "$$last_key")
+	sed "s@\"$$last_key_escaped\"[[:space:]]*:[[:space:]]*\"[^\"]*\"@\"$$last_key_escaped\": \"$$new_value_escaped\"@g" "$$file" > "$$file.tmp" && mv "$$file.tmp" "$$file"
 }
 endef
 
@@ -655,20 +739,20 @@ endef
 ###############################################################################
 define replace_host_fn
 replace_host_in_connstring() {
-	file="$$1"; \
-	key_path="$$2"; \
-	new_host="$$3"; \
-	last_key=$$(printf '%s' "$$key_path" | sed 's/.*\.//'); \
-	current_value=$$(grep "\"$$last_key\"" "$$file" | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | head -n 1); \
-	port=$$(printf '%s' "$$current_value" | sed 's/.*\(:[0-9][0-9]*\).*/\1/'); \
-	new_connstring="bolt://$$new_host$$port"; \
-	replace_json_value "$$file" "$$key_path" "$$new_connstring"; \
+	file="$$1"
+	key_path="$$2"
+	new_host="$$3"
+	last_key=$$(printf '%s' "$$key_path" | sed 's/.*\.//')
+	current_value=$$(grep "\"$$last_key\"" "$$file" | sed 's/.*:[[:space:]]*"\([^"]*\)".*/\1/' | head -n 1)
+	port=$$(printf '%s' "$$current_value" | sed 's/.*\(:[0-9][0-9]*\).*/\1/')
+	new_connstring="bolt://$$new_host$$port"
+	replace_json_value "$$file" "$$key_path" "$$new_connstring"
 }
 endef
 
 
 ###############################################################################
-# docker-detect: Verify settings used for hostname mapping (diagnostic only)
+# Verify settings used for hostname mapping (diagnostic only)
 ###############################################################################
 .PHONY: docker-detect
 docker-detect:
@@ -676,118 +760,109 @@ docker-detect:
 	$(detect_container_fn)
 	$(classify_value_fn)
 	$(choose_mode_fn)
-	@if [ ! -f "$(ENV_FILE)" ]; then \
-		echo "ERROR: $(ENV_FILE) missing"; \
-		exit 1; \
+	if [ ! -f "$(ENV_FILE)" ]; then
+		echo "ERROR: $(ENV_FILE) missing"
+		exit 1
 	fi
-	@OS_IP=$$(awk -F= '/^OS_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	WSL_IP=$$(awk -F= '/^WSL_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	PY_SIDE=$$(awk -F= '/^PYTHON_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	BLAZ_SIDE=$$(awk -F= '/^BLAZOR_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	RUNTIME=$$(detect_system); \
-	IN_CONTAINER=$$(detect_container); \
-	if [ "$$PY_SIDE" = "OS" ] || [ "$$PY_SIDE" = "WSL" ]; then \
-		MODE=$$(choose_mode "$$RUNTIME" "$$PY_SIDE"); \
-	else \
-		PY_SIDE=UNKNOWN; \
-		MODE=$$(choose_mode "$$RUNTIME" "$$PY_SIDE"); \
-	fi; \
-	echo "Runtime: $$RUNTIME  |  PYTHON_SIDE: $$PY_SIDE  |  Column: $$MODE  |  In Container: $$IN_CONTAINER"; \
-	if [ "$(VERBOSE)" = "1" ]; then \
-		echo "	OS_LOCAL_IP=$$OS_IP, WSL_LOCAL_IP=$$WSL_IP"; \
-		echo "	detect_system says this container is running on $$RUNTIME"; \
-		if [ "$$MODE" = "desktop" ]; then \
-			echo "NOTE: Python container should be deployed to Docker Desktop"; \
-		elif [ "$$MODE" = "ce" ]; then \
-			echo "NOTE: Python container should be deployed to docker-ce"; \
-		fi; \
-		echo ".env-var PYTHON_SIDE: hostnames in '.env' are relative to $$PY_SIDE"; \
-		echo ".env-var BLAZOR_SIDE: connection strings in 'appsettings.json' are relative to $$BLAZ_SIDE"; \
-		if [ "$$BLAZ_SIDE" = "$$PY_SIDE" ]; then \
-			echo "	docker-appsettings will copy directly from '.env'"; \
-		else \
-			echo "	docker-appsettings must map '.env' host IPs from $$PY_SIDE to $$BLAZ_SIDE"; \
-		fi; \
+	OS_IP=$$(awk -F= '/^OS_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	WSL_IP=$$(awk -F= '/^WSL_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	PY_SIDE=$$(awk -F= '/^PYTHON_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	BLAZ_SIDE=$$(awk -F= '/^BLAZOR_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	RUNTIME=$$(detect_system)
+	IN_CONTAINER=$$(detect_container)
+	if [ "$$PY_SIDE" = "OS" ] || [ "$$PY_SIDE" = "WSL" ]; then
+		MODE=$$(choose_mode "$$RUNTIME" "$$PY_SIDE")
+	else
+		PY_SIDE=UNKNOWN
+		MODE=$$(choose_mode "$$RUNTIME" "$$PY_SIDE")
+	fi
+	echo "Runtime: $$RUNTIME  |  PYTHON_SIDE: $$PY_SIDE  |  Column: $$MODE  |  In Container: $$IN_CONTAINER"
+	if [ "$(VERBOSE)" = "1" ]; then
+		echo "	OS_LOCAL_IP=$$OS_IP, WSL_LOCAL_IP=$$WSL_IP"
+		echo "	detect_system says this container is running on $$RUNTIME"
+		if [ "$$MODE" = "desktop" ]; then
+			echo "NOTE: Python container should be deployed to Docker Desktop"
+		elif [ "$$MODE" = "ce" ]; then
+			echo "NOTE: Python container should be deployed to docker-ce"
+		fi
+		echo ".env-var PYTHON_SIDE: hostnames in '.env' are relative to $$PY_SIDE"
+		echo ".env-var BLAZOR_SIDE: connection strings in 'appsettings.json' are relative to $$BLAZ_SIDE"
+		if [ "$$BLAZ_SIDE" = "$$PY_SIDE" ]; then
+			echo "	appsettings-docker will copy directly from '.env'"
+		else
+			echo "	appsettings-docker must map '.env' host IPs from $$PY_SIDE to $$BLAZ_SIDE"
+		fi
 	fi
 
 ###############################################################################
-# docker-env: Generate .env.docker with Docker-appropriate hostnames
+# Generate .env.docker with Docker-appropriate hostnames
 ###############################################################################
-.PHONY: docker-env
-docker-env:
+.PHONY: env-docker
+env-docker:
 	$(detect_system_fn)
 	$(detect_container_fn)
 	$(classify_value_fn)
 	$(choose_mode_fn)
 	$(map_service_fn)
-	@if [ ! -f "$(ENV_FILE)" ]; then \
-		echo "ERROR: $(ENV_FILE) not found"; \
-		exit 1; \
+	if [ ! -f "$(ENV_FILE)" ]; then
+		echo "ERROR: $(ENV_FILE) not found"
+		exit 1
 	fi
-	@OS_IP=$$(awk -F= '/^OS_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	WSL_IP=$$(awk -F= '/^WSL_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	if [ -z "$$OS_IP" ] || [ -z "$$WSL_IP" ]; then \
-		echo "ERROR: OS_LOCAL_IP and WSL_LOCAL_IP must be set in $(ENV_FILE)"; \
-		exit 1; \
-	fi; \
-	PY_SIDE=$$(awk -F= '/^PYTHON_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	RUNTIME=$$(detect_system); \
-	IN_CONTAINER=$$(detect_container); \
-	if [ "$$PY_SIDE" = "OS" ] || [ "$$PY_SIDE" = "WSL" ]; then \
-		MODE=$$(choose_mode "$$RUNTIME" "$$PY_SIDE"); \
-	else \
-		PY_SIDE=UNKNOWN; \
-		MODE=$$(choose_mode "$$RUNTIME" "$$PY_SIDE"); \
-	fi; \
-	if [ "$(VERBOSE)" = "1" ]; then \
-		echo "Generating $(ENV_DOCKER) using column: $$MODE"; \
-	fi; \
-	\
-	# Copy original file to preserve order. This also keeps PYTHON_SIDE untouched. \
-	cp $(ENV_FILE) $(ENV_DOCKER); \
-	\
-	# Loop through all host variables (excluding PYTHON_SIDE) and perform in-place replacement. \
-	for VAR in MYSQL_HOST POSTGRES_HOST MONGO_HOST NEO4J_HOST BLAZOR_HOST PYTHON_HOST; do \
-		VAL_RAW=$$(awk -F= -v v="$$VAR" '$$1==v{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-		[ -z "$$VAL_RAW" ] && continue; \
-		\
-		# Resolve IP variables (e.g., ${OS_LOCAL_IP}) in the value \
-		VAL=$$(printf '%s' "$$VAL_RAW" | sed "s/\$${OS_LOCAL_IP}/$$OS_IP/g; s/\$${WSL_LOCAL_IP}/$$WSL_IP/g; s/\$$OS_LOCAL_IP/$$OS_IP/g; s/\$$WSL_LOCAL_IP/$$WSL_IP/g"); \
-		\
-		CLASS=$$(classify_value "$$VAL" "$$OS_IP" "$$WSL_IP" "$$IN_CONTAINER" "$$RUNTIME"); \
-		MAPPED=$$(map_service "$$VAL" "$$CLASS" "$$MODE" "$$OS_IP" "$$WSL_IP"); \
-		\
-		if [ "$$MAPPED" = "**UNKNOWN**" ]; then \
-			MAPPED="$$VAL"; \
-		fi; \
-		\
-		# In-place replacement logic (portable): Target the line starting with VAR= \
-		MAPPED_ESCAPED=$$(echo "$$MAPPED" | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\&/g'); \
-		tmp=$$(mktemp 2>/dev/null || printf '/tmp/.env.tmp.%s' "$$RANDOM"); \
-		\
-		# sed command: Find line starting with VAR= and replace everything after the '=' with MAPPED_ESCAPED \
-		sed "s:^$$VAR=.*:$$VAR=$$MAPPED_ESCAPED:g" "$(ENV_DOCKER)" > "$$tmp" || true; \
-		\
-		# Move the temp file back to the destination (portable safe move) \
-		if mv "$$tmp" "$(ENV_DOCKER)" 2>/dev/null; then \
-			:; \
-		else \
-			cat "$$tmp" > "$(ENV_DOCKER)" || true; \
-			rm -f "$$tmp" || true; \
-		fi; \
-		\
-		if [ "$(VERBOSE)" = "1" ]; then \
-			echo "  $$VAR: $$VAL -> $$MAPPED ($$CLASS)"; \
-		fi; \
-	done; \
+	OS_IP=$$(awk -F= '/^OS_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	WSL_IP=$$(awk -F= '/^WSL_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	if [ -z "$$OS_IP" ] || [ -z "$$WSL_IP" ]; then
+		echo "ERROR: OS_LOCAL_IP and WSL_LOCAL_IP must be set in $(ENV_FILE)"
+		exit 1
+	fi
+	PY_SIDE=$$(awk -F= '/^PYTHON_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	RUNTIME=$$(detect_system)
+	IN_CONTAINER=$$(detect_container)
+	if [ "$$PY_SIDE" = "OS" ] || [ "$$PY_SIDE" = "WSL" ]; then
+		MODE=$$(choose_mode "$$RUNTIME" "$$PY_SIDE")
+	else
+		PY_SIDE=UNKNOWN
+		MODE=$$(choose_mode "$$RUNTIME" "$$PY_SIDE")
+	fi
+	if [ "$(VERBOSE)" = "1" ]; then
+		echo "Generating $(ENV_DOCKER) using column: $$MODE"
+	fi
+	# Copy original file to preserve order. This also keeps PYTHON_SIDE untouched.
+	cp $(ENV_FILE) $(ENV_DOCKER)
+	# Loop through all host variables (excluding PYTHON_SIDE) and perform in-place replacement.
+	for VAR in MYSQL_HOST POSTGRES_HOST MONGO_HOST NEO4J_HOST BLAZOR_HOST PYTHON_HOST; do
+		VAL_RAW=$$(awk -F= -v v="$$VAR" '$$1==v{print $$2}' $(ENV_FILE) | tr -d '\r')
+		[ -z "$$VAL_RAW" ] && continue
+
+		# Resolve IP variables (e.g., ${OS_LOCAL_IP}) in the value
+		VAL=$$(printf '%s' "$$VAL_RAW" | sed "s/\$${OS_LOCAL_IP}/$$OS_IP/g; s/\$${WSL_LOCAL_IP}/$$WSL_IP/g; s/\$$OS_LOCAL_IP/$$OS_IP/g; s/\$$WSL_LOCAL_IP/$$WSL_IP/g")
+		CLASS=$$(classify_value "$$VAL" "$$OS_IP" "$$WSL_IP" "$$IN_CONTAINER" "$$RUNTIME")
+		MAPPED=$$(map_service "$$VAL" "$$CLASS" "$$MODE" "$$OS_IP" "$$WSL_IP")
+		if [ "$$MAPPED" = "**UNKNOWN**" ]; then
+			MAPPED="$$VAL"
+		fi
+
+		# In-place replacement logic (portable): Target the line starting with VAR=
+		MAPPED_ESCAPED=$$(echo "$$MAPPED" | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\&/g')
+		tmp=$$(mktemp 2>/dev/null || printf '/tmp/.env.tmp.%s' "$$RANDOM")
+		# sed command: Find line starting with VAR= and replace everything after the '=' with MAPPED_ESCAPED
+		sed "s:^$$VAR=.*:$$VAR=$$MAPPED_ESCAPED:g" "$(ENV_DOCKER)" > "$$tmp" || true
+		# Move the temp file back to the destination (portable safe move)
+		if ! mv "$$tmp" "$(ENV_DOCKER)" 2>/dev/null; then
+			cat "$$tmp" > "$(ENV_DOCKER)" || true
+			rm -f "$$tmp" || true
+		fi
+		if [ "$(VERBOSE)" = "1" ]; then
+			echo "  $$VAR: $$VAL -> $$MAPPED ($$CLASS)"
+		fi
+	done
 	echo "✓ Generated $(ENV_DOCKER)"
 
 
 ###############################################################################
-# docker-appsettings: Generate appsettings.Docker.json with Docker-appropriate hostnames
+# Generate appsettings.Docker.json with Docker-appropriate hostnames
 ###############################################################################
-.PHONY: docker-appsettings
-docker-appsettings:
+.PHONY: appsettings-docker
+appsettings-docker:
 	$(detect_system_fn)
 	$(detect_container_fn)
 	$(classify_value_fn)
@@ -795,100 +870,100 @@ docker-appsettings:
 	$(map_service_fn)
 	$(replace_host_fn)
 	$(replace_json_value_fn)
-	@if [ ! -f "$(ENV_FILE)" ]; then \
-		echo "ERROR: $(ENV_FILE) missing"; \
-		exit 1; \
+	if [ ! -f "$(ENV_FILE)" ]; then
+		echo "ERROR: $(ENV_FILE) missing"
+		exit 1
 	fi
-	@if [ ! -f "$(APPSET)" ]; then \
-		echo "ERROR: $(APPSET) missing"; \
-		exit 1; \
+	if [ ! -f "$(APPSET)" ]; then
+		echo "ERROR: $(APPSET) missing"
+		exit 1
 	fi
-	@OS_IP=$$(awk -F= '/^OS_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	WSL_IP=$$(awk -F= '/^WSL_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	if [ -z "$$OS_IP" ] || [ -z "$$WSL_IP" ]; then \
-		echo "ERROR: OS_LOCAL_IP and WSL_LOCAL_IP must be set in $(ENV_FILE)"; \
-		exit 1; \
-	fi; \
-	PY_SIDE=$$(awk -F= '/^PYTHON_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	BLAZ_SIDE=$$(awk -F= '/^BLAZOR_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-	RUNTIME=$$(detect_system); \
-	IN_CONTAINER=$$(detect_container); \
-	\
-	if [ "$$BLAZ_SIDE" != "OS" ] && [ "$$BLAZ_SIDE" != "WSL" ]; then \
-		echo "ERROR: BLAZOR_SIDE must be 'WSL' or 'OS' (got $$BLAZ_SIDE)"; \
-		exit 1; \
-	fi; \
-	# Determine the mapping mode (MODE) based on BLAZOR_SIDE and PYTHON_SIDE \
-	MODE=$$(choose_mode "$$PY_SIDE" "$$BLAZ_SIDE"); \
-	echo "Mode = $$MODE, from runtime = $$PY_SIDE and python_side = $$BLAZ_SIDE"; \
-	\
-	if [ "$(VERBOSE)" = "1" ]; then \
-		echo "Generating $(APPSET_DOCKER) using column: $$MODE"; \
-		if [ "$$BLAZ_SIDE" != "$$PY_SIDE" ]; then \
-			echo "	mapping '.env' hostnames from PYTHON_SIDE ($$PY_SIDE) to BLAZOR_SIDE ($$BLAZ_SIDE)"; \
-		else \
-			echo "	copying '.env' hostnames since PYTHON_SIDE == BLAZOR_SIDE"; \
-		fi; \
-	fi; \
-	cp $(APPSET) $(APPSET_DOCKER); \
-	\
-	# Services to check in appsettings.json, corresponding to BLAZOR_DB_KEYS \
-	for SERVICE_KEY in $(BLAZOR_DB_KEYS); do \
-		# 1. Determine the corresponding .env variable name (e.g., Neo4j -> NEO4J_HOST) \
-		DB_VAR=$$(echo "$$SERVICE_KEY" | tr '[:lower:]' '[:upper:]' | sed 's/API/_\0/'); \
-		DB_VAR=$$(echo "$$DB_VAR" | sed 's/\(SQL\|DB\)\(.\)/\1_\2/'); \
-		ENV_HOST_VAR=$$(echo "$$DB_VAR" | sed 's/MYSQL/MY_SQL/' | sed 's/POSTGRESQL/POSTGRES_QL/' | sed 's/MONGODB/MONGO_DB/')_HOST; \
-		ENV_HOST_VAR=$$(echo "$$ENV_HOST_VAR" | sed 's/_QL//' | sed 's/_DB//' | sed 's/MY_SQL/MYSQL/'); \
-		\
-		# 2. Extract the current host from appsettings.json (JSON_HOST) \
-		CONN_STRING=$$(grep -E "\"$$SERVICE_KEY\"[[:space:]]*:[[:space:]]*\"" "$(APPSET_DOCKER)" | head -n 1); \
-		[ -z "$$CONN_STRING" ] && continue; \
-		JSON_HOST=$$(echo "$$CONN_STRING" | sed -E 's/.*bolt:\/\/(.*):[0-9]+".*/\1/'); \
-		\
-		# Check if extraction was successful \
-		if [ -z "$$JSON_HOST" ] || [ "$$JSON_HOST" = "$$CONN_STRING" ]; then \
-			if [ "$(VERBOSE)" = "1" ]; then \
-				echo "  WARNING: Could not reliably extract host for $$SERVICE_KEY. Skipping."; \
-			fi; \
-			continue; \
-		fi; \
-		\
-		# 3. Extract and resolve the ground truth host from .env (ENV_HOST_VAL) \
-		ENV_HOST_RAW=$$(awk -F= -v v="$$ENV_HOST_VAR" '$$1==v{print $$2}' $(ENV_FILE) | tr -d '\r'); \
-		[ -z "$$ENV_HOST_RAW" ] && continue; \
-		ENV_HOST_VAL=$$(printf '%s' "$$ENV_HOST_RAW" | sed "s/\$${OS_LOCAL_IP}/$$OS_IP/g; s/\$${WSL_LOCAL_IP}/$$WSL_IP/g; s/\$$OS_LOCAL_IP/$$OS_IP/g; s/\$$WSL_LOCAL_IP/$$WSL_IP/g"); \
-		\
-		# 4. Resolve the JSON host to its concrete IP/Name (JSON_HOST_VAL) \
-		JSON_HOST_VAL=$$(printf "%s" "$$JSON_HOST" | sed "s/\$${OS_LOCAL_IP}/$$OS_IP/g; s/\$${WSL_LOCAL_IP}/$$WSL_IP/g; s/\$$OS_LOCAL_IP/$$OS_IP/g; s/\$$WSL_LOCAL_IP/$$WSL_IP/g"); \
-		\
+	OS_IP=$$(awk -F= '/^OS_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	WSL_IP=$$(awk -F= '/^WSL_LOCAL_IP=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	if [ -z "$$OS_IP" ] || [ -z "$$WSL_IP" ]; then
+		echo "ERROR: OS_LOCAL_IP and WSL_LOCAL_IP must be set in $(ENV_FILE)"
+		exit 1
+	fi
+	PY_SIDE=$$(awk -F= '/^PYTHON_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	BLAZ_SIDE=$$(awk -F= '/^BLAZOR_SIDE=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	RUNTIME=$$(detect_system)
+	IN_CONTAINER=$$(detect_container)
+
+	if [ "$$BLAZ_SIDE" != "OS" ] && [ "$$BLAZ_SIDE" != "WSL" ]; then
+		echo "ERROR: BLAZOR_SIDE must be 'WSL' or 'OS' (got $$BLAZ_SIDE)"
+		exit 1
+	fi
+	# Determine the mapping mode (MODE) based on BLAZOR_SIDE and PYTHON_SIDE
+	MODE=$$(choose_mode "$$PY_SIDE" "$$BLAZ_SIDE")
+	echo "Mode = $$MODE, from runtime = $$PY_SIDE and python_side = $$BLAZ_SIDE"
+
+	if [ "$(VERBOSE)" = "1" ]; then
+		echo "Generating $(APPSET_DOCKER) using column: $$MODE"
+		if [ "$$BLAZ_SIDE" != "$$PY_SIDE" ]; then
+			echo "	mapping '.env' hostnames from PYTHON_SIDE ($$PY_SIDE) to BLAZOR_SIDE ($$BLAZ_SIDE)"
+		else
+			echo "	copying '.env' hostnames since PYTHON_SIDE == BLAZOR_SIDE"
+		fi
+	fi
+	cp $(APPSET) $(APPSET_DOCKER)
+
+	# Services to check in appsettings.json, corresponding to BLAZOR_DB_KEYS
+	for SERVICE_KEY in $(BLAZOR_DB_KEYS); do
+		# 1. Determine the corresponding .env variable name (e.g., Neo4j -> NEO4J_HOST)
+		DB_VAR=$$(echo "$$SERVICE_KEY" | tr '[:lower:]' '[:upper:]' | sed 's/API/_\0/')
+		DB_VAR=$$(echo "$$DB_VAR" | sed 's/\(SQL\|DB\)\(.\)/\1_\2/')
+		ENV_HOST_VAR=$$(echo "$$DB_VAR" | sed 's/MYSQL/MY_SQL/' | sed 's/POSTGRESQL/POSTGRES_QL/' | sed 's/MONGODB/MONGO_DB/')_HOST
+		ENV_HOST_VAR=$$(echo "$$ENV_HOST_VAR" | sed 's/_QL//' | sed 's/_DB//' | sed 's/MY_SQL/MYSQL/')
+		
+		# 2. Extract the current host from appsettings.json (JSON_HOST)
+		CONN_STRING=$$(grep -E "\"$$SERVICE_KEY\"[[:space:]]*:[[:space:]]*\"" "$(APPSET_DOCKER)" | head -n 1)
+		[ -z "$$CONN_STRING" ] && continue
+		JSON_HOST=$$(echo "$$CONN_STRING" | sed -E 's/.*bolt:\/\/(.*):[0-9]+".*/\1/')
+		
+		# Check if extraction was successful
+		if [ -z "$$JSON_HOST" ] || [ "$$JSON_HOST" = "$$CONN_STRING" ]; then
+			if [ "$(VERBOSE)" = "1" ]; then
+				echo "  WARNING: Could not reliably extract host for $$SERVICE_KEY. Skipping."
+			fi
+			continue
+		fi
+		
+		# 3. Extract and resolve the ground truth host from .env (ENV_HOST_VAL)
+		ENV_HOST_RAW=$$(awk -F= -v v="$$ENV_HOST_VAR" '$$1==v{print $$2}' $(ENV_FILE) | tr -d '\r')
+		[ -z "$$ENV_HOST_RAW" ] && continue
+		ENV_HOST_VAL=$$(printf '%s' "$$ENV_HOST_RAW" | sed "s/\$${OS_LOCAL_IP}/$$OS_IP/g; s/\$${WSL_LOCAL_IP}/$$WSL_IP/g; s/\$$OS_LOCAL_IP/$$OS_IP/g; s/\$$WSL_LOCAL_IP/$$WSL_IP/g")
+		
+		# 4. Resolve the JSON host to its concrete IP/Name (JSON_HOST_VAL)
+		JSON_HOST_VAL=$$(printf "%s" "$$JSON_HOST" | sed "s/\$${OS_LOCAL_IP}/$$OS_IP/g; s/\$${WSL_LOCAL_IP}/$$WSL_IP/g; s/\$$OS_LOCAL_IP/$$OS_IP/g; s/\$$WSL_LOCAL_IP/$$WSL_IP/g")
+		
 		# 5. Choose the correct row in the hostname conversion table
-		ENV_CLASS=$$(classify_value "$$ENV_HOST_VAL" "$$OS_IP" "$$WSL_IP" "$$IN_CONTAINER" "$$RUNTIME"); \
-		if [ "$$BLAZ_SIDE" != "$$PY_SIDE" ] && [ "$$ENV_CLASS" = "Same Container" ]; then \
+		ENV_CLASS=$$(classify_value "$$ENV_HOST_VAL" "$$OS_IP" "$$WSL_IP" "$$IN_CONTAINER" "$$RUNTIME")
+		if [ "$$BLAZ_SIDE" != "$$PY_SIDE" ] && [ "$$ENV_CLASS" = "Same Container" ]; then
 			# Manually override 
-			ENV_CLASS="Native $$PY_SIDE"; \
-		fi; \
+			ENV_CLASS="Native $$PY_SIDE"
+		fi
 		echo "ConnectionStrings key: $$SERVICE_KEY"
 		echo "	Column in table (DOCKER TYPE) = $$MODE"
 		echo "	Row in table (DESTINATION) = $$ENV_CLASS"
-		\
-		# 6. Map the .env host to the FINAL Docker context (MODE) \
-		FINAL_MAPPED=$$(map_service "$$ENV_HOST_VAL" "$$ENV_CLASS" "$$MODE" "$$OS_IP" "$$WSL_IP"); \
-		\
-		if [ "$$FINAL_MAPPED" = "**UNKNOWN**" ]; then \
-			echo "  WARNING: Mapping value $$ENV_HOST_VAL from .env failed."; \
-			continue; \
-		fi; \
-		\
-		# 7. Validation: Compare the normalized hosts \
-		if [ "$$FINAL_MAPPED" != "$$JSON_HOST_VAL" ]; then \
-			echo "  WARNING: Host mismatch for $$SERVICE_KEY. .env ('$$ENV_HOST_VAL' -> '$$FINAL_MAPPED') does not match appsettings.json ('$$JSON_HOST_VAL'). Proceeding with .env as ground truth."; \
-		fi; \
-		\
-		if [ "$(VERBOSE)" = "1" ]; then \
-			echo "  Mapping $$ENV_HOST_VAL (from .env) -> $$FINAL_MAPPED (for Docker). Replacing host: $$JSON_HOST -> $$FINAL_MAPPED"; \
-		fi; \
-		\
-		# 8. Replace the host found in the JSON ($$JSON_HOST) with the final mapped value ($$FINAL_MAPPED) \
-		replace_host_in_connstring "web-app/BlazorApp/appsettings.Docker.json" "ConnectionStrings.$(APPSET_DOCKER)" "$$FINAL_MAPPED"; \
-	done; \
+		
+		# 6. Map the .env host to the FINAL Docker context (MODE)
+		FINAL_MAPPED=$$(map_service "$$ENV_HOST_VAL" "$$ENV_CLASS" "$$MODE" "$$OS_IP" "$$WSL_IP")
+		
+		if [ "$$FINAL_MAPPED" = "**UNKNOWN**" ]; then
+			echo "  WARNING: Mapping value $$ENV_HOST_VAL from .env failed."
+			continue
+		fi
+		
+		# 7. Validation: Compare the normalized hosts
+		if [ "$$FINAL_MAPPED" != "$$JSON_HOST_VAL" ]; then
+			echo "  WARNING: Host mismatch for $$SERVICE_KEY. .env ('$$ENV_HOST_VAL' -> '$$FINAL_MAPPED') does not match appsettings.json ('$$JSON_HOST_VAL'). Proceeding with .env as ground truth."
+		fi
+
+		if [ "$(VERBOSE)" = "1" ]; then
+			echo "  Mapping $$ENV_HOST_VAL (from .env) -> $$FINAL_MAPPED (for Docker). Replacing host: $$JSON_HOST -> $$FINAL_MAPPED"
+		fi
+		
+		# 8. Replace the host found in the JSON ($$JSON_HOST) with the final mapped value ($$FINAL_MAPPED)
+		replace_host_in_connstring "web-app/BlazorApp/appsettings.Docker.json" "ConnectionStrings.$(APPSET_DOCKER)" "$$FINAL_MAPPED"
+	done
 	echo "✓ Generated $(APPSET_DOCKER)"

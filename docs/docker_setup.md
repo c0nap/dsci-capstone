@@ -311,6 +311,34 @@ docker exec container-mysql mysql -uroot -ppassword -e "SELECT 1;"
 docker volume rm $(docker volume ls -q | grep mysql)
 ```
 
+docker compose -d
+
+docker compose will auto attempt to pull the images - we use this for the database images like mysql etc. normal docker will not auto pull
+
+Makefile is POSIX-compliant to run in docker containers with only bin/sh, dont require bin/bash
+
+do NOT use docker compose up if your MySQL username is root - we need the make command to do variable substitution
+
+
+
+Target = name of the make command, e.g. make do-stuff, 'do-stuff' is target
+Recipe = body of make target
+Shell function = wrapped in define/endef for make, explicitly include in recipe with $(function_name_fn)
+
+using ONESHELL, semicolons are required only as part of control statements (if, for)
+
+backslashes are required for 1 command split across multiple lines, or if we want to feed a variable directly into a function: VAR1=val \ VAR2=val \ command
+
+square brackets required to check equivalence - not required if the command returns an exit code (echo, mv, etc)
+
+`$(VAR)` is for Make variables defined usually in global scope with `VAR = value1 value2`, `$$VAR` is for Shell variables usually defined with no spaces `VAR=value1` within a recipe
+
+for make, named args can be passed like make function ARG1="val" ARG2="val" etc - ARG1 and ARG2 are make variables so we use $(). and shell functions are like function val1 val2 and we use $$1 (or typically NAME=$$1 and $$NAME. We can also prepend args - but this create environment variables only set for that command. VAR1=0 VAR2=1 command
+
+
+
+
+
 The CLI version of Docker runs on WSL, so the normal hostnames and IPs specified in `.env` should still work. The Blazor app expects IPs relative to Windows by default, so `appsettings.json` is reconfigured for WSL deployment. Similarly, the containers from Docker Desktop run from Windows. This is fine for the Blazor app, but hostnames in `.env` must be fixed. This process is automated by `make docker-env` and `make docker-appsettings` in the provided Makefile.
 
 The typical approach would be setting the environment variables directly in `docker-compose.yml` as shown below. But doing this would definitely break `load_dotenv(".env")` in Python, requiring extra handling logic.

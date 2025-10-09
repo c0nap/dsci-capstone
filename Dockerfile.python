@@ -33,7 +33,7 @@ COPY datasets/ datasets/
 COPY ${ENV_FILE} .env
 COPY Makefile .
 # Generate .env.docker with mapped hostnames
-RUN make docker-env
+RUN make env-docker
 RUN mv .env.docker .env
 
 
