@@ -41,14 +41,16 @@ jobs:
         run: make docker-pull || true  # Speeds up the build process; true just in case images dont exist yet
 
       - name: Build latest Docker images for production
-        run: make docker-build-prod
+        run: |
+          make docker-build-prod
+          make docker-retag-dev
 
       - name: Run all containers and tests
-        run: make docker-all-tests
+        run: make docker-all-tests  # Requires a dev-labelled image
 
       - name: Publish Docker images to GHCR
         if: success()
-        run: make docker-publish
+        run: make docker-publish  # Rebuilds images as prod
 
       - name: Cleanup
         if: always()   # Runs even if previous steps fail
