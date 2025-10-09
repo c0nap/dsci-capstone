@@ -145,13 +145,13 @@ docker-publish-blazor:
 # Deploy everything to docker and run the full pipeline
 docker-all:
 	make docker-all-dbs
-	make docker-blazor
+	make docker-blazor-silent
 	make docker-python
 
 # Deploy everything to docker, but only run pytests
 docker-all-tests:
 	make docker-all-dbs
-	make docker-blazor
+	make docker-blazor-silent
 	make docker-test
 
 
@@ -201,7 +201,7 @@ docker-neo4j:
 	
 
 
-
+.PHONY: docker-network
 docker-network:
 	# if network doesn't exist:
 	docker network inspect capstone_default >/dev/null 2>&1 || \
@@ -211,9 +211,130 @@ docker-network:
 		--label com.docker.compose.project=capstone \
 		capstone_default
 
-#env-default:
 
-#env-dummy:
+.PHONY: docker-clean docker-delete docker-full-refresh
+docker-clean:
+	@echo "Stopping and removing Docker Compose services..."
+	docker compose down || true
+	@echo "Stopping all running containers..."
+	docker ps -q | xargs -r docker stop || true
+	@echo "Removing all containers..."
+	docker ps -aq | xargs -r docker rm || true
+	@echo "Removing all custom networks..."
+	docker network ls --filter type=custom -q | xargs -r docker network rm || true
+	@echo "Docker cleanup complete!"
+docker-delete:
+	@echo "Removing all images..."
+	docker images -q | xargs -r docker rmi -f || true
+	@echo "Removing all volumes..."
+	docker volume ls -q | xargs -r docker volume rm || true
+	@echo "Deleted persistent data from Docker."
+docker-full-reset:
+	make docker-clean
+	make docker-delete
+	@echo "== Full Docker cleanup complete - all containers, images, volumes, and networks removed! =="
+
+
+.PHONY: env-dummy env-dummy-credentials env-hosts-default env-hosts-dev env-hosts-docker
+env-dummy:
+	@echo "Checking for existing .env file..."
+	@if [ -f .env ]; then \
+		echo "found .env file, aborting..."; \
+		exit 1; \
+	else \
+		echo ".env does not exist, creating .env..."; \
+		cp .env.example .env
+	fi
+	make env-hosts-docker CONFIRM="y"
+	make env-dummy-credentials CONFIRM="y"
+
+env-hosts-default:
+	@echo "Your .env hostnames will be overwritten with our default values."
+	@if [ "$$CONFIRM" = "y" ] || [ "$$CONFIRM" = "Y" ]; then \
+		response="y"; \
+	else \
+		read -p "Continue? [y/N] " response; \
+	fi
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
+		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' .env; \
+		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=OS/' .env; \
+		sed -i '/^[^#]*MYSQL_HOST=/s/=.*/=localhost/' .env; \
+		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=localhost/' .env; \
+		sed -i '/^[^#]*MONGO_HOST=/s/=.*/=localhost/' .env; \
+		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=localhost/' .env; \
+		sed -i '/^[^#]*BLAZOR_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' .env; \
+		echo "Replaced .env hostnames (default)."; \
+	else \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+
+env-hosts-dev:
+	@echo "Your .env hostnames will be overwritten with our development values."
+	@if [ "$$CONFIRM" = "y" ] || [ "$$CONFIRM" = "Y" ]; then \
+		response="y"; \
+	else \
+		read -p "Continue? [y/N] " response; \
+	fi
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
+		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' .env; \
+		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=OS/' .env; \
+		sed -i '/^[^#]*MYSQL_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' .env; \
+		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=localhost/' .env; \
+		sed -i '/^[^#]*MONGO_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' .env; \
+		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=localhost/' .env; \
+		sed -i '/^[^#]*BLAZOR_HOST=/s|=.*|=\$$\{OS_LOCAL_IP\}|' .env; \
+		sed -i '/^[^#]*OS_LOCAL_IP=/s/=.*/=172.30.48.1/' .env; \
+		sed -i '/^[^#]*WSL_LOCAL_IP=/s/=.*/=172.30.63.202/' .env; \
+		echo "Replaced .env hostnames and local IPs (dev)."; \
+	else \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+
+env-hosts-docker:
+	@echo "Your .env hostnames will be overwritten with Docker service names."
+	@if [ "$$CONFIRM" = "y" ] || [ "$$CONFIRM" = "Y" ]; then \
+		response="y"; \
+	else \
+		read -p "Continue? [y/N] " response; \
+	fi
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
+		sed -i '/^[^#]*PYTHON_SIDE=/s/=.*/=WSL/' .env; \
+		sed -i '/^[^#]*BLAZOR_SIDE=/s/=.*/=WSL/' .env; \
+		sed -i '/^[^#]*MYSQL_HOST=/s/=.*/=mysql_service/' .env; \
+		sed -i '/^[^#]*POSTGRES_HOST=/s/=.*/=postgres_service/' .env; \
+		sed -i '/^[^#]*MONGO_HOST=/s/=.*/=mongo_service/' .env; \
+		sed -i '/^[^#]*NEO4J_HOST=/s/=.*/=neo4j_service/' .env; \
+		sed -i '/^[^#]*BLAZOR_HOST=/s/=.*/=blazor_service/' .env; \
+		echo "Replaced .env hostnames (full docker)."; \
+	else \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+
+env-dummy-credentials:
+	@echo "Your .env usernames and passwords will be overwritten with placeholders."
+	@if [ "$$CONFIRM" = "y" ] || [ "$$CONFIRM" = "Y" ]; then \
+		response="y"; \
+	else \
+		read -p "Continue? [y/N] " response; \
+	fi
+	if [ "$$response" = "y" ] || [ "$$response" = "Y" ]; then \
+		sed -i '/^[^#]*MYSQL_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' .env; \
+		sed -i '/^[^#]*MYSQL_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' .env; \
+		sed -i '/^[^#]*POSTGRES_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' .env; \
+		sed -i '/^[^#]*POSTGRES_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' .env; \
+		sed -i '/^[^#]*MONGO_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' .env; \
+		sed -i '/^[^#]*MONGO_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' .env; \
+		sed -i '/^[^#]*NEO4J_USERNAME=/s/=.*/=Conan_Capstone_User_TMP/' .env; \
+		sed -i '/^[^#]*NEO4J_PASSWORD=/s/=.*/=Conan_Capstone_PASSWORD_TMP/' .env; \
+		echo "Replaced .env credentials (placeholder values)"; \
+	else \
+		echo "Aborted."; \
+		exit 1; \
+	fi
+
 
 # Helper functions used by the Dockerfiles
 # 	- Generates .env.docker and appsettings.Docker.json for containerized deployments

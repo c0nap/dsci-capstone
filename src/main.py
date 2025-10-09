@@ -542,7 +542,7 @@ if __name__ == "__main__":
     # process_single()
     # graph_triple_files()
     # post_example_results()
-    output_single()
+    # output_single()
 
     full_pipeline(
         epub_path="./datasets/examples/trilogy-wishes-2.epub",

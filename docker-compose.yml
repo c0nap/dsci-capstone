@@ -103,8 +103,8 @@ services:
     volumes:
       - neo4j_data:/data
     ports:
-      - "7474:7474"   # HTTP web UI
-      - "7687:7687"   # Bolt protocol for queries
+      - "0.0.0.0:7474:7474"   # HTTP web UI
+      - "0.0.0.0:7687:7687"   # Bolt protocol for queries
 
 
 volumes:
