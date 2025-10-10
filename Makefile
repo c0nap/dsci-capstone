@@ -94,7 +94,7 @@ docker-blazor:
 docker-blazor-silent:
 	make docker-blazor DETACHED=1
 docker-python-silent:
-	make docker-python DETACHED=1
+	make docker-python DETACHED=1 CMD="$(CMD)"
 
 
 ###############################################################################
@@ -103,7 +103,7 @@ docker-python-silent:
 .PHONY: docker-python-dev docker-blazor-dev
 docker-python-dev:
 	make docker-build-dev-python || exit 1  # Stop if build fails
-	make docker-python
+	make docker-python CMD="$(CMD)"
 docker-blazor-dev:
 	make docker-build-dev-blazor || exit 1  # Stop if build fails
 	make docker-blazor
@@ -160,33 +160,7 @@ docker-all-dbs:
 ###############################################################################
 .PHONY: docker-mysql docker-postgres docker-mongo docker-neo4j
 docker-mysql:
-	# Compatibility to use an existing mysql installation with username=root
-	DOCKER_MYSQL_USER=$$(awk -F= '/^MYSQL_USERNAME=/{print $$2}' $(ENV_FILE) | tr -d '\r')
-	MYSQL_PASS=$$(awk -F= '/^MYSQL_PASSWORD=/{print $$2}' $(ENV_FILE) | tr -d '\r')
-	if [ "$$DOCKER_MYSQL_USER" = "root" ]; then
-		DOCKER_MYSQL_USER=""
-		DOCKER_MYSQL_PASS=""
-	else
-		DOCKER_MYSQL_PASS=$$MYSQL_PASS
-	fi
-	# Reassign these variables on the same line as docker compose; gives .yml the values
-	#DOCKER_MYSQL_USER="$$DOCKER_MYSQL_USER" \
-	#DOCKER_MYSQL_PASS="$$DOCKER_MYSQL_PASS" \
-	docker compose up -d mysql_service  # ERROR? Overwrites values received by docker-compose?
-	# Elevate non-local superuser
-	if [ "$$DOCKER_MYSQL_USER" = "root" ]; then
-		# Wait until MySQL is accepting connections
-		until docker exec container-mysql mysqladmin ping -uroot -p"$$MYSQL_PASS" --silent; do sleep 1; done
-		# Elevate root and allow external root logins
-		docker exec container-mysql mysql -uroot -p"$$MYSQL_PASS" \
-			-e "ALTER USER 'root'@'%' IDENTIFIED WITH caching_sha2_password BY '$$MYSQL_PASS'; GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;"
-	else
-		# Wait until MySQL is accepting connections
-		until docker exec container-mysql mysqladmin ping -uroot -p"$$MYSQL_PASS" --silent; do sleep 1; done
-		# Elevate user and to allow access to 'mysql' database
-		docker exec container-mysql mysql -uroot -p"$$MYSQL_PASS" \
-			-e "ALTER USER '$$DOCKER_MYSQL_USER'@'%' IDENTIFIED WITH caching_sha2_password BY '$$MYSQL_PASS'; GRANT ALL PRIVILEGES ON *.* TO '$$DOCKER_MYSQL_USER'@'%' WITH GRANT OPTION; FLUSH PRIVILEGES;"
-	fi
+	docker compose up -d mysql_service
 docker-postgres:
 	docker compose up -d postgres_service
 docker-mongo:

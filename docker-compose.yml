@@ -46,11 +46,8 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}  # not typically used, but required by MySQL installation
       - MYSQL_DATABASE=${DB_NAME}
-
-      # makefile will set these environment variables appropriately
-      # # look for shell variable DOCKER_* first, fallback to MYSQL_USERNAME from .env file
-      - MYSQL_USER=${DOCKER_MYSQL_USER:-${MYSQL_USERNAME}}  # problem: cannot be root
-      - MYSQL_PASSWORD=${DOCKER_MYSQL_PASSWORD:-${MYSQL_PASSWORD}}
+      - MYSQL_USER=${MYSQL_USERNAME}  # problem: cannot be root
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
     ports:

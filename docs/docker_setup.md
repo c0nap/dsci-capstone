@@ -339,6 +339,9 @@ for make, named args can be passed like make function ARG1="val" ARG2="val" etc 
 
 volumes persist when named in docker-compose.yml, and store credentials
 
+MYSQL_USERNAME cannot be root
+
+docker logs container-mysql 2>&1 | grep -i "root"
 
 
 The CLI version of Docker runs on WSL, so the normal hostnames and IPs specified in `.env` should still work. The Blazor app expects IPs relative to Windows by default, so `appsettings.json` is reconfigured for WSL deployment. Similarly, the containers from Docker Desktop run from Windows. This is fine for the Blazor app, but hostnames in `.env` must be fixed. This process is automated by `make docker-env` and `make docker-appsettings` in the provided Makefile.

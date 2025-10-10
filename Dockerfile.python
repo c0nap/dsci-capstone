@@ -4,9 +4,6 @@ FROM python:3.12-slim
 # Connect the generated Docker image to this repository
 LABEL org.opencontainers.image.source="https://github.com/c0nap/dsci-capstone"
 
-# Declare build args - whether to include .env or .env.dummy
-ARG ENV_FILE
-
 # Enable relative paths - helpful name for container's root folder
 WORKDIR /pipeline
 
@@ -28,6 +25,8 @@ COPY tests/ tests/
 COPY components/ components/
 COPY datasets/ datasets/
 
+# Declare build args - whether to include .env or .env.dummy
+ARG ENV_FILE
 
 # Create .env file
 COPY ${ENV_FILE} .env
