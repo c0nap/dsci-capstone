@@ -1,4 +1,5 @@
 import os
+from time import time
 from pandas import DataFrame
 from abc import ABC, abstractmethod
 from sqlalchemy import create_engine, text, Table, MetaData, select
@@ -221,11 +222,10 @@ class RelationalConnector(DatabaseConnector):
         Hard-coded queries are used for testing purposes, and depend on the specific engine.
     """
 
-    def __init__(self, verbose, specific_queries: list, default_database: str):
+    def __init__(self, verbose, specific_queries: list):
         """Creates a new database connector. Use @ref components.connectors.RelationalConnector.from_env instead (this is called by derived classes).
         @param verbose  Whether to print success and failure messages.
         @param specific_queries  A list of helpful SQL queries.
-        @param default_database  The name of a database which always accepts connections.
         """
         super().__init__(verbose)
         self._route_db_name = True
@@ -238,7 +238,6 @@ class RelationalConnector(DatabaseConnector):
         self._specific_queries = specific_queries
         """@brief  Hard-coded queries which depend in the specific engine, and cannot be abstracted with SQLAlchemy.
         @note  This is set by derived classes e.g. 'mysqlConnector' for lanugage-sensitive syntax."""
-        self._default_database = default_database
         assert len(specific_queries) == 2
 
     @classmethod
@@ -262,31 +261,68 @@ class RelationalConnector(DatabaseConnector):
         try:
             engine = create_engine(self.connection_string)
             with engine.connect() as connection:
-                # These queries should work in all relational databases.
+                # 1. Basic connectivity test
                 result = connection.execute(text("SELECT 1")).fetchone()[0]
                 if print_results:
                     print(result)
                 if result != 1:
                     Log.incorrect_result(result, 1)
                     return False
+    
+                # 2. Multi-statement execution test
                 result = self.execute_combined("SELECT 1; SELECT 2;")[1].iloc[0, 0]
                 if print_results:
                     print(result)
                 if result != 2:
                     Log.incorrect_result(result, 2)
                     return False
-                # Extract data with specific test queries which cannot be abstracted with SQLAlchemy.
+    
+                # 3. Current database name
                 db_name = self.execute_query(self._specific_queries[0]).iloc[0, 0]
                 if print_results:
                     print(db_name)
+    
+                # 4. List all databases
                 databases = self.execute_query(self._specific_queries[1])
                 if print_results:
                     print(databases)
-                # TODO: Test database management and table creation / deletion.
-
-                # File execution tests are performed by /tests/test_components.py
+    
+                # 5. Ensure working database exists
+                working_database = os.getenv("DB_NAME")
+                if working_database not in databases.iloc[:, 0].tolist():
+                    try:
+                        self.create_database(working_database)
+                        if self.verbose:
+                            print(f"Created database: {working_database}")
+                    except Exception as e:
+                        Log.connect_fail(f"Failed to create database {working_database}")
+                        print(e)
+                        return False
+    
+                # 6. Test create/drop database functionality with a temporary DB
+                temp_db = f"temp_test_db_{int(time.time())}"
+                try:
+                    self.create_database(temp_db)
+                    if self.verbose:
+                        print(f"Created temporary database: {temp_db}")
+                    self.drop_database(temp_db)
+                    if self.verbose:
+                        print(f"Dropped temporary database: {temp_db}")
+                except Exception as e:
+                    Log.connect_fail(f"Failed to create/drop temporary database {temp_db}")
+                    print(e)
+                    return False
+    
+                # 7. Test connection to the working database
+                self.change_database(working_database)
+                result = self.execute_query("SELECT 1").iloc[0, 0]
+                if result != 1:
+                    Log.incorrect_result(result, 1)
+                    return False
+    
+                # Log overall success
                 if self.verbose:
-                    Log.connect_success(db_name)
+                    Log.connect_success(working_database)
         except Exception as e:
             if self.verbose:
                 Log.connect_fail(self.connection_string)
@@ -388,7 +424,7 @@ class mysqlConnector(RelationalConnector):
         """Configures the relational connector.
         @param verbose  Whether to print success and failure messages."""
         super().__init__(
-            verbose, self.specific_queries["MYSQL"], default_database="mysql"
+            verbose, self.specific_queries["MYSQL"]
         )
 
     # A list of basic test queries used by RelationalConnector
@@ -408,7 +444,7 @@ class postgresConnector(RelationalConnector):
         """Configures the relational connector.
         @param verbose  Whether to print success and failure messages."""
         super().__init__(
-            verbose, self.specific_queries["POSTGRES"], default_database="postgres"
+            verbose, self.specific_queries["POSTGRES"]
         )
 
     # A list of basic test queries used by RelationalConnector

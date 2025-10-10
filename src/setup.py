@@ -44,26 +44,8 @@ class Session:
 
     def setup(self):
         """Configure the databases and verify they are working correctly."""
-        # TODO: refactor to test_connection in connectors.py
-
-        print(f"************ {self.relational_db.connection_string} ************")
-
-        # Test connection to default database "mysql" on the MySQL engine
-        default_database = self.relational_db._default_database
-        self.relational_db.change_database(default_database)
         self.relational_db.test_connection()
-        if self.verbose:
-            print()
-        # Test connection to working database ".env/DB_NAME" on the MySQL engine
-        working_database = os.getenv("DB_NAME")
-        self.relational_db.change_database(working_database)
-        already_exists = self.relational_db.test_connection(print_results=self.verbose)
-        # Ensures the working database was created
-        if not already_exists:
-            self.relational_db.change_database(default_database)
-            self.relational_db.create_database(working_database)
-            self.relational_db.change_database(working_database)
-            self.relational_db.test_connection(print_results=self.verbose)
+
         self.setup1()
 
     def setup1(self):

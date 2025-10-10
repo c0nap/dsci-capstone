@@ -1,6 +1,7 @@
 import pytest
 import sys
 import os
+import time
 from src.setup import Session
 from src.util import Log
 
@@ -18,15 +19,14 @@ def session():
 def relational_db(session):
     """Fixture to get relational database connection."""
     relational_db = session.relational_db
-    saved_config = {
-        "verbose": relational_db.verbose,
-        "working_database": relational_db.verbose,
-    }
+    saved_verbose = relational_db.verbose
     relational_db.verbose = True
-    relational_db.change_database(relational_db._default_database)
+
+    # Removed default database reference; test_connection handles creation
     yield relational_db
-    relational_db.verbose = saved_config["verbose"]
-    relational_db.change_database(saved_config["working_database"])
+
+    # Restore verbose
+    relational_db.verbose = saved_verbose
 
 
 @pytest.mark.order(1)
@@ -41,16 +41,16 @@ def test_relational(relational_db):
 @pytest.mark.order(2)
 def test_sql_examples(relational_db):
     """Run queries from test files."""
-    _test_sql_file(relational_db, "./tests/reset.sql", expect_df=False)
+    _test_sql_file(relational_db, "./db/reset.sql", expect_df=False)
     _test_sql_file(
         relational_db,
-        "./tests/example1.sql",
+        "./db/example1.sql",
         expect_df=True,
         df_header="EntityName table:",
     )
     _test_sql_file(
         relational_db,
-        "./tests/example2.sql",
+        "./db/example2.sql",
         expect_df=True,
         df_header="ExampleEAV table:",
     )
