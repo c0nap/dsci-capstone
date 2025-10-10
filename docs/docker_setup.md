@@ -335,7 +335,9 @@ square brackets required to check equivalence - not required if the command retu
 
 for make, named args can be passed like make function ARG1="val" ARG2="val" etc - ARG1 and ARG2 are make variables so we use $(). and shell functions are like function val1 val2 and we use $$1 (or typically NAME=$$1 and $$NAME. We can also prepend args - but this create environment variables only set for that command. VAR1=0 VAR2=1 command
 
+ docker compose down -v   deletes volumes
 
+volumes persist when named in docker-compose.yml, and store credentials
 
 
 
