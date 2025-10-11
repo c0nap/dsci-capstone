@@ -48,8 +48,17 @@ jobs:
           make docker-build-prod
           make docker-retag-to-dev
 
-      - name: Run all containers and tests
-        run: make docker-all-tests  # Requires a dev-labelled image
+      - name: Start database containers
+        run: make docker-all-dbs
+
+      - name: Wait for databases to be ready
+        run: sleep 20
+
+      - name: Start Blazor container
+        run: make docker-blazor-silent  # Requires a dev-labelled image
+
+      - name: Start Python container and run tests
+        run: make docker-test-raw  # Requires a dev-labelled image
 
       - name: Publish Docker images to GHCR
         if: success()
