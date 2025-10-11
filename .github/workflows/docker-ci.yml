@@ -51,6 +51,12 @@ jobs:
       - name: Wait for databases to be ready
         run: sleep 20
 
+      - name: DEBUG - Errors in DB containers?
+        run: |
+          docker ps -a
+          docker logs container-mysql
+          docker logs container-neo4j
+
       - name: Start Blazor container
         run: make docker-blazor-silent  # Requires a dev-labelled image
 
