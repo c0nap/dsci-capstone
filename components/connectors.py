@@ -3,6 +3,7 @@ from time import time
 from pandas import DataFrame
 from abc import ABC, abstractmethod
 from sqlalchemy import create_engine, text, Table, MetaData, select
+from sqlalchemy.exc import NoSuchTableError
 from dotenv import load_dotenv
 from typing import List
 from sqlparse import parse as sql_parse
@@ -300,7 +301,7 @@ class RelationalConnector(DatabaseConnector):
                         return False
     
                 # 6. Test create/drop database functionality with a temporary DB
-                temp_db = f"temp_test_db_{int(time.time())}"
+                temp_db = f"temp_test_db_{int(time())}"
                 try:
                     self.create_database(temp_db)
                     if self.verbose:
@@ -374,6 +375,9 @@ class RelationalConnector(DatabaseConnector):
                 if result.returns_rows and result.keys():
                     result = DataFrame(result.fetchall(), columns=result.keys())
                 return result
+        except NoSuchTableError:
+            # Postgres will auto-lowercase all table names.
+            return self.get_dataframe(name.lower())
         except Exception as e:
             if self.verbose:
                 Log.connect_fail(self.connection_string)

@@ -41,7 +41,13 @@ def test_relational(relational_db):
 @pytest.mark.order(2)
 def test_sql_examples(relational_db):
     """Run queries from test files."""
-    _test_sql_file(relational_db, "./db/reset.sql", expect_df=False)
+    if relational_db.db_type == "MYSQL":
+        _test_sql_file(relational_db, "./db/tables_mysql.sql", expect_df=False)
+    elif relational_db.db_type == "POSTGRES":
+        _test_sql_file(relational_db, "./db/tables_postgres.sql", expect_df=False)
+    else:
+        raise Exception(f"Unknown database engine '{relational_db.db_type}'")
+
     _test_sql_file(
         relational_db,
         "./db/example1.sql",
@@ -54,6 +60,7 @@ def test_sql_examples(relational_db):
         expect_df=True,
         df_header="ExampleEAV table:",
     )
+
     df = relational_db.get_dataframe(
         "EntityName"
     )  # Internal errors are handled by the class itself.
@@ -79,3 +86,4 @@ def _test_sql_file(relational_db, filename: str, expect_df: bool, df_header: str
                 print(df)
     except:
         Log.fail(f"Unexpected error while executing queries from '{filename}'.")
+        raise

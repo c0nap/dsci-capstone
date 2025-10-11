@@ -300,6 +300,8 @@ docker-delete:
 docker-delete-images:
 	echo "Removing all images..."
 	docker images -q | xargs -r docker rmi -f || true
+	docker image prune -af
+	docker builder prune -af
 docker-delete-volumes:
 	echo "Removing all volumes..."
 	docker volume ls -q | xargs -r docker volume rm || true

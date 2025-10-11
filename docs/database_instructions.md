@@ -193,3 +193,6 @@ This problem will spread as we scale in future versions; a remote Blazor server 
 6. Instead of allowing full access to out-of-network machines, use a VPN to connect with the secured network remotely.
 
 
+
+
+Note: Postgres is case-insensitive, and stores tables as all lowercase. MySQL is not

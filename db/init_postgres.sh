@@ -6,7 +6,8 @@ set -e
 
 # Connect to Postgres as the superuser specified by POSTGRES_USER.
 # -v ON_ERROR_STOP=1 ensures that psql exits on any SQL error.
-psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" <<-EOSQL
+# -d postgres is required, psql will otherwise try to connect to db with same name as user.
+psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d postgres <<-EOSQL
 
 -- Create the application user (role) if it doesn't already exist.
 -- IF NOT EXISTS ensures idempotency so that restarting the container
@@ -21,6 +22,9 @@ BEGIN
    END IF;
 END
 \$do\$;
+
+-- Grant the user permission to create databases
+ALTER ROLE "$POSTGRES_USER" CREATEDB;
 
 -- Create the working database if it doesn't already exist.
 -- Assign ownership to the application user.
