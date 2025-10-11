@@ -33,8 +33,8 @@ jobs:
 
       - name: Create secrets files with fake credentials
         run: |
-          make env-dummy
-          make appsettings-dummy
+          make env-dummy OUT=".env"
+          make appsettings-dummy OUT="web-app/BlazorApp/appsettings.json" ENVF=".env"
         # ORDER MATTERS ^
 
       - name: Pull outdated Docker images

@@ -328,9 +328,6 @@ appsettings-dummy:
 		echo "$$OUT_FILE already exists, aborting..."
 		exit 1
 	else
-		pwd
-		ls -la web-app/BlazorApp/
-		find . -name "appsettings.Example.json"
 		echo "$$OUT_FILE does not exist, copying..."
 		cp web-app/BlazorApp/appsettings.Example.json "$$OUT_FILE"
 	fi
