@@ -1,7 +1,12 @@
 #!/bin/sh
+YELLOW="\033[33m"
+WHITE="\033[0m"
+ECHO_PREFIX="*** ${YELLOW}(init_postgres.sh)${WHITE} ***  "
+echo "$ECHO_PREFIX === INIT SCRIPT STARTING ==="
+
 # Exit immediately if any command fails.
-# This ensures that if creating the user or database fails,
-# the container will stop instead of continuing with a partially initialized database.
+# This ensures that if any step fails, the container stops instead of continuing
+# with a partially initialized database.
 set -e
 
 # Connect to Postgres as the superuser specified by POSTGRES_USER.

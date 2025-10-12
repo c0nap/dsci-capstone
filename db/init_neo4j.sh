@@ -1,5 +1,8 @@
 #!/bin/sh
-echo "=== INIT SCRIPT STARTING ==="
+YELLOW="\033[33m"
+WHITE="\033[0m"
+ECHO_PREFIX="*** ${YELLOW}(init_neo4j.sh)${WHITE} ***  "
+echo "$ECHO_PREFIX === INIT SCRIPT STARTING ==="
 
 # Exit immediately if any command fails.
 # This ensures that if any step fails, the container stops instead of continuing
@@ -10,9 +13,6 @@ NEO4J_USERNAME=$1
 NEO4J_PASSWORD=$2
 MAX_RETRIES=4
 RETRY_DELAY=5
-YELLOW="\033[33m"
-WHITE="\033[0m"
-ECHO_PREFIX="*** ${YELLOW}(init_neo4j.sh)${WHITE} ***  "
 
 # --- SET INITIAL PASSWORD ---
 echo "$ECHO_PREFIX Setting Neo4j initial password..."

@@ -1,7 +1,11 @@
 #!/bin/sh
+# MySQL strips all color codes
+ECHO_PREFIX="***** (init_mysql.sh) *****   "
+echo "$ECHO_PREFIX === INIT SCRIPT STARTING ==="
+
 # Exit immediately if any command fails.
-# This ensures that if creating the database or granting privileges fails,
-# the container will stop instead of continuing with a partially initialized database.
+# This ensures that if any step fails, the container stops instead of continuing
+# with a partially initialized database.
 set -e
 
 # Connect to MySQL as root using the root password
