@@ -96,13 +96,14 @@ services:
         aliases:   # does not replace service_name
           - databases_service
     image: neo4j:5
-    environment:
-      - NEO4J_AUTH=${NEO4J_USERNAME}/${NEO4J_PASSWORD}   # format: "username/password"
     volumes:
       - neo4j_data:/data
+      - ./db/init_neo4j.sh:/init_neo4j.sh
     ports:
       - "0.0.0.0:7474:7474"   # HTTP web UI
       - "0.0.0.0:7687:7687"   # Bolt protocol for queries
+    entrypoint: ["/bin/sh", "/init_neo4j.sh"]
+    command: ["${NEO4J_USERNAME}", "${NEO4J_PASSWORD}"]
 
 
 volumes:
