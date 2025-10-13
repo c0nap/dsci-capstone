@@ -217,6 +217,22 @@ class DatabaseConnector(Connector):
         pass
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class RelationalConnector(DatabaseConnector):
     """Connector for relational databases (MySQL, PostgreSQL).
     @details
@@ -326,7 +342,7 @@ class RelationalConnector(DatabaseConnector):
 
     def check_connection(log_source: str, raise_error: bool) -> bool:
         """Minimal connection test to determine if our connection string is valid.
-        @details  Connect to MongoDB using the low-level PyMongo handle.
+        @details  Connect to our relational database using SQLAlchemy's engine.connect()
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
@@ -377,7 +393,7 @@ class RelationalConnector(DatabaseConnector):
             Log.fail(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
 
     def _split_combined(self, multi_query: str) -> List[str]:
-        """Checks if a string contains multiple queries.
+        """Divides a string into non-divisible SQL queries using `sqlparse`.
         @param multi_query  A string containing multiple queries.
         @return  A list of single-query strings."""
         queries = []
@@ -400,10 +416,11 @@ class RelationalConnector(DatabaseConnector):
                     table = Table(table_name, MetaData(), autoload_with=engine)
                     result = connection.execute(select(table))
                     if result.returns_rows and result.keys():
-                        result = DataFrame(result.fetchall(), columns=result.keys())
+                        df = DataFrame(result.fetchall(), columns=result.keys())
+                        
                     if self.verbose:
                         Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(table_name))
-                    return result
+                    return df
             except NoSuchTableError:
                 # Postgres will auto-lowercase all table names. Give it one more try with the lowercase name.
                 continue

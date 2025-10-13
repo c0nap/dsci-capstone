@@ -5,7 +5,6 @@ from pandas import DataFrame
 from neomodel import config, db
 import os
 import re
-import pandas as pd
 
 
 class GraphConnector(DatabaseConnector):
@@ -22,80 +21,149 @@ class GraphConnector(DatabaseConnector):
         self._route_db_name = False
         """@brief  Whether to use the database name in the connection string.
         @note  Neo4j is the exception; the free version has no concept of databases."""
-        super().configure("NEO4J", database_name="default")
+        database = os.getenv("DB_NAME")
+        super().configure("NEO4J", database)
 
-        # Connect neomodel
+        # Connect neomodel - URL never needs to change for Neo4j
         config.DATABASE_URL = self.connection_string
 
-        # TODO: Relic from RelationalConnector: some queries cannot be accomplished via NeoModel?
-        self._specific_queries = [
-            "RETURN 1;",  # Basic health check
-            "MATCH (n) RETURN count(n) AS nodes;",  # Count of all nodes
-        ]
 
-    def test_connection(self, print_results=False) -> bool:
+    def test_connection(self, raise_error=True) -> bool:
         """Establish a basic connection to the Neo4j database.
-        @param print_results  Whether to display the retrieved test DataFrames
-        @return  Whether the connection test was successful."""
+        @details  By default, Log.fail will raise an exception.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the connection test was successful.
+        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
         try:
-            # Run the hard-coded queries
-            for q in self._specific_queries:
-                df = self.execute_query(q)
-                if print_results:
-                    print(df)
+            # Check if connection string is valid
+            if self.check_connection(Log.test_conn, raise_error) == False:
+                return False
 
-            if self.verbose:
-                Log.connect_success("NEO4J")
-            return True
         except Exception as e:
-            if self.verbose:
-                Log.connect_fail(self.connection_string)
-            print(e)
+            Log.fail(Log.gr_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
             return False
+        # Finish with no errors = connection test successful
+        if self.verbose:
+            Log.success(Log.gr_db, Log.msg_db_connect(self.database_name))
+        return True
 
-    def execute_query(self, query: str) -> DataFrame:
+    def check_connection(log_source: str, raise_error: bool) -> bool:
+        """Minimal connection test to determine if our connection string is valid.
+        @details  Connect to Neo4j using ######
+        @param log_source  The Log class prefix indicating which method is performing the check.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the connection test was successful.
+        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+        try:
+            # Automatically connected, just try a basic query
+            db.cypher_query("RETURN 1")
+        except Exception as e:
+            Log.fail(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
+            return False
+        if self.verbose:
+            Log.success(Log.gr_db + log_source, Log.msg_db_connect(self.database_name))
+        return True
+
+
+    def execute_query(self, query: str) -> Optional[DataFrame]:
         """Send a single Cypher query to Neo4j.
-        @note  If a result is returned, it will be converted to a DataFrame."""
+        @note  If a result is returned, it will be converted to a DataFrame.
+        @param query  A single query to perform on the database.
+        @return  DataFrame containing the result of the query, or None
+        """
         super().execute_query(query)
+        self.check_connection(Log.run_q, raise_error=True)
+        # Derived classes MUST implement single-query execution.
         try:
             results, meta = db.cypher_query(query)
-            if not results:
-                return None
-            return pd.DataFrame(results, columns=[m for m in meta])
-        except Exception as e:
+            return None if not results
+            result = DataFrame(results, columns=[m for m in meta])
+
             if self.verbose:
-                Log.fail(f"Failed query on {self.connection_string}")
-            raise
+                Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query, result))
+            return result
+        except Exception as e:
+            Log.fail(Log.gr_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
+
 
     def _split_combined(self, multi_query: str) -> List[str]:
-        """Splits combined CQL queries by semicolons."""
+        """Divides a string into non-divisible CQL queries, ignoring comments.
+        @param multi_query  A string containing multiple queries.
+        @return  A list of single-query strings."""
+        # 1. Remove single-line comments
+        multi_query = re.sub(r'//.*', '', multi_query)
+        # 2. Remove block comments
+        multi_query = re.sub(r'/\*.*?\*/', '', multi_query, flags=re.DOTALL)
+        # 3. Split by ; and strip
         return [q.strip() for q in multi_query.split(";") if q.strip()]
 
-    def get_dataframe(self, label: str) -> DataFrame:
-        """Return all nodes of a given label, filtered by database_id."""
-        query = f"""
-        MATCH (n:{label})
-        WHERE n.database_id = '{self.database_name}'
-        RETURN n
-        """
-        return self.execute_query(query)
+
+    def get_dataframe(self, name: str) -> Optional[DataFrame]:
+        """Automatically generate and run a query for the specified collection.
+        @details
+            - Fetches all public node attributes, the internal ID, and all labels (e.g. :Person :Character)
+            - Does not explode lists or nested values
+            - Different approach than DocumentConnector because our node attributes are usually flat key:value already.
+        @param name  The name of an existing table or collection in the database.
+        @return  DataFrame containing the requested data, or None"""
+        super().get_dataframe(name)
+        self.check_connection(Log.get_df, raise_error=True)
+        try:
+            # Get all nodes in the current graph
+            query = f"MATCH (n) WHERE n.database_id = $db RETURN n"
+            results, _ = db.cypher_query(query, {"db": self.database_name})
+            
+            # Create rows containing node attributes
+            rows = []
+            for record in results:
+                node = record[0]
+                # 1) Public properties, 2) internal ID, and 3) labels
+                row = dict(node)
+                row["id"] = node.id
+                row["labels"] = list(node.labels)
+                rows.append(row)
+            # Pandas will fill in NaN where necessary
+            df = DataFrame(rows)
+
+            if self.verbose:
+                Log.success(Log.gr_db + Log.get_df, Log.msg_good_coll(name))
+            return df
+        except Exception as e:
+            Log.fail(Log.gr_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
+        # If not found, warn but do not fail
+        Log.fail(Log.gr_db + Log.get_df, Log.msg_bad_coll(name), raise_error=False)
+        return None
+
 
     def create_database(self, database_name: str):
-        """Create a pseudo-database by clearing nodes with the same database_id."""
+        """Create a fresh pseudo-database by deleting nodes having the specified database ID.
+        @note  This change will apply to any new nodes created after @ref components.connectors.DatabaseConnector.change_database is called.
+        @param database_name  A database ID specifying the pseudo-database."""
         super().create_database(database_name)
-        self.drop_database(database_name)
-        if self.verbose:
-            Log.success_manage_db(database_name, "Initialized (pseudo)")
+        self.check_connection(Log.create_db, raise_error=True)
+        try:
+            # Do nothing - base class will call @ref components.fact_storage.GraphConnector.drop_database automatically
+            if self.verbose:
+                Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
+        except Exception as e:
+            Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "create"), raise_error=True, other_error=e)
 
-    def drop_database(self, database_name: str = ""):
-        """Delete all nodes with the given database_id."""
+    def drop_database(self, database_name: str):
+        """Delete all nodes stored under a particular database name.
+        @param database_name  A database ID specifying the pseudo-database."""
         super().drop_database(database_name)
-        if not database_name:
-            database_name = self.database_name
-        query = f"MATCH (n) WHERE n.database_id = '{database_name}' DETACH DELETE n"
-        self.execute_query(query)
-        if self.verbose:
-            Log.success_manage_db(database_name, "Dropped (pseudo)")
+        self.check_connection(Log.drop_db, raise_error=True)
+        try:
+            query = f"MATCH (n) WHERE n.database_id = '{database_name}' DETACH DELETE n"
+            self.execute_query(query)
+
+            if self.verbose:
+                Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
+        except Exception as e:
+            Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "drop"), raise_error=True, other_error=e)
+
+
+
 
     def add_triple(self, subject: str, relation: str, object_: str):
         """Add a semantic triple to the graph using raw Cypher.
@@ -141,7 +209,7 @@ class GraphConnector(DatabaseConnector):
         """
         return self.execute_query(query)
 
-    def get_all_triples(self) -> pd.DataFrame:
+    def get_all_triples(self) -> DataFrame:
         """Return all triples in the current pseudo-database as a pandas DataFrame."""
         db_id = self.database_name
 
@@ -153,7 +221,7 @@ class GraphConnector(DatabaseConnector):
         df = self.execute_query(query)
         # Ensure we always return a DataFrame with the 3 desired columns
         if df is None or df.empty:
-            df = pd.DataFrame(columns=["subject", "relation", "object"])
+            df = DataFrame(columns=["subject", "relation", "object"])
         else:
             # Rename columns safely
             df = df.rename(
@@ -170,7 +238,7 @@ class GraphConnector(DatabaseConnector):
         triples_df = self.get_all_triples()
 
         # Set pandas display options temporarily
-        with pd.option_context(
+        with option_context(
             "display.max_rows", max_rows, "display.max_colwidth", max_col_width
         ):
             print(f"Graph triples ({len(triples_df)} total):")

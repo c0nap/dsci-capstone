@@ -33,12 +33,13 @@ class DocumentConnector(DatabaseConnector):
         self._route_db_name = True
         """@brief  Whether to use the database name in the connection string.
         @note  mongoengine.connect is used on-demand; we keep the convention of routing the DB name."""
-        super().configure("MONGO", database_name="default")
+        database = os.getenv("DB_NAME")
+        super().configure("MONGO", database)
 
 
 
     def test_connection(self, raise_error=True) -> bool:
-        """Establish a basic connection to the database.
+        """Establish a basic connection to the MongoDB database.
         @details  By default, Log.fail will raise an exception.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
@@ -58,7 +59,7 @@ class DocumentConnector(DatabaseConnector):
 
     def check_connection(log_source: str, raise_error: bool) -> bool:
         """Minimal connection test to determine if our connection string is valid.
-        @details  Connect to MongoDB using the low-level PyMongo handle.
+        @details  Connect to MongoDB using MongoEnigine.connect()
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
@@ -69,7 +70,7 @@ class DocumentConnector(DatabaseConnector):
             Log.fail(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
             return False
         if self.verbose:
-            Log.success(Log.rel_db + log_source, Log.msg_db_connect(self.database_name))
+            Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name))
         return True
 
     
@@ -116,14 +117,14 @@ class DocumentConnector(DatabaseConnector):
             # Convert document list to DataFrame if any docs exist
             result = self._docs_to_df(docs)
             if self.verbose:
-                Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query, result))
+                Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query, result))
             return result
         except Exception as e:
-            Log.fail(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
+            Log.fail(Log.doc_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
 
 
     def _split_combined(self, multi_query: str) -> list[str]:
-        """Split combined MongoDB commands by semicolons, ignoring comments and semicolons inside JSON.
+        """Divides a string into non-divisible MongoDB commands, ignoring comments and semicolons inside JSON.
         @details
         Example Input:
             {"ping": 1}; {"aggregate": "users", "pipeline": [...]};
@@ -170,11 +171,11 @@ class DocumentConnector(DatabaseConnector):
             db = mongoengine.get_db()
             # Results will be a list of documents
             docs = list(db[name].find({}))
-            result = self._docs_to_df(docs)
+            df = self._docs_to_df(docs)
 
             if self.verbose:
                 Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name))
-            return result
+            return df
         except Exception as e:
             Log.fail(Log.doc_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
         # If not found, warn but do not fail
@@ -214,27 +215,27 @@ class DocumentConnector(DatabaseConnector):
             db.client.drop_database(database_name)
 
             if self.verbose:
-                Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
+                Log.success(Log.doc_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
         except Exception as e:
-            Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "drop"), raise_error=True, other_error=e)
+            Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "drop"), raise_error=True, other_error=e)
 
 
     # Reuse the dataframe parsing logic
     def _docs_to_df(self, docs: List[Dict]) -> DataFrame:
         """Convert raw MongoDB documents to a Pandas DataFrame.
         @details
+        	- Will explode / flatten nested dicts only if json_normalize() is successful
+            - Different approach than GraphConnector because our documents usually contain nesting.
         Steps:
           1. Convert ObjectId fields (_id) to strings so Pandas can handle them.
           2. Flatten nested JSON structures using Pandas.json_normalize.
         Example input:
-          docs = [
-              {"_id": ObjectId("650f..."), "name": "Alice", "age": 30}, ...}
-          ]
+          docs = [ {"_id": ObjectId("650f..."), "name": "Alice", "age": 30}, ...} ]
         Example output:
           DataFrame([
               {"_id": "650f...", "name": "Alice", "age": 30, "address.city": None, "address.zip": None},
               {"_id": "650f...", "name": "Bob", "age": None, "address.city": "NY", "address.zip": "10001"}
-          ])"""
+        ])"""
         # 1. Convert MongoDB ObjectId fields to strings
         for document in docs:
             if "_id" in document:
