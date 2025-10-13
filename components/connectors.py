@@ -123,7 +123,7 @@ class DatabaseConnector(Connector):
             self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}"
 
     @abstractmethod
-    def execute_query(self, query: str) -> DataFrame:
+    def execute_query(self, query: str) -> Optional[DataFrame]:
         """Send a single command through the connection.
         @note  If a result is returned, it will be converted to a DataFrame.
         @param query  A single query to perform on the database.
@@ -138,11 +138,9 @@ class DatabaseConnector(Connector):
             if len(results) == 0:
                 return None
             # Return the final result if several are found.
-            if len(results) > 1:
-                if self.verbose:
-                    Log.fail(
-                        "A combined query was executed as a single query. Some results are hidden."
-                    )
+            if len(results) > 1 and self.verbose:
+                # Warn when earlier results are ignored
+                Log.fail(Log.db_conn_abc + Log.run_q, Log.msg_multiple_query(len(results), query), raise_error=False)
             return results[-1]
         # Derived classes MUST implement single-query execution.
         pass
@@ -153,6 +151,7 @@ class DatabaseConnector(Connector):
         @return  A list of query results converted to DataFrames."""
         queries = self._split_combined(multi_query)
         results = []
+        # No error handling - execute_query will take care of it
         for query in queries:
             df = self.execute_query(query)
             if df is not None:
@@ -164,25 +163,25 @@ class DatabaseConnector(Connector):
         @note  Loads the entire file into memory at once.
         @param filename  The path to a specified query file (.sql, .cql, .json).
         @return  Whether the query was performed successfully."""
+        
         try:  # Read the entire file as a multi-query string
             with open(filename, "r") as file:
                 multi_query = file.read()
+                if self.verbose:
+                    Log.success(Log.db_conn_abc + Log.run_f, Log.msg_good_path(filename))
         except Exception as e:
-            if self.verbose:
-                Log.file_read_error(filename)
-            raise
+            Log.fail(Log.db_conn_abc + Log.run_f, Log.msg_bad_path(filename), raise_error=True, e)
+        
         try:  # Attempt to run the multi-query
             results = self.execute_combined(multi_query)
             if self.verbose:
-                Log.success(f'Finished executing "{filename}"\n')
+                Log.success(Log.db_conn_abc + Log.run_f, Log.msg_good_exec_f(filename))
             return results
         except Exception as e:
-            if self.verbose:
-                Log.fail(f'Failed to execute file "{filename}"')
-            raise
+            Log.fail(Log.db_conn_abc + Log.run_f, Log.msg_bad_exec_f(filename), raise_error=True, e)
 
     @abstractmethod
-    def get_dataframe(self, name: str) -> DataFrame:
+    def get_dataframe(self, name: str) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified resource.
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None"""
@@ -340,6 +339,8 @@ class RelationalConnector(DatabaseConnector):
         except Exception as e:
             Log.fail(Log.rel_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
             return False
+        if self.verbose:
+            Log.success(Log.rel_db + log_source, Log.msg_db_connect(self.database_name))
         return True
 
 
@@ -352,7 +353,8 @@ class RelationalConnector(DatabaseConnector):
                 return False
         return True
 
-    def execute_query(self, query: str) -> DataFrame:
+
+    def execute_query(self, query: str) -> Optional[DataFrame]:
         """Send a single command to the database connection.
         @note  If a result is returned, it will be converted to a DataFrame.
         @param query  A single query to perform on the database.
@@ -368,10 +370,11 @@ class RelationalConnector(DatabaseConnector):
                 if result.returns_rows and result.keys():
                     result = DataFrame(result.fetchall(), columns=result.keys())
                 connection.commit()
+                if self.verbose:
+                    Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query, result))
                 return result
         except Exception as e:
-            if self.verbose:
-                Log.connect_fail(self.connection_string)
+            Log.fail(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, e)
 
     def _split_combined(self, multi_query: str) -> List[str]:
         """Checks if a string contains multiple queries.
@@ -384,7 +387,7 @@ class RelationalConnector(DatabaseConnector):
                 queries.append(query)
         return queries
 
-    def get_dataframe(self, name: str) -> DataFrame:
+    def get_dataframe(self, name: str) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None"""
@@ -405,7 +408,7 @@ class RelationalConnector(DatabaseConnector):
                 # Postgres will auto-lowercase all table names. Give it one more try with the lowercase name.
                 continue
             except Exception as e:
-                Log.fail(Log.rel_db + Log.test_df, Log.msg_unknown_error, raise_error=True, e)
+                Log.fail(Log.rel_db + Log.get_df, Log.msg_unknown_error, raise_error=True, e)
         Log.fail(Log.rel_db + Log.get_df, Log.msg_bad_table(name), raise_error=False)
         return None
 
@@ -545,11 +548,11 @@ class DocumentConnector(DatabaseConnector):
                 return False
 
         except Exception as e:
-            Log.fail(Log.gr_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
+            Log.fail(Log.doc_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
             return False
         # Finish with no errors = connection test successful
         if self.verbose:
-            Log.success(Log.gr_db, Log.msg_db_connect(self.database_name))
+            Log.success(Log.doc_db, Log.msg_db_connect(self.database_name))
         return True
 
     def check_connection(log_source: str, raise_error: bool) -> bool:
@@ -562,8 +565,10 @@ class DocumentConnector(DatabaseConnector):
         try:
             mongoengine.connect(host=self.connection_string)
         except Exception as e:
-            Log.fail(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
+            Log.fail(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
             return False
+        if self.verbose:
+            Log.success(Log.rel_db + log_source, Log.msg_db_connect(self.database_name))
         return True
 
     
@@ -588,7 +593,7 @@ class DocumentConnector(DatabaseConnector):
             try:
                 cmd_obj = json.loads(query)
             except json.JSONDecodeError:
-                Log.fail(Log.gr_db + Log.run_q, Log.msg_fail_parse("query", "JSON command object", query), raise_error=True, e)
+                Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", "JSON command object", query), raise_error=True, e)
     
             # Execute via PyMongo
             results = db.command(cmd_obj)
@@ -608,16 +613,23 @@ class DocumentConnector(DatabaseConnector):
                 docs = results
             
             # Convert document list to DataFrame if any docs exist
-            return self._docs_to_df(docs) if docs else None
-    
-        except Exception as e:
+            result = self._docs_to_df(docs)
             if self.verbose:
-                Log.fail(f"MongoDB operation failed: {e}")
-            raise
+                Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query, result))
+            return result
+        except Exception as e:
+            Log.fail(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, e)
 
 
     def _split_combined(self, multi_query: str) -> list[str]:
         """Split combined MongoDB commands by semicolons, ignoring comments and semicolons inside JSON.
+        @details
+        Example Input:
+            {"ping": 1}; {"aggregate": "users", "pipeline": [...]};
+        Output:
+            One command per string:
+            - '{"ping": 1}'
+            - '{"aggregate": "users", "pipeline": [...]}'
         @param multi_query  A string containing multiple queries.
         @return  A list of single-query strings."""
         queries = []
@@ -645,21 +657,28 @@ class DocumentConnector(DatabaseConnector):
         return queries
 
 
-    def get_dataframe(self, name: str) -> DataFrame:
+    def get_dataframe(self, name: str) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None"""
         super().get_dataframe(name)
         self.check_connection(Log.get_df, raise_error=True)
+        try:
+            # Connect to MongoDB using the low-level PyMongo handle
+            mongoengine.connect(host=self.connection_string)
+            db = mongoengine.get_db()
+            # Results will be a list of documents
+            docs = list(db[name].find({}))
+            result = self._docs_to_df(docs)
 
-        # Connect to MongoDB using the low-level PyMongo handle
-        mongoengine.connect(host=self.connection_string)
-        db = mongoengine.get_db()
-        if not db:
-            Log.connect_fail(self.connection_string)
-
-        docs = list(db[name].find({}))
-        return self._docs_to_df(docs)
+            if self.verbose:
+                Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name))
+            return result
+        except Exception as e:
+            Log.fail(Log.doc_db + Log.get_df, Log.msg_unknown_error, raise_error=True, e)
+        # If not found, warn but do not fail
+        Log.fail(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), raise_error=False)
+        return None
 
 
     def create_database(self, database_name: str):
@@ -677,9 +696,9 @@ class DocumentConnector(DatabaseConnector):
             db["init"].insert_one({"initialized_at": time()})
 
             if self.verbose:
-                Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
+                Log.success(Log.doc_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
         except Exception as e:
-            Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "create"), raise_error=True, e)
+            Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "create"), raise_error=True, e)
 
 
     def drop_database(self, database_name: str):

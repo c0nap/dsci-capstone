@@ -68,6 +68,8 @@ class Log:
     # Everything in the prefix will have color - a few words to contextualize the error source.
     # The message body (msg_*) will be bright - easy to find inside long traceback.
 
+    conn_abc = "CONNECTOR (ABC), "
+    db_conn_abc = "DB CONNECTOR (ABC), "
     rel_db = "REL DB, "
     gr_db = "GRAPH DB, "
     doc_db = "DOCS DB, "
@@ -77,6 +79,10 @@ class Log:
 
     bad_path = "FILE NOT FOUND, "
     msg_bad_path = lambda file_path: f"Failed to open file '{file_path}'"
+    msg_good_path = lambda file_path: f"Reading contents of file '{file_path}'"
+
+    msg_good_exec_f = lambda file_path: f"Finished executing queries from '{filename}'"
+    msg_bad_exec_f = lambda file_path: f"Error occurred while executing queries from '{filename}'"
 
     msg_db_connect = lambda database_name: f"Successfully connected to database: {database_name}"
 
@@ -97,8 +103,11 @@ class Log:
     create_db = "CREATE_DB, "
     drop_db = "DROP_DB, "
     run_q = "QUERY, "
-    msg_bad_table = lambda table_name: f"Table '{table_name}' not found"
-    msg_good_table = lambda table_name: f"Converted table '{table_name}' to Pandas DataFrame."
+    run_f = "FILE EXEC, "
+    msg_bad_table = lambda name: f"Table '{name}' not found"
+    msg_good_table = lambda name: f"Converted table '{name}' to Pandas DataFrame."
+    msg_bad_coll = lambda name: f"Collection '{name}' not found"
+    msg_good_coll = lambda name: f"Converted collection '{name}' to Pandas DataFrame."
 
     msg_success_managed_db = lambda managed, database_name: f"Successfully {managed} database '{database_name}'"
     """@brief  Handles various successful actions an admin could perform on a database.
@@ -109,6 +118,9 @@ class Log:
 
     msg_fail_parse = lambda alias, bad_value, expected_type: f"Could not convert {alias} with value {bad_value} to type {expected_type}"
 
+    msg_multiple_query = lambda n_queries, query: f"A combined query ({n_queries} results) was executed as a single query. Extra results were discarded. Query: {query}"
+    msg_good_exec_q = lambda query, results: f"Executed successfully: '{query}'\n{msg_result(results)}"
+    msg_bad_exec_q = lambda query: f"Failed to execute query: '{query}'"
 
 def all_none(*args):
     """Checks if all provided args are None."""
