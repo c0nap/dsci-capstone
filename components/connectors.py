@@ -340,7 +340,7 @@ class RelationalConnector(DatabaseConnector):
         return True
 
 
-    def check_connection(log_source: str, raise_error: bool) -> bool:
+    def check_connection(self, log_source: str, raise_error: bool) -> bool:
         """Minimal connection test to determine if our connection string is valid.
         @details  Connect to our relational database using SQLAlchemy's engine.connect()
         @param log_source  The Log class prefix indicating which method is performing the check.
@@ -417,7 +417,7 @@ class RelationalConnector(DatabaseConnector):
                     result = connection.execute(select(table))
                     if result.returns_rows and result.keys():
                         df = DataFrame(result.fetchall(), columns=result.keys())
-                        
+
                     if self.verbose:
                         Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(table_name))
                     return df

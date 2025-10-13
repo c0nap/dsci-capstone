@@ -57,7 +57,7 @@ class DocumentConnector(DatabaseConnector):
             Log.success(Log.doc_db, Log.msg_db_connect(self.database_name))
         return True
 
-    def check_connection(log_source: str, raise_error: bool) -> bool:
+    def check_connection(self, log_source: str, raise_error: bool) -> bool:
         """Minimal connection test to determine if our connection string is valid.
         @details  Connect to MongoDB using MongoEnigine.connect()
         @param log_source  The Log class prefix indicating which method is performing the check.

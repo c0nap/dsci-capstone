@@ -1,6 +1,6 @@
 from components.connectors import DatabaseConnector
 from src.util import Log
-from typing import List
+from typing import List, Optional
 from pandas import DataFrame
 from neomodel import config, db
 import os
@@ -47,7 +47,7 @@ class GraphConnector(DatabaseConnector):
             Log.success(Log.gr_db, Log.msg_db_connect(self.database_name))
         return True
 
-    def check_connection(log_source: str, raise_error: bool) -> bool:
+    def check_connection(self, log_source: str, raise_error: bool) -> bool:
         """Minimal connection test to determine if our connection string is valid.
         @details  Connect to Neo4j using ######
         @param log_source  The Log class prefix indicating which method is performing the check.
@@ -76,7 +76,8 @@ class GraphConnector(DatabaseConnector):
         # Derived classes MUST implement single-query execution.
         try:
             results, meta = db.cypher_query(query)
-            return None if not results
+            if not results:
+                return None
             result = DataFrame(results, columns=[m for m in meta])
 
             if self.verbose:
@@ -164,6 +165,9 @@ class GraphConnector(DatabaseConnector):
 
 
 
+    # ------------------------------------------------------------------------
+    # Knowledge Graph helpers for Semantic Triples
+    # ------------------------------------------------------------------------
 
     def add_triple(self, subject: str, relation: str, object_: str):
         """Add a semantic triple to the graph using raw Cypher.
@@ -186,12 +190,11 @@ class GraphConnector(DatabaseConnector):
         try:
             df = self.execute_query(query)
             if self.verbose:
-                print(f"Added triple: ({subject})-[:{relation}]->({object_})")
+                Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})")
             return df
         except Exception as e:
-            if self.verbose:
-                print(f"Failed to add triple: ({subject})-[:{relation}]->({object_})")
-            raise
+            Log.fail(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})", raise_error=True, other_error=e)
+
 
     def get_edge_counts(self, top_n: int = 10) -> DataFrame:
         """Return node names and their edge counts, ordered by edge count descending.
@@ -207,7 +210,14 @@ class GraphConnector(DatabaseConnector):
         LIMIT {top_n}
         RETURN node_name, edge_count
         """
-        return self.execute_query(query)
+        try:
+            df = self.execute_query(query)
+            if self.verbose:
+                Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.")
+            return df
+        except Exception as e:
+            Log.fail(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.", raise_error=True, other_error=e)
+
 
     def get_all_triples(self) -> DataFrame:
         """Return all triples in the current pseudo-database as a pandas DataFrame."""
@@ -217,21 +227,38 @@ class GraphConnector(DatabaseConnector):
         MATCH (a {{database_id: '{db_id}'}})-[r]->(b {{database_id: '{db_id}'}})
         RETURN a.name AS subject, type(r) AS relation, b.name AS object
         """
+        try:
+            df = self.execute_query(query)
+            # Always return a DataFrame with the 3 desired columns
+            if df is None or df.empty:
+                df = DataFrame(columns=["subject", "relation", "object"])
+            else:
+                # Rename columns safely
+                df = df.rename(
+                    columns={
+                        df.columns[0]: "subject",
+                        df.columns[1]: "relation",
+                        df.columns[2]: "object",
+                    }
+                )
+            if self.verbose:
+                Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.")
+            return df
+        except Exception as e:
+            Log.fail(Log.gr_db + Log.kg, f"Failed to fetch all_triples DataFrame.", raise_error=True, other_error=e)
 
-        df = self.execute_query(query)
-        # Ensure we always return a DataFrame with the 3 desired columns
-        if df is None or df.empty:
-            df = DataFrame(columns=["subject", "relation", "object"])
-        else:
-            # Rename columns safely
-            df = df.rename(
-                columns={
-                    df.columns[0]: "subject",
-                    df.columns[1]: "relation",
-                    df.columns[2]: "object",
-                }
-            )
-        return df
+
+
+    def print_nodes(self, max_rows: int = 20, max_col_width: int = 50):
+        """Print all nodes and edges in the current pseudo-database with row/column formatting."""
+        nodes_df = self.get_dataframe()
+
+        # Set pandas display options temporarily
+        with option_context(
+            "display.max_rows", max_rows, "display.max_colwidth", max_col_width
+        ):
+            print(f"Graph nodes ({len(nodes_df)} total):")
+            print(nodes_df)
 
     def print_triples(self, max_rows: int = 20, max_col_width: int = 50):
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
