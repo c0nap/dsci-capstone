@@ -123,7 +123,7 @@ class GraphConnector(DatabaseConnector):
                 node = record[0]
                 # 1) Public properties, 2) internal ID, and 3) labels
                 row = dict(node)
-                row["id"] = node.id
+                row["node_id"] = node.element_id
                 row["labels"] = list(node.labels)
                 rows.append(row)
             # Pandas will fill in NaN where necessary

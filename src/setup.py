@@ -62,14 +62,14 @@ class Session:
         # Test connection to working database ".env/DB_NAME" (stored as database_id)
         working_database = os.getenv("DB_NAME")
         self.graph_db.change_database(working_database)
-        already_exists = self.graph_db.test_connection(print_results=self.verbose)
+        already_exists = self.graph_db.test_connection()
 
         # Ensures the working database was created (pseudo)
         if not already_exists:
             self.graph_db.change_database(default_database)
             self.graph_db.create_database(working_database)
             self.graph_db.change_database(working_database)
-            self.graph_db.test_connection(print_results=self.verbose)
+            self.graph_db.test_connection()
 
         # Test database management explicitly
         self.graph_db.drop_database(working_database)

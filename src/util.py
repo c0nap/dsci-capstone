@@ -81,8 +81,8 @@ class Log:
     msg_bad_path = lambda file_path: f"Failed to open file '{file_path}'"
     msg_good_path = lambda file_path: f"Reading contents of file '{file_path}'"
 
-    msg_good_exec_f = lambda file_path: f"Finished executing queries from '{filename}'"
-    msg_bad_exec_f = lambda file_path: f"Error occurred while executing queries from '{filename}'"
+    msg_good_exec_f = lambda file_path: f"Finished executing queries from '{file_path}'"
+    msg_bad_exec_f = lambda file_path: f"Error occurred while executing queries from '{file_path}'"
 
     msg_db_connect = lambda database_name: f"Successfully connected to database: {database_name}"
 
@@ -123,6 +123,7 @@ class Log:
     msg_bad_exec_q = lambda query: f"Failed to execute query: '{query}'"
 
     kg = "KG: "
+    pytest_db = "PYTEST (DB): "
 
 
 def all_none(*args):

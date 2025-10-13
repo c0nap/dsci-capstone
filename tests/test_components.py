@@ -33,9 +33,7 @@ def relational_db(session):
 def test_relational(relational_db):
     """Tests if the relational database is working correctly.
     @note  Database connectors have internal tests, so use those instead."""
-    assert relational_db.test_connection(
-        print_results=True
-    ), "Basic tests on relational database connection failed."
+    assert relational_db.test_connection(), "Basic tests on relational database connection failed."
 
 
 @pytest.mark.order(2)
