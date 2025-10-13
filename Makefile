@@ -121,6 +121,7 @@ docker-test-dev:
 	make docker-test
 # Shows Python print statements at the expense of fancy pytest formatting
 docker-test-raw:
+	make docker-build-dev-python
 	make docker-python CMD="python -m pytest -s ."
 	
 # Deploy everything to docker, but only run pytests

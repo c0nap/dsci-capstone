@@ -83,10 +83,13 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_INITDB_DATABASE=${DB_NAME}
     volumes:
-      - mongo_data:/data/db
+      - mongo_data:/data/db   # named volume for persistent DB data
+      - ./db/init_mongo.sh:/docker-entrypoint-initdb.d/init_mongo.sh:ro  # bind mount for init script
     ports:
       - "27017:27017"
+    command: ["--quiet"]   # clean docker logs, but still very messy / unreadable
 
   # Neo4j container, exposes HTTP and Bolt ports for UI and app connections
   neo4j_service:
@@ -102,8 +105,8 @@ services:
     ports:
       - "0.0.0.0:7474:7474"   # HTTP web UI
       - "0.0.0.0:7687:7687"   # Bolt protocol for queries
-    entrypoint: ["/bin/sh", "/init_neo4j.sh"]
-    command: ["${NEO4J_USERNAME}", "${NEO4J_PASSWORD}"]
+    entrypoint: ["/bin/sh", "/init_neo4j.sh"]    # Change entrypoint to init script (note: env values no longer propagate to neo4j automatically)
+    command: ["${NEO4J_USERNAME}", "${NEO4J_PASSWORD}"]   # Provide .env credentials as args to the init script
 
 
 volumes:
