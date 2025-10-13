@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from src.util import all_none
-from components.connectors import RelationalConnector
+from components.connectors import RelationalConnector, DocumentConnector
 from components.fact_storage import GraphConnector
 
 # Read environment variables at compile time
@@ -35,7 +35,8 @@ class Session:
         self.verbose = verbose
         ## Stores RDF-compliant semantic triples.
         self.relational_db = RelationalConnector.from_env(verbose=verbose)
-        # self.docs_db = DocumentConnector(verbose=False)  # Stores input text, pre-processed chunks, JSON intermediates, and final output.
+        ## Stores input text, pre-processed chunks, JSON intermediates, and final output.
+        self.docs_db = DocumentConnector(verbose=verbose)
         ## Main storage for entities (nodes) and relations (edges).
         self.graph_db = GraphConnector(verbose=verbose)
 

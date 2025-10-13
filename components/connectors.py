@@ -458,3 +458,229 @@ class postgresConnector(RelationalConnector):
             "SELECT datname FROM pg_database;",
         ]  # List of all databases in the database engine.
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import json
+from typing import List, Optional, Any, Dict
+from dataclasses import dataclass, asdict, is_dataclass
+
+import mongoengine
+from mongoengine import (
+    Document,
+    DynamicDocument,
+)
+
+from pandas import DataFrame, json_normalize
+
+
+class DocumentConnector(DatabaseConnector):
+    """Connector for MongoDB (document database)
+    @details
+        - Uses mongoengine.connect(...) on-demand for connections.
+        - Low-level operations use pymongo via mongoengine.get_db().
+        - create_database uses an init collection insertion (MongoDB is lazy).
+    """
+
+    def __init__(self, verbose: bool = False):
+        """Creates a new MongoDB connector.
+        @param verbose  Whether to print debug messages.
+        """
+        super().__init__(verbose)
+        self._route_db_name = True
+        """@brief  Whether to use the database name in the connection string.
+        @note  mongoengine.connect is used on-demand; we keep the convention of routing the DB name."""
+        super().configure("MONGO", database_name="default")
+
+
+    def execute_query(self, query: str) -> Optional[DataFrame]:
+        """Send a single MongoDB command using PyMongo.
+        @details
+          - The query must be a valid JSON command object (e.g. {"find": "users", "filter": {...}}).
+          - Mongo shell syntax such as `db.users.find({...})` or `.js` files will NOT work.
+          - If a result is returned, it will be converted to a DataFrame.
+        """
+        super().execute_query(query)
+    
+        # Connect to MongoDB using the low-level PyMongo handle
+        mongoengine.disconnect()
+        mongoengine.connect(host=self.connection_string)
+        db = mongoengine.get_db()
+        if not db:
+            Log.connect_fail(self.connection_string)
+            return None
+    
+        try:
+            # Queries must be valid JSON
+            try:
+                cmd_obj = json.loads(query)
+            except json.JSONDecodeError:
+                Log.fail_parse("query", "JSON command object", query)
+    
+            # Execute via PyMongo
+            results = db.command(cmd_obj)
+    
+            # Mongo queries can return a dict or list
+            # Standardize everything to a list of documents
+            docs = []
+            if isinstance(results, dict):
+                if "cursor" in results:
+                    docs = results["cursor"].get("firstBatch", [])
+                elif "firstBatch" in results:
+                    docs = results["firstBatch"]
+                else:
+                    # wrap single dict as list
+                    docs = [results]
+            elif isinstance(results, list):
+                docs = results
+            
+            # Convert document list to DataFrame if any docs exist
+            return self._docs_to_df(docs) if docs else None
+    
+        except Exception as e:
+            if self.verbose:
+                Log.fail(f"MongoDB operation failed: {e}")
+            raise
+
+
+    def _split_combined(self, multi_query: str) -> list[str]:
+        """Split combined MongoDB commands by semicolons, ignoring comments and semicolons inside JSON.
+        @param multi_query  A string containing multiple queries.
+        @return  A list of single-query strings."""
+        queries = []
+        buffer = ""
+        depth = 0
+        for line in multi_query.splitlines():
+            line = line.strip()
+            # Skip comments
+            if not line or line.startswith("#") or line.startswith("//"):
+                continue
+            for c in line:
+                buffer += c
+                # Unpack nested brackets
+                if c in "{[":
+                    depth += 1
+                elif c in "}]":
+                    depth = max(0, depth - 1)
+                elif c == ";" and depth == 0:
+                    queries.append(buffer.strip().rstrip(";"))
+                    buffer = ""
+            if depth > 0:
+                buffer += " "  # keep spacing between lines
+        if buffer.strip():
+            queries.append(buffer.strip().rstrip(";"))
+        return queries
+
+
+    def get_dataframe(self, name: str) -> DataFrame:
+        """Automatically generate and run a query for the specified collection.
+        @param name  The name of an existing table or collection in the database.
+        @return  DataFrame containing the requested data, or None"""
+        if not name:
+            return None
+
+        # Connect to MongoDB using the low-level PyMongo handle
+        mongoengine.disconnect()
+        mongoengine.connect(host=self.connection_string)
+        db = mongoengine.get_db()
+        if not db:
+            Log.connect_fail(self.connection_string)
+
+        docs = list(db[name].find({}))
+        return self._docs_to_df(docs)
+
+
+    def create_database(self, database_name: str):
+        """Use the current database connection to create a sibling database in this engine.
+        @note  Forces MongoDB to actually create it by inserting a small init document.
+        @param database_name  The name of the new database to create."""
+        super().create_database(database_name)
+
+        # Connect to MongoDB using the low-level PyMongo handle
+        mongoengine.disconnect()
+        mongoengine.connect(host=self.connection_string)
+        db = mongoengine.get_db()
+        if not db:
+            Log.connect_fail(self.connection_string)
+
+        try:
+            if "init" not in db.list_collection_names():
+                db.create_collection("init")
+            db["init"].insert_one({"initialized_at": time()})
+            if self.verbose:
+                Log.success_manage_db(database_name, "Created new")
+        except Exception as e:
+            if self.verbose:
+                Log.fail_manage_db(self.connection_string, database_name, "create")
+
+
+    def drop_database(self, database_name: str):
+        """Delete all data stored in a particular database.
+        @param database_name  The name of an existing database."""
+        super().drop_database(database_name)
+    
+        # Connect to MongoDB using the low-level PyMongo handle
+        mongoengine.disconnect()
+        mongoengine.connect(host=self.connection_string)
+        db = mongoengine.get_db()
+        if not db:
+            Log.connect_fail(self.connection_string)
+            return
+    
+        try:
+            # Drop the entire database
+            db.client.drop_database(database_name)
+            if self.verbose:
+                Log.success_manage_db(database_name, "Dropped")
+        except Exception as e:
+            if self.verbose:
+                Log.fail_manage_db(self.connection_string, database_name, "drop")
+
+
+    # Reuse the dataframe parsing logic
+    def _docs_to_df(self, docs: List[Dict]) -> DataFrame:
+        """Convert raw MongoDB documents to a Pandas DataFrame.
+        @details
+        Steps:
+          1. Convert ObjectId fields (_id) to strings so Pandas can handle them.
+          2. Flatten nested JSON structures using Pandas.json_normalize.
+        Example input:
+          docs = [
+              {"_id": ObjectId("650f..."), "name": "Alice", "age": 30}, ...}
+          ]
+        Example output:
+          DataFrame([
+              {"_id": "650f...", "name": "Alice", "age": 30, "address.city": None, "address.zip": None},
+              {"_id": "650f...", "name": "Bob", "age": None, "address.city": "NY", "address.zip": "10001"}
+          ])"""
+        # 1. Convert MongoDB ObjectId fields to strings
+        for document in docs:
+            if "_id" in document:
+                try:
+                    document["_id"] = str(document["_id"])
+                except Exception:
+                    # Fail if str() raises - probably corrupted data
+                    Log.fail_parse(trace="_id field", expected_type="str", bad_value=document["_id"])
+    
+        # 2. Use Pandas to normalize nested JSON into flat columns
+        try:
+            return json_normalize(docs)
+        except Exception:
+            # Fallback: create a DataFrame directly if normalization fails
+            # Pandas DataFrames can parse messy nesting, but json_normalize requires all docs to be balanced dicts
+            return DataFrame(docs)
+
+
