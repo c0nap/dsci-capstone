@@ -33,9 +33,11 @@ class Connector(ABC):
         pass
 
     @abstractmethod
-    def test_connection(self) -> bool:
+    def test_connection(self, raise_error=True) -> bool:
         """Establish a basic connection to the database.
-        @return  Whether the connection test was successful."""
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the connection test was successful.
+        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
         pass
 
     @abstractmethod
@@ -181,7 +183,7 @@ class DatabaseConnector(Connector):
 
     @abstractmethod
     def get_dataframe(self, name: str) -> DataFrame:
-        """Automatically generate a query for the specified resource.
+        """Automatically generate and run a query for the specified resource.
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None"""
         pass
@@ -253,82 +255,101 @@ class RelationalConnector(DatabaseConnector):
         Log.fail(
             f"Database engine '{engine}' not supported. Did you mean 'MYSQL' or 'POSTGRES'?"
         )
-        raise
 
-    def test_connection(self, print_results=False) -> bool:
+    def test_connection(self, raise_error=True) -> bool:
         """Establish a basic connection to the database.
-        @param print_results  Whether to display the retrieved test DataFrames
-        @return  Whether the connection test was successful."""
+        @details  By default, Log.fail will raise an exception.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the connection test was successful.
+        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+        try:
+            # Check if connection string is valid
+            if self.check_connection(Log.test_conn, raise_error) == False:
+                return False
+
+            with engine.connect() as connection:
+                try:    # Run universal test queries
+                    result = connection.execute(text("SELECT 1")).fetchone()[0]
+                    if self._check_values([result], [1], raise_error) == False:
+                        return False
+                    result = self.execute_query("SELECT 'TWO';").iloc[0, 0]
+                    if self._check_values([result], ["TWO"], raise_error) == False:
+                        return False
+                    results = self.execute_combined("SELECT 3; SELECT 4;")
+                    if self._check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], raise_error) == False:
+                        return False
+                    results = self.execute_query("SELECT 5, 6;")
+                    if self._check_values([results[0].iloc[0, 0], results[0].iloc[0, 1]], [5, 6], raise_error) == False:
+                        return False
+                except Exception as e:
+                    Log.fail(Log.rel_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error, raise_error, e)
+                    return False
+
+                try:   # Display useful information on existing databases
+                    db_name = self.execute_query(self._specific_queries[0]).iloc[0, 0]
+                    self._check_values([db_name], [self.database_name], raise_error)
+                    databases = self.execute_query(self._specific_queries[1])
+                    if self.verbose:
+                        Log.success(Log.rel_db, Log.msg_result(databases))
+                except Exception as e:
+                    Log.fail(Log.rel_db + Log.test_conn + Log.test_info, Log.msg_unknown_error, raise_error, e)
+                    return False
+
+                try:   # Create a table, insert dummy data, and use get_dataframe
+                    tmp_table = f"test_table_{int(time())}"
+                    self.execute_query(f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');")
+                    df = self.get_dataframe(f"{tmp_table}")
+                    self._check_values([df.at[0, 'name']], ['Alice'])
+                    self.execute_query(f"DROP TABLE {tmp_table};")
+                except Exception as e:
+                    Log.fail(Log.rel_db + Log.test_conn + Log.test_df, Log.msg_unknown_error, raise_error, e)
+                    return False
+
+                try:   # Test create/drop functionality with tmp database
+                    tmp_db = f"test_db_{int(time())}"
+                    working_database = self.database_name
+                    self.create_database(tmp_db)
+                    self.change_database(tmp_db)
+                    self.drop_database(tmp_db)
+                    self.change_database(working_database)
+                except Exception as e:
+                    Log.fail(Log.rel_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error, raise_error, e)
+                    return False
+
+        except Exception as e:
+            Log.fail(Log.rel_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
+            return False
+        # Finish with no errors = connection test successful
+        if self.verbose:
+            Log.success(Log.rel_db, Log.msg_db_connect(self.database_name))
+        return True
+
+
+    def check_connection(log_source: str, raise_error: bool) -> bool:
+        """Minimal connection test to determine if our connection string is valid.
+        @details  Connect to MongoDB using the low-level PyMongo handle.
+        @param log_source  The Log class prefix indicating which method is performing the check.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the connection test was successful.
+        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
         try:
             engine = create_engine(self.connection_string)
+            # SQLAlchemy will not create the connection until we send a query
             with engine.connect() as connection:
-                # 1. Basic connectivity test
-                result = connection.execute(text("SELECT 1")).fetchone()[0]
-                if print_results:
-                    print(result)
-                if result != 1:
-                    Log.incorrect_result(result, 1)
-                    return False
-    
-                # 2. Multi-statement execution test
-                result = self.execute_combined("SELECT 1; SELECT 2;")[1].iloc[0, 0]
-                if print_results:
-                    print(result)
-                if result != 2:
-                    Log.incorrect_result(result, 2)
-                    return False
-    
-                # 3. Current database name
-                db_name = self.execute_query(self._specific_queries[0]).iloc[0, 0]
-                if print_results:
-                    print(db_name)
-    
-                # 4. List all databases
-                databases = self.execute_query(self._specific_queries[1])
-                if print_results:
-                    print(databases)
-    
-                # 5. Ensure working database exists
-                working_database = os.getenv("DB_NAME")
-                if working_database not in databases.iloc[:, 0].tolist():
-                    try:
-                        self.create_database(working_database)
-                        if self.verbose:
-                            print(f"Created database: {working_database}")
-                    except Exception as e:
-                        Log.connect_fail(f"Failed to create database {working_database}")
-                        print(e)
-                        return False
-    
-                # 6. Test create/drop database functionality with a temporary DB
-                temp_db = f"temp_test_db_{int(time())}"
-                try:
-                    self.create_database(temp_db)
-                    if self.verbose:
-                        print(f"Created temporary database: {temp_db}")
-                    self.drop_database(temp_db)
-                    if self.verbose:
-                        print(f"Dropped temporary database: {temp_db}")
-                except Exception as e:
-                    Log.connect_fail(f"Failed to create/drop temporary database {temp_db}")
-                    print(e)
-                    return False
-    
-                # 7. Test connection to the working database
-                self.change_database(working_database)
-                result = self.execute_query("SELECT 1").iloc[0, 0]
-                if result != 1:
-                    Log.incorrect_result(result, 1)
-                    return False
-    
-                # Log overall success
-                if self.verbose:
-                    Log.connect_success(working_database)
+                connection.execute(text("SELECT 1"))
         except Exception as e:
-            if self.verbose:
-                Log.connect_fail(self.connection_string)
-            print(e)
+            Log.fail(Log.rel_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
             return False
+        return True
+
+
+    def _check_values(results, expected, raise_error):
+        for i in range(len(results)):
+            if self.verbose && result == expected[i]:
+                Log.success(Log.rel_db + Log.good_val, Log.msg_compare(result, 1))
+            elif results[i] != expected[i]:
+                Log.fail(Log.rel_db + Log.bad_val, Log.msg_compare(result, 1), raise_error)
+                return False
         return True
 
     def execute_query(self, query: str) -> DataFrame:
@@ -338,6 +359,7 @@ class RelationalConnector(DatabaseConnector):
         @return  DataFrame containing the result of the query, or None
         """
         super().execute_query(query)
+        self.check_connection(Log.run_q, raise_error=True)
         # Derived classes MUST implement single-query execution.
         try:
             engine = create_engine(self.connection_string)
@@ -350,7 +372,6 @@ class RelationalConnector(DatabaseConnector):
         except Exception as e:
             if self.verbose:
                 Log.connect_fail(self.connection_string)
-            raise
 
     def _split_combined(self, multi_query: str) -> List[str]:
         """Checks if a string contains multiple queries.
@@ -364,60 +385,65 @@ class RelationalConnector(DatabaseConnector):
         return queries
 
     def get_dataframe(self, name: str) -> DataFrame:
-        """Automatically generate a query for the specified table using SQLAlchemy.
+        """Automatically generate and run a query for the specified table using SQLAlchemy.
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None"""
-        try:
-            engine = create_engine(self.connection_string)
-            with engine.connect() as connection:
-                table = Table(name, MetaData(), autoload_with=engine)
-                result = connection.execute(select(table))
-                if result.returns_rows and result.keys():
-                    result = DataFrame(result.fetchall(), columns=result.keys())
-                return result
-        except NoSuchTableError:
-            # Postgres will auto-lowercase all table names.
-            return self.get_dataframe(name.lower())
-        except Exception as e:
-            if self.verbose:
-                Log.connect_fail(self.connection_string)
-            raise
+        super().get_dataframe(name)
+        self.check_connection(Log.get_df, raise_error=True)
+        for table_name in (name, name.lower()):
+            try:
+                engine = create_engine(self.connection_string)
+                with engine.connect() as connection:
+                    table = Table(table_name, MetaData(), autoload_with=engine)
+                    result = connection.execute(select(table))
+                    if result.returns_rows and result.keys():
+                        result = DataFrame(result.fetchall(), columns=result.keys())
+                    if self.verbose:
+                        Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(table_name))
+                    return result
+            except NoSuchTableError:
+                # Postgres will auto-lowercase all table names. Give it one more try with the lowercase name.
+                continue
+            except Exception as e:
+                Log.fail(Log.rel_db + Log.test_df, Log.msg_unknown_error, raise_error=True, e)
+        Log.fail(Log.rel_db + Log.get_df, Log.msg_bad_table(name), raise_error=False)
+        return None
 
     def create_database(self, database_name: str):
         """Use the current database connection to create a sibling database in this engine.
-        @note  Auto-commit is required for database management.
         @param database_name  The name of the new database to create."""
         super().create_database(database_name)
+        self.check_connection(Log.create_db, raise_error=True)
         try:
+            # Auto-commit is required for database management operations
             engine = create_engine(self.connection_string)
             with engine.connect().execution_options(
                 isolation_level="AUTOCOMMIT"
             ) as connection:
                 connection.execute(text(f"CREATE DATABASE {database_name}"))
+
             if self.verbose:
-                Log.success_manage_db(database_name, "Created new")
+                Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
         except Exception as e:
-            if self.verbose:
-                Log.fail_manage_db(self.connection_string, database_name, "create")
-            raise
+            Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "create"), raise_error=True, e)
 
     def drop_database(self, database_name: str = ""):
         """Delete all data stored in a particular database.
-        @note  Auto-commit is required for database management.
         @param database_name  The name of an existing database."""
         super().drop_database(database_name)
+        self.check_connection(Log.drop_db, raise_error=True)
         try:
+            # Auto-commit is required for database management operations
             engine = create_engine(self.connection_string)
             with engine.connect().execution_options(
                 isolation_level="AUTOCOMMIT"
             ) as connection:
                 connection.execute(text(f"DROP DATABASE IF EXISTS {database_name}"))
+            
             if self.verbose:
-                Log.success_manage_db(database_name, "Dropped")
+                Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
         except Exception as e:
-            if self.verbose:
-                Log.fail_manage_db(self.connection_string, database_name, "drop")
-            raise
+            Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "drop"), raise_error=True, e)
 
 
 class mysqlConnector(RelationalConnector):
@@ -435,7 +461,7 @@ class mysqlConnector(RelationalConnector):
     specific_queries = {
         "MYSQL": [
             "SELECT DATABASE();",  # Single value, name of the current database.
-            "SHOW DATABASES;",
+            "SHOW DATABASES;",     # List of databases the secondary user can access.
         ]  # List of all databases in the database engine.
     }
 
@@ -455,7 +481,7 @@ class postgresConnector(RelationalConnector):
     specific_queries = {
         "POSTGRES": [
             "SELECT current_database();",  # Single value, name of the current database.
-            "SELECT datname FROM pg_database;",
+            "SELECT datname FROM pg_database;",  # List of ALL databases, even ones we cannot access.
         ]  # List of all databases in the database engine.
     }
 
@@ -506,6 +532,43 @@ class DocumentConnector(DatabaseConnector):
         super().configure("MONGO", database_name="default")
 
 
+
+    def test_connection(self, raise_error=True) -> bool:
+        """Establish a basic connection to the database.
+        @details  By default, Log.fail will raise an exception.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the connection test was successful.
+        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+        try:
+            # Check if connection string is valid
+            if self.check_connection(Log.test_conn, raise_error) == False:
+                return False
+
+        except Exception as e:
+            Log.fail(Log.gr_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
+            return False
+        # Finish with no errors = connection test successful
+        if self.verbose:
+            Log.success(Log.gr_db, Log.msg_db_connect(self.database_name))
+        return True
+
+    def check_connection(log_source: str, raise_error: bool) -> bool:
+        """Minimal connection test to determine if our connection string is valid.
+        @details  Connect to MongoDB using the low-level PyMongo handle.
+        @param log_source  The Log class prefix indicating which method is performing the check.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the connection test was successful.
+        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+        try:
+            mongoengine.connect(host=self.connection_string)
+        except Exception as e:
+            Log.fail(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
+            return False
+        return True
+
+    
+
+
     def execute_query(self, query: str) -> Optional[DataFrame]:
         """Send a single MongoDB command using PyMongo.
         @details
@@ -513,22 +576,19 @@ class DocumentConnector(DatabaseConnector):
           - Mongo shell syntax such as `db.users.find({...})` or `.js` files will NOT work.
           - If a result is returned, it will be converted to a DataFrame.
         """
+        self.check_connection(Log.run_q, raise_error=True)
         super().execute_query(query)
     
-        # Connect to MongoDB using the low-level PyMongo handle
-        mongoengine.disconnect()
-        mongoengine.connect(host=self.connection_string)
-        db = mongoengine.get_db()
-        if not db:
-            Log.connect_fail(self.connection_string)
-            return None
-    
         try:
+            # Connect to MongoDB using the low-level PyMongo handle
+            mongoengine.connect(host=self.connection_string)
+            db = mongoengine.get_db()
+
             # Queries must be valid JSON
             try:
                 cmd_obj = json.loads(query)
             except json.JSONDecodeError:
-                Log.fail_parse("query", "JSON command object", query)
+                Log.fail(Log.gr_db + Log.run_q, Log.msg_fail_parse("query", "JSON command object", query), raise_error=True, e)
     
             # Execute via PyMongo
             results = db.command(cmd_obj)
@@ -589,11 +649,10 @@ class DocumentConnector(DatabaseConnector):
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None"""
-        if not name:
-            return None
+        super().get_dataframe(name)
+        self.check_connection(Log.get_df, raise_error=True)
 
         # Connect to MongoDB using the low-level PyMongo handle
-        mongoengine.disconnect()
         mongoengine.connect(host=self.connection_string)
         db = mongoengine.get_db()
         if not db:
@@ -608,46 +667,36 @@ class DocumentConnector(DatabaseConnector):
         @note  Forces MongoDB to actually create it by inserting a small init document.
         @param database_name  The name of the new database to create."""
         super().create_database(database_name)
-
-        # Connect to MongoDB using the low-level PyMongo handle
-        mongoengine.disconnect()
-        mongoengine.connect(host=self.connection_string)
-        db = mongoengine.get_db()
-        if not db:
-            Log.connect_fail(self.connection_string)
-
+        self.check_connection(Log.create_db, raise_error=True)
         try:
+            mongoengine.connect(host=self.connection_string)
+            db = mongoengine.get_db()
+            # Create the database by adding dummy data
             if "init" not in db.list_collection_names():
                 db.create_collection("init")
             db["init"].insert_one({"initialized_at": time()})
+
             if self.verbose:
-                Log.success_manage_db(database_name, "Created new")
+                Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
         except Exception as e:
-            if self.verbose:
-                Log.fail_manage_db(self.connection_string, database_name, "create")
+            Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "create"), raise_error=True, e)
 
 
     def drop_database(self, database_name: str):
         """Delete all data stored in a particular database.
         @param database_name  The name of an existing database."""
         super().drop_database(database_name)
-    
-        # Connect to MongoDB using the low-level PyMongo handle
-        mongoengine.disconnect()
-        mongoengine.connect(host=self.connection_string)
-        db = mongoengine.get_db()
-        if not db:
-            Log.connect_fail(self.connection_string)
-            return
-    
+        self.check_connection(Log.drop_db, raise_error=True)
         try:
+            mongoengine.connect(host=self.connection_string)
+            db = mongoengine.get_db()
             # Drop the entire database
             db.client.drop_database(database_name)
+
             if self.verbose:
-                Log.success_manage_db(database_name, "Dropped")
+                Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
         except Exception as e:
-            if self.verbose:
-                Log.fail_manage_db(self.connection_string, database_name, "drop")
+            Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "drop"), raise_error=True, e)
 
 
     # Reuse the dataframe parsing logic
@@ -680,7 +729,7 @@ class DocumentConnector(DatabaseConnector):
             return json_normalize(docs)
         except Exception:
             # Fallback: create a DataFrame directly if normalization fails
-            # Pandas DataFrames can parse messy nesting, but json_normalize requires all docs to be balanced dicts
+            # Pandas DataFrames can salvage messy nesting, but json_normalize requires all docs to be balanced dicts
             return DataFrame(docs)
 
 
