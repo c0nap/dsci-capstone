@@ -49,14 +49,14 @@ class Log:
             print(text)
 
     @staticmethod
-    def success_legacy(msg: str = "")
+    def success_legacy(msg: str = ""):
         """A legacy success message begins with a Green Plus.
         @param msg  The message to print."""
         if msg != "":
             Log.success(prefix="+", msg=f" - - {msg}")
 
     @staticmethod
-    def fail_legacy(msg: str = "")
+    def fail_legacy(msg: str = ""):
         """A legacy failure message begins with a Red X.
         @param msg  The message to print."""
         if msg != "":

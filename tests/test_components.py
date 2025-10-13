@@ -84,6 +84,5 @@ def _test_sql_file(relational_db, filename: str, expect_df: bool, df_header: str
             if df_header:
                 print(df_header)
                 print(df)
-    except:
-        Log.fail(f"Unexpected error while executing queries from '{filename}'.")
-        raise
+    except Exception as e:
+        Log.fail(Log.pytest_db + Log.run_f, Log.msg_bad_exec_f(filename), raise_error=True, other_error=e)

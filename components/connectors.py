@@ -170,7 +170,7 @@ class DatabaseConnector(Connector):
                 if self.verbose:
                     Log.success(Log.db_conn_abc + Log.run_f, Log.msg_good_path(filename))
         except Exception as e:
-            Log.fail(Log.db_conn_abc + Log.run_f, Log.msg_bad_path(filename), raise_error=True, e)
+            Log.fail(Log.db_conn_abc + Log.run_f, Log.msg_bad_path(filename), raise_error=True, other_error=e)
         
         try:  # Attempt to run the multi-query
             results = self.execute_combined(multi_query)
@@ -178,7 +178,7 @@ class DatabaseConnector(Connector):
                 Log.success(Log.db_conn_abc + Log.run_f, Log.msg_good_exec_f(filename))
             return results
         except Exception as e:
-            Log.fail(Log.db_conn_abc + Log.run_f, Log.msg_bad_exec_f(filename), raise_error=True, e)
+            Log.fail(Log.db_conn_abc + Log.run_f, Log.msg_bad_exec_f(filename), raise_error=True, other_error=e)
 
     @abstractmethod
     def get_dataframe(self, name: str) -> Optional[DataFrame]:
@@ -346,7 +346,7 @@ class RelationalConnector(DatabaseConnector):
 
     def _check_values(results, expected, raise_error):
         for i in range(len(results)):
-            if self.verbose && result == expected[i]:
+            if self.verbose and result == expected[i]:
                 Log.success(Log.rel_db + Log.good_val, Log.msg_compare(result, 1))
             elif results[i] != expected[i]:
                 Log.fail(Log.rel_db + Log.bad_val, Log.msg_compare(result, 1), raise_error)
@@ -374,7 +374,7 @@ class RelationalConnector(DatabaseConnector):
                     Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query, result))
                 return result
         except Exception as e:
-            Log.fail(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, e)
+            Log.fail(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
 
     def _split_combined(self, multi_query: str) -> List[str]:
         """Checks if a string contains multiple queries.
@@ -408,7 +408,7 @@ class RelationalConnector(DatabaseConnector):
                 # Postgres will auto-lowercase all table names. Give it one more try with the lowercase name.
                 continue
             except Exception as e:
-                Log.fail(Log.rel_db + Log.get_df, Log.msg_unknown_error, raise_error=True, e)
+                Log.fail(Log.rel_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
         Log.fail(Log.rel_db + Log.get_df, Log.msg_bad_table(name), raise_error=False)
         return None
 
@@ -428,7 +428,7 @@ class RelationalConnector(DatabaseConnector):
             if self.verbose:
                 Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
         except Exception as e:
-            Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "create"), raise_error=True, e)
+            Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "create"), raise_error=True, other_error=e)
 
     def drop_database(self, database_name: str = ""):
         """Delete all data stored in a particular database.
@@ -446,7 +446,7 @@ class RelationalConnector(DatabaseConnector):
             if self.verbose:
                 Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
         except Exception as e:
-            Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "drop"), raise_error=True, e)
+            Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "drop"), raise_error=True, other_error=e)
 
 
 class mysqlConnector(RelationalConnector):

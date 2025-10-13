@@ -1,10 +1,11 @@
+from components.connectors import DatabaseConnector
+from src.util import Log
 import os
 from time import time
 import json
 from pandas import DataFrame, json_normalize
 from typing import List, Optional, Dict
 from dotenv import load_dotenv
-from src.util import Log
 
 import mongoengine
 from mongoengine import (
@@ -93,7 +94,7 @@ class DocumentConnector(DatabaseConnector):
             try:
                 cmd_obj = json.loads(query)
             except json.JSONDecodeError:
-                Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", "JSON command object", query), raise_error=True, e)
+                Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", "JSON command object", query), raise_error=True, other_error=e)
     
             # Execute via PyMongo
             results = db.command(cmd_obj)
@@ -118,7 +119,7 @@ class DocumentConnector(DatabaseConnector):
                 Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query, result))
             return result
         except Exception as e:
-            Log.fail(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, e)
+            Log.fail(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
 
 
     def _split_combined(self, multi_query: str) -> list[str]:
@@ -175,7 +176,7 @@ class DocumentConnector(DatabaseConnector):
                 Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name))
             return result
         except Exception as e:
-            Log.fail(Log.doc_db + Log.get_df, Log.msg_unknown_error, raise_error=True, e)
+            Log.fail(Log.doc_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
         # If not found, warn but do not fail
         Log.fail(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), raise_error=False)
         return None
@@ -198,7 +199,7 @@ class DocumentConnector(DatabaseConnector):
             if self.verbose:
                 Log.success(Log.doc_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
         except Exception as e:
-            Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "create"), raise_error=True, e)
+            Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "create"), raise_error=True, other_error=e)
 
 
     def drop_database(self, database_name: str):
@@ -215,7 +216,7 @@ class DocumentConnector(DatabaseConnector):
             if self.verbose:
                 Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
         except Exception as e:
-            Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "drop"), raise_error=True, e)
+            Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "drop"), raise_error=True, other_error=e)
 
 
     # Reuse the dataframe parsing logic
