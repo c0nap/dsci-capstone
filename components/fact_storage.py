@@ -71,9 +71,12 @@ class GraphConnector(DatabaseConnector):
         @param query  A single query to perform on the database.
         @return  DataFrame containing the result of the query, or None
         """
-        super().execute_query(query)
-        self.check_connection(Log.run_q, raise_error=True)
+        # The base class will handle the multi-query case, so prevent a 2nd duplicate query
+        result = super().execute_query(query)
+        if not self._is_single_query(query):
+            return result
         # Derived classes MUST implement single-query execution.
+        self.check_connection(Log.run_q, raise_error=True)
         try:
             results, meta = db.cypher_query(query)
             if not results:
@@ -147,7 +150,7 @@ class GraphConnector(DatabaseConnector):
             if self.verbose:
                 Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
         except Exception as e:
-            Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "create"), raise_error=True, other_error=e)
+            Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string), raise_error=True, other_error=e)
 
     def drop_database(self, database_name: str):
         """Delete all nodes stored under a particular database name.
@@ -161,7 +164,7 @@ class GraphConnector(DatabaseConnector):
             if self.verbose:
                 Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
         except Exception as e:
-            Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "drop"), raise_error=True, other_error=e)
+            Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string), raise_error=True, other_error=e)
 
 
 

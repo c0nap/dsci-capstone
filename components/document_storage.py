@@ -83,9 +83,12 @@ class DocumentConnector(DatabaseConnector):
           - Mongo shell syntax such as `db.users.find({...})` or `.js` files will NOT work.
           - If a result is returned, it will be converted to a DataFrame.
         """
+        # The base class will handle the multi-query case, so prevent a 2nd duplicate query
+        result = super().execute_query(query)
+        if not self._is_single_query(query):
+            return result
+        # Derived classes MUST implement single-query execution.
         self.check_connection(Log.run_q, raise_error=True)
-        super().execute_query(query)
-    
         try:
             # Connect to MongoDB using the low-level PyMongo handle
             mongoengine.connect(host=self.connection_string)
@@ -200,7 +203,7 @@ class DocumentConnector(DatabaseConnector):
             if self.verbose:
                 Log.success(Log.doc_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
         except Exception as e:
-            Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "create"), raise_error=True, other_error=e)
+            Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string), raise_error=True, other_error=e)
 
 
     def drop_database(self, database_name: str):
@@ -217,7 +220,7 @@ class DocumentConnector(DatabaseConnector):
             if self.verbose:
                 Log.success(Log.doc_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
         except Exception as e:
-            Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db(self.connection_string, database_name, "drop"), raise_error=True, other_error=e)
+            Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string), raise_error=True, other_error=e)
 
 
     # Reuse the dataframe parsing logic

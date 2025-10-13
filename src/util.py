@@ -28,7 +28,7 @@ class Log:
         """A success message begins with a Green Plus.
         @param prefix  The context of the message.
         @param msg  The message to print."""
-        text = f"{Log.SUCCESS_COLOR}{prefix}{Log.MSG_COLOR}{msg}{WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
+        text = f"{Log.SUCCESS_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
         print(text)
 
     @staticmethod
@@ -112,14 +112,14 @@ class Log:
     msg_success_managed_db = lambda managed, database_name: f"Successfully {managed} database '{database_name}'"
     """@brief  Handles various successful actions an admin could perform on a database.
     @param managed  Past-tense verb representing the database operation performed, e.g. Created, Dropped."""
-    msg_fail_manage_db = lambda managed, database_name, connection_string: f"Failed to {manage} database '{database_name}' on connection {connection_string}"
+    msg_fail_manage_db = lambda manage, database_name, connection_string: f"Failed to {manage} database '{database_name}' on connection {connection_string}"
     """@brief  Handles various failed actions an admin could perform on a database.
     @param manage  Present-tense verb representing the database operation performed, e.g. create, drop."""
 
     msg_fail_parse = lambda alias, bad_value, expected_type: f"Could not convert {alias} with value {bad_value} to type {expected_type}"
 
     msg_multiple_query = lambda n_queries, query: f"A combined query ({n_queries} results) was executed as a single query. Extra results were discarded. Query: {query}"
-    msg_good_exec_q = lambda query, results: f"Executed successfully: '{query}'\n{msg_result(results)}"
+    msg_good_exec_q = lambda query, results: f"Executed successfully: '{query}'\n{Log.msg_result(results)}"
     msg_bad_exec_q = lambda query: f"Failed to execute query: '{query}'"
 
     kg = "KG: "
