@@ -37,6 +37,24 @@ class GraphConnector(DatabaseConnector):
         if not self.database_exists(database):
             self.create_database(database)
 
+    def change_database(self, new_database: str):
+        """Update the connection URI to reference a different database in the same engine.
+        @note  Neo4j does not accept database names routed through the connection string.
+        @param new_database  The name of the database to connect to.
+        """
+        if self.verbose:
+            Log.success(Log.gr_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database))
+        self.database_name = new_database
+        self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}"
+
+    def change_graph(self, graph_name: str):
+        """Sets graph_name to create new a Knowledge Graph (collection of triples).
+        @details  Similar to creating tables in SQL and collections in Mongo.
+        @note  This change will apply to any new nodes created.
+        @param graph_name  A string corresponding to the 'kg' node attribute."""
+        if self.verbose:
+            Log.success(Log.gr_db + Log.swap_kg, Log.msg_swap_kg(self.graph_name, graph_name))
+        self.graph_name = graph_name
 
 
     def test_connection(self, raise_error=True) -> bool:
@@ -205,21 +223,6 @@ class GraphConnector(DatabaseConnector):
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
     # ------------------------------------------------------------------------
-
-    def change_graph(self, graph_name: str):
-        """Sets graph_name to create new a Knowledge Graph (collection of triples).
-        @details  Similar to creating tables in SQL and collections in Mongo.
-        @note  This change will apply to any new nodes created.
-        @param graph_name  A string corresponding to the 'kg' node attribute."""
-        if self.verbose:
-            Log.success(Log.gr_db + "SWAP_KG: ", f"Switched from graph '{self.graph_name}' to graph '{graph_name}'")
-        self.graph_name = graph_name
-
-
-    
-
-
-
     def add_triple(self, subject: str, relation: str, object_: str):
         """Add a semantic triple to the graph using raw Cypher.
         @details

@@ -68,6 +68,7 @@ class DatabaseConnector(Connector):
         - @ref components.connectors.DatabaseConnector.get_dataframe
         - @ref components.connectors.DatabaseConnector.create_database
         - @ref components.connectors.DatabaseConnector.drop_database
+        - @ref components.connectors.DatabaseConnector.change_database
         - @ref components.connectors.DatabaseConnector.database_exists
     """
 
@@ -113,20 +114,12 @@ class DatabaseConnector(Connector):
         # Condense the above variables into a connection string
         self.change_database(database_name)
 
+    @abstractmethod
     def change_database(self, new_database: str):
         """Update the connection URI to reference a different database in the same engine.
         @param new_database  The name of the database to connect to.
         """
-        # The following variables are set by derived classes in __init__
-        # _route_db_name  Whether to use the database name in the connection string.
-        # _authSuffix  Additional options appended to the MongoDB connection string.
-        if self.verbose:
-            Log.success(Log.db_conn_abc + "SWAP_DB: ", f"Switched from database '{self.database_name}' to database '{new_database}'")
-        self.database_name = new_database
-        if self._route_db_name:
-            self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
-        else:
-            self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}{self._auth_suffix}"
+        pass
 
     @abstractmethod
     def execute_query(self, query: str) -> Optional[DataFrame]:
@@ -294,6 +287,16 @@ class RelationalConnector(DatabaseConnector):
             f"Database engine '{engine}' not supported. Did you mean 'MYSQL' or 'POSTGRES'?",
             raise_error=True
         )
+
+    def change_database(self, new_database: str):
+        """Update the connection URI to reference a different database in the same engine.
+        @param new_database  The name of the database to connect to.
+        """
+        if self.verbose:
+            Log.success(Log.rel_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database))
+        self.database_name = new_database
+        self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
+
 
     def test_connection(self, raise_error=True) -> bool:
         """Establish a basic connection to the database.

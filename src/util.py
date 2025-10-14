@@ -135,6 +135,11 @@ class Log:
     msg_db_not_found = lambda database_name, connection_string: f"Could not find database '{database_name}' using connection '{connection_string}'"
     msg_db_current = lambda database_name: f"Cannot drop database '{database_name}' while connected to it!"
 
+    swap_db = "SWAP_DB: "
+    swap_kg = "SWAP_GRAPH: "
+    msg_swap_db = lambda old_db, new_db: f"Switched from database '{old_db}' to database '{new_db}'"
+    msg_swap_kg = lambda old_kg, new_kg: f"Switched from graph '{old_kg}' to graph '{new_kg}'"
+
 
 def all_none(*args):
     """Checks if all provided args are None."""

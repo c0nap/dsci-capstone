@@ -45,6 +45,16 @@ class DocumentConnector(DatabaseConnector):
         database = os.getenv("DB_NAME")
         super().configure("MONGO", database)
 
+    def change_database(self, new_database: str):
+        """Update the connection URI to reference a different database in the same engine.
+        @note  Additional settings are appended as a suffix to the MongoDB connection string.
+        @param new_database  The name of the database to connect to.
+        """
+        if self.verbose:
+            Log.success(Log.doc_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database))
+        self.database_name = new_database
+        self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
+
 
     def test_connection(self, raise_error=True) -> bool:
         """Establish a basic connection to the MongoDB database.
