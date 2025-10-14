@@ -3,6 +3,7 @@ from src.util import Log, check_values
 from typing import List, Optional
 from pandas import DataFrame
 from neomodel import config, db
+from time import time
 import os
 import re
 
@@ -45,6 +46,7 @@ class GraphConnector(DatabaseConnector):
         if self.verbose:
             Log.success(Log.gr_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database))
         self.database_name = new_database
+        self.graph_name = "default"
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}"
 
     def change_graph(self, graph_name: str):
@@ -83,12 +85,12 @@ class GraphConnector(DatabaseConnector):
                 return False
     
             try:   # Display useful information on existing databases
-                result = self.get_unique(key="db")
+                databases = self.get_unique(key="db")
                 if self.verbose:
-                    Log.success(Log.gr_db, Log.msg_result(result))
-                result = self.get_unique(key="kg")
+                    Log.success(Log.gr_db, Log.msg_result(databases))
+                graphs = self.get_unique(key="kg")
                 if self.verbose:
-                    Log.success(Log.gr_db, Log.msg_result(result))
+                    Log.success(Log.gr_db, Log.msg_result(graphs))
             except Exception as e:
                 Log.fail(Log.gr_db + Log.test_conn + Log.test_info, Log.msg_unknown_error, raise_error, e)
                 return False
@@ -196,13 +198,16 @@ class GraphConnector(DatabaseConnector):
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None
         @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
-        self.check_connection(Log.get_df, raise_error=True)
         if name == "":
             name = self.graph_name
+        self.check_connection(Log.get_df, raise_error=True)
         try:
+            working_graph = self.graph_name
+            self.change_graph(name)
             # Get all nodes in the specified graph
             query = f"MATCH (n {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} RETURN n"
             results, _ = db.cypher_query(query)
+            self.change_graph(working_graph)
             
             # Create a row for each node with attributes as columns - might be unbalanced
             rows = []
@@ -224,6 +229,28 @@ class GraphConnector(DatabaseConnector):
         # If not found, warn but do not fail
         Log.fail(Log.gr_db + Log.get_df, Log.msg_bad_coll(name), raise_error=False)
         return None
+
+
+    def get_unique(self, key: str) -> List[str]:
+        """Retrieve all unique values for a specified node property.
+        @details  Queries all nodes in the database and extracts distinct values for the given key.
+        @param key  The node property name to extract unique values from (e.g. 'db' or 'kg').
+        @return  A list of unique values for the specified key, or an empty list if none exist.
+        @raises RuntimeError  If the query fails to execute."""
+        self.check_connection(Log.get_unique, raise_error=True)
+        try:
+            query = f"""MATCH (n) WHERE n.{key} IS NOT NULL AND {self.NOT_DUMMY_()}
+                RETURN DISTINCT n.{key} AS {key} ORDER BY {key}"""
+            df = self.execute_query(query)
+            if df is None or df.empty:
+                return []
+            unique_values = df[key].tolist()
+            
+            if self.verbose:
+                Log.success(Log.gr_db + Log.get_unique, Log.msg_result(unique_values))
+            return unique_values
+        except Exception as e:
+            Log.fail(Log.gr_db + Log.get_unique, Log.msg_unknown_error, raise_error=True, other_error=e)
 
 
     def create_database(self, database_name: str):
@@ -264,7 +291,7 @@ class GraphConnector(DatabaseConnector):
         @param database_name  The name of a database to search for.
         @return  Whether the database is visible to this connector."""
         query = f"""MATCH (n)
-            WHERE n.db = '{self.database_name}'
+            WHERE n.db = '{database_name}'
             RETURN count(n) AS count"""
         # Result includes multiple collections & any dummy nodes
         count = self.execute_query(query).iloc[0, 0]

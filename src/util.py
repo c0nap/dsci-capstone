@@ -143,6 +143,7 @@ class Log:
     msg_swap_db = lambda old_db, new_db: f"Switched from database '{old_db}' to database '{new_db}'"
     msg_swap_kg = lambda old_kg, new_kg: f"Switched from graph '{old_kg}' to graph '{new_kg}'"
 
+    get_unique = "UNIQUE: "
 
 
 
