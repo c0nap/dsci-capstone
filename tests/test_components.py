@@ -92,23 +92,21 @@ def test_db_docs_comprehensive(docs_db):
 def test_sql_examples(relational_db):
     """Run queries from test files."""
     if relational_db.db_type == "MYSQL":
-        _test_sql_file(relational_db, "./db/tables_mysql.sql", expect_df=False)
+        _test_sql_file(relational_db, "./tests/examples-db/rel_postgres_schema.sql")
     elif relational_db.db_type == "POSTGRES":
-        _test_sql_file(relational_db, "./db/tables_postgres.sql", expect_df=False)
+        _test_sql_file(relational_db, "./tests/examples-db/rel_postgres_schema.sql")
     else:
         raise Exception(f"Unknown database engine '{relational_db.db_type}'")
 
     _test_sql_file(
         relational_db,
-        "./db/example1.sql",
+        "./tests/examples-db/relational_df1.sql",
         expect_df=True,
-        df_header="EntityName table:",
     )
     _test_sql_file(
         relational_db,
-        "./db/example2.sql",
+        "./tests/examples-db/relational_df2.sql",
         expect_df=True,
-        df_header="ExampleEAV table:",
     )
 
     df = relational_db.get_dataframe(
@@ -123,20 +121,16 @@ def test_sql_examples(relational_db):
 # ------------------------------------------------------------------------------
 # FILE TEST WRAPPERS: Reuse the logic to test multiple files within a single test.
 # ------------------------------------------------------------------------------
-def _test_sql_file(relational_db, filename: str, expect_df: bool, df_header: str = ""):
+def _test_sql_file(relational_db, filename: str, expect_df: bool = False):
     """Run queries from a local file through the database.
     @param relational_db  Fixture corresponding to the current session's relational database.
     @param filename  The name of a .sql file.
-    @param expect_df  Whether to throw an error if the queries fail to return a DataFrame.
-    @param df_header  (Optional) A string to print before displaying the DataFrame."""
+    @param expect_df  Whether to throw an error if the queries fail to return a DataFrame."""
     try:
         df = relational_db.execute_file(filename)
         if expect_df:
             assert (
                 df is not None
             ), f"Execution of '{filename}' failed to produce results."
-            if df_header:
-                print(df_header)
-                print(df)
     except Exception as e:
         Log.fail(Log.pytest_db + Log.run_f, Log.msg_bad_exec_f(filename), raise_error=True, other_error=e)
