@@ -25,6 +25,8 @@ class GraphConnector(DatabaseConnector):
         """@brief  Additional options appended to the connection string. Not used here."""
         database = os.getenv("DB_NAME")
         super().configure("NEO4J", database)
+        ## The name of the current graph. Matches node.graph_name for all nodes in the graph.
+        self.graph_name = None
         self.change_graph("default")
 
         # Connect neomodel - URL never needs to change for Neo4j
@@ -147,11 +149,11 @@ class GraphConnector(DatabaseConnector):
 
 
     def create_database(self, database_name: str):
-        """Create a fresh pseudo-database by deleting nodes having the specified database ID.
+        """Create a fresh pseudo-database if it does not already exist.
         @note  This change will apply to any new nodes created after @ref components.connectors.DatabaseConnector.change_database is called.
         @param database_name  A database ID specifying the pseudo-database.
         @raises RuntimeError  If we fail to create the requested database for any reason."""
-        super().create_database(database_name)
+        super().create_database(database_name)  # Check if exists
         self.check_connection(Log.create_db, raise_error=True)
         try:
             # Do nothing - base class will call @ref components.fact_storage.GraphConnector.drop_database automatically
@@ -164,7 +166,7 @@ class GraphConnector(DatabaseConnector):
         """Delete all nodes stored under a particular database name.
         @param database_name  A database ID specifying the pseudo-database.
         @raises RuntimeError  If we fail to drop the target database for any reason."""
-        super().drop_database(database_name)
+        super().drop_database(database_name)  # Check if exists
         self.check_connection(Log.drop_db, raise_error=True)
         try:
             query = f"MATCH (n) WHERE n.database_id = '{database_name}' DETACH DELETE n"
@@ -175,8 +177,18 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string), raise_error=True, other_error=e)
 
-
-
+    def database_exists(self, database_name: str) -> bool:
+        """Search for an existing database using the provided name.
+        @param database_name  The name of a database to search for.
+        @return  Whether the database is visible to this connector."""
+        if not super().database_exists(database_name):
+            return False   # Invalid name
+        query = f"""MATCH (n)
+            WHERE n.database_id = '{self.database_name}'
+            RETURN count(n) AS count"""
+        # Result includes multiple collections & any dummy nodes
+        count = self.execute_query(query).iloc[0, 0]
+        return count != 0
 
 
 

@@ -7,6 +7,10 @@ class Log:
     GREEN = "\033[32m"
     ## ANSI code for red text
     RED = "\033[31m"
+    ## ANSI code for yellow text
+    YELLOW = "\033[33m"
+    ## ANSI code for bright red / pink
+    PINK = "\033[91m"
     ## ANSI code for bright yellow / cream
     BRIGHT = "\033[93m"
     ## ANSI code to reset color
@@ -14,7 +18,9 @@ class Log:
 
     ## ANSI color applied to the prefix of success messages
     SUCCESS_COLOR = GREEN
-    ## ANSI color applied to the prefix of fail messages
+    ## ANSI color applied to the prefix of ignored fail messages
+    WARNING_COLOR = YELLOW
+    ## ANSI color applied to the prefix of critical fail messages
     FAILURE_COLOR = RED
     ## ANSI color applied to the body of every Log message
     MSG_COLOR = BRIGHT
@@ -38,8 +44,9 @@ class Log:
         @param msg  The message to print.
         @param raise_error  Whether to raise an error.
         @param other_error  Another Exception resulting from this failure.
-        @throws RuntimeError  If raise_error is True"""
-        text = f"{Log.FAILURE_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
+        @raises RuntimeError  If raise_error is True"""
+        _FAIL_COLOR = Log.FAILURE_COLOR if raise_error else Log.WARNING_COLOR
+        text = f"{_FAIL_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
         if raise_error:
             if isinstance(other_error, Exception):
                 raise RuntimeError(text) from other_error
@@ -69,7 +76,7 @@ class Log:
     # The message body (msg_*) will be bright - easy to find inside long traceback.
 
     conn_abc = "CONNECTOR (ABC): "
-    db_conn_abc = "DB CONNECTOR (ABC): "
+    db_conn_abc = "BASE CONNECTOR: "
     rel_db = "REL DB: "
     gr_db = "GRAPH DB: "
     doc_db = "DOCS DB: "
@@ -105,9 +112,9 @@ class Log:
     run_q = "QUERY: "
     run_f = "FILE EXEC: "
     msg_bad_table = lambda name: f"Table '{name}' not found"
-    msg_good_table = lambda name: f"Converted table '{name}' to Pandas DataFrame."
+    msg_good_table = lambda name: f"Exported table '{name}' to DataFrame."
     msg_bad_coll = lambda name: f"Collection '{name}' not found"
-    msg_good_coll = lambda name: f"Converted collection '{name}' to Pandas DataFrame."
+    msg_good_coll = lambda name: f"Exported collection '{name}' to DataFrame."
 
     msg_success_managed_db = lambda managed, database_name: f"Successfully {managed} database '{database_name}'"
     """@brief  Handles various successful actions an admin could perform on a database.
@@ -124,6 +131,11 @@ class Log:
 
     kg = "KG: "
     pytest_db = "PYTEST (DB): "
+
+    db_exists = "DB_EXIST: "
+    msg_db_exists = lambda database_name: f"Database '{database_name}' already exists."
+    msg_db_not_found = lambda database_name, connection_string: f"Could not find database '{database_name}' using connection '{connection_string}'"
+    msg_db_current = lambda database_name: f"Cannot drop database '{database_name}' while connected to it!"
 
 
 def all_none(*args):

@@ -68,6 +68,7 @@ class DatabaseConnector(Connector):
         - @ref components.connectors.DatabaseConnector.get_dataframe
         - @ref components.connectors.DatabaseConnector.create_database
         - @ref components.connectors.DatabaseConnector.drop_database
+        - @ref components.connectors.DatabaseConnector.database_exists
     """
 
     def __init__(self, verbose=False):
@@ -119,6 +120,8 @@ class DatabaseConnector(Connector):
         # The following variables are set by derived classes in __init__
         # _route_db_name  Whether to use the database name in the connection string.
         # _authSuffix  Additional options appended to the MongoDB connection string.
+        if self.verbose:
+            Log.success(Log.db_conn_abc + "SWAP_DB: ", f"Switched from database '{self.database_name}' to database '{new_database}'")
         self.database_name = new_database
         if self._route_db_name:
             self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
@@ -195,16 +198,30 @@ class DatabaseConnector(Connector):
     @abstractmethod
     def create_database(self, database_name: str):
         """Use the current database connection to create a sibling database in this engine.
-        @param database_name  The name of the new database to create."""
-        self.drop_database(database_name)
+        @param database_name  The name of the new database to create.
+        @raises RuntimeError  If the database already exists."""
+        if self.database_exists(database_name):
+            Log.fail(Log.db_conn_abc + Log.create_db, Log.msg_db_exists(database_name))
         pass
 
     @abstractmethod
-    def drop_database(self, database_name: str = ""):
+    def drop_database(self, database_name: str):
         """Delete all data stored in a particular database.
-        @param database_name  The name of an existing database."""
+        @param database_name  The name of an existing database.
+        @raises RuntimeError  If the database does not exist."""
+        if not self.database_exists(database_name):
+            Log.fail(Log.db_conn_abc + Log.drop_db, Log.msg_db_not_found(database_name, self.connection_string))
+        if database_name == self.database_name:
+            Log.fail(Log.db_conn_abc + Log.drop_db, Log.msg_db_current(database_name))
+        pass
+
+    @abstractmethod
+    def database_exists(self, database_name: str) -> bool:
+        """Search for an existing database using the provided name.
+        @param database_name  The name of a database to search for.
+        @return  Whether the database is visible to this connector."""
         if not database_name:
-            database_name = self.database_name
+            return False
         pass
 
     def _is_single_query(self, query: str) -> bool:
@@ -334,6 +351,8 @@ class RelationalConnector(DatabaseConnector):
                 try:   # Test create/drop functionality with tmp database
                     tmp_db = f"test_db_{int(time())}"
                     working_database = self.database_name
+                    if self.database_exists(tmp_db):
+                        self.drop_database(tmp_db)
                     self.create_database(tmp_db)
                     self.change_database(tmp_db)
                     self.execute_query("SELECT 1").iloc[0, 0]
@@ -380,9 +399,9 @@ class RelationalConnector(DatabaseConnector):
         @raises RuntimeError  If any result does not match what was expected."""
         for i in range(len(results)):
             if self.verbose and results[i] == expected[i]:
-                Log.success(Log.rel_db + Log.good_val, Log.msg_compare(results[i], 1))
+                Log.success(Log.rel_db + Log.good_val, Log.msg_compare(results[i], expected[i]))
             elif results[i] != expected[i]:
-                Log.fail(Log.rel_db + Log.bad_val, Log.msg_compare(results[i], 1), raise_error)
+                Log.fail(Log.rel_db + Log.bad_val, Log.msg_compare(results[i], expected[i]), raise_error)
                 return False
         return True
 
@@ -428,7 +447,6 @@ class RelationalConnector(DatabaseConnector):
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None
         @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
-        super().get_dataframe(name)
         self.check_connection(Log.get_df, raise_error=True)
         for table_name in (name, name.lower()):
             try:
@@ -485,6 +503,13 @@ class RelationalConnector(DatabaseConnector):
                 Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
         except Exception as e:
             Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string), raise_error=True, other_error=e)
+
+    def database_exists(self, database_name: str) -> bool:
+        """Search for an existing database using the provided name.
+        @param database_name  The name of a database to search for.
+        @return  Whether the database is visible to this connector."""
+        databases = self.execute_query(self._specific_queries[1]).iloc[:, 0].tolist()
+        return database_name in databases
 
 
 class mysqlConnector(RelationalConnector):
