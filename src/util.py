@@ -1,3 +1,5 @@
+from typing import List
+
 class Log:
     """The Log class standardizes console output."""
 
@@ -142,6 +144,25 @@ class Log:
     msg_swap_kg = lambda old_kg, new_kg: f"Switched from graph '{old_kg}' to graph '{new_kg}'"
 
 
+
+
 def all_none(*args):
     """Checks if all provided args are None."""
     return all(arg is None for arg in args)
+
+
+def check_values(results: List, expected: List, verbose: str, log_source: str, raise_error: bool) -> bool:
+    """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_connection
+    @param results  A list of observed values from the database.
+    @param expected  A list of correct values to compare against.
+    @param verbose  Whether to print success messages.
+    @param log_source  The Log class prefix indicating which method is performing the check.
+    @param raise_error  Whether to raise an error on connection failure.
+    @raises RuntimeError  If any result does not match what was expected."""
+    for i in range(len(results)):
+        if verbose and results[i] == expected[i]:
+            Log.success(log_source + Log.good_val, Log.msg_compare(results[i], expected[i]))
+        elif results[i] != expected[i]:
+            Log.fail(log_source + Log.bad_val, Log.msg_compare(results[i], expected[i]), raise_error)
+            return False
+    return True

@@ -56,5 +56,5 @@ class Session:
         # TODO
 
 
-session = Session()
-print()
+if __name__ == "__main__":
+    session = Session()

@@ -1,5 +1,5 @@
 from components.connectors import DatabaseConnector
-from src.util import Log
+from src.util import Log, check_values
 from typing import List, Optional
 from pandas import DataFrame
 from neomodel import config, db
@@ -70,13 +70,13 @@ class GraphConnector(DatabaseConnector):
     
             try:    # Run universal test queries
                 result, _ = db.cypher_query("RETURN 1")
-                if self._check_values([result[0][0]], [1], raise_error) == False:
+                if check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error) == False:
                     return False
                 result, _ = db.cypher_query("RETURN 'TWO'")
-                if self._check_values([result[0][0]], ["TWO"], raise_error) == False:
+                if check_values([result[0][0]], ["TWO"], self.verbose, Log.gr_db, raise_error) == False:
                     return False
                 result, _ = db.cypher_query("RETURN 5, 6")
-                if self._check_values([result[0][0], result[0][1]], [5, 6], raise_error) == False:
+                if check_values([result[0][0], result[0][1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
                     return False
             except Exception as e:
                 Log.fail(Log.gr_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error, raise_error, e)
@@ -98,7 +98,7 @@ class GraphConnector(DatabaseConnector):
                             CREATE (n2:Person {{db: '{self.database_name}', kg: '{self.graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
                 self.execute_query(query)
                 df = self.get_dataframe(self.graph_name)
-                if self._check_values([len(df)], [2], raise_error) == False:
+                if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
                     return False
                 query = f"MATCH (n {{db: '{self.database_name}', kg: '{self.graph_name}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                 self.execute_query(query)

@@ -8,7 +8,7 @@ from sqlalchemy.pool import NullPool
 from dotenv import load_dotenv
 from typing import List, Optional
 from sqlparse import parse as sql_parse
-from src.util import Log
+from src.util import Log, check_values
 
 # Read environment variables at compile time
 load_dotenv(".env")
@@ -313,16 +313,16 @@ class RelationalConnector(DatabaseConnector):
             with engine.begin() as connection:
                 try:    # Run universal test queries
                     result = connection.execute(text("SELECT 1")).fetchone()[0]
-                    if self._check_values([result], [1], raise_error) == False:
+                    if check_values([result], [1], self.verbose, Log.rel_db, raise_error) == False:
                         return False
                     result = self.execute_query("SELECT 'TWO';").iloc[0, 0]
-                    if self._check_values([result], ["TWO"], raise_error) == False:
+                    if check_values([result], ["TWO"], self.verbose, Log.rel_db, raise_error) == False:
                         return False
                     results = self.execute_combined("SELECT 3; SELECT 4;")
-                    if self._check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], raise_error) == False:
+                    if check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], self.verbose, Log.rel_db, raise_error) == False:
                         return False
                     result = self.execute_query("SELECT 5, 6;")
-                    if self._check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], raise_error) == False:
+                    if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error) == False:
                         return False
                 except Exception as e:
                     Log.fail(Log.rel_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error, raise_error, e)
@@ -330,7 +330,7 @@ class RelationalConnector(DatabaseConnector):
 
                 try:   # Display useful information on existing databases
                     db_name = self.execute_query(self._specific_queries[0]).iloc[0, 0]
-                    self._check_values([db_name], [self.database_name], raise_error)
+                    check_values([db_name], [self.database_name], self.verbose, Log.rel_db, raise_error)
                     databases = self.execute_query(self._specific_queries[1])
                     if self.verbose:
                         Log.success(Log.rel_db, Log.msg_result(databases))
@@ -343,7 +343,7 @@ class RelationalConnector(DatabaseConnector):
                     self.execute_query(f"DROP TABLE IF EXISTS {tmp_table} CASCADE;")
                     self.execute_query(f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');")
                     df = self.get_dataframe(f"{tmp_table}")
-                    self._check_values([df.at[0, 'name']], ['Alice'], raise_error)
+                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
                     self.execute_query(f"DROP TABLE {tmp_table};")
                 except Exception as e:
                     Log.fail(Log.rel_db + Log.test_conn + Log.test_df, Log.msg_unknown_error, raise_error, e)
@@ -356,7 +356,7 @@ class RelationalConnector(DatabaseConnector):
                         self.drop_database(tmp_db)
                     self.create_database(tmp_db)
                     self.change_database(tmp_db)
-                    self.execute_query("SELECT 1").iloc[0, 0]
+                    self.execute_query("SELECT 1")
                     self.change_database(working_database)
                     self.drop_database(tmp_db)
                 except Exception as e:
@@ -389,21 +389,6 @@ class RelationalConnector(DatabaseConnector):
             return False
         if self.verbose:
             Log.success(Log.rel_db + log_source, Log.msg_db_connect(self.database_name))
-        return True
-
-
-    def _check_values(self, results: List, expected: List, raise_error: bool) -> bool:
-        """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_connection
-        @param results  A list of observed values from the database.
-        @param expected  A list of correct values to compare against.
-        @param raise_error  Whether to raise an error on connection failure.
-        @raises RuntimeError  If any result does not match what was expected."""
-        for i in range(len(results)):
-            if self.verbose and results[i] == expected[i]:
-                Log.success(Log.rel_db + Log.good_val, Log.msg_compare(results[i], expected[i]))
-            elif results[i] != expected[i]:
-                Log.fail(Log.rel_db + Log.bad_val, Log.msg_compare(results[i], expected[i]), raise_error)
-                return False
         return True
 
 

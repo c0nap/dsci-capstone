@@ -1,5 +1,5 @@
 from components.connectors import DatabaseConnector
-from src.util import Log
+from src.util import Log, check_values
 import os
 from time import time
 import json
@@ -70,13 +70,13 @@ class DocumentConnector(DatabaseConnector):
             with mongo_handle(host=self.connection_string, alias="test_conn") as db:
                 try:    # Run universal test queries - some require admin
                     result = db.command({"ping": 1})
-                    if self._check_values([result.get("ok")], [1.0], raise_error) == False:
+                    if check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
                         return False
                     status = db.command({"serverStatus": 1})
-                    if self._check_values([status.get("ok")], [1.0], raise_error) == False:
+                    if check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
                         return False
                     result = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
-                    if self._check_values([isinstance(result, list)], [True], raise_error) == False:
+                    if check_values([isinstance(result, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
                         return False
                 except Exception as e:
                     Log.fail(Log.doc_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error, raise_error, e)
@@ -96,7 +96,7 @@ class DocumentConnector(DatabaseConnector):
                         db.drop_collection(tmp_collection)
                     db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
                     df = self.get_dataframe(tmp_collection)
-                    self._check_values([df.at[0, 'name']], ['Alice'], raise_error)
+                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
                     db.drop_collection(tmp_collection)
                 except Exception as e:
                     Log.fail(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error, raise_error, e)
@@ -142,22 +142,6 @@ class DocumentConnector(DatabaseConnector):
             return False
         if self.verbose:
             Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name))
-        return True
-
-    
-
-    def _check_values(self, results: List, expected: List, raise_error: bool) -> bool:
-        """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_connection
-        @param results  A list of observed values from the database.
-        @param expected  A list of correct values to compare against.
-        @param raise_error  Whether to raise an error on connection failure.
-        @raises RuntimeError  If any result does not match what was expected."""
-        for i in range(len(results)):
-            if self.verbose and results[i] == expected[i]:
-                Log.success(Log.doc_db + Log.good_val, Log.msg_compare(results[i], expected[i]))
-            elif results[i] != expected[i]:
-                Log.fail(Log.doc_db + Log.bad_val, Log.msg_compare(results[i], expected[i]), raise_error)
-                return False
         return True
 
 
