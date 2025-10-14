@@ -5,45 +5,26 @@ import time
 from src.setup import Session
 from src.util import Log
 
-
-@pytest.fixture(scope="session")
-def session():
-    """Fixture to create session."""
-    session = Session()
-    relational_db = session.relational_db
-    yield session
-    session.reset()
-
-
 # ------------------------------------------------------------------------------
 # DATABASE FIXTURES: Checkpoint the database connector instances from Session.
 # ------------------------------------------------------------------------------
 @pytest.fixture(scope="session")
 def relational_db(session):
     """Fixture to get relational database connection."""
-    relational_db = session.relational_db
-    saved_verbose = relational_db.verbose
-    relational_db.verbose = True
-    yield relational_db
-    relational_db.verbose = saved_verbose  # Restore verbose afterwards
+    _relational_db = session.relational_db
+    yield _relational_db
 
 @pytest.fixture(scope="session")
 def docs_db(session):
     """Fixture to get document database connection."""
-    docs_db = session.docs_db
-    saved_verbose = docs_db.verbose
-    docs_db.verbose = True
-    yield docs_db
-    docs_db.verbose = saved_verbose  # Restore verbose afterwards
+    _docs_db = session.docs_db
+    yield _docs_db
 
 # @pytest.fixture(scope="session")
 # def graph_db(session):
 #     """Fixture to get document database connection."""
-#     graph_db = session.graph_db
-#     saved_verbose = graph_db.verbose
-#     graph_db.verbose = True
-#     yield graph_db
-#     graph_db.verbose = saved_verbose  # Restore verbose afterwards
+#     _graph_db = session.graph_db
+#     yield _graph_db
 
 
 

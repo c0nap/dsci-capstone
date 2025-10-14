@@ -7,6 +7,14 @@ MAKEFLAGS += --no-print-directory
 # Run each recipe in a single shell so helper functions persist and local variables remain in scope
 .ONESHELL:
 
+# TODO: apply these variables to all make recipes
+#    --verbose is reserved flag for pytest
+#    VERBOSE in this file was created first (for env-docker)
+# Default values if unset:
+VERBOSE ?= 0
+VERBY ?= 0
+COLOR ?= 1
+
 ###############################################################################
 .PHONY: db-start-local db-start-docker db-stop-local
 DATABASES = MYSQL POSTGRES MONGO NEO4J
@@ -112,17 +120,17 @@ docker-blazor-dev:
 # Bypass the original pipeline and run pytests instead.
 ###############################################################################
 .PHONY: docker-test docker-test-dev docker-test-raw docker-all-tests docker-all
-# Note: uses existing container images
+# Note: uses existing container images, runs "pytest {args} ."
 docker-test:
-	make docker-python CMD="pytest ."
+	make docker-python CMD="pytest $(if $(filter 1,$(VERBY)),--verby) $(if $(filter 0,$(COLOR)),--no-colors) ."
 # Recompiles docker images for the latest source code
 docker-test-dev:
 	make docker-build-dev-python
 	make docker-test
-# Shows Python print statements at the expense of fancy pytest formatting
+# Shows Python print statements at the expense of fancy pytest formatting, runs "python -m pytest -s {args} ."
 docker-test-raw:
 	make docker-build-dev-python
-	make docker-python CMD="python -m pytest -s ."
+	make docker-python CMD="python -m pytest -s $(if $(filter 1,$(VERBY)),--verby) $(if $(filter 0,$(COLOR)),--no-colors) ."
 	
 # Deploy everything to docker, but only run pytests
 docker-all-tests:
@@ -546,9 +554,6 @@ ENV_FILE := .env
 ENV_DOCKER := .env.docker
 APPSET := web-app/BlazorApp/appsettings.json
 APPSET_DOCKER := web-app/BlazorApp/appsettings.Docker.json
-
-# VERBOSE=1 prints detailed mapping info for debugging
-VERBOSE ?= 0
 
 ###############################################################################
 # Detect whether Make is running on Windows (OS) or WSL

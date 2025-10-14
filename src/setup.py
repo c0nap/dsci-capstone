@@ -25,7 +25,7 @@ class Session:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, verbose=True):
+    def __init__(self, verbose=False):
         """Initializes the session using the .env file.
         @details
             - The relational database connector is created using a Factory Method, choosing mysql or postgres based on the .env file.
