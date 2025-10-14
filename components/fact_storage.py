@@ -217,18 +217,29 @@ class GraphConnector(DatabaseConnector):
         count = self.execute_query(query).iloc[0, 0]
         return count > 0
 
+    def delete_dummy(self):
+        """Delete the initial dummy node from the database.
+        @note  Call this method whenever real data is being added to avoid pollution."""
+        query = f"MATCH (n) WHERE {self.IS_DUMMY_()} DETACH DELETE n"
+        self.execute_query(query)
 
 
 
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
     # ------------------------------------------------------------------------
-    def add_triple(self, subject: str, relation: str, object_: str):
+    def add_triple(self, subject: str, relation: str, object_: str, _delete_init: bool = True):
         """Add a semantic triple to the graph using raw Cypher.
         @details
             1. Finds nodes by exact match on `name` attribute.
             2. Creates a relationship between them with the given label.
+        @param subject  A string representing the entity performing an action.
+        @param relation  A string describing the action.
+        @param object  A string representing the entity being acted upon.
+        @param _delete_init  Whether to delete the dummy node added during database creation.
         @raises RuntimeError  If the triple cannot be added to our graph database."""
+        if _delete_init:
+            self.delete_dummy()
 
         # Keep only letters, numbers, underscores
         relation = re.sub(r"[^A-Za-z0-9_]", "_", relation)
@@ -318,9 +329,16 @@ class GraphConnector(DatabaseConnector):
 
 
 
+    def IS_DUMMY_(self, alias: str = 'n'):
+        """Generates Cypher code to select dummy nodes inside a WHERE clause.
+        @details  Usage: MATCH (n) WHERE {self.IS_DUMMY_('n')};
+        @return  A string containing Cypher code.
+        """
+        return f"({alias}._init = true)"
+
     def NOT_DUMMY_(self, alias: str = 'n'):
         """Generates Cypher code to select non-dummy nodes inside a WHERE clause.
-        @details  Usage: MATCH (n) WHERE {self.NOT_DUMMY('n')};
+        @details  Usage: MATCH (n) WHERE {self.NOT_DUMMY_('n')};
         @return  A string containing Cypher code.
         """
         return f"({alias}._init IS NULL OR {alias}._init = false)"

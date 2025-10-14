@@ -284,6 +284,7 @@ class DocumentConnector(DatabaseConnector):
                 if "init" not in db.list_collection_names():
                     db.create_collection("init")
                 db["init"].insert_one({"initialized_at": int(time())})
+                db["init"].delete_many({})
 
                 self.change_database(working_database)
                 if self.verbose:
@@ -319,6 +320,14 @@ class DocumentConnector(DatabaseConnector):
             databases = db.client.list_database_names()
         #print(databases)
         return database_name in databases
+
+
+    def delete_dummy(self):
+        """Delete the initial dummy collection from the database.
+        @note  Call this method whenever real data is being added to avoid pollution."""
+        with mongo_handle(host=self.connection_string, alias="drop_dum") as db:
+            if "init" in db.list_collection_names() and db.command("dbstats")["collections"] > 1:
+                db["init"].drop()
 
 
     # Reuse the dataframe parsing logic
