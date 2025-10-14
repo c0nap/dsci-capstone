@@ -25,6 +25,7 @@ class GraphConnector(DatabaseConnector):
         """@brief  Additional options appended to the connection string. Not used here."""
         database = os.getenv("DB_NAME")
         super().configure("NEO4J", database)
+        self.change_graph("default")
 
         # Connect neomodel - URL never needs to change for Neo4j
         config.DATABASE_URL = self.connection_string
@@ -40,6 +41,8 @@ class GraphConnector(DatabaseConnector):
             # Check if connection string is valid
             if self.check_connection(Log.test_conn, raise_error) == False:
                 return False
+
+            # TODO
 
         except Exception as e:
             Log.fail(Log.gr_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
@@ -174,9 +177,23 @@ class GraphConnector(DatabaseConnector):
 
 
 
+
+
+
+
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
     # ------------------------------------------------------------------------
+
+    def change_graph(self, graph_name: str):
+        """Sets graph_name to create new a Knowledge Graph (collection of triples).
+        @details  Similar to creating tables in SQL and collections in Mongo.
+        @note  This change will apply to any new nodes created.
+        @param graph_name  A string corresponding to the graph_name node attribute."""
+        if self.verbose:
+            Log.success(Log.gr_db + "CHANGE_KG", f"Switched from graph '{self.graph_name}' to graph '{graph_name}'")
+        self.graph_name = graph_name
+
 
     def add_triple(self, subject: str, relation: str, object_: str):
         """Add a semantic triple to the graph using raw Cypher.
@@ -191,8 +208,8 @@ class GraphConnector(DatabaseConnector):
         object_ = re.sub(r"[^A-Za-z0-9_]", "_", object_)
 
         query = f"""
-        MERGE (from_node {{name: '{subject}', database_id: '{self.database_name}'}})
-        MERGE (to_node {{name: '{object_}', database_id: '{self.database_name}'}})
+        MERGE (from_node {{name: '{subject}', database_id: '{self.database_name}', graph_name: '{self.graph_name}'}})
+        MERGE (to_node {{name: '{object_}', database_id: '{self.database_name}', graph_name: '{self.graph_name}'}})
         MERGE (from_node)-[r:{relation}]->(to_node)
         RETURN from_node, r, to_node
         """
@@ -214,7 +231,7 @@ class GraphConnector(DatabaseConnector):
         """
         query = f"""
         MATCH (n)
-        WHERE n.database_id = '{self.database_name}'
+        WHERE n.database_id = '{self.database_name}' AND n.graph_name = '{self.graph_name}'
         OPTIONAL MATCH (n)-[r]-()
         WITH n.name as node_name, count(r) as edge_count
         ORDER BY edge_count DESC, rand()
@@ -233,10 +250,8 @@ class GraphConnector(DatabaseConnector):
     def get_all_triples(self) -> DataFrame:
         """Return all triples in the current pseudo-database as a pandas DataFrame.
         @raises RuntimeError  If the query fails to retrieve the requested DataFrame."""
-        db_id = self.database_name
-
         query = f"""
-        MATCH (a {{database_id: '{db_id}'}})-[r]->(b {{database_id: '{db_id}'}})
+        MATCH (a {{database_id: '{self.database_name}', graph_name: '{self.graph_name}'}})-[r]->(b {{database_id: '{self.database_name}', graph_name: '{self.graph_name}'}})
         RETURN a.name AS subject, type(r) AS relation, b.name AS object
         """
         try:
