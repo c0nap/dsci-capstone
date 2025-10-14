@@ -220,8 +220,6 @@ class DatabaseConnector(Connector):
         """Search for an existing database using the provided name.
         @param database_name  The name of a database to search for.
         @return  Whether the database is visible to this connector."""
-        if not database_name:
-            return False
         pass
 
     def _is_single_query(self, query: str) -> bool:

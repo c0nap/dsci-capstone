@@ -9,8 +9,6 @@ class Log:
     RED = "\033[31m"
     ## ANSI code for yellow text
     YELLOW = "\033[33m"
-    ## ANSI code for bright red / pink
-    PINK = "\033[91m"
     ## ANSI code for bright yellow / cream
     BRIGHT = "\033[93m"
     ## ANSI code to reset color
@@ -75,8 +73,8 @@ class Log:
     # Everything in the prefix will have color - a few words to contextualize the error source.
     # The message body (msg_*) will be bright - easy to find inside long traceback.
 
-    conn_abc = "CONNECTOR (ABC): "
-    db_conn_abc = "BASE CONNECTOR: "
+    conn_abc = "BASE CONNECTOR: "
+    db_conn_abc = "CONNECTOR: "
     rel_db = "REL DB: "
     gr_db = "GRAPH DB: "
     doc_db = "DOCS DB: "

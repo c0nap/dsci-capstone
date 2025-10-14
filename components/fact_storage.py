@@ -11,7 +11,8 @@ class GraphConnector(DatabaseConnector):
     """Connector for Neo4j (graph database).
     @details
         - Uses neomodel to abstract some operations, but raw CQL is required for many tasks.
-        - Neo4j does not support multiple logical databases in community edition, so we emulate them using a `database_id` property on nodes.
+        - Neo4j does not support multiple logical databases in community edition, so we emulate them.
+        - This is achieved by using a 'db' property (database name) and 'kg' property (graph name) on nodes.
     """
 
     def __init__(self, verbose=False):
@@ -25,12 +26,17 @@ class GraphConnector(DatabaseConnector):
         """@brief  Additional options appended to the connection string. Not used here."""
         database = os.getenv("DB_NAME")
         super().configure("NEO4J", database)
-        ## The name of the current graph. Matches node.graph_name for all nodes in the graph.
+        # Connect neomodel - URL never needs to change for Neo4j
+        config.DATABASE_URL = self.connection_string
+        
+        ## The name of the current graph. Matches node.kg for all nodes in the graph.
         self.graph_name = None
         self.change_graph("default")
 
-        # Connect neomodel - URL never needs to change for Neo4j
-        config.DATABASE_URL = self.connection_string
+        # Add a dummy node to ensure at least 1 valid database exists
+        if not self.database_exists(database):
+            self.create_database(database)
+
 
 
     def test_connection(self, raise_error=True) -> bool:
@@ -111,7 +117,7 @@ class GraphConnector(DatabaseConnector):
 
 
     def get_dataframe(self, name: str) -> Optional[DataFrame]:
-        """Automatically generate and run a query for the specified collection.
+        """Automatically generate and run a query for the specified Knowledge Graph collection.
         @details
             - Fetches all public node attributes, the internal ID, and all labels (e.g. :Person :Character)
             - Does not explode lists or nested values
@@ -119,14 +125,15 @@ class GraphConnector(DatabaseConnector):
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None
         @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
-        super().get_dataframe(name)
         self.check_connection(Log.get_df, raise_error=True)
+        if name == "":
+            name = self.graph_name
         try:
-            # Get all nodes in the current graph
-            query = f"MATCH (n) WHERE n.database_id = $db RETURN n"
-            results, _ = db.cypher_query(query, {"db": self.database_name})
+            # Get all nodes in the specified graph
+            query = f"MATCH (n {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} RETURN n"
+            results, _ = db.cypher_query(query)
             
-            # Create rows containing node attributes
+            # Create a row for each node with attributes as columns - might be unbalanced
             rows = []
             for record in results:
                 node = record[0]
@@ -156,7 +163,10 @@ class GraphConnector(DatabaseConnector):
         super().create_database(database_name)  # Check if exists
         self.check_connection(Log.create_db, raise_error=True)
         try:
-            # Do nothing - base class will call @ref components.fact_storage.GraphConnector.drop_database automatically
+            # Insert a dummy node to resolve self.database_exists()
+            query = f"CREATE ({{db: '{database_name}', _init: true}})"
+            self.execute_query(query)
+
             if self.verbose:
                 Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
         except Exception as e:
@@ -169,7 +179,8 @@ class GraphConnector(DatabaseConnector):
         super().drop_database(database_name)  # Check if exists
         self.check_connection(Log.drop_db, raise_error=True)
         try:
-            query = f"MATCH (n) WHERE n.database_id = '{database_name}' DETACH DELETE n"
+            # Result includes multiple collections & any dummy nodes
+            query = f"MATCH (n) WHERE n.db = '{database_name}' DETACH DELETE n"
             self.execute_query(query)
 
             if self.verbose:
@@ -181,14 +192,12 @@ class GraphConnector(DatabaseConnector):
         """Search for an existing database using the provided name.
         @param database_name  The name of a database to search for.
         @return  Whether the database is visible to this connector."""
-        if not super().database_exists(database_name):
-            return False   # Invalid name
         query = f"""MATCH (n)
-            WHERE n.database_id = '{self.database_name}'
+            WHERE n.db = '{self.database_name}'
             RETURN count(n) AS count"""
         # Result includes multiple collections & any dummy nodes
         count = self.execute_query(query).iloc[0, 0]
-        return count != 0
+        return count > 0
 
 
 
@@ -201,16 +210,20 @@ class GraphConnector(DatabaseConnector):
         """Sets graph_name to create new a Knowledge Graph (collection of triples).
         @details  Similar to creating tables in SQL and collections in Mongo.
         @note  This change will apply to any new nodes created.
-        @param graph_name  A string corresponding to the graph_name node attribute."""
+        @param graph_name  A string corresponding to the 'kg' node attribute."""
         if self.verbose:
-            Log.success(Log.gr_db + "CHANGE_KG", f"Switched from graph '{self.graph_name}' to graph '{graph_name}'")
+            Log.success(Log.gr_db + "SWAP_KG: ", f"Switched from graph '{self.graph_name}' to graph '{graph_name}'")
         self.graph_name = graph_name
+
+
+    
+
 
 
     def add_triple(self, subject: str, relation: str, object_: str):
         """Add a semantic triple to the graph using raw Cypher.
         @details
-            1. Finds nodes by exact match on `name` and `database_id`.
+            1. Finds nodes by exact match on `name` attribute.
             2. Creates a relationship between them with the given label.
         @raises RuntimeError  If the triple cannot be added to our graph database."""
 
@@ -219,12 +232,12 @@ class GraphConnector(DatabaseConnector):
         subject = re.sub(r"[^A-Za-z0-9_]", "_", subject)
         object_ = re.sub(r"[^A-Za-z0-9_]", "_", object_)
 
+        # Finds or creates 2 nodes with correct attributes, and connects with an edge.
         query = f"""
-        MERGE (from_node {{name: '{subject}', database_id: '{self.database_name}', graph_name: '{self.graph_name}'}})
-        MERGE (to_node {{name: '{object_}', database_id: '{self.database_name}', graph_name: '{self.graph_name}'}})
-        MERGE (from_node)-[r:{relation}]->(to_node)
-        RETURN from_node, r, to_node
-        """
+        MERGE (s {{name: '{subject}', db: '{self.database_name}', kg: '{self.graph_name}'}})
+        MERGE (o {{name: '{object_}', db: '{self.database_name}', kg: '{self.graph_name}'}})
+        MERGE (s)-[r:{relation}]->(o)
+        RETURN s, r, o"""
 
         try:
             df = self.execute_query(query)
@@ -242,14 +255,13 @@ class GraphConnector(DatabaseConnector):
         @raises RuntimeError  If the query fails to retrieve the requested DataFrame.
         """
         query = f"""
-        MATCH (n)
-        WHERE n.database_id = '{self.database_name}' AND n.graph_name = '{self.graph_name}'
+        MATCH (n {self.SAME_DB_KG_()})
+        WHERE {self.NOT_DUMMY_()}
         OPTIONAL MATCH (n)-[r]-()
         WITH n.name as node_name, count(r) as edge_count
         ORDER BY edge_count DESC, rand()
         LIMIT {top_n}
-        RETURN node_name, edge_count
-        """
+        RETURN node_name, edge_count"""
         try:
             df = self.execute_query(query)
             if self.verbose:
@@ -263,23 +275,15 @@ class GraphConnector(DatabaseConnector):
         """Return all triples in the current pseudo-database as a pandas DataFrame.
         @raises RuntimeError  If the query fails to retrieve the requested DataFrame."""
         query = f"""
-        MATCH (a {{database_id: '{self.database_name}', graph_name: '{self.graph_name}'}})-[r]->(b {{database_id: '{self.database_name}', graph_name: '{self.graph_name}'}})
-        RETURN a.name AS subject, type(r) AS relation, b.name AS object
+        MATCH (s {self.SAME_DB_KG_()})-[r]->(o {self.SAME_DB_KG_()})
+        WHERE {self.NOT_DUMMY_('s')} AND {self.NOT_DUMMY_('o')}
+        RETURN s.name AS subject, type(r) AS relation, o.name AS object
         """
         try:
-            df = self.execute_query(query)
-            # Always return a DataFrame with the 3 desired columns
-            if df is None or df.empty:
-                df = DataFrame(columns=["subject", "relation", "object"])
-            else:
-                # Rename columns safely
-                df = df.rename(
-                    columns={
-                        df.columns[0]: "subject",
-                        df.columns[1]: "relation",
-                        df.columns[2]: "object",
-                    }
-                )
+            # Always return a DataFrame with the 3 desired columns, even if empty or None
+            cols = ["subject", "relation", "object"]
+            df = (self.execute_query(query) or DataFrame()).reindex(columns=cols)
+
             if self.verbose:
                 Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.")
             return df
@@ -292,10 +296,9 @@ class GraphConnector(DatabaseConnector):
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
         nodes_df = self.get_dataframe()
 
-        # Set pandas display options temporarily
-        with option_context(
-            "display.max_rows", max_rows, "display.max_colwidth", max_col_width
-        ):
+        # Set pandas display options only within scope
+        with option_context("display.max_rows", max_rows,
+            "display.max_colwidth", max_col_width):
             print(f"Graph nodes ({len(nodes_df)} total):")
             print(nodes_df)
 
@@ -303,9 +306,26 @@ class GraphConnector(DatabaseConnector):
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
         triples_df = self.get_all_triples()
 
-        # Set pandas display options temporarily
-        with option_context(
-            "display.max_rows", max_rows, "display.max_colwidth", max_col_width
-        ):
+        # Set pandas display options only within scope
+        with option_context("display.max_rows", max_rows,
+            "display.max_colwidth", max_col_width):
             print(f"Graph triples ({len(triples_df)} total):")
             print(triples_df)
+
+
+
+
+    def NOT_DUMMY_(self, alias: str = 'n'):
+        """Generates Cypher code to select non-dummy nodes inside a WHERE clause.
+        @details  Usage: MATCH (n) WHERE {self.NOT_DUMMY('n')};
+        @return  A string containing Cypher code.
+        """
+        return f"({alias}._init IS NULL OR {alias}._init = false)"
+    
+    def SAME_DB_KG_(self):
+        """Generates a Cypher pattern dictionary to match nodes by current database and graph name.
+        @details  Usage: MATCH (n {self.SAME_DB_KG_()})
+        @return  A string containing Cypher code.
+        """
+        return f"{{db: '{self.database_name}', kg: '{self.graph_name}'}}"
+
