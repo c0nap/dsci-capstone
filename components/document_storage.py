@@ -33,29 +33,83 @@ class DocumentConnector(DatabaseConnector):
         self._route_db_name = True
         """@brief  Whether to use the database name in the connection string.
         @note  mongoengine.connect is used on-demand; we keep the convention of routing the DB name."""
+        self._auth_suffix = "?authSource=admin" + "&uuidRepresentation=standard"
+        """@brief  Additional options appended to the connection string.
+        @note  PyMongo requires a lookup location for user permissions, and MongoEngine will show warnings if 'uuidRepresentation' is not set."""
         database = os.getenv("DB_NAME")
         super().configure("MONGO", database)
 
 
-
     def test_connection(self, raise_error=True) -> bool:
-        """Establish a basic connection to the MongoDB database.
-        @details  By default, Log.fail will raise an exception.
-        @param raise_error  Whether to raise an error on connection failure.
-        @return  Whether the connection test was successful.
-        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
-        try:
-            # Check if connection string is valid
-            if self.check_connection(Log.test_conn, raise_error) == False:
-                return False
-
-        except Exception as e:
-            Log.fail(Log.doc_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
-            return False
-        # Finish with no errors = connection test successful
-        if self.verbose:
-            Log.success(Log.doc_db, Log.msg_db_connect(self.database_name))
-        return True
+    	"""Establish a basic connection to the MongoDB database.
+    	@details  By default, Log.fail will raise an exception.
+    	@param raise_error  Whether to raise an error on connection failure.
+    	@return  Whether the connection test was successful.
+    	@raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+    	try:
+    	    # Check if connection string is valid
+    	    if self.check_connection(Log.test_conn, raise_error) == False:
+    	        return False
+	
+    	    mongoengine.connect(host=self.connection_string)
+    	    db = mongoengine.get_db()
+	
+    	    try:    # Run universal test queries
+    	        result = db.command({"ping": 1})
+    	        if self._check_values([result.get("ok")], [1.0], raise_error) == False:
+    	            return False
+    	        status = db.command({"serverStatus": 1})
+    	        if self._check_values([status.get("ok")], [1.0], raise_error) == False:
+    	            return False
+    	        result = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
+    	        if self._check_values([isinstance(result, list)], [True], raise_error) == False:
+    	            return False
+    	    except Exception as e:
+    	        Log.fail(Log.doc_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error, raise_error, e)
+    	        return False
+	
+    	    try:   # Display useful information on existing databases
+    	        databases = db.client.list_database_names()
+    	        if self.verbose:
+    	            Log.success(Log.doc_db, Log.msg_result(databases))
+    	    except Exception as e:
+    	        Log.fail(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error, raise_error, e)
+    	        return False
+	
+    	    try:   # Create a collection, insert dummy data, and use get_dataframe
+    	        tmp_collection = f"test_collection_{int(time())}"
+    	        if tmp_collection in db.list_collection_names():
+    	            db.drop_collection(tmp_collection)
+    	        db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
+    	        df = self.get_dataframe(tmp_collection)
+    	        self._check_values([df.at[0, 'name']], ['Alice'], raise_error)
+    	        db.drop_collection(tmp_collection)
+    	    except Exception as e:
+    	        Log.fail(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error, raise_error, e)
+    	        return False
+	
+    	    try:   # Test create/drop functionality with tmp database
+    	        tmp_db = f"test_db_{int(time())}"
+    	        working_database = self.database_name
+    	        self.create_database(tmp_db)
+    	        self.change_database(tmp_db)
+    	        db.command({"ping": 1})
+    	        self.change_database(working_database)
+    	        self.drop_database(tmp_db)
+    	    except Exception as e:
+    	        Log.fail(Log.doc_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error, raise_error, e)
+    	        return False
+	
+    	except Exception as e:
+    	    Log.fail(Log.doc_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
+    	    return False
+    	# Finish with no errors = connection test successful
+    	if self.verbose:
+    	    Log.success(Log.doc_db, Log.msg_db_connect(self.database_name))
+    	return True
+	
+	
+	
 
     def check_connection(self, log_source: str, raise_error: bool) -> bool:
         """Minimal connection test to determine if our connection string is valid.
@@ -66,6 +120,8 @@ class DocumentConnector(DatabaseConnector):
         @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
         try:
             mongoengine.connect(host=self.connection_string)
+            db = mongoengine.get_db()
+            db.command({"ping": 1})
         except Exception as e:
             Log.fail(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
             return False
@@ -74,6 +130,21 @@ class DocumentConnector(DatabaseConnector):
         return True
 
     
+
+    def _check_values(self, results: List, expected: List, raise_error: bool) -> bool:
+        """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_connection
+        @param results  A list of observed values from the database.
+        @param expected  A list of correct values to compare against.
+        @param raise_error  Whether to raise an error on connection failure.
+        @raises RuntimeError  If any result does not match what was expected."""
+        for i in range(len(results)):
+            if self.verbose and results[i] == expected[i]:
+                Log.success(Log.doc_db + Log.good_val, Log.msg_compare(results[i], 1))
+            elif results[i] != expected[i]:
+                Log.fail(Log.doc_db + Log.bad_val, Log.msg_compare(results[i], 1), raise_error)
+                return False
+        return True
+
 
 
     def execute_query(self, query: str) -> Optional[DataFrame]:

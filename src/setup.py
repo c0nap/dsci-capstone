@@ -47,6 +47,7 @@ class Session:
     def setup(self):
         """Configure the databases and verify they are working correctly."""
         self.relational_db.test_connection()
+        self.docs_db.test_connection()
 
         self.setup1()
 

@@ -116,11 +116,14 @@ class DatabaseConnector(Connector):
         """Update the connection URI to reference a different database in the same engine.
         @param new_database  The name of the database to connect to.
         """
+        # The following variables are set by derived classes in __init__
+        # _route_db_name  Whether to use the database name in the connection string.
+        # _authSuffix  Additional options appended to the MongoDB connection string.
         self.database_name = new_database
         if self._route_db_name:
-            self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
+            self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
         else:
-            self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}"
+            self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}{self._auth_suffix}"
 
     @abstractmethod
     def execute_query(self, query: str) -> Optional[DataFrame]:
@@ -251,6 +254,8 @@ class RelationalConnector(DatabaseConnector):
         self._route_db_name = True
         """@brief  Whether to use the database name in the connection string.
         @note  MySQL and PostgreSQL both ask for this. We avoided using databases that don't fit this pattern."""
+        self._auth_suffix = ""
+        """@brief  Additional options appended to the connection string. Not used here."""
         engine = os.getenv("DB_ENGINE")
         database = os.getenv("DB_NAME")
         super().configure(engine, database)
@@ -367,8 +372,11 @@ class RelationalConnector(DatabaseConnector):
         return True
 
 
-    def _check_values(self, results, expected, raise_error):
+    def _check_values(self, results: List, expected: List, raise_error: bool) -> bool:
         """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_connection
+        @param results  A list of observed values from the database.
+        @param expected  A list of correct values to compare against.
+        @param raise_error  Whether to raise an error on connection failure.
         @raises RuntimeError  If any result does not match what was expected."""
         for i in range(len(results)):
             if self.verbose and results[i] == expected[i]:
