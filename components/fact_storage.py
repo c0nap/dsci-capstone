@@ -67,9 +67,59 @@ class GraphConnector(DatabaseConnector):
             # Check if connection string is valid
             if self.check_connection(Log.test_conn, raise_error) == False:
                 return False
-
-            # TODO
-
+    
+            try:    # Run universal test queries
+                result, _ = db.cypher_query("RETURN 1")
+                if self._check_values([result[0][0]], [1], raise_error) == False:
+                    return False
+                result, _ = db.cypher_query("RETURN 'TWO'")
+                if self._check_values([result[0][0]], ["TWO"], raise_error) == False:
+                    return False
+                result, _ = db.cypher_query("RETURN 5, 6")
+                if self._check_values([result[0][0], result[0][1]], [5, 6], raise_error) == False:
+                    return False
+            except Exception as e:
+                Log.fail(Log.gr_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error, raise_error, e)
+                return False
+    
+            try:   # Display useful information on existing databases
+                result = self.get_unique(key="db")
+                if self.verbose:
+                    Log.success(Log.gr_db, Log.msg_result(result))
+                result = self.get_unique(key="kg")
+                if self.verbose:
+                    Log.success(Log.gr_db, Log.msg_result(result))
+            except Exception as e:
+                Log.fail(Log.gr_db + Log.test_conn + Log.test_info, Log.msg_unknown_error, raise_error, e)
+                return False
+    
+            try:   # Create nodes, insert dummy data, and use get_dataframe
+                query = f"""CREATE (n1:Person {{db: '{self.database_name}', kg: '{self.graph_name}', name: 'Alice', age: 30}})
+                            CREATE (n2:Person {{db: '{self.database_name}', kg: '{self.graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
+                self.execute_query(query)
+                df = self.get_dataframe(self.graph_name)
+                if self._check_values([len(df)], [2], raise_error) == False:
+                    return False
+                query = f"MATCH (n {{db: '{self.database_name}', kg: '{self.graph_name}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
+                self.execute_query(query)
+            except Exception as e:
+                Log.fail(Log.gr_db + Log.test_conn + Log.test_df, Log.msg_unknown_error, raise_error, e)
+                return False
+    
+            try:   # Test create/drop functionality with tmp database
+                tmp_db = f"test_db_{int(time())}"
+                working_database = self.database_name
+                if self.database_exists(tmp_db):
+                    self.drop_database(tmp_db)
+                self.create_database(tmp_db)
+                self.change_database(tmp_db)
+                self.execute_query("RETURN 1")
+                self.change_database(working_database)
+                self.drop_database(tmp_db)
+            except Exception as e:
+                Log.fail(Log.gr_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error, raise_error, e)
+                return False
+    
         except Exception as e:
             Log.fail(Log.gr_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
             return False
