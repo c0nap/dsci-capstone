@@ -116,7 +116,10 @@ class GraphConnector(DatabaseConnector):
             result = DataFrame(results, columns=[m for m in meta])
 
             if self.verbose:
-                Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query, result))
+                if result is None or result.empty:
+                    Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query))
+                else:
+                    Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, result))
             return result
         except Exception as e:
             Log.fail(Log.gr_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)

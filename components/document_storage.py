@@ -204,7 +204,10 @@ class DocumentConnector(DatabaseConnector):
                 # Convert document list to DataFrame if any docs exist
                 result = self._docs_to_df(docs)
                 if self.verbose:
-                    Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query, result))
+                    if result is None or result.empty:
+                        Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query))
+                    else:
+                        Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_qr(query, result))
                 return result
         except Exception as e:
             Log.fail(Log.doc_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)

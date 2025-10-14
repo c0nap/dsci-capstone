@@ -426,8 +426,10 @@ class RelationalConnector(DatabaseConnector):
                 if result.returns_rows and result.keys():
                     result = DataFrame(result.fetchall(), columns=result.keys())
 
-                if self.verbose:
-                    Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query, result))
+                    if self.verbose:
+                        Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_qr(query, result))
+                elif self.verbose:
+                    Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query))
                 return result
         except Exception as e:
             Log.fail(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
