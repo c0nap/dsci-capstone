@@ -15,28 +15,80 @@ def session():
     session.reset()
 
 
+# ------------------------------------------------------------------------------
+# DATABASE FIXTURES: Checkpoint the database connector instances from Session.
+# ------------------------------------------------------------------------------
 @pytest.fixture(scope="session")
 def relational_db(session):
     """Fixture to get relational database connection."""
     relational_db = session.relational_db
     saved_verbose = relational_db.verbose
     relational_db.verbose = True
-
-    # Removed default database reference; test_connection handles creation
     yield relational_db
+    relational_db.verbose = saved_verbose  # Restore verbose afterwards
 
-    # Restore verbose
-    relational_db.verbose = saved_verbose
+@pytest.fixture(scope="session")
+def docs_db(session):
+    """Fixture to get document database connection."""
+    docs_db = session.docs_db
+    saved_verbose = docs_db.verbose
+    docs_db.verbose = True
+    yield docs_db
+    docs_db.verbose = saved_verbose  # Restore verbose afterwards
 
+# @pytest.fixture(scope="session")
+# def graph_db(session):
+#     """Fixture to get document database connection."""
+#     graph_db = session.graph_db
+#     saved_verbose = graph_db.verbose
+#     graph_db.verbose = True
+#     yield graph_db
+#     graph_db.verbose = saved_verbose  # Restore verbose afterwards
+
+
+
+# ------------------------------------------------------------------------------
+# BUILT-IN DATABASE TESTS: Run check_connection() for minimal connection test.
+# ------------------------------------------------------------------------------
+@pytest.mark.order(1)
+def test_db_relational_minimal(relational_db):
+    """Tests if the RelationalConnector has a valid connection string."""
+    assert relational_db.check_connection(log_source=Log.pytest_db, raise_error=True), "Minimal connection test on relational database failed."
 
 @pytest.mark.order(1)
-def test_relational(relational_db):
-    """Tests if the relational database is working correctly.
-    @note  Database connectors have internal tests, so use those instead."""
-    assert relational_db.test_connection(), "Basic tests on relational database connection failed."
+def test_db_docs_minimal(docs_db):
+    """Tests if the DocumentConnector has a valid connection string."""
+    assert docs_db.check_connection(log_source=Log.pytest_db, raise_error=True), "Minimal connection test on document database failed."
 
+# @pytest.mark.order(1)
+# def test_db_graph_minimal(graph_db):
+#     """Tests if the GraphConnector has a valid connection string."""
+#     assert graph_db.check_connection(log_source=Log.pytest_db, raise_error=True), "Minimal connection test on graph database failed."
+
+
+# ------------------------------------------------------------------------------
+# BUILT-IN DATABASE TESTS: Run test_connection() for comprehensive usage tests.
+# ------------------------------------------------------------------------------
+@pytest.mark.order(2)
+def test_db_relational_comprehensive(relational_db):
+    """Tests if the GraphConnector is working as intended."""
+    assert relational_db.test_connection(), "Comprehensive connection test on relational database failed."
 
 @pytest.mark.order(2)
+def test_db_docs_comprehensive(docs_db):
+    """Tests if the GraphConnector is working as intended."""
+    assert docs_db.test_connection(), "Comprehensive connection test on document database failed."
+
+# @pytest.mark.order(2)
+# def test_db_graph_comprehensive(graph_db):
+#     """Tests if the GraphConnector is working as intended."""
+#     assert graph_db.test_connection(), "Comprehensive connection test on graph database failed."
+
+
+# ------------------------------------------------------------------------------
+# DATABASE FILE TESTS: Run execute_file with example scripts.
+# ------------------------------------------------------------------------------
+@pytest.mark.order(3)
 def test_sql_examples(relational_db):
     """Run queries from test files."""
     if relational_db.db_type == "MYSQL":
@@ -67,6 +119,10 @@ def test_sql_examples(relational_db):
     )  # We can just check results since implementation is checked by RelationalConnector.
 
 
+
+# ------------------------------------------------------------------------------
+# FILE TEST WRAPPERS: Reuse the logic to test multiple files within a single test.
+# ------------------------------------------------------------------------------
 def _test_sql_file(relational_db, filename: str, expect_df: bool, df_header: str = ""):
     """Run queries from a local file through the database.
     @param relational_db  Fixture corresponding to the current session's relational database.
