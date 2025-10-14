@@ -128,6 +128,7 @@ class DatabaseConnector(Connector):
         @note  If a result is returned, it will be converted to a DataFrame.
         @param query  A single query to perform on the database.
         @return  DataFrame containing the result of the query, or None
+        @raises RuntimeError  If the query fails to execute.
         """
         # Perform basic error checks.
         query = query.strip()  # Remove whitespace
@@ -162,7 +163,8 @@ class DatabaseConnector(Connector):
         """Run several database commands from a file.
         @note  Loads the entire file into memory at once.
         @param filename  The path to a specified query file (.sql, .cql, .json).
-        @return  Whether the query was performed successfully."""
+        @return  Whether the query was performed successfully.
+        @raises RuntimeError  If any query in the file fails to execute."""
         
         try:  # Read the entire file as a multi-query string
             with open(filename, "r") as file:
@@ -261,14 +263,16 @@ class RelationalConnector(DatabaseConnector):
     @classmethod
     def from_env(cls, verbose=False):
         """Decides what type of relational connector to create using the .env file.
-        @param verbose  Whether to print success and failure messages."""
+        @param verbose  Whether to print success and failure messages.
+        @raises RuntimeError  If the .env file contains an invalid DB_ENGINE value."""
         engine = os.getenv("DB_ENGINE")
         if engine == "MYSQL":
             return mysqlConnector(verbose)
         elif engine == "POSTGRES":
             return postgresConnector(verbose)
-        Log.fail(
-            f"Database engine '{engine}' not supported. Did you mean 'MYSQL' or 'POSTGRES'?"
+        Log.fail(Log.rel_db + "FROM_ENV: ", 
+            f"Database engine '{engine}' not supported. Did you mean 'MYSQL' or 'POSTGRES'?",
+            raise_error=True
         )
 
     def test_connection(self, raise_error=True) -> bool:
@@ -364,7 +368,8 @@ class RelationalConnector(DatabaseConnector):
 
 
     def _check_values(self, results, expected, raise_error):
-        """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_connection"""
+        """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_connection
+        @raises RuntimeError  If any result does not match what was expected."""
         for i in range(len(results)):
             if self.verbose and results[i] == expected[i]:
                 Log.success(Log.rel_db + Log.good_val, Log.msg_compare(results[i], 1))
@@ -379,7 +384,7 @@ class RelationalConnector(DatabaseConnector):
         @note  If a result is returned, it will be converted to a DataFrame.
         @param query  A single query to perform on the database.
         @return  DataFrame containing the result of the query, or None
-        """
+        @raises RuntimeError  If the query fails to execute."""
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
         result = super().execute_query(query)
         if not self._is_single_query(query):
@@ -413,7 +418,8 @@ class RelationalConnector(DatabaseConnector):
     def get_dataframe(self, name: str) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.
         @param name  The name of an existing table or collection in the database.
-        @return  DataFrame containing the requested data, or None"""
+        @return  DataFrame containing the requested data, or None
+        @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
         super().get_dataframe(name)
         self.check_connection(Log.get_df, raise_error=True)
         for table_name in (name, name.lower()):
@@ -438,7 +444,8 @@ class RelationalConnector(DatabaseConnector):
 
     def create_database(self, database_name: str):
         """Use the current database connection to create a sibling database in this engine.
-        @param database_name  The name of the new database to create."""
+        @param database_name  The name of the new database to create.
+        @raises RuntimeError  If we fail to create the requested database for any reason."""
         super().create_database(database_name)
         self.check_connection(Log.create_db, raise_error=True)
         try:
@@ -455,7 +462,8 @@ class RelationalConnector(DatabaseConnector):
 
     def drop_database(self, database_name: str = ""):
         """Delete all data stored in a particular database.
-        @param database_name  The name of an existing database."""
+        @param database_name  The name of an existing database.
+        @raises RuntimeError  If we fail to drop the target database for any reason."""
         super().drop_database(database_name)
         self.check_connection(Log.drop_db, raise_error=True)
         try:

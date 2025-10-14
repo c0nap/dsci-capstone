@@ -82,6 +82,7 @@ class DocumentConnector(DatabaseConnector):
           - The query must be a valid JSON command object (e.g. {"find": "users", "filter": {...}}).
           - Mongo shell syntax such as `db.users.find({...})` or `.js` files will NOT work.
           - If a result is returned, it will be converted to a DataFrame.
+        @raises RuntimeError  If the query fails to execute.
         """
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
         result = super().execute_query(query)
@@ -165,7 +166,8 @@ class DocumentConnector(DatabaseConnector):
     def get_dataframe(self, name: str) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.
-        @return  DataFrame containing the requested data, or None"""
+        @return  DataFrame containing the requested data, or None
+        @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
         super().get_dataframe(name)
         self.check_connection(Log.get_df, raise_error=True)
         try:
@@ -189,7 +191,8 @@ class DocumentConnector(DatabaseConnector):
     def create_database(self, database_name: str):
         """Use the current database connection to create a sibling database in this engine.
         @note  Forces MongoDB to actually create it by inserting a small init document.
-        @param database_name  The name of the new database to create."""
+        @param database_name  The name of the new database to create.
+        @raises RuntimeError  If we fail to create the requested database for any reason."""
         super().create_database(database_name)
         self.check_connection(Log.create_db, raise_error=True)
         try:
@@ -208,7 +211,8 @@ class DocumentConnector(DatabaseConnector):
 
     def drop_database(self, database_name: str):
         """Delete all data stored in a particular database.
-        @param database_name  The name of an existing database."""
+        @param database_name  The name of an existing database.
+        @raises RuntimeError  If we fail to drop the target database for any reason."""
         super().drop_database(database_name)
         self.check_connection(Log.drop_db, raise_error=True)
         try:
@@ -239,15 +243,17 @@ class DocumentConnector(DatabaseConnector):
           DataFrame([
               {"_id": "650f...", "name": "Alice", "age": 30, "address.city": None, "address.zip": None},
               {"_id": "650f...", "name": "Bob", "age": None, "address.city": "NY", "address.zip": "10001"}
-        ])"""
+        ])
+        @raises RuntimeError  If parsing query results to JSON fails.
+        """
         # 1. Convert MongoDB ObjectId fields to strings
         for document in docs:
             if "_id" in document:
                 try:
                     document["_id"] = str(document["_id"])
-                except Exception:
-                    # Fail if str() raises - probably corrupted data
-                    Log.fail_parse(trace="_id field", expected_type="str", bad_value=document["_id"])
+                except Exception as e:
+                    # Fail if str() conversion raises - probably corrupted data
+                    Log.fail(Log.doc_db + "MAKE_DF: ", Log.msg_fail_parse("_id field", document["_id"], "str"))
     
         # 2. Use Pandas to normalize nested JSON into flat columns
         try:

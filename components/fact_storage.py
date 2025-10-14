@@ -70,6 +70,7 @@ class GraphConnector(DatabaseConnector):
         @note  If a result is returned, it will be converted to a DataFrame.
         @param query  A single query to perform on the database.
         @return  DataFrame containing the result of the query, or None
+        @raises RuntimeError  If the query fails to execute.
         """
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
         result = super().execute_query(query)
@@ -109,7 +110,8 @@ class GraphConnector(DatabaseConnector):
             - Does not explode lists or nested values
             - Different approach than DocumentConnector because our node attributes are usually flat key:value already.
         @param name  The name of an existing table or collection in the database.
-        @return  DataFrame containing the requested data, or None"""
+        @return  DataFrame containing the requested data, or None
+        @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
         super().get_dataframe(name)
         self.check_connection(Log.get_df, raise_error=True)
         try:
@@ -142,7 +144,8 @@ class GraphConnector(DatabaseConnector):
     def create_database(self, database_name: str):
         """Create a fresh pseudo-database by deleting nodes having the specified database ID.
         @note  This change will apply to any new nodes created after @ref components.connectors.DatabaseConnector.change_database is called.
-        @param database_name  A database ID specifying the pseudo-database."""
+        @param database_name  A database ID specifying the pseudo-database.
+        @raises RuntimeError  If we fail to create the requested database for any reason."""
         super().create_database(database_name)
         self.check_connection(Log.create_db, raise_error=True)
         try:
@@ -154,7 +157,8 @@ class GraphConnector(DatabaseConnector):
 
     def drop_database(self, database_name: str):
         """Delete all nodes stored under a particular database name.
-        @param database_name  A database ID specifying the pseudo-database."""
+        @param database_name  A database ID specifying the pseudo-database.
+        @raises RuntimeError  If we fail to drop the target database for any reason."""
         super().drop_database(database_name)
         self.check_connection(Log.drop_db, raise_error=True)
         try:
@@ -176,7 +180,8 @@ class GraphConnector(DatabaseConnector):
         """Add a semantic triple to the graph using raw Cypher.
         @details
             1. Finds nodes by exact match on `name` and `database_id`.
-            2. Creates a relationship between them with the given label."""
+            2. Creates a relationship between them with the given label.
+        @raises RuntimeError  If the triple cannot be added to our graph database."""
 
         # Keep only letters, numbers, underscores
         relation = re.sub(r"[^A-Za-z0-9_]", "_", relation)
@@ -203,6 +208,7 @@ class GraphConnector(DatabaseConnector):
         """Return node names and their edge counts, ordered by edge count descending.
         @param top_n  Number of top nodes to return (by edge count). Default is 10.
         @return  DataFrame with columns: node_name, edge_count
+        @raises RuntimeError  If the query fails to retrieve the requested DataFrame.
         """
         query = f"""
         MATCH (n)
@@ -223,7 +229,8 @@ class GraphConnector(DatabaseConnector):
 
 
     def get_all_triples(self) -> DataFrame:
-        """Return all triples in the current pseudo-database as a pandas DataFrame."""
+        """Return all triples in the current pseudo-database as a pandas DataFrame.
+        @raises RuntimeError  If the query fails to retrieve the requested DataFrame."""
         db_id = self.database_name
 
         query = f"""
