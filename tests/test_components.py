@@ -93,11 +93,11 @@ def test_sql_example_1(relational_db, load_examples_relational):
     _test_query_file(
         relational_db,
         "./tests/examples-db/relational_df1.sql",
-        valid_files=["sql"],
-        expect_df=True,
+        valid_files=["sql"]
     )
     df = relational_db.get_dataframe("EntityName")
     assert (df is not None)
+    assert (not df.empty)
     assert (df.loc[1, 'name'] == 'Fluffy')
 
 @pytest.mark.order(8)
@@ -109,11 +109,11 @@ def test_sql_example_2(relational_db, load_examples_relational):
     _test_query_file(
         relational_db,
         "./tests/examples-db/relational_df2.sql",
-        valid_files=["sql"],
-        expect_df=True,
+        valid_files=["sql"]
     )
     df = relational_db.get_dataframe("ExampleEAV")
     assert (df is not None)
+    assert (not df.empty)
     assert (df.loc[0, 'value'] == 'Timber')
 
 
@@ -125,27 +125,42 @@ def test_mongo_example_1(docs_db):
     _test_query_file(
         docs_db,
         "./tests/examples-db/document_df1.mongo",
-        valid_files=["json", "mongo"],
-        expect_df=True,
+        valid_files=["json", "mongo"]
     )
     df = docs_db.get_dataframe("books")
     assert (df is not None)
+    assert (not df.empty)
     assert (df.loc[0, 'title'] == 'Wuthering Heights')
     assert (df.iloc[-1]['chapters.pages'] == 25)
     docs_db.execute_query('{"drop": "books"}')
+
+@pytest.mark.order(10)
+def test_mongo_example_2(docs_db):
+    """Run queries contained within test files.
+    @details  Internal errors are handled by the class itself, and ruled out earlier.
+    Here we just assert that the received results DataFrame matches what we expected."""
+    _test_query_file(
+        docs_db,
+        "./tests/examples-db/document_df2.json",
+        valid_files=["json", "mongo"]
+    )
+    df = docs_db.get_dataframe("qa_exam")
+    assert (df is not None)
+    assert (not df.empty)
+    assert (df.loc[0, 'answer'] == 'Paul Atreides')
+    assert (df.loc[1, 'is_correct'] == False)
+    docs_db.execute_query('{"drop": "qa_exam"}')
+
+
 # ------------------------------------------------------------------------------
 # FILE TEST WRAPPERS: Reuse the logic to test multiple files within a single test.
 # ------------------------------------------------------------------------------
-def _test_query_file(db_fixture, filename: str, valid_files: List, expect_df: bool = False):
+def _test_query_file(db_fixture, filename: str, valid_files: List):
     """Run queries from a local file through the database.
     @param db_fixture  Fixture corresponding to the current session's database.
     @param filename  The name of a query file (for example ./tests/example1.sql).
-    @param valid_files  A list of file extensions valid for this database type.
-    @param expect_df  Whether to throw an error if the queries fail to return a DataFrame."""
+    @param valid_files  A list of file extensions valid for this database type."""
     file_ext = filename.split('.')[-1].lower()
     assert file_ext in valid_files, f"Received '{filename}', but cannot execute .{file_ext} files."
     df = db_fixture.execute_file(filename)
-    if expect_df:
-        assert (
-            df is not None
-        ), f"Execution of '{filename}' failed to produce results."
+

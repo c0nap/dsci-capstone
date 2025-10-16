@@ -164,12 +164,15 @@ class DocumentConnector(DatabaseConnector):
             with mongo_handle(host=self.connection_string, alias="exec_q") as db:
                 # Queries must be valid JSON
                 try:
-                    cmd_obj = json.loads(query)
+                    json_cmd_doc = json.loads(query)
                 except json.JSONDecodeError:
-                    Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", "JSON command object", query), raise_error=True, other_error=e)
+                    Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", "JSON command object", query), raise_error=False)
+                    query = _sanitize_json(query)
+                    json_cmd_doc = json.loads(query)
+                    Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("sanitized query", "JSON command object", query), raise_error=True)
         
                 # Execute via PyMongo
-                results = db.command(cmd_obj)
+                results = db.command(json_cmd_doc)
         
                 # Mongo queries can return a dict or list
                 # Standardize everything to a list of documents
@@ -197,39 +200,73 @@ class DocumentConnector(DatabaseConnector):
             Log.fail(Log.doc_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
 
 
+
+# points that need attention:
+#   - Single value vs list → Wrap single values as lists before flattening.
+#   - Single dict vs list of dicts → Wrap single dicts in a list for uniformity.
+#   - Nested fields of varying depth → Convert strings to dicts with a default key if expected to be nested.
+#   - Heterogeneous array contents → Standardize array element types across documents.
+#   - Optional future nesting → Recursively flatten arrays of dicts for deeper levels.
+#   - split_combined: multi-line comments?
+# 
+# Points that are already handled:
+#   - Missing fields → Pandas fills NaN.
+#   - Sparse arrays → NaN for missing positions.
+#   - Empty arrays → works, no action needed.
+
+
     def _split_combined(self, multi_query: str) -> list[str]:
-        """Divides a string into non-divisible MongoDB commands, ignoring comments and semicolons inside JSON.
-        @details
-        Example Input:
-            {"ping": 1}; {"aggregate": "users", "pipeline": [...]};
-        Output:
-            One command per string:
-            - '{"ping": 1}'
-            - '{"aggregate": "users", "pipeline": [...]}'
-        @param multi_query  A string containing multiple queries.
-        @return  A list of single-query strings."""
+        """Divides a string into non-divisible MongoDB commands by splitting on semicolons at depth 0.
+        @details  Handles nested brackets and semicolons inside JSON strings.
+        @param multi_query  A string containing multiple queries with possible comments.
+        @return  A list of single-query strings (cleaned, ready for JSON parsing)."""
         queries = []
         buffer = ""
         depth = 0
-        for line in multi_query.splitlines():
-            line = line.strip()
-            # Skip comments
-            if not line or line.startswith("#") or line.startswith("//"):
-                continue
-            for c in line:
+        in_string = False
+        escape_next = False
+        
+        # Remove all comments and normalize whitespace
+        cleaned = _sanitize_json(multi_query)
+        for c in cleaned:
+            # Handle string escaping
+            if escape_next:
                 buffer += c
-                # Unpack nested brackets
+                escape_next = False
+                continue
+            if c == '\\' and in_string:
+                buffer += c
+                escape_next = True
+                continue
+            
+            # Track whether we're inside a string
+            if c == '"':
+                in_string = not in_string
+                buffer += c
+                continue
+            # Only track depth and semicolons outside of strings
+            if not in_string:
                 if c in "{[":
                     depth += 1
+                    buffer += c
                 elif c in "}]":
                     depth = max(0, depth - 1)
+                    buffer += c
                 elif c == ";" and depth == 0:
-                    queries.append(buffer.strip().rstrip(";"))
+                    # End of query at top level
+                    stripped = buffer.strip()
+                    if stripped:
+                        queries.append(stripped)
                     buffer = ""
-            if depth > 0:
-                buffer += " "  # keep spacing between lines
-        if buffer.strip():
-            queries.append(buffer.strip().rstrip(";"))
+                else:
+                    buffer += c
+            else:
+                buffer += c
+        
+        # Append any remaining buffer
+        stripped = buffer.strip()
+        if stripped:
+            queries.append(stripped)
         return queries
 
 
@@ -348,7 +385,7 @@ class DocumentConnector(DatabaseConnector):
         # 2. Use Pandas to normalize nested JSON into flat columns
         df = DataFrame(docs)
         df = _flatten_recursive(df)
-        Log.success(Log.doc_db + "MAKE_DF: ", f"json_normalize succeeded!\nkeys:\n{df.columns}")
+        Log.success(Log.doc_db + "MAKE_DF: ", f"flatten_recursive succeeded!\nkeys:\n{list(df.columns)}")
         return df
 
 
@@ -409,6 +446,89 @@ def _flatten_recursive(df: DataFrame) -> DataFrame:
 
         # No more lists or dicts → fully flattened
         break
-
     return df
 
+
+def _sanitize_json(text: str) -> str:
+    """Remove comments and other non-JSON content from a MongoDB query string.
+    @details  Removes the following elements:
+        - Block comments /* ... */
+        - Single-line comments //
+        - Half-line comments ... //
+        - Trailing commas before closing braces
+        - Newlines and whitespace
+    Preserves bad text inside JSON string values.
+    @param text  Raw text that may contain comments.
+    @return  Cleaned text suitable for JSON parsing."""
+    result = []
+    i = 0
+    in_string = False
+    escape_next = False
+    last_was_space = False
+    
+    while i < len(text):
+        c = text[i]
+        
+        # Handle escape sequences
+        if escape_next:
+            result.append(c)
+            escape_next = False
+            last_was_space = False
+            i += 1
+            continue
+        if c == '\\' and in_string:
+            result.append(c)
+            escape_next = True
+            last_was_space = False
+            i += 1
+            continue
+        # Track string boundaries
+        if c == '"':
+            in_string = not in_string
+            result.append(c)
+            last_was_space = False
+            i += 1
+            continue
+        
+        # Inside strings: preserve everything exactly
+        if in_string:
+            result.append(c)
+            last_was_space = False
+            i += 1
+            continue
+        
+        # Outside strings: process comments and normalize whitespace
+        # Check for block comment /* */
+        if i < len(text) - 1 and text[i:i+2] == '/*':
+            i += 2
+            while i < len(text) - 1:
+                if text[i:i+2] == '*/':
+                    i += 2
+                    break
+                i += 1
+            continue
+        
+        # Check for single-line comment //
+        if i < len(text) - 1 and text[i:i+2] == '//':
+            while i < len(text) and text[i] != '\n':
+                i += 1
+            if i < len(text):
+                i += 1  # Skip the newline
+            continue
+        
+        # Normalize whitespace outside strings
+        if c in ' \t\n\r':
+            # Collapse consecutive whitespace to single space
+            if not last_was_space and result:  # Don't add leading spaces
+                result.append(' ')
+                last_was_space = True
+            i += 1
+            continue
+        
+        # Regular character
+        result.append(c)
+        last_was_space = False
+        i += 1
+    # Strip trailing whitespace
+    output = ''.join(result).strip()
+    return output
