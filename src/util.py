@@ -112,9 +112,11 @@ class Log:
     run_q = "QUERY: "
     run_f = "FILE EXEC: "
     msg_bad_table = lambda name: f"Table '{name}' not found"
-    msg_good_table = lambda name: f"Exported table '{name}' to DataFrame."
+    msg_good_table = lambda name, df: f"Exported table '{name}' to DataFrame\n{df}"
     msg_bad_coll = lambda name: f"Collection '{name}' not found"
-    msg_good_coll = lambda name: f"Exported collection '{name}' to DataFrame."
+    msg_good_coll = lambda name, df: f"Exported collection '{name}' to DataFrame:\n{df}"
+    msg_bad_graph = lambda name: f"Graph '{name}' not found"
+    msg_good_graph = lambda name, df: f"Exported graph '{name}' to DataFrame:\n{df}"
 
     msg_success_managed_db = lambda managed, database_name: f"Successfully {managed} database '{database_name}'"
     """@brief  Handles various successful actions an admin could perform on a database.

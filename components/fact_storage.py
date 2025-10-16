@@ -96,13 +96,15 @@ class GraphConnector(DatabaseConnector):
                 return False
     
             try:   # Create nodes, insert dummy data, and use get_dataframe
-                query = f"""CREATE (n1:Person {{db: '{self.database_name}', kg: '{self.graph_name}', name: 'Alice', age: 30}})
-                            CREATE (n2:Person {{db: '{self.database_name}', kg: '{self.graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
+                query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{self.graph_name}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
+                self.execute_query(query)
+                query = f"""CREATE (n1:TestPerson {{db: '{self.database_name}', kg: '{self.graph_name}', name: 'Alice', age: 30}})
+                            CREATE (n2:TestPerson {{db: '{self.database_name}', kg: '{self.graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
                 self.execute_query(query)
                 df = self.get_dataframe(self.graph_name)
                 if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
                     return False
-                query = f"MATCH (n {{db: '{self.database_name}', kg: '{self.graph_name}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
+                query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{self.graph_name}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                 self.execute_query(query)
             except Exception as e:
                 Log.fail(Log.gr_db + Log.test_conn + Log.test_df, Log.msg_unknown_error, raise_error, e)
@@ -146,7 +148,6 @@ class GraphConnector(DatabaseConnector):
         if self.verbose:
             Log.success(Log.gr_db + log_source, Log.msg_db_connect(self.database_name))
         return True
-
 
     def execute_query(self, query: str) -> Optional[DataFrame]:
         """Send a single Cypher query to Neo4j.
@@ -222,12 +223,12 @@ class GraphConnector(DatabaseConnector):
             df = DataFrame(rows)
 
             if self.verbose:
-                Log.success(Log.gr_db + Log.get_df, Log.msg_good_coll(name))
+                Log.success(Log.gr_db + Log.get_df, Log.msg_good_coll(name, df))
             return df
         except Exception as e:
             Log.fail(Log.gr_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
         # If not found, warn but do not fail
-        Log.fail(Log.gr_db + Log.get_df, Log.msg_bad_coll(name), raise_error=False)
+        Log.fail(Log.gr_db + Log.get_df, Log.msg_bad_graph(name), raise_error=False)
         return None
 
 

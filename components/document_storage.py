@@ -283,7 +283,7 @@ class DocumentConnector(DatabaseConnector):
                 df = self._docs_to_df(docs)
     
                 if self.verbose:
-                    Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name))
+                    Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df))
                 return df
         except Exception as e:
             Log.fail(Log.doc_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
@@ -469,21 +469,16 @@ def _sanitize_json(text: str) -> str:
     
     while i < len(text):
         c = text[i]
-        
-        # Handle escape sequences
-        if escape_next:
+
+        # Handle backslash - check what it's escaping
+        if c == '\\' and i < len(text) - 1:
+            # Add the backslash and the next character
             result.append(c)
-            escape_next = False
+            result.append(text[i + 1])
             last_was_space = False
-            i += 1
+            i += 2
             continue
-        if c == '\\' and in_string:
-            result.append(c)
-            escape_next = True
-            last_was_space = False
-            i += 1
-            continue
-        # Track string boundaries
+        # Track string boundaries (only unescaped quotes)
         if c == '"':
             in_string = not in_string
             result.append(c)
@@ -497,7 +492,6 @@ def _sanitize_json(text: str) -> str:
             last_was_space = False
             i += 1
             continue
-        
         # Outside strings: process comments and normalize whitespace
         # Check for block comment /* */
         if i < len(text) - 1 and text[i:i+2] == '/*':
@@ -508,7 +502,6 @@ def _sanitize_json(text: str) -> str:
                     break
                 i += 1
             continue
-        
         # Check for single-line comment //
         if i < len(text) - 1 and text[i:i+2] == '//':
             while i < len(text) and text[i] != '\n':
@@ -516,7 +509,6 @@ def _sanitize_json(text: str) -> str:
             if i < len(text):
                 i += 1  # Skip the newline
             continue
-        
         # Normalize whitespace outside strings
         if c in ' \t\n\r':
             # Collapse consecutive whitespace to single space

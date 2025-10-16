@@ -446,7 +446,7 @@ class RelationalConnector(DatabaseConnector):
                         df = DataFrame(result.fetchall(), columns=result.keys())
 
                     if self.verbose:
-                        Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(table_name))
+                        Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(table_name, df))
                     return df
             except NoSuchTableError:
                 # Postgres will auto-lowercase all table names. Give it one more try with the lowercase name.
