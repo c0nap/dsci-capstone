@@ -166,10 +166,13 @@ class DocumentConnector(DatabaseConnector):
                 try:
                     json_cmd_doc = json.loads(query)
                 except json.JSONDecodeError:
-                    Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", "JSON command object", query), raise_error=False)
+                    if self.verbose:
+                        Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", query, "JSON command object"), raise_error=False)
                     query = _sanitize_json(query)
-                    json_cmd_doc = json.loads(query)
-                    Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("sanitized query", "JSON command object", query), raise_error=True)
+                    try:
+                        json_cmd_doc = json.loads(query)
+                    except json.JSONDecodeError:
+                        Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("sanitized query", query, "JSON command object"), raise_error=True)
         
                 # Execute via PyMongo
                 results = db.command(json_cmd_doc)
@@ -288,7 +291,8 @@ class DocumentConnector(DatabaseConnector):
         except Exception as e:
             Log.fail(Log.doc_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
         # If not found, warn but do not fail
-        Log.fail(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), raise_error=False)
+        if self.verbose:
+            Log.fail(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), raise_error=False)
         return None
 
 

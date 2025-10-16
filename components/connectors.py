@@ -453,7 +453,8 @@ class RelationalConnector(DatabaseConnector):
                 continue
             except Exception as e:
                 Log.fail(Log.rel_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
-        Log.fail(Log.rel_db + Log.get_df, Log.msg_bad_table(name), raise_error=False)
+        if self.verbose:
+            Log.fail(Log.rel_db + Log.get_df, Log.msg_bad_table(name), raise_error=False)
         return None
 
     def create_database(self, database_name: str):
