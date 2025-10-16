@@ -125,10 +125,10 @@ class Log:
 
     msg_fail_parse = lambda alias, bad_value, expected_type: f"Could not convert {alias} with value {bad_value} to type {expected_type}"
 
-    msg_multiple_query = lambda n_queries, query: f"A combined query ({n_queries} results) was executed as a single query. Extra results were discarded. Query: {query}"
-    msg_good_exec_q = lambda query: f"Executed successfully: '{query}'"
-    msg_good_exec_qr = lambda query, results: f"Executed successfully: '{query}'\n{Log.msg_result(results)}"
-    msg_bad_exec_q = lambda query: f"Failed to execute query: '{query}'"
+    msg_multiple_query = lambda n_queries, query: f"A combined query ({n_queries} results) was executed as a single query. Extra results were discarded. Query:\n{query}"
+    msg_good_exec_q = lambda query: f"Executed successfully:\n'{query}'"
+    msg_good_exec_qr = lambda query, results: f"Executed successfully:\n'{query}'\n{Log.msg_result(results)}"
+    msg_bad_exec_q = lambda query: f"Failed to execute query:\n'{query}'"
 
     kg = "KG: "
     pytest_db = "PYTEST (DB): "

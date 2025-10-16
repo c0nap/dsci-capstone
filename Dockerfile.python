@@ -36,6 +36,7 @@ COPY Makefile .
 RUN make env-docker
 RUN mv .env.docker .env
 
+COPY pyproject.toml .
 
 # default command
 CMD ["python", "-m", "src.main"]

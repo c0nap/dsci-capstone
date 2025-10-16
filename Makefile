@@ -10,10 +10,9 @@ MAKEFLAGS += --no-print-directory
 # TODO: apply these variables to all make recipes
 #    --verbose is reserved flag for pytest
 #    VERBOSE in this file was created first (for env-docker)
-# Default values if unset:
 VERBOSE ?= 0
-VERBY ?= 0
-COLOR ?= 1
+VERBY ?=
+COLOR ?=
 
 ###############################################################################
 .PHONY: db-start-local db-start-docker db-stop-local
@@ -120,17 +119,34 @@ docker-blazor-dev:
 # Bypass the original pipeline and run pytests instead.
 ###############################################################################
 .PHONY: docker-test docker-test-dev docker-test-raw docker-all-tests docker-all
-# Note: uses existing container images, runs "pytest {args} ."
+
+# Run pytests using existing container images.
+# Default to VERBY=0 and COLOR=1.
 docker-test:
-	make docker-python CMD="pytest $(if $(filter 1,$(VERBY)),--verby) $(if $(filter 0,$(COLOR)),--no-colors) ."
-# Recompiles docker images for the latest source code
+	make docker-python CMD="pytest \
+		$(if $(filter 1,$(VERBY)),--log-success) \
+		$(if $(filter 1,$(COLOR)),,--no-log-colors)  ."
+
+# Recompiles docker images to test the latest source code
+# Pytest will capture all console output - see non-capturing targets below.
 docker-test-dev:
 	make docker-build-dev-python
 	make docker-test
-# Shows Python print statements at the expense of fancy pytest formatting, runs "python -m pytest -s {args} ."
+
+# Default to NOT verbose, and NO colors in messages from the Log class.
 docker-test-raw:
 	make docker-build-dev-python
-	make docker-python CMD="python -m pytest -s $(if $(filter 1,$(VERBY)),--verby) $(if $(filter 0,$(COLOR)),--no-colors) ."
+	make docker-python CMD="python -m pytest -s \
+		$(if $(filter 1,$(VERBY)),--log-success) \
+		$(if $(filter 1,$(COLOR)),,--no-log-colors) ."
+
+# Shows Python print statements, but pytest output is messy.
+# Default to verbose and colorful.
+docker-test-fancy:
+	make docker-build-dev-python
+	make docker-python CMD="python -m pytest -s \
+		$(if $(filter 0,$(VERBY)),,--log-success) \
+		$(if $(filter 0,$(COLOR)),--no-log-colors) ."
 	
 # Deploy everything to docker, but only run pytests
 docker-all-tests:

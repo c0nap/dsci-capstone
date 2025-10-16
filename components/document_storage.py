@@ -385,7 +385,8 @@ class DocumentConnector(DatabaseConnector):
         # 2. Use Pandas to normalize nested JSON into flat columns
         df = DataFrame(docs)
         df = _flatten_recursive(df)
-        Log.success(Log.doc_db + "MAKE_DF: ", f"flatten_recursive succeeded!\nkeys:\n{list(df.columns)}")
+        if self.verbose:
+            Log.success(Log.doc_db + "MAKE_DF: ", f"flatten_recursive succeeded!\nkeys:\n{list(df.columns)}")
         return df
 
 
