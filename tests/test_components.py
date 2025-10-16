@@ -124,7 +124,7 @@ def test_mongo_example_1(docs_db):
     Here we just assert that the received results DataFrame matches what we expected."""
     _test_query_file(
         docs_db,
-        "./tests/examples-db/documents_df1.mongo",
+        "./tests/examples-db/document_df1.mongo",
         valid_files=["json", "mongo"],
         expect_df=True,
     )
