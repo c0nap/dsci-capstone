@@ -151,6 +151,21 @@ def test_mongo_example_2(docs_db):
     assert (df.loc[1, 'is_correct'] == False)
     docs_db.execute_query('{"drop": "qa_exam"}')
 
+@pytest.mark.order(11)
+def test_mongo_example_3(docs_db):
+    """Run queries contained within test files.
+    @details  Internal errors are handled by the class itself, and ruled out earlier.
+    Here we just assert that the received results DataFrame matches what we expected."""
+    _test_query_file(
+        docs_db,
+        "./tests/examples-db/document_df3.mongo",
+        valid_files=["json", "mongo"]
+    )
+    df = docs_db.get_dataframe("potions")
+    assert (df is not None)
+    assert (df.loc[0, 'potion_name'] == 'Elixir of Wisdom')
+    docs_db.execute_query('{"drop": "potions"}')
+
 
 # ------------------------------------------------------------------------------
 # FILE TEST WRAPPERS: Reuse the logic to test multiple files within a single test.

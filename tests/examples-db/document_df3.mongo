@@ -1,5 +1,5 @@
-// Drop collection if exists (will not raise error)
-{"drop": "potions"};
+// Safely delete existing data
+{"delete": "potions", "deletes": [{"q": {}, "limit": 0}]};
 
 // Insert a single document with nested fields
 {"insert": "potions",

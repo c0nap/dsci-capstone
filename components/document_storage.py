@@ -468,7 +468,6 @@ def _sanitize_json(text: str) -> str:
     result = []
     i = 0
     in_string = False
-    escape_next = False
     last_was_space = False
     
     while i < len(text):
@@ -496,6 +495,7 @@ def _sanitize_json(text: str) -> str:
             last_was_space = False
             i += 1
             continue
+
         # Outside strings: process comments and normalize whitespace
         # Check for block comment /* */
         if i < len(text) - 1 and text[i:i+2] == '/*':
@@ -521,11 +521,21 @@ def _sanitize_json(text: str) -> str:
                 last_was_space = True
             i += 1
             continue
+        # Check for trailing comma before } or ]
+        if c == ',':
+            # Look ahead: skip whitespace to see if } or ] follows
+            j = i + 1
+            while j < len(text) and text[j] in ' \t\n\r':
+                j += 1
+            # If we find } or ], skip the comma (trailing comma)
+            if j < len(text) and text[j] in '}]':
+                i += 1
+                continue
         
         # Regular character
         result.append(c)
         last_was_space = False
         i += 1
+    
     # Strip trailing whitespace
-    output = ''.join(result).strip()
-    return output
+    return ''.join(result).strip()
