@@ -325,7 +325,7 @@ class DocumentConnector(DatabaseConnector):
             - Different approach than GraphConnector because our documents usually contain nesting.
         
         Steps:
-          1. Convert ObjectId fields (_id) to strings so Pandas can handle them.
+          1. Convert invalid ObjectId fields (_id) to strings so Pandas can handle them.
           2. Flatten nested JSON structures using Pandas.json_normalize.
         Example input:
           docs = [ {"_id": ObjectId("650f..."), "name": "Alice", "age": 30}, ...} ]
@@ -346,13 +346,10 @@ class DocumentConnector(DatabaseConnector):
                     Log.fail(Log.doc_db + "MAKE_DF: ", Log.msg_fail_parse("_id field", document["_id"], "str"))
     
         # 2. Use Pandas to normalize nested JSON into flat columns
-        try:
-            return json_normalize(docs)
-        except Exception:
-            # Fallback: create a DataFrame directly if normalization fails
-            # Pandas DataFrames can salvage messy nesting, but json_normalize requires all docs to be balanced dicts
-            return DataFrame(docs)
-
+        df = DataFrame(docs)
+        df = _flatten_recursive(df)
+        Log.success(Log.doc_db + "MAKE_DF: ", f"json_normalize succeeded!\nkeys:\n{df.columns}")
+        return df
 
 
 
@@ -377,4 +374,41 @@ def mongo_handle(host: str, alias: str):
         yield db  # <-- your code runs here
     finally:
         mongoengine.disconnect(alias=alias)
+
+
+
+def _flatten_recursive(df: DataFrame) -> DataFrame:
+    """Explode all list columns and flatten dict columns until only scalars remain.
+    @details  Recursive Process:
+        1. Find columns containing lists → explode to create new rows
+        2. Find columns containing dicts → normalize to create new columns
+        3. Repeat until no lists or dicts remain
+    @param df  DataFrame with potentially nested structures.
+    @return  Fully flattened DataFrame with only scalar values.
+    """
+    while True:
+        # Find all columns that contain lists
+        list_cols = [c for c in df.columns if df[c].apply(lambda x: isinstance(x, list)).any()]
+        if list_cols:
+            # Explode the first list column (creates new rows)
+            col = list_cols[0]
+            df = df.explode(col).reset_index(drop=True)
+            continue
+
+        # Find all columns that contain dicts
+        dict_cols = [c for c in df.columns if df[c].apply(lambda x: isinstance(x, dict)).any()]
+        if dict_cols:
+            # Normalize the first dict column (creates new columns with parent prefix)
+            col = dict_cols[0]
+            normalized = json_normalize(df[col])
+            # Prefix all new columns with the parent column name
+            normalized.columns = [f"{col}.{subcol}" for subcol in normalized.columns]
+            normalized.index = df.index
+            df = df.drop(columns=[col]).join(normalized)
+            continue
+
+        # No more lists or dicts → fully flattened
+        break
+
+    return df
 

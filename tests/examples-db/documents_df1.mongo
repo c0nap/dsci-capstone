@@ -1,5 +1,6 @@
-// Drop collection if exists (will not raise error)
-{"drop": "books"};
+// Safely delete existing data
+// Note: db.books.drop() is safe, but {"drop": "books"} will raise if doesnt exist.
+{"delete": "books", "deletes": [{"q": {}, "limit": 0}]};
 
 // Insert a nested document
 {"insert": "books", "documents": [

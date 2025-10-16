@@ -117,6 +117,22 @@ def test_sql_example_2(relational_db, load_examples_relational):
     assert (df.loc[0, 'value'] == 'Timber')
 
 
+@pytest.mark.order(9)
+def test_mongo_example_1(docs_db):
+    """Run queries contained within test files.
+    @details  Internal errors are handled by the class itself, and ruled out earlier.
+    Here we just assert that the received results DataFrame matches what we expected."""
+    _test_query_file(
+        docs_db,
+        "./tests/examples-db/documents_df1.mongo",
+        valid_files=["json", "mongo"],
+        expect_df=True,
+    )
+    df = docs_db.get_dataframe("books")
+    assert (df is not None)
+    assert (df.loc[0, 'title'] == 'Wuthering Heights')
+    assert (df.iloc[-1]['chapters.pages'] == 25)
+    docs_db.execute_query('{"drop": "books"}')
 # ------------------------------------------------------------------------------
 # FILE TEST WRAPPERS: Reuse the logic to test multiple files within a single test.
 # ------------------------------------------------------------------------------
