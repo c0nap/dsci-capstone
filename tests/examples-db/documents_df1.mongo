@@ -1,0 +1,19 @@
+// Drop collection if exists (will not raise error)
+{"drop": "books"};
+
+// Insert a nested document
+{"insert": "books", "documents": [
+  {"title": "Wuthering Heights", "author": {"first": "Emily", "last": "Brontë"},
+   "publication_date": "1847-12-01",
+   "publisher": {"name": "Thomas Cautley Newby", "location": {"city": "London", "country": "UK"}},
+   "chapters": [
+     {"name": "Mr. Lockwood’s Visit", "pages": 15},
+     {"name": "The Earnshaw Family", "pages": 22},
+     {"name": "Heathcliff’s Return", "pages": 20},
+     {"name": "Catherine’s Illness", "pages": 18},
+     {"name": "Revenge and Redemption", "pages": 25}
+   ]}
+]};
+
+// Select all books
+{"find": "books"};

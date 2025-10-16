@@ -1,0 +1,44 @@
+// Drop collection if exists (will not raise error)
+{"drop": "potions"};
+
+// Insert a single document with nested fields
+{"insert": "potions",
+  "documents": [
+    {
+        "potion_name": "Elixir of Wisdom",
+        "ingredients": ["Dragon Scale", "Unicorn Hair", "Phoenix Feather"], // array of simple values
+        "effects": ["Grants knowledge", "Enhances memory"] // array of simple values
+    }
+]};
+
+// In JSON, the value of a key can be any valid JSON type
+//     e.g. string, number, object, array, boolean, or null.
+// It does NOT enforce a consistent schema.
+
+// Insert multiple documents with inconsistent schema:
+{"insert": "potions",
+  "documents": [
+    {
+        "potion_name": "Invisibility Draught",
+        "ingredients": "Shadowroot",       // single value instead of array (TODO: wrap as list)
+        "effects": {"description": "Silent movement"} // single dict instead of list of dicts (TODO: wrap as list)
+    },
+    {
+        "potion_name": "Fire Resistance Brew",
+        "ingredients": ["Salamander Skin", "Fire Lily"], // array of simple values
+        "effects": "Protects against flame" // string instead of dict/list (TODO: convert to dict for consistency)
+    },
+    {
+        "potion_name": "Chicken Noodle Soup",
+        "ingredients": ["Carrot", "Noodles", "Chicken Broth"], // array of simple values
+            // note: missing 'effects' (handled as NaN by json_normalize)
+    },
+    {
+        "potion_name": "Heavenly Coffee",
+            // note: missing 'ingredients' (handled as NaN by json_normalize)
+        "effects": {"description": "Stamina boost", "duration": "3 Hours"} // single dict instead of list (TODO: wrap as list)
+    }
+]};
+
+// Return all potions
+{"find": "potions"};

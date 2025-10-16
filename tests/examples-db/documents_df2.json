@@ -1,0 +1,15 @@
+{
+  // True JSON would not allow comments, but our robust split_combined logic can handle it
+  "_comment": "A single-command QA example.",
+  "aggregate": "qa_exam",
+  "pipeline": [
+    {
+      "$replaceWith": {
+        "question": "Who becomes the ruler of Arrakis?",
+        "gold_answer": "Paul Atreides",
+        "answer": "Paul Atreides",
+        "is_correct": true
+      }
+    }
+  ]
+}
