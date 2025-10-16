@@ -2,25 +2,26 @@ import pytest
 import sys
 import os
 import time
+from typing import List
 from src.setup import Session
 from src.util import Log
 
 # ------------------------------------------------------------------------------
 # DATABASE FIXTURES: Checkpoint the database connector instances from Session.
 # ------------------------------------------------------------------------------
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def relational_db(session):
     """Fixture to get relational database connection."""
     _relational_db = session.relational_db
     yield _relational_db
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def docs_db(session):
     """Fixture to get document database connection."""
     _docs_db = session.docs_db
     yield _docs_db
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def graph_db(session):
     """Fixture to get document database connection."""
     _graph_db = session.graph_db
@@ -69,49 +70,66 @@ def test_db_graph_comprehensive(graph_db):
 # ------------------------------------------------------------------------------
 # DATABASE FILE TESTS: Run execute_file with example scripts.
 # ------------------------------------------------------------------------------
-@pytest.mark.order(7)
-def test_sql_examples(relational_db):
-    """Run queries from test files."""
+@pytest.fixture(scope="module")
+def load_examples_relational(relational_db):
+    """Fixture to create relational tables using engine-specific syntax."""
     if relational_db.db_type == "MYSQL":
-        _test_sql_file(relational_db, "./tests/examples-db/rel_postgres_schema.sql")
+        _test_query_file(relational_db, "./tests/examples-db/rel_postgres_schema.sql", ["sql"])
+        yield
+        relational_db.execute_query("DROP TABLE EntityName; DROP TABLE ExampleEAV;")
     elif relational_db.db_type == "POSTGRES":
-        _test_sql_file(relational_db, "./tests/examples-db/rel_postgres_schema.sql")
+        _test_query_file(relational_db, "./tests/examples-db/rel_postgres_schema.sql", ["sql"])
+        yield
+        relational_db.execute_query("DROP TABLE entityname; DROP TABLE exampleeav;")
     else:
         raise Exception(f"Unknown database engine '{relational_db.db_type}'")
 
-    _test_sql_file(
+@pytest.mark.order(7)
+def test_sql_example_1(relational_db, load_examples_relational):
+    """Run queries contained within test files.
+    @details  Internal errors are handled by the class itself, and ruled out earlier.
+    Here we just assert that the received results DataFrame matches what we expected.
+    @note  Uses a table-creation fixture to load / unload schema."""
+    _test_query_file(
         relational_db,
         "./tests/examples-db/relational_df1.sql",
+        valid_files=["sql"],
         expect_df=True,
     )
-    _test_sql_file(
+    df = relational_db.get_dataframe("EntityName")
+    assert (df is not None)
+    assert (df.loc[1, 'name'] == 'Fluffy')
+
+@pytest.mark.order(8)
+def test_sql_example_2(relational_db, load_examples_relational):
+    """Run queries contained within test files.
+    @details  Internal errors are handled by the class itself, and ruled out earlier.
+    Here we just assert that the received results DataFrame matches what we expected.
+    @note  Uses a table-creation fixture to load / unload schema."""
+    _test_query_file(
         relational_db,
         "./tests/examples-db/relational_df2.sql",
+        valid_files=["sql"],
         expect_df=True,
     )
-
-    df = relational_db.get_dataframe(
-        "EntityName"
-    )  # Internal errors are handled by the class itself.
-    assert (
-        df is not None
-    )  # We can just check results since implementation is checked by RelationalConnector.
-
+    df = relational_db.get_dataframe("ExampleEAV")
+    assert (df is not None)
+    assert (df.loc[0, 'value'] == 'Timber')
 
 
 # ------------------------------------------------------------------------------
 # FILE TEST WRAPPERS: Reuse the logic to test multiple files within a single test.
 # ------------------------------------------------------------------------------
-def _test_sql_file(relational_db, filename: str, expect_df: bool = False):
+def _test_query_file(db_fixture, filename: str, valid_files: List, expect_df: bool = False):
     """Run queries from a local file through the database.
-    @param relational_db  Fixture corresponding to the current session's relational database.
-    @param filename  The name of a .sql file.
+    @param db_fixture  Fixture corresponding to the current session's database.
+    @param filename  The name of a query file (for example ./tests/example1.sql).
+    @param valid_files  A list of file extensions valid for this database type.
     @param expect_df  Whether to throw an error if the queries fail to return a DataFrame."""
-    try:
-        df = relational_db.execute_file(filename)
-        if expect_df:
-            assert (
-                df is not None
-            ), f"Execution of '{filename}' failed to produce results."
-    except Exception as e:
-        Log.fail(Log.pytest_db + Log.run_f, Log.msg_bad_exec_f(filename), raise_error=True, other_error=e)
+    file_ext = filename.split('.')[-1].lower()
+    assert file_ext in valid_files, f"Received '{filename}', but cannot execute .{file_ext} files."
+    df = db_fixture.execute_file(filename)
+    if expect_df:
+        assert (
+            df is not None
+        ), f"Execution of '{filename}' failed to produce results."
