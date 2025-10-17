@@ -1,5 +1,5 @@
 from components.connectors import DatabaseConnector
-from src.util import Log, check_values
+from src.util import Log, check_values, df_natural_sorted
 import os
 from time import time
 import json
@@ -187,13 +187,13 @@ class DocumentConnector(DatabaseConnector):
                     docs = results
                 
                 # Convert document list to DataFrame if any docs exist
-                result = _docs_to_df(docs)
-                if result is None or result.empty:
+                df = _docs_to_df(docs)
+                if df is None or df.empty:
                     Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query))
                     return None
                 else:
-                    Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_qr(query, result))
-                    return result
+                    Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_qr(query, df))
+                    return df
         except Exception as e:
             Log.fail(Log.doc_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
 
@@ -279,7 +279,8 @@ class DocumentConnector(DatabaseConnector):
                 # Results will be a list of documents
                 docs = list(db[name].find({}))
                 df = _docs_to_df(docs)
-    
+                df = df_natural_sorted(df, ignored_columns=['_id'])
+
                 Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
                 return df
         except Exception as e:

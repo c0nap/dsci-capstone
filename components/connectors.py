@@ -8,7 +8,7 @@ from sqlalchemy.pool import NullPool
 from dotenv import load_dotenv
 from typing import List, Optional
 from sqlparse import parse as sql_parse
-from src.util import Log, check_values
+from src.util import Log, check_values, df_natural_sorted
 
 # Read environment variables at compile time
 load_dotenv(".env")
@@ -403,9 +403,9 @@ class RelationalConnector(DatabaseConnector):
             with engine.begin() as connection:
                 result = connection.execute(text(query))
                 if result.returns_rows and result.keys():
-                    result = DataFrame(result.fetchall(), columns=result.keys())
-                    Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_qr(query, result), self.verbose)
-                    return result
+                    df = DataFrame(result.fetchall(), columns=result.keys())
+                    Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
+                    return df
                 else:
                     Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
                     return None
@@ -426,7 +426,7 @@ class RelationalConnector(DatabaseConnector):
     def get_dataframe(self, name: str) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.
         @param name  The name of an existing table or collection in the database.
-        @return  DataFrame containing the requested data, or None
+        @return  Sorted DataFrame containing the requested data, or None
         @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
         for table_name in (name, name.lower()):
@@ -435,8 +435,8 @@ class RelationalConnector(DatabaseConnector):
                 with engine.begin() as connection:
                     table = Table(table_name, MetaData(), autoload_with=engine)
                     result = connection.execute(select(table))
-                    if result.returns_rows and result.keys():
-                        df = DataFrame(result.fetchall(), columns=result.keys())
+                    df = DataFrame(result.fetchall(), columns=result.keys())
+                    df = df_natural_sorted(df)
 
                     Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(table_name, df), self.verbose)
                     return df

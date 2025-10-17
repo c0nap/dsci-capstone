@@ -1,5 +1,5 @@
 from components.connectors import DatabaseConnector
-from src.util import Log, check_values
+from src.util import Log, check_values, df_natural_sorted
 from typing import List, Optional
 from pandas import DataFrame
 from neomodel import config, db
@@ -160,13 +160,14 @@ class GraphConnector(DatabaseConnector):
             results, meta = db.cypher_query(query)
             if not results:
                 return None
-            result = DataFrame(results, columns=[m for m in meta])
+            df = DataFrame(results, columns=[m for m in meta])
 
-            if result is None or result.empty:
+            if df is None or df.empty:
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
+                return None
             else:
-                Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, result), self.verbose)
-            return result
+                Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
+                return df
         except Exception as e:
             Log.fail(Log.gr_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
 
@@ -214,8 +215,9 @@ class GraphConnector(DatabaseConnector):
                 rows.append(row)
             # Pandas will fill in NaN where necessary
             df = DataFrame(rows)
+            df = df_natural_sorted(df, ignored_columns=['db', 'kg'])
 
-            Log.success(Log.gr_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
+            Log.success(Log.gr_db + Log.get_df, Log.msg_good_graph(name, df), self.verbose)
             return df
         except Exception as e:
             Log.fail(Log.gr_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)

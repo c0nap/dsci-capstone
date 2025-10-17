@@ -172,6 +172,24 @@ def all_none(*args):
     return all(arg is None for arg in args)
 
 
+def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = []) -> DataFrame:
+    """Sort a DataFrame in natural order using only certain columns.
+    @details
+    - The provided DataFrame will not be modified, since inplace=False by default.
+    - Existing row numbers will be deleted and regenerated to match the sorted order.
+    @param df  The DataFrame containing unsorted rows.
+    @param  ignored_columns  A list of column names to NOT sort by."""
+    if df is None or df.empty:
+        return df
+    # Exclude non-hashable columns e.g. lists and dicts
+    safe_cols = [c for c in df.columns
+        if c not in ignored_columns and not isinstance(df[c].iloc[0], (list, dict))]
+    # If we have no columns to sort on, just reset the row indexing.
+    if not safe_cols:
+        return df.reset_index(drop=True)
+    return df.sort_values(by=safe_cols, kind="stable").reset_index(drop=True)
+
+
 def check_values(results: List, expected: List, verbose: str, log_source: str, raise_error: bool) -> bool:
     """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_connection
     @param results  A list of observed values from the database.
