@@ -4,7 +4,7 @@ import os
 from time import time
 import json
 from pandas import DataFrame, json_normalize
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Set, Type
 from dotenv import load_dotenv
 from contextlib import contextmanager
 
@@ -192,7 +192,7 @@ class DocumentConnector(DatabaseConnector):
                     docs = results
                 
                 # Convert document list to DataFrame if any docs exist
-                result = self._docs_to_df(docs)
+                result = _docs_to_df(docs)
                 if self.verbose:
                     if result is None or result.empty:
                         Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query))
@@ -283,7 +283,7 @@ class DocumentConnector(DatabaseConnector):
             with mongo_handle(host=self.connection_string, alias="get_df") as db:
                 # Results will be a list of documents
                 docs = list(db[name].find({}))
-                df = self._docs_to_df(docs)
+                df = _docs_to_df(docs)
     
                 if self.verbose:
                     Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df))
@@ -358,40 +358,7 @@ class DocumentConnector(DatabaseConnector):
                 db["init"].drop()
 
 
-    # Reuse the dataframe parsing logic
-    def _docs_to_df(self, docs: List[Dict]) -> DataFrame:
-        """Convert raw MongoDB documents to a Pandas DataFrame.
-        @details
-            - Will explode / flatten nested dicts only if json_normalize() is successful
-            - Different approach than GraphConnector because our documents usually contain nesting.
-        
-        Steps:
-          1. Convert invalid ObjectId fields (_id) to strings so Pandas can handle them.
-          2. Flatten nested JSON structures using Pandas.json_normalize.
-        Example input:
-          docs = [ {"_id": ObjectId("650f..."), "name": "Alice", "age": 30}, ...} ]
-        Example output:
-          DataFrame([
-              {"_id": "650f...", "name": "Alice", "age": 30, "address.city": None, "address.zip": None},
-              {"_id": "650f...", "name": "Bob", "age": None, "address.city": "NY", "address.zip": "10001"}
-        ])
-        @raises RuntimeError  If parsing query results to JSON fails.
-        """
-        # 1. Convert MongoDB ObjectId fields to strings
-        for document in docs:
-            if "_id" in document:
-                try:
-                    document["_id"] = str(document["_id"])
-                except Exception as e:
-                    # Fail if str() conversion raises - probably corrupted data
-                    Log.fail(Log.doc_db + "MAKE_DF: ", Log.msg_fail_parse("_id field", document["_id"], "str"))
-    
-        # 2. Use Pandas to normalize nested JSON into flat columns
-        df = DataFrame(docs)
-        df = _flatten_recursive(df)
-        if self.verbose:
-            Log.success(Log.doc_db + "MAKE_DF: ", f"flatten_recursive succeeded!\nkeys:\n{list(df.columns)}")
-        return df
+
 
 
 
@@ -539,3 +506,122 @@ def _sanitize_json(text: str) -> str:
     
     # Strip trailing whitespace
     return ''.join(result).strip()
+
+
+
+
+
+
+def _sanitize_document(doc: Dict, type_registry: Dict[str, Set[Type]]) -> Dict:
+    """Normalize document fields to consistent types for DataFrame construction.
+    @details  Converts all field values to lists and tracks type patterns.
+              - ObjectId → string
+              - Single value → [value]
+              - Mixed types tracked in type_registry for conflict resolution
+    @param doc  MongoDB document to sanitize.
+    @param type_registry  Tracks observed types per field path (e.g., {"effects": {str, list}}).
+    @return  Document with all fields as lists.
+    """
+    sanitized = {}
+    
+    for key, value in doc.items():
+        # Convert ObjectId to string
+        if key == "_id":
+            try:
+                sanitized[key] = [str(value)]
+            except Exception:
+                Log.fail(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str"))
+                continue
+        else:
+            # Track the original type before wrapping
+            original_type = type(value)
+            if key not in type_registry:
+                type_registry[key] = set()
+            type_registry[key].add(original_type)
+            
+            # Wrap everything as a list
+            if value is None:
+                sanitized[key] = []
+            elif isinstance(value, list):
+                sanitized[key] = value if value else []
+            else:
+                sanitized[key] = [value]
+    
+    return sanitized
+
+
+def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
+    """Convert raw MongoDB documents to a Pandas DataFrame.
+    @details  Handles schema inconsistencies by:
+              1. First pass: identify all nested column names that will exist after flattening
+              2. Second pass: sanitize and wrap primitives using discovered schema
+              3. Flatten and optionally merge _unspecified columns into matching nested columns
+    @param docs  List of MongoDB documents to convert.
+    @param merge_unspecified  If True, merge _unspecified_type columns into first matching
+                              nested column. If False, keep as separate columns.
+    @raises RuntimeError  If parsing query results to JSON fails.
+    """
+    if not docs:
+        return DataFrame()
+    
+    # First pass: discover what nested columns will exist after flattening
+    nested_keys = {}  # Maps base field -> set of nested keys (e.g., "effects" -> {"description"})
+    for doc in docs:
+        for key, value in doc.items():
+            if isinstance(value, dict):
+                if key not in nested_keys:
+                    nested_keys[key] = set()
+                nested_keys[key].update(value.keys())
+            elif isinstance(value, list) and value and isinstance(value[0], dict):
+                if key not in nested_keys:
+                    nested_keys[key] = set()
+                for item in value:
+                    if isinstance(item, dict):
+                        nested_keys[key].update(item.keys())
+    
+    # Second pass: sanitize with knowledge of future nested columns
+    type_registry = {}
+    sanitized_docs = []
+    
+    for doc in docs:
+        sanitized = {}
+        for key, value in doc.items():
+            # Convert ObjectId to string
+            if key == "_id":
+                try:
+                    sanitized[key] = [str(value)]
+                except Exception:
+                    Log.fail(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str"))
+                    continue
+            else:
+                # Track the original type
+                original_type = type(value)
+                if key not in type_registry:
+                    type_registry[key] = set()
+                type_registry[key].add(original_type)
+                
+                # Wrap values, but check if we need special handling for primitives
+                if value is None:
+                    sanitized[key] = []
+                elif isinstance(value, list):
+                    # If field will have nested columns, wrap primitives in dicts
+                    if key in nested_keys and value and not isinstance(value[0], dict):
+                        target_key = list(nested_keys[key])[0] if merge_unspecified else f"_unspecified_{type(value[0]).__name__}"
+                        sanitized[key] = [{target_key: item} for item in value]
+                    else:
+                        sanitized[key] = value if value else []
+                else:
+                    # Single value: wrap in list, and if field will have nested columns, wrap in dict
+                    if key in nested_keys and not isinstance(value, dict):
+                        target_key = list(nested_keys[key])[0] if merge_unspecified else f"_unspecified_{type(value).__name__}"
+                        sanitized[key] = [{target_key: value}]
+                    else:
+                        sanitized[key] = [value]
+        
+        sanitized_docs.append(sanitized)
+    
+    # Create DataFrame and flatten
+    df = DataFrame(sanitized_docs)
+    df = _flatten_recursive(df)
+    
+    return df
