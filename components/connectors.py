@@ -140,7 +140,7 @@ class DatabaseConnector(Connector):
             # Return the final result if several are found.
             if len(results) > 1 and self.verbose:
                 # Warn when earlier results are ignored
-                Log.fail(Log.db_conn_abc + Log.run_q, Log.msg_multiple_query(len(results), query), raise_error=False)
+                Log.warn(Log.db_conn_abc + Log.run_q, Log.msg_multiple_query(len(results), query))
             return results[-1]
         # Derived classes MUST implement single-query execution.
         pass
@@ -454,7 +454,7 @@ class RelationalConnector(DatabaseConnector):
             except Exception as e:
                 Log.fail(Log.rel_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
         if self.verbose:
-            Log.fail(Log.rel_db + Log.get_df, Log.msg_bad_table(name), raise_error=False)
+            Log.warn(Log.rel_db + Log.get_df, Log.msg_bad_table(name))
         return None
 
     def create_database(self, database_name: str):

@@ -35,15 +35,23 @@ class Log:
 
     @staticmethod
     def success(prefix: str = "PASS", msg: str = ""):
-        """A success message begins with a Green Plus.
+        """A success message begins with a green prefix.
         @param prefix  The context of the message.
         @param msg  The message to print."""
         text = f"{Log.SUCCESS_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
         print(text)
 
     @staticmethod
+    def warn(prefix: str = "PASS", msg: str = ""):
+        """A warning message begins with a yellow prefix.
+        @param prefix  The context of the message.
+        @param msg  The message to print."""
+        text = f"{Log.WARNING_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
+        print(text)
+
+    @staticmethod
     def fail(prefix: str = "ERROR", msg: str = "", raise_error=True, other_error=None):
-        """A failure message begins with a Red X.
+        """A failure message begins with a red prefix.
         @param prefix  The context of the message.
         @param msg  The message to print.
         @param raise_error  Whether to raise an error.

@@ -167,7 +167,7 @@ class DocumentConnector(DatabaseConnector):
                     json_cmd_doc = json.loads(query)
                 except json.JSONDecodeError:
                     if self.verbose:
-                        Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", query, "JSON command object"), raise_error=False)
+                        Log.warn(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", query, "JSON command object"))
                     query = _sanitize_json(query)
                     try:
                         json_cmd_doc = json.loads(query)
@@ -292,7 +292,7 @@ class DocumentConnector(DatabaseConnector):
             Log.fail(Log.doc_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
         # If not found, warn but do not fail
         if self.verbose:
-            Log.fail(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), raise_error=False)
+            Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name))
         return None
 
 

@@ -229,7 +229,7 @@ class GraphConnector(DatabaseConnector):
             Log.fail(Log.gr_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
         # If not found, warn but do not fail
         if self.verbose:
-            Log.fail(Log.gr_db + Log.get_df, Log.msg_bad_graph(name), raise_error=False)
+            Log.warn(Log.gr_db + Log.get_df, Log.msg_bad_graph(name))
         return None
 
 
