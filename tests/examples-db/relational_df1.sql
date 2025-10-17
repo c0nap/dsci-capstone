@@ -2,4 +2,4 @@
 INSERT INTO EntityName (name)
 	VALUES ('Cat'), ('Fluffy');
 
-SELECT * FROM EntityName;
+SELECT * FROM EntityName ORDER BY (name);

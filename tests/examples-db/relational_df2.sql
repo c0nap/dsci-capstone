@@ -6,4 +6,4 @@ INSERT INTO ExampleEAV (entity, attribute, value) VALUES
 	('Husky', 'Color', 'Black & White'),
 	('Animal', 'Type Of', 'Organism');
 
-SELECT * FROM ExampleEAV;
+SELECT * FROM ExampleEAV ORDER BY (entity, attribute) DESC;
