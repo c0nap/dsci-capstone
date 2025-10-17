@@ -50,8 +50,7 @@ class DocumentConnector(DatabaseConnector):
         @note  Additional settings are appended as a suffix to the MongoDB connection string.
         @param new_database  The name of the database to connect to.
         """
-        if self.verbose:
-            Log.success(Log.doc_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database))
+        Log.success(Log.doc_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database), self.verbose)
         self.database_name = new_database
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
 
@@ -84,8 +83,7 @@ class DocumentConnector(DatabaseConnector):
         
                 try:   # Display useful information on existing databases
                     databases = db.client.list_database_names()
-                    if self.verbose:
-                        Log.success(Log.doc_db, Log.msg_result(databases))
+                    Log.success(Log.doc_db, Log.msg_result(databases), self.verbose)
                 except Exception as e:
                     Log.fail(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error, raise_error, e)
                     return False
@@ -120,8 +118,7 @@ class DocumentConnector(DatabaseConnector):
             Log.fail(Log.doc_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
             return False
         # Finish with no errors = connection test successful
-        if self.verbose:
-            Log.success(Log.doc_db, Log.msg_db_connect(self.database_name))
+        Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
     
     
@@ -140,8 +137,7 @@ class DocumentConnector(DatabaseConnector):
         except Exception as e:
             Log.fail(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
             return False
-        if self.verbose:
-            Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name))
+        Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
 
@@ -166,8 +162,7 @@ class DocumentConnector(DatabaseConnector):
                 try:
                     json_cmd_doc = json.loads(query)
                 except json.JSONDecodeError:
-                    if self.verbose:
-                        Log.warn(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", query, "JSON command object"))
+                    Log.warn(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", query, "JSON command object"), self.verbose)
                     query = _sanitize_json(query)
                     try:
                         json_cmd_doc = json.loads(query)
@@ -193,12 +188,12 @@ class DocumentConnector(DatabaseConnector):
                 
                 # Convert document list to DataFrame if any docs exist
                 result = _docs_to_df(docs)
-                if self.verbose:
-                    if result is None or result.empty:
-                        Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query))
-                    else:
-                        Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_qr(query, result))
-                return result
+                if result is None or result.empty:
+                    Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query))
+                    return None
+                else:
+                    Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_qr(query, result))
+                    return result
         except Exception as e:
             Log.fail(Log.doc_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
 
@@ -285,14 +280,12 @@ class DocumentConnector(DatabaseConnector):
                 docs = list(db[name].find({}))
                 df = _docs_to_df(docs)
     
-                if self.verbose:
-                    Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df))
+                Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
                 return df
         except Exception as e:
             Log.fail(Log.doc_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
         # If not found, warn but do not fail
-        if self.verbose:
-            Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name))
+        Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
         return None
 
 
@@ -315,8 +308,7 @@ class DocumentConnector(DatabaseConnector):
                 db["init"].delete_many({})
 
                 self.change_database(working_database)
-                if self.verbose:
-                    Log.success(Log.doc_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
+                Log.success(Log.doc_db + Log.create_db, Log.msg_success_managed_db("created", database_name), self.verbose)
         except Exception as e:
             Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string), raise_error=True, other_error=e)
 
@@ -331,9 +323,7 @@ class DocumentConnector(DatabaseConnector):
             with mongo_handle(host=self.connection_string, alias="drop_db") as db:
                 # Drop the entire database
                 db.client.drop_database(database_name)
-    
-                if self.verbose:
-                    Log.success(Log.doc_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
+                Log.success(Log.doc_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name), self.verbose)
         except Exception as e:
             Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string), raise_error=True, other_error=e)
 

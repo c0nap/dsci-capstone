@@ -138,9 +138,9 @@ class DatabaseConnector(Connector):
             if len(results) == 0:
                 return None
             # Return the final result if several are found.
-            if len(results) > 1 and self.verbose:
+            if len(results) > 1:
                 # Warn when earlier results are ignored
-                Log.warn(Log.db_conn_abc + Log.run_q, Log.msg_multiple_query(len(results), query))
+                Log.warn(Log.db_conn_abc + Log.run_q, Log.msg_multiple_query(len(results), query), self.verbose)
             return results[-1]
         # Derived classes MUST implement single-query execution.
         pass
@@ -168,15 +168,13 @@ class DatabaseConnector(Connector):
         try:  # Read the entire file as a multi-query string
             with open(filename, "r") as file:
                 multi_query = file.read()
-                if self.verbose:
-                    Log.success(Log.db_conn_abc + Log.run_f, Log.msg_good_path(filename))
+                Log.success(Log.db_conn_abc + Log.run_f, Log.msg_good_path(filename), self.verbose)
         except Exception as e:
             Log.fail(Log.db_conn_abc + Log.run_f, Log.msg_bad_path(filename), raise_error=True, other_error=e)
         
         try:  # Attempt to run the multi-query
             results = self.execute_combined(multi_query)
-            if self.verbose:
-                Log.success(Log.db_conn_abc + Log.run_f, Log.msg_good_exec_f(filename))
+            Log.success(Log.db_conn_abc + Log.run_f, Log.msg_good_exec_f(filename), self.verbose)
             return results
         except Exception as e:
             Log.fail(Log.db_conn_abc + Log.run_f, Log.msg_bad_exec_f(filename), raise_error=True, other_error=e)
@@ -292,8 +290,7 @@ class RelationalConnector(DatabaseConnector):
         """Update the connection URI to reference a different database in the same engine.
         @param new_database  The name of the database to connect to.
         """
-        if self.verbose:
-            Log.success(Log.rel_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database))
+        Log.success(Log.rel_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database), self.verbose)
         self.database_name = new_database
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
 
@@ -332,8 +329,7 @@ class RelationalConnector(DatabaseConnector):
                     db_name = self.execute_query(self._specific_queries[0]).iloc[0, 0]
                     check_values([db_name], [self.database_name], self.verbose, Log.rel_db, raise_error)
                     databases = self.execute_query(self._specific_queries[1])
-                    if self.verbose:
-                        Log.success(Log.rel_db, Log.msg_result(databases))
+                    Log.success(Log.rel_db, Log.msg_result(databases), self.verbose)
                 except Exception as e:
                     Log.fail(Log.rel_db + Log.test_conn + Log.test_info, Log.msg_unknown_error, raise_error, e)
                     return False
@@ -367,8 +363,7 @@ class RelationalConnector(DatabaseConnector):
             Log.fail(Log.rel_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
             return False
         # Finish with no errors = connection test successful
-        if self.verbose:
-            Log.success(Log.rel_db, Log.msg_db_connect(self.database_name))
+        Log.success(Log.rel_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
 
@@ -387,8 +382,7 @@ class RelationalConnector(DatabaseConnector):
         except Exception as e:
             Log.fail(Log.rel_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
             return False
-        if self.verbose:
-            Log.success(Log.rel_db + log_source, Log.msg_db_connect(self.database_name))
+        Log.success(Log.rel_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
 
@@ -410,12 +404,11 @@ class RelationalConnector(DatabaseConnector):
                 result = connection.execute(text(query))
                 if result.returns_rows and result.keys():
                     result = DataFrame(result.fetchall(), columns=result.keys())
-
-                    if self.verbose:
-                        Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_qr(query, result))
-                elif self.verbose:
-                    Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query))
-                return result
+                    Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_qr(query, result), self.verbose)
+                    return result
+                else:
+                    Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
+                    return None
         except Exception as e:
             Log.fail(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
 
@@ -445,16 +438,14 @@ class RelationalConnector(DatabaseConnector):
                     if result.returns_rows and result.keys():
                         df = DataFrame(result.fetchall(), columns=result.keys())
 
-                    if self.verbose:
-                        Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(table_name, df))
+                    Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(table_name, df), self.verbose)
                     return df
             except NoSuchTableError:
                 # Postgres will auto-lowercase all table names. Give it one more try with the lowercase name.
                 continue
             except Exception as e:
                 Log.fail(Log.rel_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
-        if self.verbose:
-            Log.warn(Log.rel_db + Log.get_df, Log.msg_bad_table(name))
+        Log.warn(Log.rel_db + Log.get_df, Log.msg_bad_table(name), self.verbose)
         return None
 
     def create_database(self, database_name: str):
@@ -470,8 +461,7 @@ class RelationalConnector(DatabaseConnector):
             ) as connection:
                 connection.execute(text(f"CREATE DATABASE {database_name}"))
 
-            if self.verbose:
-                Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
+            Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("created", database_name), self.verbose)
         except Exception as e:
             Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string), raise_error=True, other_error=e)
 
@@ -488,8 +478,7 @@ class RelationalConnector(DatabaseConnector):
             ) as connection:
                 connection.execute(text(f"DROP DATABASE IF EXISTS {database_name}"))
             
-            if self.verbose:
-                Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
+            Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name), self.verbose)
         except Exception as e:
             Log.fail(Log.rel_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string), raise_error=True, other_error=e)
 

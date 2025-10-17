@@ -43,8 +43,7 @@ class GraphConnector(DatabaseConnector):
         @note  Neo4j does not accept database names routed through the connection string.
         @param new_database  The name of the database to connect to.
         """
-        if self.verbose:
-            Log.success(Log.gr_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database))
+        Log.success(Log.gr_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database), self.verbose)
         self.database_name = new_database
         self.graph_name = "default"
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}"
@@ -54,8 +53,7 @@ class GraphConnector(DatabaseConnector):
         @details  Similar to creating tables in SQL and collections in Mongo.
         @note  This change will apply to any new nodes created.
         @param graph_name  A string corresponding to the 'kg' node attribute."""
-        if self.verbose:
-            Log.success(Log.gr_db + Log.swap_kg, Log.msg_swap_kg(self.graph_name, graph_name))
+        Log.success(Log.gr_db + Log.swap_kg, Log.msg_swap_kg(self.graph_name, graph_name), self.verbose)
         self.graph_name = graph_name
 
 
@@ -86,11 +84,9 @@ class GraphConnector(DatabaseConnector):
     
             try:   # Display useful information on existing databases
                 databases = self.get_unique(key="db")
-                if self.verbose:
-                    Log.success(Log.gr_db, Log.msg_result(databases))
+                Log.success(Log.gr_db, Log.msg_result(databases), self.verbose)
                 graphs = self.get_unique(key="kg")
-                if self.verbose:
-                    Log.success(Log.gr_db, Log.msg_result(graphs))
+                Log.success(Log.gr_db, Log.msg_result(graphs), self.verbose)
             except Exception as e:
                 Log.fail(Log.gr_db + Log.test_conn + Log.test_info, Log.msg_unknown_error, raise_error, e)
                 return False
@@ -128,8 +124,7 @@ class GraphConnector(DatabaseConnector):
             Log.fail(Log.gr_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
             return False
         # Finish with no errors = connection test successful
-        if self.verbose:
-            Log.success(Log.gr_db, Log.msg_db_connect(self.database_name))
+        Log.success(Log.gr_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
     def check_connection(self, log_source: str, raise_error: bool) -> bool:
@@ -145,8 +140,7 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             Log.fail(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
             return False
-        if self.verbose:
-            Log.success(Log.gr_db + log_source, Log.msg_db_connect(self.database_name))
+        Log.success(Log.gr_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
     def execute_query(self, query: str) -> Optional[DataFrame]:
@@ -168,11 +162,10 @@ class GraphConnector(DatabaseConnector):
                 return None
             result = DataFrame(results, columns=[m for m in meta])
 
-            if self.verbose:
-                if result is None or result.empty:
-                    Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query))
-                else:
-                    Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, result))
+            if result is None or result.empty:
+                Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
+            else:
+                Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, result), self.verbose)
             return result
         except Exception as e:
             Log.fail(Log.gr_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
@@ -222,14 +215,12 @@ class GraphConnector(DatabaseConnector):
             # Pandas will fill in NaN where necessary
             df = DataFrame(rows)
 
-            if self.verbose:
-                Log.success(Log.gr_db + Log.get_df, Log.msg_good_coll(name, df))
+            Log.success(Log.gr_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
             return df
         except Exception as e:
             Log.fail(Log.gr_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
         # If not found, warn but do not fail
-        if self.verbose:
-            Log.warn(Log.gr_db + Log.get_df, Log.msg_bad_graph(name))
+        Log.warn(Log.gr_db + Log.get_df, Log.msg_bad_graph(name), self.verbose)
         return None
 
 
@@ -248,8 +239,7 @@ class GraphConnector(DatabaseConnector):
                 return []
             unique_values = df[key].tolist()
             
-            if self.verbose:
-                Log.success(Log.gr_db + Log.get_unique, Log.msg_result(unique_values))
+            Log.success(Log.gr_db + Log.get_unique, Log.msg_result(unique_values), self.verbose)
             return unique_values
         except Exception as e:
             Log.fail(Log.gr_db + Log.get_unique, Log.msg_unknown_error, raise_error=True, other_error=e)
@@ -267,8 +257,7 @@ class GraphConnector(DatabaseConnector):
             query = f"CREATE ({{db: '{database_name}', _init: true}})"
             self.execute_query(query)
 
-            if self.verbose:
-                Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("created", database_name))
+            Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("created", database_name), self.verbose)
         except Exception as e:
             Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string), raise_error=True, other_error=e)
 
@@ -283,8 +272,7 @@ class GraphConnector(DatabaseConnector):
             query = f"MATCH (n) WHERE n.db = '{database_name}' DETACH DELETE n"
             self.execute_query(query)
 
-            if self.verbose:
-                Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name))
+            Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name), self.verbose)
         except Exception as e:
             Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string), raise_error=True, other_error=e)
 
@@ -337,8 +325,7 @@ class GraphConnector(DatabaseConnector):
 
         try:
             df = self.execute_query(query)
-            if self.verbose:
-                Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})")
+            Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
             return df
         except Exception as e:
             Log.fail(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})", raise_error=True, other_error=e)
@@ -360,8 +347,7 @@ class GraphConnector(DatabaseConnector):
         RETURN node_name, edge_count"""
         try:
             df = self.execute_query(query)
-            if self.verbose:
-                Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.")
+            Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.", self.verbose)
             return df
         except Exception as e:
             Log.fail(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.", raise_error=True, other_error=e)
@@ -380,8 +366,7 @@ class GraphConnector(DatabaseConnector):
             cols = ["subject", "relation", "object"]
             df = (self.execute_query(query) or DataFrame()).reindex(columns=cols)
 
-            if self.verbose:
-                Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.")
+            Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.", self.verbose)
             return df
         except Exception as e:
             Log.fail(Log.gr_db + Log.kg, f"Failed to fetch all_triples DataFrame.", raise_error=True, other_error=e)

@@ -34,18 +34,24 @@ class Log:
     # before your own print(), or a message can be specified.
 
     @staticmethod
-    def success(prefix: str = "PASS", msg: str = ""):
+    def success(prefix: str = "PASS", msg: str = "", verbose: bool = True):
         """A success message begins with a green prefix.
         @param prefix  The context of the message.
-        @param msg  The message to print."""
+        @param msg  The message to print.
+        @param verbose  Whether to actually print. Saves space and reduces nested if statements."""
+        if not verbose:
+            return
         text = f"{Log.SUCCESS_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
         print(text)
 
     @staticmethod
-    def warn(prefix: str = "PASS", msg: str = ""):
+    def warn(prefix: str = "PASS", msg: str = "", verbose: bool = True):
         """A warning message begins with a yellow prefix.
         @param prefix  The context of the message.
-        @param msg  The message to print."""
+        @param msg  The message to print.
+        @param verbose  Whether to actually print. Saves space and reduces nested if statements."""
+        if not verbose:
+            return
         text = f"{Log.WARNING_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
         print(text)
 
@@ -175,8 +181,8 @@ def check_values(results: List, expected: List, verbose: str, log_source: str, r
     @param raise_error  Whether to raise an error on connection failure.
     @raises RuntimeError  If any result does not match what was expected."""
     for i in range(len(results)):
-        if verbose and results[i] == expected[i]:
-            Log.success(log_source + Log.good_val, Log.msg_compare(results[i], expected[i]))
+        if results[i] == expected[i]:
+            Log.success(log_source + Log.good_val, Log.msg_compare(results[i], expected[i]), verbose)
         elif results[i] != expected[i]:
             Log.fail(log_source + Log.bad_val, Log.msg_compare(results[i], expected[i]), raise_error)
             return False
