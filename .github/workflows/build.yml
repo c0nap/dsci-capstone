@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Initial setup
-      run: |
-        echo "Deploying to ${{ inputs.environment }}"
-        sudo apt-get update && sudo apt-get install -y make
+        run: |
+          echo "Deploying to ${{ inputs.environment }}"
+          sudo apt-get update && sudo apt-get install -y make
 
 
       # 1. Get public Docker images
