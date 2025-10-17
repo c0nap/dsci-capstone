@@ -1,0 +1,57 @@
+name: Build Job
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+
+jobs:
+  build-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Initial setup
+      run: |
+        echo "Deploying to ${{ inputs.environment }}"
+        sudo apt-get update && sudo apt-get install -y make
+
+
+      # 1. Get public Docker images
+      # Start from a checkpoint to speed up the build process.
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull outdated Docker images
+        run: make docker-pull || true  # true in case images dont exist yet
+
+      
+      # 2. Set up environment with latest source code
+      - name: Download code from repository
+      - uses: actions/checkout@v4
+
+      - name: Create secrets files with fake credentials
+        run: |
+          make env-dummy OUT=".env"
+          make appsettings-dummy OUT="web-app/BlazorApp/appsettings.json" ENVF=".env"
+
+      
+      # 3. Update the local Docker images with latest code
+      # This creates the images with baked-in .env and appsettings.json files.
+      - name: Build new Docker images
+        run: make docker-build-dev
+
+
+      # 4. Send these images over to the main CI/CD workflow
+      - name: Save images as artifacts
+        run: docker save dsci-cap-img-python-dev:latest dsci-cap-img-blazor-dev:latest -o images.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docker-images
+          path: images.tar
+
+      # The images file will be auto-removed from this runner since the job ends here.
+
