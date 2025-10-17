@@ -114,7 +114,22 @@ class Log:
     good_val = "VALID RESULT: "
     bad_val = "INCORRECT RESULT: "
     msg_compare = lambda observed, expected: f"Expected {expected}, got {observed}"
-    msg_result = lambda results: f"Query results:\n{DataFrame(results).to_string(max_rows=None, max_cols=None)}" if Log.FULL_DF else results
+
+    msg_result = lambda results: f"""Fetched results: {Log.WHITE if Log.USE_COLORS else ''}
+    {DataFrame(results).to_string(max_rows=None, max_cols=None) if Log.FULL_DF else results} {Log.MSG_COLOR if Log.USE_COLORS else ''}"""
+
+    msg_good_table = lambda name, df: f"""Exported table '{name}' to DataFrame:{Log.WHITE if Log.USE_COLORS else ''}
+    {DataFrame(df).to_string(max_rows=None, max_cols=None) if Log.FULL_DF else df} {Log.MSG_COLOR if Log.USE_COLORS else ''}"""
+
+    msg_good_coll = lambda name, df: f"""Exported collection '{name}' to DataFrame:{Log.WHITE if Log.USE_COLORS else ''}
+    {DataFrame(df).to_string(max_rows=None, max_cols=None) if Log.FULL_DF else df} {Log.MSG_COLOR if Log.USE_COLORS else ''}"""
+
+    msg_good_graph = lambda name, df: f"""Exported graph '{name}' to DataFrame:{Log.WHITE if Log.USE_COLORS else ''}
+    {DataFrame(df).to_string(max_rows=None, max_cols=None) if Log.FULL_DF else df} {Log.MSG_COLOR if Log.USE_COLORS else ''}"""
+
+    msg_bad_table = lambda name: f"Table '{name}' not found"
+    msg_bad_coll = lambda name: f"Collection '{name}' not found"
+    msg_bad_graph = lambda name: f"Graph '{name}' not found"
 
     test_conn = "CONNECTION TEST: "
     test_basic = "BASIC: "
@@ -129,12 +144,6 @@ class Log:
     drop_db = "DROP_DB: "
     run_q = "QUERY: "
     run_f = "FILE EXEC: "
-    msg_bad_table = lambda name: f"Table '{name}' not found"
-    msg_good_table = lambda name, df: f"Exported table '{name}' to DataFrame:{df.to_string(max_rows=None, max_cols=None)}" if Log.FULL_DF else df
-    msg_bad_coll = lambda name: f"Collection '{name}' not found"
-    msg_good_coll = lambda name, df: f"Exported collection '{name}' to DataFrame:\n{df.to_string(max_rows=None, max_cols=None)}" if Log.FULL_DF else df
-    msg_bad_graph = lambda name: f"Graph '{name}' not found"
-    msg_good_graph = lambda name, df: f"Exported graph '{name}' to DataFrame:\n{df.to_string(max_rows=None, max_cols=None)}" if Log.FULL_DF else df
 
     msg_success_managed_db = lambda managed, database_name: f"Successfully {managed} database '{database_name}'"
     """@brief  Handles various successful actions an admin could perform on a database.
