@@ -31,7 +31,7 @@ jobs:
       
       # 2. Set up environment with latest source code
       - name: Download code from repository
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: Create secrets files with fake credentials
         run: |
@@ -48,6 +48,7 @@ jobs:
       # 4. Send these images over to the main CI/CD workflow
       - name: Save images as artifacts
         run: docker save dsci-cap-img-python-dev:latest dsci-cap-img-blazor-dev:latest -o images.tar
+      
       - uses: actions/upload-artifact@v4
         with:
           name: docker-images
