@@ -164,6 +164,12 @@ def test_mongo_example_3(docs_db):
     df = docs_db.get_dataframe("potions")
     assert (df is not None)
     assert (df.loc[0, 'potion_name'] == 'Elixir of Wisdom')
+    assert ("effects.description" in df.columns)
+    assert any((df['potion_name'] == 'Invisibility Draught') & (df['effects.description'] == 'Silent movement'))
+    assert ("ingredients.name" in df.columns)
+    assert (df.loc[0, 'ingredients.name'] == 'Dragon Scale')
+    assert ("effects.seconds" in df.columns)
+    assert any((df['potion_name'] == 'Catkin Tincture') & (df['effects.seconds'] == 0))
     docs_db.execute_query('{"drop": "potions"}')
 
 

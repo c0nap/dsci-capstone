@@ -512,6 +512,9 @@ def _sanitize_json(text: str) -> str:
 
 
 
+
+
+
 def _sanitize_document(doc: Dict, type_registry: Dict[str, Set[Type]]) -> Dict:
     """Normalize document fields to consistent types for DataFrame construction.
     @details  Converts all field values to lists and tracks type patterns.
@@ -553,33 +556,40 @@ def _sanitize_document(doc: Dict, type_registry: Dict[str, Set[Type]]) -> Dict:
 def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
     """Convert raw MongoDB documents to a Pandas DataFrame.
     @details  Handles schema inconsistencies by:
-              1. First pass: identify all nested column names that will exist after flattening
-              2. Second pass: sanitize and wrap primitives using discovered schema
-              3. Flatten and optionally merge _unspecified columns into matching nested columns
+              1. First pass: identify all nested column names and their types
+              2. Second pass: sanitize and wrap primitives using type-compatible nested columns
+              3. Flatten structures into final DataFrame
     @param docs  List of MongoDB documents to convert.
-    @param merge_unspecified  If True, merge _unspecified_type columns into first matching
-                              nested column. If False, keep as separate columns.
+    @param merge_unspecified  If True, merge primitives into type-compatible nested columns
+                              using aggressive type casting (int→float, bool→int→float).
+                              If False, keep as _unspecified_type columns.
     @raises RuntimeError  If parsing query results to JSON fails.
     """
     if not docs:
         return DataFrame()
     
-    # First pass: discover what nested columns will exist after flattening
-    nested_keys = {}  # Maps base field -> set of nested keys (e.g., "effects" -> {"description"})
+    # First pass: discover nested columns and their value types
+    nested_schema = {}  # Maps base field -> {nested_key: set of value types}
     for doc in docs:
         for key, value in doc.items():
             if isinstance(value, dict):
-                if key not in nested_keys:
-                    nested_keys[key] = set()
-                nested_keys[key].update(value.keys())
-            elif isinstance(value, list) and value and isinstance(value[0], dict):
-                if key not in nested_keys:
-                    nested_keys[key] = set()
+                if key not in nested_schema:
+                    nested_schema[key] = {}
+                for nested_key, nested_val in value.items():
+                    if nested_key not in nested_schema[key]:
+                        nested_schema[key][nested_key] = set()
+                    nested_schema[key][nested_key].add(type(nested_val))
+            elif isinstance(value, list) and value:
                 for item in value:
                     if isinstance(item, dict):
-                        nested_keys[key].update(item.keys())
+                        if key not in nested_schema:
+                            nested_schema[key] = {}
+                        for nested_key, nested_val in item.items():
+                            if nested_key not in nested_schema[key]:
+                                nested_schema[key][nested_key] = set()
+                            nested_schema[key][nested_key].add(type(nested_val))
     
-    # Second pass: sanitize with knowledge of future nested columns
+    # Second pass: sanitize with type-aware column mapping
     type_registry = {}
     sanitized_docs = []
     
@@ -600,20 +610,24 @@ def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
                     type_registry[key] = set()
                 type_registry[key].add(original_type)
                 
-                # Wrap values, but check if we need special handling for primitives
+                # Wrap values with type-aware nested column mapping
                 if value is None:
                     sanitized[key] = []
                 elif isinstance(value, list):
-                    # If field will have nested columns, wrap primitives in dicts
-                    if key in nested_keys and value and not isinstance(value[0], dict):
-                        target_key = list(nested_keys[key])[0] if merge_unspecified else f"_unspecified_{type(value[0]).__name__}"
+                    # If field has nested schema and list contains primitives, wrap in dicts
+                    if key in nested_schema and value and not isinstance(value[0], dict):
+                        target_key = _find_compatible_nested_key(
+                            type(value[0]), nested_schema.get(key, {}), merge_unspecified
+                        )
                         sanitized[key] = [{target_key: item} for item in value]
                     else:
                         sanitized[key] = value if value else []
                 else:
-                    # Single value: wrap in list, and if field will have nested columns, wrap in dict
-                    if key in nested_keys and not isinstance(value, dict):
-                        target_key = list(nested_keys[key])[0] if merge_unspecified else f"_unspecified_{type(value).__name__}"
+                    # Single value: wrap in list, check for nested column mapping
+                    if key in nested_schema and not isinstance(value, dict):
+                        target_key = _find_compatible_nested_key(
+                            type(value), nested_schema.get(key, {}), merge_unspecified
+                        )
                         sanitized[key] = [{target_key: value}]
                     else:
                         sanitized[key] = [value]
@@ -625,3 +639,38 @@ def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
     df = _flatten_recursive(df)
     
     return df
+
+
+def _find_compatible_nested_key(value_type: Type, nested_schema: Dict[str, Set[Type]], 
+                                  merge_unspecified: bool) -> str:
+    """Find a nested column compatible with the given primitive type.
+    @details  Uses type compatibility hierarchy for aggressive merging:
+              bool → int → float (numeric types)
+              str (isolated, only matches str)
+              Searches for exact match first, then compatible types.
+    @param value_type  The type of the primitive value to map (e.g., str, int, float).
+    @param nested_schema  Dict mapping nested keys to sets of observed types.
+    @param merge_unspecified  Whether to attempt type-compatible merging.
+    @return  The nested key name to use for wrapping the primitive.
+    """
+    if not merge_unspecified:
+        return f"_unspecified_{value_type.__name__}"
+    
+    # Define type compatibility: value_type can be cast to these types
+    type_compatibility = {
+        int: [int, float],          # int can go to float
+        float: [float],             # float only to float
+        str: [str],                 # str only to str
+        bool: [bool]                # bool only to bool
+    }
+    
+    compatible_types = type_compatibility.get(value_type, [value_type])
+    
+    # Search for compatible columns in order of preference (exact match first)
+    for target_type in compatible_types:
+        for nested_key, observed_types in nested_schema.items():
+            if target_type in observed_types:
+                return nested_key
+    
+    # No compatible column found
+    return f"_unspecified_{value_type.__name__}"

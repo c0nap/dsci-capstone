@@ -56,22 +56,45 @@
 
 
 
-// // Insert multiple documents with inconsistent schema:
-// {"insert": "potions",
-//   "documents": [
-//     {
-//         "potion_name": "Heavenly Coffee",
-//             // note: missing 'ingredients' (handled as NaN by json_normalize)
-//         "effects": {"seconds": 12600.0, "cost": 6.95}  // dict with missing values  (handled as NaN; not merged since different type)
-//     },
-//     {
-//         "potion_name": "Catkin Tincture",
-//         "ingredients": [
-//             {"name": "Moon Lily", "location": "Eldermist Abyss"},
-//             {"name": "Mirage Powder", "location": "Hamlet of Duskwraith"},
-//             {"name": "Gleaming Stardrop", "location": "Joja Mountain"}
-//         ],
-//         "effects": 0  // single ambiguous value; interpreted as "effects._unspecified_int" OR "effects.seconds"
-//     }
-// ]};
-// {"find": "potions"};
+// 5. Insert multiple documents with inconsistent schema:
+{"insert": "potions",
+  "documents": [
+    {
+        "potion_name": "Heavenly Coffee",
+            // note: missing 'ingredients' (handled as NaN by json_normalize)
+        "effects": {"seconds": 12600.0, "cost": 6.95}  // dict with missing values  (handled as NaN; not merged since different type)
+    },
+    {
+        "potion_name": "Catkin Tincture",
+        "ingredients": [
+            {"name": "Moon Lily", "location": "Eldermist Abyss"},
+            {"name": "Mirage Powder", "location": "Hamlet of Duskwraith"},
+            {"name": "Gleaming Stardrop", "location": "Joja Mountain"}
+        ],
+        "effects": 0  // single ambiguous value; interpreted as "effects._unspecified_int" OR "effects.seconds"
+    }
+]};
+{"find": "potions"};
+
+
+
+// 6. Insert severe edge cases:
+{"insert": "potions",
+  "documents": [
+    {   // new top-level key
+        "valid": false
+    },
+    {   // null value for existing key - creates 1 fully NaN row
+        "ingredients": null
+    },
+    {   // null key - creates 1 column called "null" with 1 fully NaN row
+        "null": null
+    },
+    {   // blank document - creates 1 fully NaN row
+
+    },
+    {   // blank key - creates 1 column with no name, and 1 row with empty string value
+        "": ""
+    }
+]};
+{"find": "potions"};
