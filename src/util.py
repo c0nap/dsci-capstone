@@ -1,4 +1,5 @@
 from typing import List
+from pandas import DataFrame
 
 class Log:
     """The Log class standardizes console output."""
@@ -96,7 +97,7 @@ class Log:
     good_val = "VALID RESULT: "
     bad_val = "INCORRECT RESULT: "
     msg_compare = lambda observed, expected: f"Expected {expected}, got {observed}"
-    msg_result = lambda results: f"Query results:\n{results}"
+    msg_result = lambda results: f"Query results:\n{DataFrame(results).to_string(max_rows=None, max_cols=None)}"
 
     test_conn = "CONNECTION TEST: "
     test_basic = "BASIC: "
@@ -114,7 +115,7 @@ class Log:
     msg_bad_table = lambda name: f"Table '{name}' not found"
     msg_good_table = lambda name, df: f"Exported table '{name}' to DataFrame\n{df}"
     msg_bad_coll = lambda name: f"Collection '{name}' not found"
-    msg_good_coll = lambda name, df: f"Exported collection '{name}' to DataFrame:\n{df}"
+    msg_good_coll = lambda name, df: f"Exported collection '{name}' to DataFrame:\n{df.to_string(max_rows=None, max_cols=None)}"
     msg_bad_graph = lambda name: f"Graph '{name}' not found"
     msg_good_graph = lambda name, df: f"Exported graph '{name}' to DataFrame:\n{df}"
 
