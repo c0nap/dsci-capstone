@@ -10,7 +10,7 @@ on:
         type: string
 
 jobs:
-  update-private-images:
+  update-dev-images:
     runs-on: ubuntu-latest
     steps:
       - name: Initial setup
