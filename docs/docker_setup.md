@@ -295,8 +295,8 @@ Images in the `ghcr.io/c0nap/` namespace will be private by default, but you sho
 - `dsci-cap-img-blazor-dev:latest`
 
 Images used for automatic CI/CD tests are regenerated frequently:
-- `dsci-cap-img-python-tmp:latest`
-- `dsci-cap-img-blazor-tmp:latest`
+- `dsci-cap-img-python-dev:RUN_ID`
+- `dsci-cap-img-blazor-dev:RUN_ID`
 
 Rename your container image so docker knows where to upload it. We use the `dev` suffix for private images meant to stay on your local machine.
 ```bash

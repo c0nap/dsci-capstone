@@ -5,18 +5,21 @@ on:
       private-namespace:
         required: true
         type: string
+      image-tag:
+        required: true
+        type: string
 
 jobs:
   update-private-images:
     runs-on: ubuntu-latest
     steps:
       - name: Initial setup
-        run: echo "Deploying to ${{ inputs.private-namespace }} with image tag ${{ env.DEVTAG }}"
+        run: echo "Deploying to ${{ inputs.private-namespace }} with image tag ${{ inputs.image-tag }}"
 
 
       # 1. Get public Docker images
       # Start from a checkpoint to speed up the build process.
-      - name: Pull outdated Docker images
+      - name: Pull last successful Docker images
         run: make docker-pull || true  # true in case images dont exist yet
 
       
@@ -46,5 +49,5 @@ jobs:
 
       - name: Push images to a private GHCR namespace
         if: success()
-        run: make docker-push-dev
+        run: make docker-push-dev DEVTAG=${{ inputs.image-tag }}
 
