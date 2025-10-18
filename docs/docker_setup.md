@@ -133,67 +133,6 @@ make docker-all
 
 ---
 
-## Environment Setup
-
-Here we describe how to configure the `.env` file for advanced Docker setups. For example, running all components inside Docker containers, communicating with externally-hosted containers, and using a combination of Docker Desktop and docker-ce.
-
-### Overview
-
-Docker enables deployment of our individual pipeline components to various locations across your system. By default, Python runs on WSL and Blazor runs on Windows - this means `.env` usually contains WSL-centric hostnames, and `/web-app/BlazorApp/appsettings.json` contains Windows-centric connection strings.
-
-When these processes are deployed to different system types, we need to change the hostnames in `.env` file. For example, if Neo4j is started from WSL, Python can access it using `NEO4J_HOST=localhost`. But if we deploy Python to a Docker container in Docker Desktop, this hostname must be changed to the local IP of WSL as seen from Windows, _e.g._ `NEO4J_HOST=172.30.63.202`.
-
-When communicating with another container in the same Docker network, we use the service names (the headers in `docker-compose.yml`, for example `container-python` could post data to `container-blazor` using `BLAZOR_HOST=blazor_service` and `http://blazor_service:5055/api/metrics`). The container names just are used to shorten docker commands.
-
-Refer to the conversion table below for specific network targets. Please note that `.env` is manually completed by referencing this table, and our current Makefile simply converts the hostnames to their Docker equivalents.
-
-### Network Hostnames Table
-
-This table displays the valid hostname (for any `*_HOST` in `.env`) when the current container is deployed to Windows (Docker Desktop application) or WSL (docker-ce binary). Rows indicate different targets that this container might want to communicate with.
-
-| **Target Location**     | Docker Desktop (Windows) | docker-ce (WSL) |
-|-------------------------|--------------------------|-----------------|
-| **Native Windows**      | `host.docker.internal`   | `OS_LOCAL_IP`   |
-| **Native WSL**          | `WSL_LOCAL_IP`           | `localhost`     |
-| **Parallel Container**  | `service_name`           | `service_name`  |
-| **External Container**  | `WSL_LOCAL_IP`           | `OS_LOCAL_IP`   |
-| **Same Container**      | `localhost`              | `localhost`     |
-
-### Makefile Commands for Docker
-
-You can safely run these commands even if your project doesn't use Docker.
-
-#### docker-detect
-Verify settings used for hostname mapping (diagnostic only).
-```bash
-VERBOSE=1 make docker-detect
-```
-
-#### docker-env
-Generate `.env.docker` with Docker-appropriate hostnames
-```bash
-VERBOSE=1 make docker-env
-```
-
-#### docker-appsettings
-Generate `appsettings.Docker.json` with Docker-appropriate hostnames.
-```bash
-VERBOSE=1 make docker-appsettings
-```
-
-### Makefile Helper Functions
-
-- `map_service()` - Map a hostname based on a given value and row / column labels.
-- `classify_value()` - Determine the row in hostname table by comparing the value to `WSL_LOCAL_IP` and `OS_LOCAL_IP`.
-- `choose_mode()` - Determine which hostname column (desktop | ce) to use by comparing `PYTHON_SIDE` to auto-detected runtime.
-- `detect_system()` - Detect whether Make is running on Windows (OS) or WSL.
-- `detect_container()` - Detect whether Make is running in a Docker container.
-- `replace_host_in_connstring()` - Modify a connection string to swap out the hostname only.
-
-
-
----
-
 ## Advanced Usage Guide
 
 ### Dockerfiles & Images
@@ -307,7 +246,7 @@ Volumes are data references inside a container to files on your host machine. Th
 docker volume rm $(docker volume ls -q | grep mysql)
 ```
 
-#### 7. Deleting EVERYTHING
+#### 7. Deleting EVERYTHING from Docker
 Sometimes Docker will stall indefinitely when building from a Dockerfile. The best solution is to delete all images, prune their data from disk, and restart your computer.
 
 Our make target purges all containers & networks `make docker-clean`, and all volumes & images `make docker-delete`, but usually you must manually restart WSL via PowerShell `wsl --shutdown` to fix it.
@@ -447,22 +386,61 @@ docker compose down -v
 
 ### 4. Docker Networks
 
-In order for containers to communicate with one another using hostname = `service_name`, they must be running on the same Docker Network. Since our code uses a mix of normal Docker and Compose commands, this poses a signicant issue.
+In order for containers to communicate with one another using hostname = `service_name`, they must be running on the same Docker Network. Since our code uses a mix of normal Docker and Compose commands, this poses a signicant issue and is addressed by our Make targets.
 
+#### Case 1) Docker Compose creates the network
 
+In our `docker-compose.yml`, all containers are created on the same network `default`. Without renaming this network manually to `capstone_default`, Docker Compose will auto-complete the network name as `parent-folder-name_default`.
+```yml
+services:
+  python_service:
+    networks:
+      - default
 
+  mysql_service:
+    networks:
+      default:
+        aliases:
+          - databases_service
+
+# Declare our docker network globally
+networks:
+  default:
+    name: capstone_default
+```
+Note that we additionally grant database containers the network alias `databases_service` which does not override the `mysql_service` name. Applications can also connect using `databases_service` as long as a port is specified.
+
+Once the network is created, the Make targets `docker-python` and `docker-blazor` will connect to an existing network called `capstone_default`.
+```bash
+docker network connect --alias python_service capstone_default container-python
+```
+
+This will fail if the container is already running, so we use `docker create` and `docker start` instead of the default `docker run`.
+
+#### Case 2) Makefile creates the Docker Network
+
+Our Make targets check if the `capstone_default` network exists, and then automatically create the network if it doesn't by calling `make docker-network`.
+
+This entails adding appropriate labels so Docker Compose will recognize it as a valid network and connect its own containers to our existing network.
+```bash
+docker network create \
+    --label com.docker.compose.network=default \
+    --label com.docker.compose.project=capstone \
+    capstone_default
+```
+
+#### Other Useful Commands
+List all Docker Networks:
 ```bash
 docker network ls
-docker ps -a
-docker compose ps -a
-docker network ls | grep capstone
+```
+Print the name of the network a container is running on:
+```bash
 docker inspect container-neo4j --format='{{range $net,$v := .NetworkSettings.Networks}}{{$net}} {{end}}'
-
 ```
 
 
-
-
+---
 
 # Understanding the Makefile
 
@@ -483,8 +461,65 @@ square brackets required to check equivalence - not required if the command retu
 for make, named args can be passed like make function ARG1="val" ARG2="val" etc - ARG1 and ARG2 are make variables so we use $(). and shell functions are like function val1 val2 and we use $$1 (or typically NAME=$$1 and $$NAME. We can also prepend args - but this create environment variables only set for that command. VAR1=0 VAR2=1 command
 
 
+---
 
-docker logs container-mysql 2>&1 | grep -i "root"
+## Environment Setup
+
+Here we describe how to configure the `.env` file for advanced Docker setups. For example, running all components inside Docker containers, communicating with externally-hosted containers, and using a combination of Docker Desktop and docker-ce.
+
+### Overview
+
+Docker enables deployment of our individual pipeline components to various locations across your system. By default, Python runs on WSL and Blazor runs on Windows - this means `.env` usually contains WSL-centric hostnames, and `/web-app/BlazorApp/appsettings.json` contains Windows-centric connection strings.
+
+When these processes are deployed to different system types, we need to change the hostnames in `.env` file. For example, if Neo4j is started from WSL, Python can access it using `NEO4J_HOST=localhost`. But if we deploy Python to a Docker container in Docker Desktop, this hostname must be changed to the local IP of WSL as seen from Windows, _e.g._ `NEO4J_HOST=172.30.63.202`.
+
+When communicating with another container in the same Docker network, we use the service names (the headers in `docker-compose.yml`, for example `container-python` could post data to `container-blazor` using `BLAZOR_HOST=blazor_service` and `http://blazor_service:5055/api/metrics`). The container names just are used to shorten docker commands.
+
+Refer to the conversion table below for specific network targets. Please note that `.env` is manually completed by referencing this table, and our current Makefile simply converts the hostnames to their Docker equivalents.
+
+### Network Hostnames Table
+
+This table displays the valid hostname (for any `*_HOST` in `.env`) when the current container is deployed to Windows (Docker Desktop application) or WSL (docker-ce binary). Rows indicate different targets that this container might want to communicate with.
+
+| **Target Location**     | Docker Desktop (Windows) | docker-ce (WSL) |
+|-------------------------|--------------------------|-----------------|
+| **Native Windows**      | `host.docker.internal`   | `OS_LOCAL_IP`   |
+| **Native WSL**          | `WSL_LOCAL_IP`           | `localhost`     |
+| **Parallel Container**  | `service_name`           | `service_name`  |
+| **External Container**  | `WSL_LOCAL_IP`           | `OS_LOCAL_IP`   |
+| **Same Container**      | `localhost`              | `localhost`     |
+
+### Makefile Commands for Docker
+
+You can safely run these commands even if your project doesn't use Docker.
+
+#### docker-detect
+Verify settings used for hostname mapping (diagnostic only).
+```bash
+VERBOSE=1 make docker-detect
+```
+
+#### docker-env
+Generate `.env.docker` with Docker-appropriate hostnames
+```bash
+VERBOSE=1 make docker-env
+```
+
+#### docker-appsettings
+Generate `appsettings.Docker.json` with Docker-appropriate hostnames.
+```bash
+VERBOSE=1 make docker-appsettings
+```
+
+### Makefile Helper Functions
+
+- `map_service()` - Map a hostname based on a given value and row / column labels.
+- `classify_value()` - Determine the row in hostname table by comparing the value to `WSL_LOCAL_IP` and `OS_LOCAL_IP`.
+- `choose_mode()` - Determine which hostname column (desktop | ce) to use by comparing `PYTHON_SIDE` to auto-detected runtime.
+- `detect_system()` - Detect whether Make is running on Windows (OS) or WSL.
+- `detect_container()` - Detect whether Make is running in a Docker container.
+- `replace_host_in_connstring()` - Modify a connection string to swap out the hostname only.
+
 
 
 

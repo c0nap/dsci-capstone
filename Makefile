@@ -374,6 +374,7 @@ docker-delete-volumes:
 docker-full-reset:
 	make docker-clean
 	make docker-delete
+	sudo service docker restart
 	echo "=== Full Docker cleanup complete - all containers, images, volumes, and networks removed! ==="
 ###############################################################################
 
