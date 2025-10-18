@@ -19,8 +19,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: build
-    env:
-      DEVTAG: ${{ github.run_id }}
     steps:
       # We need the Makefile to run make targets
       - name: Download code from repository
