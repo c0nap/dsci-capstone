@@ -199,24 +199,43 @@ docker-neo4j:
 ###############################################################################
 # Pulls the latest container images from GHCR, and gives them identical names to locally-generated images
 ###############################################################################
+.PHONY: docker-pull docker-pull-python docker-pull-blazor
 docker-pull:
 	make docker-pull-python
 	make docker-pull-blazor
 docker-pull-python:
 	# Python: pull, rename to local, and delete old names
-	docker pull ghcr.io/c0nap/dsci-cap-img-python-prod:latest
-	docker tag ghcr.io/c0nap/dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
+	docker pull ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest
+	docker tag ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
 	# Remove the GHCR tagged alias (keeps local image)
-	docker rmi ghcr.io/c0nap/dsci-cap-img-python-prod:latest
+	docker rmi ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest
 docker-pull-blazor:
 	# Blazor: pull, rename to local, and delete old names
-	docker pull ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
-	docker tag ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
+	docker pull ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest
+	docker tag ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
 	# Remove the GHCR tagged alias (keeps local image)
-	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
+	docker rmi ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest
 
 ###############################################################################
-# Creates the images locally using the latest Dockerfiles (for development)
+# Pulls images from our private namespace and gives them identical names to locally-generated images
+###############################################################################
+# DEVELOPMENT USE ONLY
+.PHONY: docker-pull-dev docker-pull-dev-python docker-pull-dev-blazor
+docker-pull-dev:
+	make docker-pull-dev-python
+	make docker-pull-dev-blazor
+docker-pull-dev-python:
+	docker pull ghcr.io/c0nap/dsci-cap-img-python-dev:latest
+docker-pull-dev-blazor:
+	docker pull ghcr.io/c0nap/dsci-cap-img-blazor-dev:latest
+docker-retag-dev-local:
+	docker tag ghcr.io/c0nap/dsci-cap-img-python-dev:latest dsci-cap-img-python-dev:latest
+	docker rmi ghcr.io/c0nap/dsci-cap-img-python-dev:latest
+	docker tag ghcr.io/c0nap/dsci-cap-img-blazor-dev:latest dsci-cap-img-blazor-dev:latest
+	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-dev:latest
+
+###############################################################################
+# Creates the images locally using the Dockerfiles (for development)
 ###############################################################################
 docker-build-dev:
 	make docker-build-dev-python
@@ -237,7 +256,7 @@ docker-build-dev-blazor:
 # Risks sharing secrets if used improperly - these are for automatic CI/CD only
 ###############################################################################
 # DO NOT USE
-.PHONY: docker-build-prod docker-build-dev-python docker-build-prod-blazor docker-retag-to-dev
+.PHONY: docker-build-prod docker-build-prod-python docker-build-prod-blazor docker-retag-to-dev
 docker-build-prod:
 	make docker-build-prod-python
 	make docker-build-prod-blazor
@@ -253,10 +272,9 @@ docker-build-prod-blazor:
 		--build-arg ENV_FILE=".env.dummy" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.Dummy.json \
 		-t dsci-cap-img-blazor-prod:latest .
-docker-retag-to-dev:
+docker-retag-prod-dev:
 	docker tag dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
 	docker tag dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
-	# keep the prod images - they will be used later in docker-publish
 
 ###############################################################################
 # Builds the latest container images, and attempt to push to this repository
@@ -268,22 +286,44 @@ docker-publish:
 	make docker-publish-python
 	make docker-publish-blazor
 docker-publish-python:
-	make docker-build-prod-python || exit 1  # Stop if build fails
-	# Python: tag for GHCR & push
-	docker tag dsci-cap-img-python-prod:latest ghcr.io/c0nap/dsci-cap-img-python-prod:latest
-	docker push ghcr.io/c0nap/dsci-cap-img-python-prod:latest
+	# Use a dummy environment, and stop if build fails
+	make docker-build-prod-python || exit 1
+	# Python: tag for GHCR & push PUBLIC
+	docker tag dsci-cap-img-python-prod:latest ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest
+	docker push ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest
 	# Remove the GHCR tagged alias (keeps local image)
-	docker rmi ghcr.io/c0nap/dsci-cap-img-python-prod:latest
+	docker rmi ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest
 docker-publish-blazor:
-	make docker-build-prod-blazor || exit 1  # Stop if build fails
-	# Blazor: tag for GHCR & push
-	docker tag dsci-cap-img-blazor-prod:latest ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
-	docker push ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
+	# Use a dummy environment, and stop if build fails
+	make docker-build-prod-blazor || exit 1
+	# Blazor: tag for GHCR & push PUBLIC
+	docker tag dsci-cap-img-blazor-prod:latest ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest
+	docker push ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest
 	# Remove the GHCR tagged alias (keeps local image)
-	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
+	docker rmi ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest
 
 
-
+###############################################################################
+# Push existing images to a private GHCR namespace.
+# wont work until authenticated using 'docker login'
+###############################################################################
+# DEVELOPMENT USE ONLY
+.PHONY: docker-push-dev docker-push-dev-python docker-push-dev-blazor
+docker-push-dev:
+	make docker-publish-python
+	make docker-publish-blazor
+docker-push-dev-python:
+	# Python: tag for GHCR & push
+	docker tag dsci-cap-img-python-dev:latest ghcr.io/c0nap/dsci-cap-img-python-dev:latest
+	docker push ghcr.io/c0nap/dsci-cap-img-python-dev:latest
+	# Remove the GHCR tagged alias (keeps local image)
+	docker rmi ghcr.io/c0nap/dsci-cap-img-python-dev:latest
+docker-push-dev-blazor:
+	# Blazor: tag for GHCR & push
+	docker tag dsci-cap-img-blazor-dev:latest ghcr.io/c0nap/dsci-cap-img-blazor-dev:latest
+	docker push ghcr.io/c0nap/dsci-cap-img-blazor-dev:latest
+	# Remove the GHCR tagged alias (keeps local image)
+	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-dev:latest
 
 
 

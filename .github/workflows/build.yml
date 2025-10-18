@@ -7,7 +7,7 @@ on:
         type: string
 
 jobs:
-  build-images:
+  update-private-images:
     runs-on: ubuntu-latest
     steps:
       - name: Initial setup
@@ -23,7 +23,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Pull outdated Docker images
         run: make docker-pull || true  # true in case images dont exist yet
@@ -46,13 +46,7 @@ jobs:
 
 
       # 4. Send these images over to the main CI/CD workflow
-      - name: Save images as artifacts
-        run: docker save dsci-cap-img-python-dev:latest dsci-cap-img-blazor-dev:latest -o images.tar
-      
-      - uses: actions/upload-artifact@v4
-        with:
-          name: docker-images
-          path: images.tar
-
-      # The images file will be auto-removed from this runner since the job ends here.
+      - name: Push images to a private GHCR namespace
+        if: success()
+        run: make docker-push-dev
 

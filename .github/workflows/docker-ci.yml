@@ -18,13 +18,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/download-artifact@v4
+
+      # Get Docker images from private namespace
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          name: docker-images
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
 
-
-      - name: Load pre-built images from artifact
-        run: docker load -i images.tar
+      - name: Pull updated Docker images
+        run: |
+          make docker-pull-dev
+          make docker-retag-dev-local
 
       - name: Start database containers
         run: make docker-all-dbs
