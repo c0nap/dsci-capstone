@@ -2,7 +2,7 @@ name: Build Job
 on:
   workflow_call:
     inputs:
-      environment:
+      private-namespace:
         required: true
         type: string
 
@@ -11,9 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Initial setup
-        run: |
-          echo "Deploying to ${{ inputs.environment }}"
-        #sudo apt-get update && sudo apt-get install -y make
+        run: echo "Deploying to ${{ inputs.private-namespace }} with image tag ${{ env.DEVTAG }}"
 
 
       # 1. Get public Docker images
