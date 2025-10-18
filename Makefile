@@ -118,7 +118,7 @@ docker-blazor-dev:
 ###############################################################################
 # Bypass the original pipeline and run pytests instead.
 ###############################################################################
-.PHONY: docker-test docker-test-dev docker-test-raw docker-all-tests docker-all
+.PHONY: docker-test docker-test-dev docker-test-raw docker-all-tests docker-all-main
 
 # Run pytests using existing container images.
 # Default to VERBY=0 and COLOR=1.
@@ -155,7 +155,7 @@ docker-all-tests:
 	make docker-test
 
 # Deploy everything to docker and run the full pipeline
-docker-all:
+docker-all-main:
 	make docker-all-dbs
 	make docker-blazor-silent
 	make docker-python
@@ -311,8 +311,8 @@ docker-publish-blazor:
 # DEVELOPMENT USE ONLY
 .PHONY: docker-push-dev docker-push-dev-python docker-push-dev-blazor
 docker-push-dev:
-	make docker-publish-python
-	make docker-publish-blazor
+	make docker-push-dev-python
+	make docker-push-dev-blazor
 docker-push-dev-python:
 	# Python: tag for GHCR & push
 	docker tag dsci-cap-img-python-dev:$(DEVTAG) ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)

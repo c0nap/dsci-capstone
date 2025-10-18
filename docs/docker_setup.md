@@ -127,7 +127,7 @@ make docker-python
 
 ### All-in-One:
 ```bash
-make docker-all
+make docker-all-main
 ```
 
 
@@ -184,6 +184,9 @@ List all images:
 ```bash
 docker images
 ```
+```bash
+docker images -f "dangling=true"
+```
 
 List all containers:
 ```bash
@@ -230,6 +233,11 @@ make docker-delete-images
 To delete a specific image:
 ```bash
 docker rmi <img_name>
+```
+
+To delete dangling images after a build fails:
+```bash
+docker image prune
 ```
 
 To delete all images manually:
