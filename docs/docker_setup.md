@@ -444,21 +444,35 @@ docker inspect container-neo4j --format='{{range $net,$v := .NetworkSettings.Net
 
 # Understanding the Makefile
 
-Target = name of the make command, e.g. make do-stuff, 'do-stuff' is target
-Recipe = body of make target
-Shell function = wrapped in define/endef for make, explicitly include in recipe with $(function_name_fn)
+### Terminology
 
-Makefile is POSIX-compliant to run in docker containers with only bin/sh, dont require bin/bash
+- `Target` - name of the make command, _e.g._ in `make do-stuff`, the make target is `do-stuff`
+- `Recipe` - body of a make target
+- `Shell function` - clearly defines parameters, can return an exit code `return 0` or a string `echo`, wrapped in define / endef so make targets can recognize it, and must explicitly include in a recipe with `$(function_name_fn)`
 
-using ONESHELL, semicolons are required only as part of control statements (if, for)
+- `POSIX` - a standard requiring systems to have basic shell functionality
+- `bin/sh` - the lowest-level shell available in all environments, expected to be universal and fully POSIX-compliant
+- `bin/bash` - uses a slightly different syntax which might not work on all systems
+- `ONESHELL` - a Makefile parameter to run each recipe in a single shell so helper functions persist and local variables remain in scope
+- `SILENT` - a Makefile parameter to disable command echo
+- `/dev/null` - will delete anything fed into it
+- `1>/dev/null` - will hide `stdout` (normal output of a function)
+- `2>/dev/null` - will hide `stderr` (errors resulting from a function)
 
-backslashes are required for 1 command split across multiple lines, or if we want to feed a variable directly into a function: VAR1=val \ VAR2=val \ command
+### Clean Syntax Tips
 
-square brackets required to check equivalence - not required if the command returns an exit code (echo, mv, etc)
+- The Makefile could potentially use `bin/bash` syntax, but we stick to `bin/sh` for universal compatibility with externally-sourced container images like `mysql`. 
+- When checking a condition using an `if` statement, single square brackets are required for comparisons `if [ "$$VAR" = "YES" ]; then`, but not if the command returns an exit code `if ! my-function; then`, this works for `echo`, `mv`, etc).
+- The `SILENT` flag means we never need to put `@` in front of lines to silence them.
+- The `ONESHELL` flag changes the syntax inside recipes, and semicolons are only required as part of control statements like `if` and `for`. 
+- Backslashes are required to split 1 command across multiple lines. Without `ONESHELL` they can also be used to feed a variable directly into a function: `VAR1=val \ VAR2=val \ command`.
+- `$(VAR)` is for Make variables defined usually in global scope with `VAR = value1 value2`. `$$VAR` is for Shell variables usually defined with no spaces `VAR=value1` within a recipe.
+- Named args can be passed with `make my-function ARG1="val-1" ARG2=2`. ARG1 and ARG2 are make variables so we use `$()` inside the recipe to let `my-function` use the passed values.
+- Values can be passed to shell functions with `my-function val1 val2`. Their values can be accessed using `$$1` or `$$2` depending on the argument order, but ususally the shell function should reassign them with names `VERBOSE=$$1` and `$$VERBOSE`.
+- We can also prepend args - but this creates environment variables only set for that command: `ARG1=1 ARG2=2 my-function`
 
-`$(VAR)` is for Make variables defined usually in global scope with `VAR = value1 value2`, `$$VAR` is for Shell variables usually defined with no spaces `VAR=value1` within a recipe
 
-for make, named args can be passed like make function ARG1="val" ARG2="val" etc - ARG1 and ARG2 are make variables so we use $(). and shell functions are like function val1 val2 and we use $$1 (or typically NAME=$$1 and $$NAME. We can also prepend args - but this create environment variables only set for that command. VAR1=0 VAR2=1 command
+
 
 
 ---
