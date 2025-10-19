@@ -2,19 +2,17 @@ name: Build Job
 on:
   workflow_call:
     inputs:
-      private-namespace:
-        required: true
-        type: string
       image-tag:
         required: true
         type: string
 
 jobs:
-  update-dev-images:
+  update-images:
     runs-on: ubuntu-latest
+    outputs:
+      artifact: ${{ steps.upload_images.outputs.artifact-id }}
+      secrets: ${{ steps.upload_secrets.outputs.artifact-id }}
     steps:
-      - name: Initial setup
-        run: echo "Deploying to ${{ inputs.private-namespace }} with image tag ${{ inputs.image-tag }}"
 
       # Speed up build process with Buildx
       - name: Set up Docker Buildx
@@ -28,14 +26,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
 
-      # 1. Get public Docker images
-      # Start from a checkpoint to speed up the build process.
+
+      # 1. Start from a checkpoint to speed up the build process.
       # Automatically retagged as "dev"
       - name: Pull last successful Docker images
-        run: make docker-pull || true  # true in case images dont exist yet
+        run: |
+          echo "🔹 Trying private GHCR images..."
+          if make docker-pull-dev; then
+            make docker-retag-dev-local DEVTAG=${{ inputs.image-tag }}
+            echo "✅ Pulled from private namespace."
+          else
+            echo "⚠️ Private pull failed, trying public images..."
+            if make docker-pull; then
+              echo "✅ Pulled from public namespace."
+            else
+              echo "🚫 No cached images found — continuing with rebuild."
+            fi
+          fi
 
-      
+
       # 2. Set up environment with latest source code
       - name: Download code from repository
         uses: actions/checkout@v4
@@ -44,6 +60,16 @@ jobs:
         run: |
           make env-dummy OUT=".env"
           make appsettings-dummy OUT="web-app/BlazorApp/appsettings.json" ENVF=".env"
+
+      - name: Upload dummy secrets artifacts
+        id: upload_secrets
+        uses: actions/upload-artifact@v4
+        with:
+          name: secrets-artifacts
+          path: |
+            .env
+            web-app/BlazorApp/appsettings.json
+          retention-days: 1
 
       
       # 3. Update the local Docker images with latest code
@@ -54,14 +80,13 @@ jobs:
 
 
       # 4. Send these images over to the main CI/CD workflow
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      # Faster than uploading + downloading with GHCR
+      - name: Upload images artifact
+        id: upload_images
+        uses: actions/upload-artifact@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          name: docker-images-ci
+          path: docker-images-ci.tar
+          retention-days: 1
 
-      - name: Push images to a private GHCR namespace
-        if: success()
-        run: make docker-push-dev DEVTAG=${{ inputs.image-tag }}
 

@@ -8,41 +8,53 @@ concurrency:  # Prevent multiple runs on rapid pushes
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+
 jobs:
   build:
     uses: ./.github/workflows/build.yml
+    secrets: inherit
+    with:
+      image-tag: ci
+
+  push:
+    uses: ./.github/workflows/push-dev.yml
+    needs: [build, test]
+    secrets: inherit
     with:
       private-namespace: c0nap
       image-tag: ci
-    secrets: inherit
+
 
   test:
     runs-on: ubuntu-latest
     needs: build
+    with:
+      registry: ghcr.io
+      username: ${{ github.actor }}
+      password: ${{ secrets.GHCR_PAT }}
+
     steps:
-      # We need the Makefile to run make targets
+      - run: echo "Downloading images from artifact ${{ needs.build.outputs.artifact }}"
+
+      # 1. Download artifacts
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: {{ needs.build.outputs.artifact }}
+
+      - name: Load Docker images
+        run: |
+          docker load < docker-images-ci.tar
+
+
+      # 2. Create test environment
       - name: Download code from repository
         uses: actions/checkout@v4
 
-      # Get Docker images from private namespace
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Download dummy secrets artifact
+        uses: actions/download-artifact@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
-
-      - name: Pull updated Docker images
-        run: |
-          make docker-pull-dev DEVTAG=ci
-          make docker-retag-dev-local DEVTAG=ci
-
-
-      # Create test environment, and run all PyTests
-      - name: Create secrets files with fake credentials
-        run: |
-          make env-dummy OUT=".env"
-          make appsettings-dummy OUT="web-app/BlazorApp/appsettings.json" ENVF=".env"
+          name: {{ jobs.build.outputs.secrets }}
 
       - name: Start database containers
         run: make docker-all-dbs
@@ -50,9 +62,13 @@ jobs:
       - name: Wait for databases to be ready
         run: sleep 20
 
+
+      # 3. Start web app and run all pytests
       - name: Start Blazor container in background
         run: make docker-blazor-silent
 
       - name: Run PyTests with existing images
         run: make docker-test VERBY=1 COLORS=1
+
+
 
