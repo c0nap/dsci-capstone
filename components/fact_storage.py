@@ -92,15 +92,16 @@ class GraphConnector(DatabaseConnector):
                 return False
     
             try:   # Create nodes, insert dummy data, and use get_dataframe
-                query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{self.graph_name}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
+                tmp_graph = "test_graph"
+                query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                 self.execute_query(query)
-                query = f"""CREATE (n1:TestPerson {{db: '{self.database_name}', kg: '{self.graph_name}', name: 'Alice', age: 30}})
-                            CREATE (n2:TestPerson {{db: '{self.database_name}', kg: '{self.graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
+                query = f"""CREATE (n1:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}', name: 'Alice', age: 30}})
+                            CREATE (n2:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}', name: 'Bob', age: 25}}) RETURN n1, n2"""
                 self.execute_query(query)
-                df = self.get_dataframe(self.graph_name)
+                df = self.get_dataframe(tmp_graph)
                 if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
                     return False
-                query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{self.graph_name}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
+                query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                 self.execute_query(query)
             except Exception as e:
                 Log.fail(Log.gr_db + Log.test_conn + Log.test_df, Log.msg_unknown_error, raise_error, e)
@@ -364,9 +365,12 @@ class GraphConnector(DatabaseConnector):
         RETURN s.name AS subject, type(r) AS relation, o.name AS object
         """
         try:
+            df = self.execute_query(query)
             # Always return a DataFrame with the 3 desired columns, even if empty or None
             cols = ["subject", "relation", "object"]
-            df = (self.execute_query(query) or DataFrame()).reindex(columns=cols)
+            if df is None:
+                df = DataFrame()
+            df = df.reindex(columns=cols)
 
             Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.", self.verbose)
             return df
