@@ -13,7 +13,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       private-namespace: c0nap
-      image-tag: ci-${{ github.run_id }}
+      image-tag: ci
     secrets: inherit
 
   test:
@@ -34,8 +34,8 @@ jobs:
 
       - name: Pull updated Docker images
         run: |
-          make docker-pull-dev DEVTAG="ci-${{ github.run_id }}"
-          make docker-retag-dev-local DEVTAG="ci-${{ github.run_id }}"
+          make docker-pull-dev DEVTAG=ci
+          make docker-retag-dev-local DEVTAG=ci
 
 
       # Create test environment, and run all PyTests
