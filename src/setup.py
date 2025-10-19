@@ -42,9 +42,9 @@ class Session:
         self.graph_db = GraphConnector(verbose=verbose)
 
         # TODO: Do not interact with these directly, provide them to EAV Model and Knowledge Graph classes
-        self.setup()
 
-    def setup(self):
+
+    def test_database_connections(self):
         """Configure the databases and verify they are working correctly."""
         self.relational_db.test_connection()
         self.docs_db.test_connection()
