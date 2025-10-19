@@ -59,7 +59,7 @@ class GraphConnector(DatabaseConnector):
 
     def test_connection(self, raise_error=True) -> bool:
         """Establish a basic connection to the Neo4j database.
-        @details  By default, Log.fail will raise an exception.
+        @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
         @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
@@ -79,8 +79,8 @@ class GraphConnector(DatabaseConnector):
                 if check_values([result[0][0], result[0][1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
                     return False
             except Exception as e:
-                Log.fail(Log.gr_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error, raise_error, e)
-                return False
+                if not raise_error: return False
+                raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
     
             try:   # Display useful information on existing databases
                 databases = self.get_unique(key="db")
@@ -88,8 +88,8 @@ class GraphConnector(DatabaseConnector):
                 graphs = self.get_unique(key="kg")
                 Log.success(Log.gr_db, Log.msg_result(graphs), self.verbose)
             except Exception as e:
-                Log.fail(Log.gr_db + Log.test_conn + Log.test_info, Log.msg_unknown_error, raise_error, e)
-                return False
+                if not raise_error: return False
+                raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
     
             try:   # Create nodes, insert dummy data, and use get_dataframe
                 tmp_graph = "test_graph"
@@ -104,8 +104,8 @@ class GraphConnector(DatabaseConnector):
                 query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                 self.execute_query(query)
             except Exception as e:
-                Log.fail(Log.gr_db + Log.test_conn + Log.test_df, Log.msg_unknown_error, raise_error, e)
-                return False
+                if not raise_error: return False
+                raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
     
             try:   # Test create/drop functionality with tmp database
                 tmp_db = f"test_db_{int(time())}"
@@ -118,12 +118,12 @@ class GraphConnector(DatabaseConnector):
                 self.change_database(working_database)
                 self.drop_database(tmp_db)
             except Exception as e:
-                Log.fail(Log.gr_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error, raise_error, e)
-                return False
+                if not raise_error: return False
+                raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
     
         except Exception as e:
-            Log.fail(Log.gr_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
-            return False
+            if not raise_error: return False
+            raise Log.Failure(Log.gr_db + Log.test_conn, Log.msg_unknown_error) from e
         # Finish with no errors = connection test successful
         Log.success(Log.gr_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
@@ -139,8 +139,8 @@ class GraphConnector(DatabaseConnector):
             # Automatically connected, just try a basic query
             db.cypher_query("RETURN 1")
         except Exception as e:
-            Log.fail(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
-            return False
+            if not raise_error: return False
+            raise Log.Failure(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from e
         Log.success(Log.gr_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
@@ -170,7 +170,7 @@ class GraphConnector(DatabaseConnector):
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
                 return df
         except Exception as e:
-            Log.fail(Log.gr_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
+            raise Log.Failure(Log.gr_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
 
 
     def _split_combined(self, multi_query: str) -> List[str]:
@@ -221,7 +221,7 @@ class GraphConnector(DatabaseConnector):
             Log.success(Log.gr_db + Log.get_df, Log.msg_good_graph(name, df), self.verbose)
             return df
         except Exception as e:
-            Log.fail(Log.gr_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
+            raise Log.Failure(Log.gr_db + Log.get_df, Log.msg_unknown_error) from e
         # If not found, warn but do not fail
         Log.warn(Log.gr_db + Log.get_df, Log.msg_bad_graph(name), self.verbose)
         return None
@@ -245,7 +245,7 @@ class GraphConnector(DatabaseConnector):
             Log.success(Log.gr_db + Log.get_unique, Log.msg_result(unique_values), self.verbose)
             return unique_values
         except Exception as e:
-            Log.fail(Log.gr_db + Log.get_unique, Log.msg_unknown_error, raise_error=True, other_error=e)
+            raise Log.Failure(Log.gr_db + Log.get_unique, Log.msg_unknown_error) from e
 
 
     def create_database(self, database_name: str):
@@ -262,7 +262,7 @@ class GraphConnector(DatabaseConnector):
 
             Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("created", database_name), self.verbose)
         except Exception as e:
-            Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string), raise_error=True, other_error=e)
+            raise Log.Failure(Log.gr_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string)) from e
 
     def drop_database(self, database_name: str):
         """Delete all nodes stored under a particular database name.
@@ -277,7 +277,7 @@ class GraphConnector(DatabaseConnector):
 
             Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name), self.verbose)
         except Exception as e:
-            Log.fail(Log.gr_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string), raise_error=True, other_error=e)
+            raise Log.Failure(Log.gr_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string)) from e
 
     def database_exists(self, database_name: str) -> bool:
         """Search for an existing database using the provided name.
@@ -331,7 +331,7 @@ class GraphConnector(DatabaseConnector):
             Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
             return df
         except Exception as e:
-            Log.fail(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})", raise_error=True, other_error=e)
+            raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
 
 
     def get_edge_counts(self, top_n: int = 10) -> DataFrame:
@@ -353,7 +353,7 @@ class GraphConnector(DatabaseConnector):
             Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.", self.verbose)
             return df
         except Exception as e:
-            Log.fail(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.", raise_error=True, other_error=e)
+            raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.") from e
 
 
     def get_all_triples(self) -> DataFrame:
@@ -375,7 +375,7 @@ class GraphConnector(DatabaseConnector):
             Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.", self.verbose)
             return df
         except Exception as e:
-            Log.fail(Log.gr_db + Log.kg, f"Failed to fetch all_triples DataFrame.", raise_error=True, other_error=e)
+            raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch all_triples DataFrame.") from e
 
 
 

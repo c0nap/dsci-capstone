@@ -73,6 +73,20 @@ class Log:
         else:
             print(text)
 
+
+    class Failure(RuntimeError):
+        def __init__(self, prefix: str = "ERROR", msg: str = ""):
+            self.prefix = prefix
+            self.msg = msg if msg else Log.msg_unknown_error
+            super().__init__(self.__str__())
+    
+        def __str__(self):
+            if Log.USE_COLORS:
+                return f"{Log.FAILURE_COLOR}{self.prefix}{Log.MSG_COLOR}{self.msg}{Log.WHITE}"
+            else:
+                return f"{self.prefix}{self.msg}"
+
+
     @staticmethod
     def success_legacy(msg: str = ""):
         """A legacy success message begins with a Green Plus.

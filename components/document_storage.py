@@ -57,7 +57,7 @@ class DocumentConnector(DatabaseConnector):
 
     def test_connection(self, raise_error=True) -> bool:
         """Establish a basic connection to the MongoDB database.
-        @details  By default, Log.fail will raise an exception.
+        @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
         @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
@@ -78,15 +78,15 @@ class DocumentConnector(DatabaseConnector):
                     if check_values([isinstance(result, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
                         return False
                 except Exception as e:
-                    Log.fail(Log.doc_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error, raise_error, e)
-                    return False
+                    if not raise_error: return False
+                    raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
         
                 try:   # Display useful information on existing databases
                     databases = db.client.list_database_names()
                     Log.success(Log.doc_db, Log.msg_result(databases), self.verbose)
                 except Exception as e:
-                    Log.fail(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error, raise_error, e)
-                    return False
+                    if not raise_error: return False
+                    raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
         
                 try:   # Create a collection, insert dummy data, and use get_dataframe
                     tmp_collection = f"test_collection_{int(time())}"
@@ -97,8 +97,8 @@ class DocumentConnector(DatabaseConnector):
                     check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
                     db.drop_collection(tmp_collection)
                 except Exception as e:
-                    Log.fail(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error, raise_error, e)
-                    return False
+                    if not raise_error: return False
+                    raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
         
                 try:   # Test create/drop functionality with tmp database
                     tmp_db = f"test_db_{int(time())}"
@@ -111,12 +111,12 @@ class DocumentConnector(DatabaseConnector):
                     self.change_database(working_database)
                     self.drop_database(tmp_db)
                 except Exception as e:
-                    Log.fail(Log.doc_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error, raise_error, e)
-                    return False
+                    if not raise_error: return False
+                    raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
     
         except Exception as e:
-            Log.fail(Log.doc_db + Log.test_conn, Log.msg_unknown_error, raise_error, e)
-            return False
+            if not raise_error: return False
+            raise Log.Failure(Log.doc_db + Log.test_conn, Log.msg_unknown_error) from e
         # Finish with no errors = connection test successful
         Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
@@ -135,8 +135,8 @@ class DocumentConnector(DatabaseConnector):
             with mongo_handle(host=self.connection_string, alias="check_conn") as db:
                 db.command({"ping": 1})
         except Exception as e:
-            Log.fail(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string), raise_error, e)
-            return False
+            if not raise_error: return False
+            raise Log.Failure(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from e
         Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
@@ -167,7 +167,7 @@ class DocumentConnector(DatabaseConnector):
                     try:
                         json_cmd_doc = json.loads(query)
                     except json.JSONDecodeError:
-                        Log.fail(Log.doc_db + Log.run_q, Log.msg_fail_parse("sanitized query", query, "JSON command object"), raise_error=True)
+                        raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_fail_parse("sanitized query", query, "JSON command object"))
         
                 # Execute via PyMongo
                 results = db.command(json_cmd_doc)
@@ -195,7 +195,7 @@ class DocumentConnector(DatabaseConnector):
                     Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
                     return df
         except Exception as e:
-            Log.fail(Log.doc_db + Log.run_q, Log.msg_bad_exec_q(query), raise_error=True, other_error=e)
+            raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
 
 
 
@@ -284,7 +284,7 @@ class DocumentConnector(DatabaseConnector):
                 Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
                 return df
         except Exception as e:
-            Log.fail(Log.doc_db + Log.get_df, Log.msg_unknown_error, raise_error=True, other_error=e)
+            raise Log.Failure(Log.doc_db + Log.get_df, Log.msg_unknown_error) from e
         # If not found, warn but do not fail
         Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
         return None
@@ -311,7 +311,7 @@ class DocumentConnector(DatabaseConnector):
                 self.change_database(working_database)
                 Log.success(Log.doc_db + Log.create_db, Log.msg_success_managed_db("created", database_name), self.verbose)
         except Exception as e:
-            Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string), raise_error=True, other_error=e)
+            raise Log.Failure(Log.doc_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string)) from e
 
 
     def drop_database(self, database_name: str):
@@ -326,7 +326,7 @@ class DocumentConnector(DatabaseConnector):
                 db.client.drop_database(database_name)
                 Log.success(Log.doc_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name), self.verbose)
         except Exception as e:
-            Log.fail(Log.doc_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string), raise_error=True, other_error=e)
+            raise Log.Failure(Log.doc_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string)) from e
 
 
     def database_exists(self, database_name: str) -> bool:
@@ -524,8 +524,7 @@ def _sanitize_document(doc: Dict, type_registry: Dict[str, Set[Type]]) -> Dict:
             try:
                 sanitized[key] = [str(value)]
             except Exception:
-                Log.fail(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str"))
-                continue
+                raise Log.Failure(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str"))
         else:
             # Track the original type before wrapping
             original_type = type(value)
@@ -592,8 +591,7 @@ def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
                 try:
                     sanitized[key] = [str(value)]
                 except Exception:
-                    Log.fail(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str"))
-                    continue
+                    raise Log.Failure(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str"))
             else:
                 # Track the original type
                 original_type = type(value)
