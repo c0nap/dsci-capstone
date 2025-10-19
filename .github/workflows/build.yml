@@ -16,9 +16,22 @@ jobs:
       - name: Initial setup
         run: echo "Deploying to ${{ inputs.private-namespace }} with image tag ${{ inputs.image-tag }}"
 
+      # Speed up build process with Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
 
       # 1. Get public Docker images
       # Start from a checkpoint to speed up the build process.
+      # Automatically retagged as "dev"
       - name: Pull last successful Docker images
         run: make docker-pull || true  # true in case images dont exist yet
 
@@ -35,8 +48,9 @@ jobs:
       
       # 3. Update the local Docker images with latest code
       # This creates the images with baked-in .env and appsettings.json files.
+      # gha = GitHub Actions, matches ANY suitable image layer regardless of image name.
       - name: Build new Docker images
-        run: make docker-build-dev
+        run: make docker-build-dev CACHE_ARGS="--cache-from type=gha --cache-to type=gha,mode=max"
 
 
       # 4. Send these images over to the main CI/CD workflow

@@ -215,6 +215,10 @@ docker-pull-blazor:
 	docker tag ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
 	# Remove the GHCR tagged alias (keeps local image)
 	docker rmi ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest
+docker-retag-prod-dev:
+	docker tag dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
+	docker tag dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
+
 
 ###############################################################################
 # Pulls images from our private namespace and gives them identical names to locally-generated images
@@ -238,15 +242,18 @@ docker-retag-dev-local:
 ###############################################################################
 # Creates the images locally using the Dockerfiles (for development)
 ###############################################################################
+DOCKER_BUILD := docker buildx build --load
+CACHE_ARGS ?=
+.PHONY: docker-build-dev docker-build-dev-python docker-build-dev-blazor
 docker-build-dev:
 	make docker-build-dev-python
 	make docker-build-dev-blazor
 docker-build-dev-python:
-	docker build -f Dockerfile.python \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.python \
 		--build-arg ENV_FILE=".env" \
 		-t dsci-cap-img-python-dev:latest .
 docker-build-dev-blazor:
-	docker build -f Dockerfile.blazor \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.blazor \
 		--build-arg ENV_FILE=".env" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.json \
 		-t dsci-cap-img-blazor-dev:latest .
@@ -263,19 +270,16 @@ docker-build-prod:
 	make docker-build-prod-blazor
 docker-build-prod-python:
 	make env-dummy  # Generates .env.dummy from .env.example
-	docker build -f Dockerfile.python \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.python \
 		--build-arg ENV_FILE=".env.dummy" \
 		-t dsci-cap-img-python-prod:latest .
 docker-build-prod-blazor:
 	make env-dummy  # Generates .env.dummy from .env.example
 	make appsettings-dummy  # Generates appsettings.Dummy.json from .env.dummy and appsettings.Example.json
-	docker build -f Dockerfile.blazor \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.blazor \
 		--build-arg ENV_FILE=".env.dummy" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.Dummy.json \
 		-t dsci-cap-img-blazor-prod:latest .
-docker-retag-prod-dev:
-	docker tag dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
-	docker tag dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
 
 ###############################################################################
 # Builds the latest container images, and attempt to push to this repository
