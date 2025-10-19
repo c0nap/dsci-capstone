@@ -35,17 +35,17 @@ def graph_db(session):
 @pytest.mark.order(1)
 def test_db_relational_minimal(relational_db):
     """Tests if the RelationalConnector has a valid connection string."""
-    assert relational_db.check_connection(log_source=Log.pytest_db, raise_error=True), "Minimal connection test on relational database failed."
+    relational_db.check_connection(log_source=Log.pytest_db, raise_error=True)
 
 @pytest.mark.order(2)
 def test_db_docs_minimal(docs_db):
     """Tests if the DocumentConnector has a valid connection string."""
-    assert docs_db.check_connection(log_source=Log.pytest_db, raise_error=True), "Minimal connection test on document database failed."
+    docs_db.check_connection(log_source=Log.pytest_db, raise_error=True)
 
 @pytest.mark.order(3)
 def test_db_graph_minimal(graph_db):
     """Tests if the GraphConnector has a valid connection string."""
-    assert graph_db.check_connection(log_source=Log.pytest_db, raise_error=True), "Minimal connection test on graph database failed."
+    graph_db.check_connection(log_source=Log.pytest_db, raise_error=True)
 
 
 # ------------------------------------------------------------------------------
@@ -54,17 +54,17 @@ def test_db_graph_minimal(graph_db):
 @pytest.mark.order(4)
 def test_db_relational_comprehensive(relational_db):
     """Tests if the GraphConnector is working as intended."""
-    assert relational_db.test_connection(), "Comprehensive connection test on relational database failed."
+    relational_db.test_connection(raise_error=True)
 
 @pytest.mark.order(5)
 def test_db_docs_comprehensive(docs_db):
     """Tests if the GraphConnector is working as intended."""
-    assert docs_db.test_connection(), "Comprehensive connection test on document database failed."
+    docs_db.test_connection(raise_error=True)
 
 @pytest.mark.order(6)
 def test_db_graph_comprehensive(graph_db):
     """Tests if the GraphConnector is working as intended."""
-    assert graph_db.test_connection(), "Comprehensive connection test on graph database failed."
+    graph_db.test_connection(raise_error=True)
 
 
 # ------------------------------------------------------------------------------
