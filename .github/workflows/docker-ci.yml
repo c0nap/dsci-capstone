@@ -35,7 +35,7 @@ jobs:
       - name: Pull updated Docker images
         run: |
           make docker-pull-dev DEVTAG="ci-${{ github.run_id }}"
-          make docker-retag-dev-local
+          make docker-retag-dev-local DEVTAG="ci-${{ github.run_id }}"
 
       - name: Start database containers
         run: make docker-all-dbs
