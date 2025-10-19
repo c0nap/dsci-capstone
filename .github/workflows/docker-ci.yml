@@ -37,6 +37,13 @@ jobs:
           make docker-pull-dev DEVTAG="ci-${{ github.run_id }}"
           make docker-retag-dev-local DEVTAG="ci-${{ github.run_id }}"
 
+
+      # Create test environment, and run all PyTests
+      - name: Create secrets files with fake credentials
+        run: |
+          make env-dummy OUT=".env"
+          make appsettings-dummy OUT="web-app/BlazorApp/appsettings.json" ENVF=".env"
+
       - name: Start database containers
         run: make docker-all-dbs
 
@@ -46,6 +53,6 @@ jobs:
       - name: Start Blazor container in background
         run: make docker-blazor-silent
 
-      - name: Run pytests with existing images
+      - name: Run PyTests with existing images
         run: make docker-test VERBY=1 COLORS=1
 
