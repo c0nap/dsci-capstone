@@ -237,18 +237,16 @@ class GraphConnector(DatabaseConnector):
         @raises RuntimeError  If the query fails to execute."""
         if self._created_dummy:
             self.check_connection(Log.get_unique, raise_error=True)
-        try:
-            query = f"""MATCH (n) WHERE n.{key} IS NOT NULL AND {self.NOT_DUMMY_()}
-                RETURN DISTINCT n.{key} AS {key} ORDER BY {key}"""
-            df = self.execute_query(query)
-            if df is None or df.empty:
-                return []
-            unique_values = df[key].tolist()
+
+        query = f"""MATCH (n) WHERE n.{key} IS NOT NULL AND {self.NOT_DUMMY_()}
+            RETURN DISTINCT n.{key} AS {key} ORDER BY {key}"""
+        df = self.execute_query(query)
+        if df is None or df.empty:
+            return []
+        unique_values = df[key].tolist()
             
-            Log.success(Log.gr_db + Log.get_unique, Log.msg_result(unique_values), self.verbose)
-            return unique_values
-        except Exception as e:
-            raise Log.Failure(Log.gr_db + Log.get_unique, Log.msg_unknown_error) from e
+        Log.success(Log.gr_db + Log.get_unique, Log.msg_result(unique_values), self.verbose)
+        return unique_values
 
 
     def create_database(self, database_name: str):
