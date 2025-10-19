@@ -36,12 +36,6 @@ class DocumentConnector(DatabaseConnector):
         @param verbose  Whether to print debug messages.
         """
         super().__init__(verbose)
-        self._route_db_name = True
-        """@brief  Whether to use the database name in the connection string.
-        @note  mongoengine.connect is used on-demand; we keep the convention of routing the DB name."""
-        self._auth_suffix = "?authSource=admin" + "&uuidRepresentation=standard"
-        """@brief  Additional options appended to the connection string.
-        @note  PyMongo requires a lookup location for user permissions, and MongoEngine will show warnings if 'uuidRepresentation' is not set."""
         database = os.getenv("DB_NAME")
         super().configure("MONGO", database)
 
@@ -52,6 +46,9 @@ class DocumentConnector(DatabaseConnector):
         """
         Log.success(Log.doc_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database), self.verbose)
         self.database_name = new_database
+        self._auth_suffix = "?authSource=admin" + "&uuidRepresentation=standard"
+        """@brief  Additional options appended to the connection string.
+        @note  PyMongo requires a lookup location for user permissions, and MongoEngine will show warnings if 'uuidRepresentation' is not set."""
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
 
 

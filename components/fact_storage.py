@@ -20,11 +20,6 @@ class GraphConnector(DatabaseConnector):
         """Creates a new Neo4j connector.
         @param verbose  Whether to print success and failure messages."""
         super().__init__(verbose)
-        self._route_db_name = False
-        """@brief  Whether to use the database name in the connection string.
-        @note  Neo4j is the exception; the free version has no concept of databases."""
-        self._auth_suffix = ""
-        """@brief  Additional options appended to the connection string. Not used here."""
         database = os.getenv("DB_NAME")
         super().configure("NEO4J", database)
         # Connect neomodel - URL never needs to change for Neo4j

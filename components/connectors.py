@@ -94,8 +94,6 @@ class DatabaseConnector(Connector):
         self.database_name = None
         ## URI of the database connection: syntax is engine://username:password@host:port/database.
         self.connection_string = None
-        ## Whether to use the database name in the connection string.
-        self._route_db_name = None
         ## Whether to print debug messages.
         self.verbose = verbose
 
@@ -258,11 +256,6 @@ class RelationalConnector(DatabaseConnector):
         @param specific_queries  A list of helpful SQL queries.
         """
         super().__init__(verbose)
-        self._route_db_name = True
-        """@brief  Whether to use the database name in the connection string.
-        @note  MySQL and PostgreSQL both ask for this. We avoided using databases that don't fit this pattern."""
-        self._auth_suffix = ""
-        """@brief  Additional options appended to the connection string. Not used here."""
         engine = os.getenv("DB_ENGINE")
         database = os.getenv("DB_NAME")
         super().configure(engine, database)
