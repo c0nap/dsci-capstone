@@ -292,68 +292,65 @@ class RelationalConnector(DatabaseConnector):
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
-        try:
-            # Check if connection string is valid
-            if self.check_connection(Log.test_conn, raise_error) == False:
-                return False
+        @raises RuntimeError  If raise_error is True and the connection test fails to complete.
+        """
+        # Check if connection string is valid
+        if self.check_connection(Log.test_conn, raise_error) == False:
+            return False
 
-            engine = create_engine(self.connection_string, poolclass=NullPool)
-            with engine.begin() as connection:
-                try:    # Run universal test queries
-                    result = connection.execute(text("SELECT 1")).fetchone()[0]
-                    if check_values([result], [1], self.verbose, Log.rel_db, raise_error) == False:
-                        return False
-                    result = self.execute_query("SELECT 'TWO';").iloc[0, 0]
-                    if check_values([result], ["TWO"], self.verbose, Log.rel_db, raise_error) == False:
-                        return False
-                    results = self.execute_combined("SELECT 3; SELECT 4;")
-                    if check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], self.verbose, Log.rel_db, raise_error) == False:
-                        return False
-                    result = self.execute_query("SELECT 5, 6;")
-                    if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error) == False:
-                        return False
-                except Exception as e:
-                    if not raise_error: return False
-                    raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
+        engine = create_engine(self.connection_string, poolclass=NullPool)
+        with engine.begin() as connection:
+            try:    # Run universal test queries
+                result = connection.execute(text("SELECT 1")).fetchone()[0]
+                if check_values([result], [1], self.verbose, Log.rel_db, raise_error) == False:
+                    return False
+                result = self.execute_query("SELECT 'TWO';").iloc[0, 0]
+                if check_values([result], ["TWO"], self.verbose, Log.rel_db, raise_error) == False:
+                    return False
+                results = self.execute_combined("SELECT 3; SELECT 4;")
+                if check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], self.verbose, Log.rel_db, raise_error) == False:
+                    return False
+                result = self.execute_query("SELECT 5, 6;")
+                if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error) == False:
+                    return False
+            except Exception as e:
+                if not raise_error: return False
+                raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
 
-                try:   # Display useful information on existing databases
-                    db_name = self.execute_query(self._specific_queries[0]).iloc[0, 0]
-                    check_values([db_name], [self.database_name], self.verbose, Log.rel_db, raise_error)
-                    databases = self.execute_query(self._specific_queries[1])
-                    Log.success(Log.rel_db, Log.msg_result(databases), self.verbose)
-                except Exception as e:
-                    if not raise_error: return False
-                    raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
+            try:   # Display useful information on existing databases
+                db_name = self.execute_query(self._specific_queries[0]).iloc[0, 0]
+                check_values([db_name], [self.database_name], self.verbose, Log.rel_db, raise_error)
+                databases = self.execute_query(self._specific_queries[1])
+                Log.success(Log.rel_db, Log.msg_result(databases), self.verbose)
+            except Exception as e:
+                if not raise_error: return False
+                raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
 
-                try:   # Create a table, insert dummy data, and use get_dataframe
-                    tmp_table = f"test_table_{int(time())}"
-                    self.execute_query(f"DROP TABLE IF EXISTS {tmp_table} CASCADE;")
-                    self.execute_query(f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');")
-                    df = self.get_dataframe(f"{tmp_table}")
-                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
-                    self.execute_query(f"DROP TABLE {tmp_table};")
-                except Exception as e:
-                    if not raise_error: return False
-                    raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
+            try:   # Create a table, insert dummy data, and use get_dataframe
+                tmp_table = f"test_table_{int(time())}"
+                self.execute_query(f"DROP TABLE IF EXISTS {tmp_table} CASCADE;")
+                self.execute_query(f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');")
+                df = self.get_dataframe(f"{tmp_table}")
+                check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
+                self.execute_query(f"DROP TABLE {tmp_table};")
+            except Exception as e:
+                if not raise_error: return False
+                raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
 
-                try:   # Test create/drop functionality with tmp database
-                    tmp_db = f"test_db_{int(time())}"
-                    working_database = self.database_name
-                    if self.database_exists(tmp_db):
-                        self.drop_database(tmp_db)
-                    self.create_database(tmp_db)
-                    self.change_database(tmp_db)
-                    self.execute_query("SELECT 1")
-                    self.change_database(working_database)
+            try:   # Test create/drop functionality with tmp database
+                tmp_db = f"test_db_{int(time())}"
+                working_database = self.database_name
+                if self.database_exists(tmp_db):
                     self.drop_database(tmp_db)
-                except Exception as e:
-                    if not raise_error: return False
-                    raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
+                self.create_database(tmp_db)
+                self.change_database(tmp_db)
+                self.execute_query("SELECT 1")
+                self.change_database(working_database)
+                self.drop_database(tmp_db)
+            except Exception as e:
+                if not raise_error: return False
+                raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
 
-        except Exception as e:
-            if not raise_error: return False
-            raise Log.Failure(Log.rel_db + Log.test_conn, Log.msg_unknown_error) from e
         # Finish with no errors = connection test successful
         Log.success(Log.rel_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
@@ -371,9 +368,9 @@ class RelationalConnector(DatabaseConnector):
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
                 connection.execute(text("SELECT 1"))
-        except Exception as e:
+        except Exception:  # These errors are usually nasty, so dont print the original.
             if not raise_error: return False
-            raise Log.Failure(Log.rel_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from e
+            raise Log.Failure(Log.rel_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string))
         Log.success(Log.rel_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
@@ -421,22 +418,22 @@ class RelationalConnector(DatabaseConnector):
         @return  Sorted DataFrame containing the requested data, or None
         @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
-        for table_name in (name, name.lower()):
-            try:
-                engine = create_engine(self.connection_string, poolclass=NullPool)
-                with engine.begin() as connection:
-                    table = Table(table_name, MetaData(), autoload_with=engine)
-                    result = connection.execute(select(table))
-                    df = DataFrame(result.fetchall(), columns=result.keys())
-                    df = df_natural_sorted(df)
 
-                    Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(table_name, df), self.verbose)
-                    return df
-            except NoSuchTableError:
-                # Postgres will auto-lowercase all table names. Give it one more try with the lowercase name.
-                continue
-            except Exception as e:
-                raise Log.Failure(Log.rel_db + Log.get_df, Log.msg_unknown_error) from e
+        # Postgres will auto-lowercase all table names.
+        if self.db_type == "POSTGRES":
+            name = name.lower()
+
+        engine = create_engine(self.connection_string, poolclass=NullPool)
+        with engine.begin() as connection:
+            table = Table(name, MetaData(), autoload_with=engine)
+            result = connection.execute(select(table))
+            df = DataFrame(result.fetchall(), columns=result.keys())
+            df = df_natural_sorted(df)
+
+            if df is not None and not df.empty:
+                Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(name, df), self.verbose)
+                return df
+        # If not found, warn but do not fail
         Log.warn(Log.rel_db + Log.get_df, Log.msg_bad_table(name), self.verbose)
         return None
 

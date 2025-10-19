@@ -57,63 +57,60 @@ class DocumentConnector(DatabaseConnector):
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
-        try:
-            # Check if connection string is valid
-            if self.check_connection(Log.test_conn, raise_error) == False:
-                return False
-            
-            with mongo_handle(host=self.connection_string, alias="test_conn") as db:
-                try:    # Run universal test queries - some require admin
-                    result = db.command({"ping": 1})
-                    if check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
-                        return False
-                    status = db.command({"serverStatus": 1})
-                    if check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
-                        return False
-                    result = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
-                    if check_values([isinstance(result, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
-                        return False
-                except Exception as e:
-                    if not raise_error: return False
-                    raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
+        @raises RuntimeError  If raise_error is True and the connection test fails to complete.
+        """
+        # Check if connection string is valid
+        if self.check_connection(Log.test_conn, raise_error) == False:
+            return False
         
-                try:   # Display useful information on existing databases
-                    databases = db.client.list_database_names()
-                    Log.success(Log.doc_db, Log.msg_result(databases), self.verbose)
-                except Exception as e:
-                    if not raise_error: return False
-                    raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
-        
-                try:   # Create a collection, insert dummy data, and use get_dataframe
-                    tmp_collection = f"test_collection_{int(time())}"
-                    if tmp_collection in db.list_collection_names():
-                        db.drop_collection(tmp_collection)
-                    db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
-                    df = self.get_dataframe(tmp_collection)
-                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
-                    db.drop_collection(tmp_collection)
-                except Exception as e:
-                    if not raise_error: return False
-                    raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
-        
-                try:   # Test create/drop functionality with tmp database
-                    tmp_db = f"test_db_{int(time())}"
-                    working_database = self.database_name
-                    if self.database_exists(tmp_db):
-                        self.drop_database(tmp_db)
-                    self.create_database(tmp_db)
-                    self.change_database(tmp_db)
-                    self.execute_query('{"ping": 1}')
-                    self.change_database(working_database)
-                    self.drop_database(tmp_db)
-                except Exception as e:
-                    if not raise_error: return False
-                    raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
+        with mongo_handle(host=self.connection_string, alias="test_conn") as db:
+            try:    # Run universal test queries - some require admin
+                result = db.command({"ping": 1})
+                if check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
+                    return False
+                status = db.command({"serverStatus": 1})
+                if check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
+                    return False
+                result = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
+                if check_values([isinstance(result, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
+                    return False
+            except Exception as e:
+                if not raise_error: return False
+                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
     
-        except Exception as e:
-            if not raise_error: return False
-            raise Log.Failure(Log.doc_db + Log.test_conn, Log.msg_unknown_error) from e
+            try:   # Display useful information on existing databases
+                databases = db.client.list_database_names()
+                Log.success(Log.doc_db, Log.msg_result(databases), self.verbose)
+            except Exception as e:
+                if not raise_error: return False
+                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
+    
+            try:   # Create a collection, insert dummy data, and use get_dataframe
+                tmp_collection = f"test_collection_{int(time())}"
+                if tmp_collection in db.list_collection_names():
+                    db.drop_collection(tmp_collection)
+                db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
+                df = self.get_dataframe(tmp_collection)
+                check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
+                db.drop_collection(tmp_collection)
+            except Exception as e:
+                if not raise_error: return False
+                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
+    
+            try:   # Test create/drop functionality with tmp database
+                tmp_db = f"test_db_{int(time())}"
+                working_database = self.database_name
+                if self.database_exists(tmp_db):
+                    self.drop_database(tmp_db)
+                self.create_database(tmp_db)
+                self.change_database(tmp_db)
+                self.execute_query('{"ping": 1}')
+                self.change_database(working_database)
+                self.drop_database(tmp_db)
+            except Exception as e:
+                if not raise_error: return False
+                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
+    
         # Finish with no errors = connection test successful
         Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
@@ -131,9 +128,9 @@ class DocumentConnector(DatabaseConnector):
         try:
             with mongo_handle(host=self.connection_string, alias="check_conn") as db:
                 db.command({"ping": 1})
-        except Exception as e:
+        except Exception:  # These errors are usually nasty, so dont print the original.
             if not raise_error: return False
-            raise Log.Failure(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from e
+            raise Log.Failure(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string))
         Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
@@ -194,20 +191,6 @@ class DocumentConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
 
-
-
-# points that need attention:
-#   - Single value vs list → Wrap single values as lists before flattening.
-#   - Single dict vs list of dicts → Wrap single dicts in a list for uniformity.
-#   - Nested fields of varying depth → Convert strings to dicts with a default key if expected to be nested.
-#   - Heterogeneous array contents → Standardize array element types across documents.
-#   - Optional future nesting → Recursively flatten arrays of dicts for deeper levels.
-#   - split_combined: multi-line comments?
-# 
-# Points that are already handled:
-#   - Missing fields → Pandas fills NaN.
-#   - Sparse arrays → NaN for missing positions.
-#   - Empty arrays → works, no action needed.
 
 
     def _split_combined(self, multi_query: str) -> list[str]:
@@ -271,17 +254,15 @@ class DocumentConnector(DatabaseConnector):
         @return  DataFrame containing the requested data, or None
         @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
-        try:
-            with mongo_handle(host=self.connection_string, alias="get_df") as db:
-                # Results will be a list of documents
-                docs = list(db[name].find({}))
-                df = _docs_to_df(docs)
-                df = df_natural_sorted(df, ignored_columns=['_id'])
+        with mongo_handle(host=self.connection_string, alias="get_df") as db:
+            # Results will be a list of documents
+            docs = list(db[name].find({}))
+            df = _docs_to_df(docs)
+            df = df_natural_sorted(df, ignored_columns=['_id'])
 
+            if df is not None and not df.empty:
                 Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
                 return df
-        except Exception as e:
-            raise Log.Failure(Log.doc_db + Log.get_df, Log.msg_unknown_error) from e
         # If not found, warn but do not fail
         Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
         return None
