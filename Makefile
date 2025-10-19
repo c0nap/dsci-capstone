@@ -234,9 +234,9 @@ docker-pull-dev-python:
 docker-pull-dev-blazor:
 	docker pull ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG)
 docker-retag-dev-local:
-	docker tag ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG) dsci-cap-img-python-dev:$(DEVTAG)
+	docker tag ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG) dsci-cap-img-python-dev:latest
 	docker rmi ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)
-	docker tag ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG) dsci-cap-img-blazor-dev:$(DEVTAG)
+	docker tag ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG) dsci-cap-img-blazor-dev:latest
 	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG)
 
 ###############################################################################
@@ -319,13 +319,13 @@ docker-push-dev:
 	make docker-push-dev-blazor
 docker-push-dev-python:
 	# Python: tag for GHCR & push
-	docker tag dsci-cap-img-python-dev:$(DEVTAG) ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)
+	docker tag dsci-cap-img-python-dev:latest ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)
 	docker push ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)
 	# Remove the GHCR tagged alias (keeps local image)
 	docker rmi ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)
 docker-push-dev-blazor:
 	# Blazor: tag for GHCR & push
-	docker tag dsci-cap-img-blazor-dev:$(DEVTAG) ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG)
+	docker tag dsci-cap-img-blazor-dev:latest ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG)
 	docker push ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG)
 	# Remove the GHCR tagged alias (keeps local image)
 	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG)
