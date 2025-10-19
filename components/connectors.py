@@ -370,7 +370,7 @@ class RelationalConnector(DatabaseConnector):
                 connection.execute(text("SELECT 1"))
         except Exception:  # These errors are usually nasty, so dont print the original.
             if not raise_error: return False
-            raise Log.Failure(Log.rel_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string))
+            raise Log.Failure(Log.rel_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
         Log.success(Log.rel_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
