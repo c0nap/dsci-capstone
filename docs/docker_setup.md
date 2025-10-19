@@ -262,7 +262,24 @@ Our make target purges all containers & networks `make docker-clean`, and all vo
 make docker-full-reset
 ```
 
+### 8. Cleaning up after Docker
 
+(Optional) Inspect WSL for unnecessary files:
+```bash
+sudo apt install ncdu
+sudo ncdu /var/lib
+```
+
+Delete any unused containers or images from Docker:
+```bash
+docker system prune
+```
+
+Downsize WSL once the space is freed (Windows 11 may have `wsl --compact` instead):
+```powershell
+wsl --shutdown
+Optimize-VHD -Path "$env:LOCALAPPDATA\Packages\CanonicalGroupLimited.UbuntuonWindows_*\LocalState\ext4.vhdx" -Mode Full
+```
 
 
 # Docker Compose
