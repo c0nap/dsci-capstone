@@ -2,6 +2,9 @@ name: Push Job
 on:
   workflow_call:
     inputs:
+      artifact-name:
+        required: true
+        type: string
       private-namespace:
         required: true
         type: string
@@ -19,7 +22,7 @@ jobs:
       - name: Download Docker image artifact
         uses: actions/download-artifact@v4
         with:
-          name: {{ jobs.build }}
+          name: ${{ inputs.artifact-name }}
 
       - name: Load Docker images
         run: |
@@ -34,6 +37,5 @@ jobs:
           password: ${{ secrets.GHCR_PAT }}
 
       - name: Push images to a private GHCR namespace
-        if: success()
         run: make docker-push-dev DEVTAG=${{ inputs.image-tag }}
 
