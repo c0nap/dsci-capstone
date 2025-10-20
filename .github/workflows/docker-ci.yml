@@ -14,7 +14,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
-      image-tag: ci
+      image-tag: ${{ github.event.pull_request.number && format('{0}-pr-{1}', github.base_ref, github.event.pull_request.number) || 'manual-run' }}
 
   push:
     uses: ./.github/workflows/push-dev.yml
@@ -23,7 +23,7 @@ jobs:
     with:
       artifact-name: ${{ needs.build.outputs.artifact }}
       private-namespace: c0nap
-      image-tag: ci
+      image-tag: ${{ github.event.pull_request.number && format('{0}-pr-{1}', github.base_ref, github.event.pull_request.number) || 'manual-run' }}
 
 
   test:

@@ -62,9 +62,10 @@ jobs:
         run: make docker-build-dev CACHE_ARGS="--cache-from type=gha --cache-to type=gha,mode=max"
 
       - name: Save Docker images to tarball
-        run: docker save -o docker-images-ci.tar \
-          dsci-cap-img-python-dev:latest \
-          dsci-cap-img-blazor-dev:latest
+        run: |
+          docker save -o docker-images-ci.tar \
+            dsci-cap-img-python-dev:latest \
+            dsci-cap-img-blazor-dev:latest
 
       # 4. Send these images over to the main CI/CD workflow
       # Faster than uploading + downloading with GHCR
