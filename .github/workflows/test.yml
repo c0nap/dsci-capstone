@@ -20,11 +20,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
-          path: .
 
       - name: Load Docker images
         run: |
-          docker load < docker-images-ci.tar
+          docker load < docker-images-ci/docker-images-ci.tar
 
 
       # 2. Create test environment
