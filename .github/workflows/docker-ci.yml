@@ -16,6 +16,14 @@ jobs:
     with:
       image-tag: ${{ github.event.pull_request.number && format('{0}-pr-{1}', github.base_ref, github.event.pull_request.number) || 'manual-run' }}
 
+  test:
+    uses: ./.github/workflows/test.yml
+    needs: build
+    secrets: inherit
+    with:
+      artifact-name: ${{ needs.build.outputs.artifact }}
+      secrets-name: ${{ needs.build.outputs.secrets }}
+
   push:
     uses: ./.github/workflows/push-dev.yml
     needs: test
@@ -24,47 +32,3 @@ jobs:
       artifact-name: ${{ needs.build.outputs.artifact }}
       private-namespace: c0nap
       image-tag: ${{ github.event.pull_request.number && format('{0}-pr-{1}', github.base_ref, github.event.pull_request.number) || 'manual-run' }}
-
-
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - run: echo "Downloading images from artifact ${{ needs.build.outputs.artifact }}"
-
-      # 1. Download artifacts
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build.outputs.artifact }}
-
-      - name: Load Docker images
-        run: |
-          docker load < docker-images-ci.tar
-
-
-      # 2. Create test environment
-      - name: Download code from repository
-        uses: actions/checkout@v4
-
-      - name: Download dummy secrets artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build.outputs.secrets }}
-
-      - name: Start database containers
-        run: make docker-all-dbs
-
-      - name: Wait for databases to be ready
-        run: sleep 20   # Postgres, MySQL, MongoDB, Neo4j
-
-
-      # 3. Start web app and run all pytests
-      - name: Start Blazor container in background
-        run: make docker-blazor-silent
-
-      - name: Run PyTests with existing images
-        run: make docker-test VERBY=1 COLORS=1
-
-
-
