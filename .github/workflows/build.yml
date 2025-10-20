@@ -5,6 +5,11 @@ on:
       image-tag:
         required: true
         type: string
+    outputs:
+      artifact:
+        value: ${{ jobs.update-images.outputs.artifact }}
+      secrets:
+        value: ${{ jobs.update-images.outputs.secrets }}
 
 jobs:
   update-images:

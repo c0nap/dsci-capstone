@@ -22,8 +22,7 @@ jobs:
           name: ${{ inputs.artifact-name }}
 
       - name: Load Docker images
-        run: |
-          docker load < ${{ inputs.artifact-name }}/docker-images-ci.tar
+        run: docker load < ${{ inputs.artifact-name }}/docker-images-ci.tar
 
 
       # 2. Create test environment

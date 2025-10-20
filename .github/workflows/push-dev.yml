@@ -25,8 +25,7 @@ jobs:
           name: ${{ inputs.artifact-name }}
 
       - name: Load Docker images
-        run: |
-          docker load < docker-images-ci/docker-images-ci.tar
+        run: docker load < ${{ inputs.artifact-name }}/docker-images-ci.tar
 
       # 2. Upload images to GHCR
       - name: Log in to GitHub Container Registry
