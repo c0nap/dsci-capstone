@@ -20,9 +20,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
+          path: .
 
       - name: Load Docker images
-        run: docker load < ${{ inputs.artifact-name }}/docker-images-ci.tar
+        run: docker load < docker-images-ci.tar
 
 
       # 2. Create test environment
@@ -33,9 +34,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.secrets-name }}
+          path: .
 
-      - name: Unpack secrets artifact
-        run: mv ./${{ inputs.secrets-name }}/* .
+      #- name: Unpack secrets artifact
+      #  run: mv ./${{ inputs.secrets-name }}/* .
 
       - name: Start database containers
         run: make docker-all-dbs
