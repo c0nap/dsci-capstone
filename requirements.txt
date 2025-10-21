@@ -6,6 +6,7 @@ pytest-order
 sqlparse
 pypandoc
 lxml
+datasets
 
 # Database drivers
 sqlalchemy
