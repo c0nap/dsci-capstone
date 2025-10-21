@@ -25,6 +25,25 @@ services:
       - "5055:5055"
 
 
+  questeval_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - METRIC=questeval
+    ports: ["5001:5001"]
+
+  bookscore_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - METRIC=bookscore
+    ports: ["5002:5002"]
+
+
+
+
   # Meta-service to orchestrate all DB containers at once
   databases_service:
     container_name: container-databases

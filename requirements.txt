@@ -1,16 +1,13 @@
 # Core dependencies
-numpy==1.26.4
-pandas==1.5.3  # compatible with numpy 1.23
-evaluate==0.4.0
-booookscore==0.1.3
 python-dotenv
 pytest
 pytest-order
+pandas
 sqlparse
 pypandoc
 lxml
 rapidfuzz
-git+https://github.com/ThomasScialom/QuestEval.git
+evaluate
 
 # Database drivers
 sqlalchemy
