@@ -13,9 +13,6 @@ jobs:
       - run: echo "Deploying to '${{ inputs.public-namespace }}' with image tag 'latest'"
 
       # Initial setup
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -24,7 +21,10 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Download code from repository
+        uses: actions/checkout@v4
 
 
       # Speed up rebuild by starting from the last public checkpoint
