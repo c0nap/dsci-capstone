@@ -13,7 +13,7 @@ jobs:
   run-all-pytest:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Downloading images from artifact ${{ needs.build.outputs.artifact }}"
+      - run: echo "Downloading images from artifact ${{ inputs.artifact-name }}"
 
       # 1. Download artifacts
       - name: Download Docker image artifact
