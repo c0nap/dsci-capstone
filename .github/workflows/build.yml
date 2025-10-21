@@ -64,8 +64,8 @@ jobs:
         with:
           name: secret-files
           path: |
-            ./.env
-            ./web-app/BlazorApp/appsettings.json
+            **/.env
+            web-app/BlazorApp/appsettings.json
           retention-days: 1
 
       
