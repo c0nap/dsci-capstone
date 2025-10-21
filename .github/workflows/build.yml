@@ -59,13 +59,14 @@ jobs:
           make env-dummy OUT=".env"
           make appsettings-dummy OUT="web-app/BlazorApp/appsettings.json" ENVF=".env"
 
+      - name: Package secrets
+        run: zip -r secret-files.zip .env web-app/BlazorApp/appsettings.json
+
       - name: Upload dummy secrets artifact
         uses: actions/upload-artifact@v4
         with:
           name: secret-files
-          path: |
-            **/.env
-            web-app/BlazorApp/appsettings.json
+          path: secret-files.zip
           retention-days: 1
 
       

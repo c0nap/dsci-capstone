@@ -36,8 +36,8 @@ jobs:
           name: ${{ inputs.secrets-name }}
           path: .
 
-      #- name: Unpack secrets artifact
-      #  run: mv ./${{ inputs.secrets-name }}/* .
+      - name: Unpack secrets artifact
+        run: unzip -o secret-files.zip
 
       - name: Start database containers
         run: make docker-all-dbs
