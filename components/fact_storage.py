@@ -5,7 +5,7 @@ from pandas import DataFrame, option_context
 import re
 from src.util import check_values, df_natural_sorted, Log
 from time import time
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 
 class GraphConnector(DatabaseConnector):
@@ -68,11 +68,11 @@ class GraphConnector(DatabaseConnector):
             result, _ = db.cypher_query("RETURN 1")
             if check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error) == False:
                 return False
-            result, _ = db.cypher_query("RETURN 'TWO'")
-            if check_values([result[0][0]], ["TWO"], self.verbose, Log.gr_db, raise_error) == False:
+            result = self.execute_query("RETURN 'TWO'", filter_results=False)
+            if check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.gr_db, raise_error) == False:
                 return False
-            result, _ = db.cypher_query("RETURN 5, 6")
-            if check_values([result[0][0], result[0][1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
+            result = self.execute_query("RETURN 5, 6", filter_results=False)
+            if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
                 return False
         except Exception as e:
             if not raise_error:
@@ -92,15 +92,15 @@ class GraphConnector(DatabaseConnector):
         try:  # Create nodes, insert dummy data, and use get_dataframe
             tmp_graph = "test_graph"
             query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
-            self.execute_query(query)
+            self.execute_query(query, filter_results=False)
             query = f"""CREATE (n1:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}', name: 'Alice', age: 30}})
                         CREATE (n2:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}', name: 'Bob', age: 25}}) RETURN n1, n2"""
-            self.execute_query(query)
+            self.execute_query(query, filter_results=False)
             df = self.get_dataframe(tmp_graph)
             if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
                 return False
             query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
-            self.execute_query(query)
+            self.execute_query(query, filter_results=False)
         except Exception as e:
             if not raise_error:
                 return False
@@ -147,7 +147,7 @@ class GraphConnector(DatabaseConnector):
             self._created_dummy = True
         return True
 
-    def execute_query(self, query: str) -> Optional[DataFrame]:
+    def execute_query(self, query: str, filter_results: bool = True) -> Optional[DataFrame]:
         """Send a single Cypher query to Neo4j.
         @note  If a result is returned, it will be converted to a DataFrame.
         @param query  A single query to perform on the database.
@@ -156,6 +156,8 @@ class GraphConnector(DatabaseConnector):
         """
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
         result = super().execute_query(query)
+        if not query:
+            return None
         if not self._is_single_query(query):
             return result
         # Derived classes MUST implement single-query execution.
@@ -163,8 +165,12 @@ class GraphConnector(DatabaseConnector):
             self.check_connection(Log.run_q, raise_error=True)
         try:
             results, meta = db.cypher_query(query)
-            if not results:
-                return None
+            if filter_results:
+                results, meta = filter_valid(results, meta, self.database_name, self.graph_name)
+            elif "create" in query.lower() and "return" in query.lower():
+                query = self.TAG_NODES_(results)
+                if query:
+                    db.cypher_query(query)
             df = DataFrame(results, columns=[m for m in meta])
 
             if df is None or df.empty:
@@ -178,6 +184,7 @@ class GraphConnector(DatabaseConnector):
 
     def _split_combined(self, multi_query: str) -> List[str]:
         """Divides a string into non-divisible CQL queries, ignoring comments.
+        @note  Will NOT handle semicolons inside strings.
         @param multi_query  A string containing multiple queries.
         @return  A list of single-query strings."""
         # 1. Remove single-line comments
@@ -202,10 +209,12 @@ class GraphConnector(DatabaseConnector):
         working_graph = self.graph_name
         self.change_graph(name)
         # Get all nodes in the specified graph
-        query = f"MATCH (n {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} RETURN n"
-        results, _ = db.cypher_query(query)
+        query = f"MATCH (n) RETURN n"
+        results = self.execute_query(query, filter_results=True)
         self.change_graph(working_graph)
-
+        if results is None:
+            return None
+        
         # Create a row for each node with attributes as columns - might be unbalanced
         rows = []
         for record in results:
@@ -238,7 +247,7 @@ class GraphConnector(DatabaseConnector):
 
         query = f"""MATCH (n) WHERE n.{key} IS NOT NULL AND {self.NOT_DUMMY_()}
             RETURN DISTINCT n.{key} AS {key} ORDER BY {key}"""
-        df = self.execute_query(query)
+        df = self.execute_query(query, filter_results=False)
         if df is None or df.empty:
             return []
         unique_values = df[key].tolist()
@@ -275,9 +284,28 @@ class GraphConnector(DatabaseConnector):
             query = f"MATCH (n) WHERE n.db = '{database_name}' DETACH DELETE n"
             self.execute_query(query)
 
-            Log.success(Log.gr_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name), self.verbose)
+            Log.success(Log.gr_db + Log.drop_db, Log.msg_success_managed_db("dropped", database_name), self.verbose)
         except Exception as e:
-            raise Log.Failure(Log.gr_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string)) from e
+            raise Log.Failure(Log.gr_db + Log.drop_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string)) from e
+
+    def drop_graph(self, graph_name: str):
+        """Delete all nodes stored under a particular graph name.
+        @param graph_name  The name of a graph in the current database.
+        @raises RuntimeError  If we fail to drop the target graph for any reason."""
+        if self._created_dummy:
+            self.check_connection(Log.drop_gr, raise_error=True)
+        try:
+            # Result includes any dummy nodes
+            working_graph = self.graph_name
+            self.change_graph(name)
+            query = f"MATCH (n {self.SAME_DB_KG_()}) DETACH DELETE n"
+            self.execute_query(query)
+            self.change_graph(working_graph)
+
+            Log.success(Log.gr_db + Log.drop_gr, Log.msg_success_managed_gr("dropped", graph_name), self.verbose)
+        except Exception as e:
+            raise Log.Failure(Log.gr_db + Log.drop_gr, Log.msg_fail_manage_gr("drop", graph_name, self.connection_string)) from e
+
 
     def database_exists(self, database_name: str) -> bool:
         """Search for an existing database using the provided name.
@@ -287,7 +315,7 @@ class GraphConnector(DatabaseConnector):
             WHERE n.db = '{database_name}'
             RETURN count(n) AS count"""
         # Result includes multiple collections & any dummy nodes
-        result = self.execute_query(query)
+        result = self.execute_query(query, filter_results=False)
         if result is None:
             return False
         count = result.iloc[0, 0]
@@ -297,7 +325,7 @@ class GraphConnector(DatabaseConnector):
         """Delete the initial dummy node from the database.
         @note  Call this method whenever real data is being added to avoid pollution."""
         query = f"MATCH (n) WHERE {self.IS_DUMMY_()} DETACH DELETE n"
-        self.execute_query(query)
+        self.execute_query(query, filter_results=False)
 
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
@@ -328,7 +356,7 @@ class GraphConnector(DatabaseConnector):
         RETURN s, r, o"""
 
         try:
-            df = self.execute_query(query)
+            df = self.execute_query(query, filter_results=False)
             if df is not None:
                 Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
         except Exception as e:
@@ -349,7 +377,7 @@ class GraphConnector(DatabaseConnector):
         LIMIT {top_n}
         RETURN node_name, edge_count"""
         try:
-            df = self.execute_query(query)
+            df = self.execute_query(query, filter_results=False)
             Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.", self.verbose)
             return df
         except Exception as e:
@@ -364,7 +392,7 @@ class GraphConnector(DatabaseConnector):
         RETURN s.name AS subject, type(r) AS relation, o.name AS object
         """
         try:
-            df = self.execute_query(query)
+            df = self.execute_query(query, filter_results=False)
             # Always return a DataFrame with the 3 desired columns, even if empty or None
             cols = ["subject", "relation", "object"]
             if df is None:
@@ -418,3 +446,74 @@ class GraphConnector(DatabaseConnector):
         @return  A string containing Cypher code.
         """
         return f"{{db: '{self.database_name}', kg: '{self.graph_name}'}}"
+
+
+    def TAG_NODES_(self, results):
+        """Generate Cypher to tag returned nodes with database and graph names.
+        @details
+            - For use after a CREATE ... RETURN query.
+            - Collects node IDs from results and builds a SET statement.
+        @param results  Result list returned by db.cypher_query().
+        @return  Cypher query string to update db/kg fields, or None if no nodes found.
+        """
+        print(results)
+        print(results[0])
+        node_ids = [
+            obj["id"]
+            for row in results
+            for obj in row
+            if isinstance(obj, dict) and "id" in obj
+        ]
+        if not node_ids:
+            return None
+        print(node_ids)
+    
+        return f"""
+            MATCH (n) WHERE id(n) IN {node_ids}
+            SET n.db = "{self.database_name}",
+                n.kg = "{self.graph_name}"
+        """
+
+
+
+
+def filter_valid(results: List[Tuple], meta: List[str], db_name: str, kg_name: str) -> Tuple:
+    """Filter Cypher query results (nodes or relationships) by database and graph context.
+    @details
+        - Keeps entities where 'db' and 'kg' match the given names.
+        - Excludes dummy nodes (_init = true).
+        - Relationships are valid if they or either endpoint match.
+        - Removes meta columns with no valid entities.
+    @param results  List of tuples from db.cypher_query().
+    @param meta  Column names corresponding to each result element.
+    @param db_name  Database name to match.
+    @param kg_name  Graph name to match.
+    @return  Tuple (filtered_results, filtered_meta) with only valid entities.
+    """
+    if not results:
+        return (None, None)
+
+    def get_props(o):
+        return getattr(o, "__properties__", o) if isinstance(o, (dict, object)) else {}
+
+    def valid(o):
+        d = get_props(o)
+        return (
+            isinstance(d, dict)
+            and d.get("db") == db_name
+            and d.get("kg") == kg_name
+            and d.get("_init") in (None, False)
+        )
+
+    def row_ok(row):
+        for x in row:
+            if hasattr(x, "start_node"):
+                if valid(x) or valid(x.start_node) or valid(x.end_node):
+                    return True
+            elif valid(x):
+                return True
+        return False
+
+    rows = [r for r in results if row_ok(r)]
+    cols = [i for i in range(len(meta)) if any(valid(r[i]) for r in rows)]
+    return [tuple(r[i] for i in cols) for r in rows], [meta[i] for i in cols]

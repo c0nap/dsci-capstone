@@ -164,6 +164,8 @@ class Log:
     run_q = "QUERY: "
     run_f = "FILE EXEC: "
 
+    drop_gr = "DROP_GRAPH: "
+
     msg_success_managed_db = lambda managed, database_name: f"Successfully {managed} database '{database_name}'"
     """@brief  Handles various successful actions an admin could perform on a database.
     @param managed  Past-tense verb representing the database operation performed, e.g. Created, Dropped."""
@@ -172,6 +174,9 @@ class Log:
     )
     """@brief  Handles various failed actions an admin could perform on a database.
     @param manage  Present-tense verb representing the database operation performed, e.g. create, drop."""
+
+    msg_success_managed_gr = lambda managed, database_name: f"Successfully {managed} graph '{database_name}'"
+    msg_fail_manage_gr = lambda manage, database_name, connection_string: f"Failed to {manage} graph '{database_name}' on connection {connection_string}"
 
     msg_fail_parse = lambda alias, bad_value, expected_type: f"Could not convert {alias} with value {bad_value} to type {expected_type}"
 

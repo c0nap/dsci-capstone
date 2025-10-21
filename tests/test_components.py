@@ -163,6 +163,51 @@ def test_mongo_example_3(docs_db):
     docs_db.execute_query('{"drop": "potions"}')
 
 
+@pytest.mark.order(12)
+def test_cypher_example_1(graph_db):
+    """Run queries contained within test files.
+    @details  Internal errors are handled by the class itself, and ruled out earlier.
+    Here we just assert that the received results DataFrame matches what we expected."""
+    _test_query_file(
+        graph_db,
+        "./tests/examples-db/graph_df1.cql",
+        valid_files=["cql", "cypher"]
+    )
+    df = graph_db.get_dataframe("pets")
+    assert (df is not None)
+    assert (len(df) == 5)
+    assert ("node_id" in df.columns and "labels" in df.columns)
+    assert ("db" in df.columns and "kg" in df.columns)
+    assert (len(df.columns) == 8)
+    assert (df.loc[0, 'name'] == 'Buddy')
+    assert any((df['species'] == 'Rabbit') & (df['age'] == 1))
+    graph_db.drop_graph("pets")
+
+# @pytest.mark.order(13)
+# def test_cypher_example_2(graph_db):
+#     """Run queries contained within test files.
+#     @details  Internal errors are handled by the class itself, and ruled out earlier.
+#     Here we just assert that the received results DataFrame matches what we expected."""
+#     graph_db.create_database("test")
+#     graph_db.create_database("test")
+#     _test_query_file(
+#         graph_db,
+#         "./tests/examples-db/graph_df1.cql",
+#         valid_files=["cql", "cypher"]
+#     )
+#     df = graph_db.get_dataframe("potions")
+#     assert (df is not None)
+#     assert (df.loc[10, 'potion_name'] == 'Elixir of Wisdom')
+#     assert ("effects.description" in df.columns)
+#     assert any((df['potion_name'] == 'Invisibility Draught') & (df['effects.description'] == 'Silent movement'))
+#     assert ("ingredients.name" in df.columns)
+#     assert (df.loc[1, 'ingredients.name'] == 'Mirage Powder')
+#     assert ("effects.seconds" in df.columns)
+#     assert any((df['potion_name'] == 'Catkin Tincture') & (df['effects.seconds'] == 0))
+#     graph_db.change_database("default")
+#     graph_db.drop_database("test")
+
+
 # ------------------------------------------------------------------------------
 # FILE TEST WRAPPERS: Reuse the logic to test multiple files within a single test.
 # ------------------------------------------------------------------------------
