@@ -1,40 +1,7 @@
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker rm container-python
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python
 container-python
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker build -f Dockerfile.python -t dsci-cap-img-python:latest .
-[+] Building 18.7s (20/20) FINISHED                                                                      docker:default
- => [internal] load build definition from Dockerfile.python                                                        0.1s
- => => transferring dockerfile: 1.09kB                                                                             0.0s
- => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.5s
- => [auth] library/python:pull token for registry-1.docker.io                                                      0.0s
- => [internal] load .dockerignore                                                                                  0.0s
- => => transferring context: 79B                                                                                   0.0s
- => [ 1/14] FROM docker.io/library/python:3.12-slim@sha256:47ae396f09c1303b8653019811a8498470603d7ffefc29cb07c88f  0.0s
- => => resolve docker.io/library/python:3.12-slim@sha256:47ae396f09c1303b8653019811a8498470603d7ffefc29cb07c88f1f  0.0s
- => [internal] load build context                                                                                  0.3s
- => => transferring context: 3.15kB                                                                                0.3s
- => CACHED [ 2/14] WORKDIR /pipeline                                                                               0.0s
- => CACHED [ 3/14] RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /va  0.0s
- => CACHED [ 4/14] COPY requirements.txt .                                                                         0.0s
- => CACHED [ 5/14] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
- => [ 6/14] RUN apt-get update && apt-get install -y --no-install-recommends pandoc && rm -rf /var/lib/apt/lists/  8.5s
- => [ 7/14] COPY src/ src/                                                                                         0.1s
- => [ 8/14] COPY tests/ tests/                                                                                     0.1s
- => [ 9/14] COPY components/ components/                                                                           0.1s
- => [10/14] COPY datasets/ datasets/                                                                               0.1s
- => [11/14] COPY .env .                                                                                            0.1s
- => [12/14] COPY Makefile .                                                                                        0.0s
- => [13/14] RUN make docker-env                                                                                    0.4s
- => [14/14] RUN mv .env.docker .env                                                                                0.5s
- => exporting to image                                                                                             7.7s
- => => exporting layers                                                                                            6.3s
- => => exporting manifest sha256:090846255c0a013301b250734645deca93159749d466ffcd31798daa16b8bda4                  0.0s
- => => exporting config sha256:9de9bf1ce3769c7d502fdcc40df5618f8aefe7f817fcdae77205098bccd3a39c                    0.0s
- => => exporting attestation manifest sha256:388cfe612fdf13893a8426a6988a31bb5d8107227a34a58efb5875046152e54b      0.0s
- => => exporting manifest list sha256:89e28ab3914b2e73be253d8e0c88c4370025a1528f919120f670cf4b8e89696f             0.0s
- => => naming to docker.io/library/dsci-cap-img-python:latest                                                      0.0s
- => => unpacking to docker.io/library/dsci-cap-img-python:latest                                                   1.3s
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker run --name container-python -it dsci-cap-img-python:latest /bin/sh
-# python -m src.main
+c97c69e0480bd767b44d9a04a757ad2675a872e9669cba57bd2363a7f9b947aa
+Network 'capstone_default' already exists; continue...
 
 
 ==================================================
@@ -42,223 +9,225 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 
 === STORY SUMMARY ===
 Total chunks: 254
-tokenizer_config.json: 1.23kB [00:00, 5.65MB/s]
-vocab.json: 798kB [00:00, 18.2MB/s]
-merges.txt: 456kB [00:00, 24.9MB/s]
-tokenizer.json: 1.36MB [00:00, 35.6MB/s]
-added_tokens.json: 100%|███████████████████████████████████████████████████████████████| 123/123 [00:00<00:00, 1.29MB/s]
-special_tokens_map.json: 100%|█████████████████████████████████████████████████████████| 344/344 [00:00<00:00, 3.69MB/s]
-config.json: 1.42kB [00:00, 8.71MB/s]
-model.safetensors: 100%|███████████████████████████████████████████████████████████| 1.63G/1.63G [01:10<00:00, 23.1MB/s]
 
 Chunk details:
-  index: Chunk(len=1465, book=2, chapter=13, story=1, lines=[4035,4062], story%=62.552, chapter%=8.275)
+  index: Chunk(len=1237, book=2, chapter=8, story=1, lines=[1840,1865], story%=28.475, chapter%=96.429)
 
-His voice was drowned in a wild burst of mewing and squeaking. And as soon as it died down all four children began to explain at once; and though the squeaking and mewing were not at their very loudest, yet there was quite enough of both to make it very hard for the policeman to understand a single word of any of the four wholly different explanations now poured out to him.
-‘Stow it,’ he said at last. ‘I’m a-goin’ into the next room in the execution of my duty. I’m a-goin’ to use my eyes—my ears have gone off their chumps, what with you and them cats.’
-And he pushed Robert aside, and strode through the door.
-‘Don’t say I didn’t warn you,’ said Robert.
-‘It’s tigers REALLY,’ said Jane. ‘Father said so. I wouldn’t go in, if I were you.’
-But the policeman was quite stony; nothing any one said seemed to make any difference to him. Some policemen are like this, I believe. He strode down the passage, and in another moment he would have been in the room with all the cats and all the rats (musk), but at that very instant a thin, sharp voice screamed from the street outside—
-‘Murder—murder! Stop thief!’
-The policeman stopped, with one regulation boot heavily poised in the air.
-‘Eh?’ he said.
-And again the shrieks sounded shrilly and piercingly from the dark street outside.
-‘Come on,’ said Robert. ‘Come and look after cats while somebody’s being killed outside.’ For Robert had an inside feeling that told him quite plainly WHO it was that was screaming.
+‘I believe you, my dear,’ said the cook, heartily. ‘Nothing to do unless you want to. But I’m getting rested now. Tomorrow I’m going to start cleaning out my hut, if the dream keeps on, and I shall teach them cooking; they burns everything to a cinder now unless they eats it raw.’
+‘But can you talk to them?’
+‘Lor’ love a duck, yes!’ the happy cook-queen replied; ‘it’s quite easy to pick up. I always thought I should be quick at foreign languages. I’ve taught them to understand “dinner,” and “I want a drink,” and “You leave me be,” already.’
+‘Then you don’t want anything?’ Anthea asked earnestly and anxiously.
+‘Not me, miss; except if you’d only go away. I’m afraid of me waking up with that bell a-going if you keep on stopping here a-talking to me. Long as this here dream keeps up I’m as happy as a queen.’
+‘Goodbye, then,’ said Anthea, gaily, for her conscience was clear now.
+She hurried into the wood, threw herself on the ground, and said ‘Home’—and there she was, rolled in the carpet on the nursery floor.
+‘SHE’S all right, anyhow,’ said Anthea, and went back to bed. ‘I’m glad somebody’s pleased. But mother will never believe me when I tell her.’
+The story is indeed a little difficult to believe. Still, you might try.
 
 NLP output:
-('Mowing', 'subclass of', 'squeaking')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'Cymbeline', 'notable work')
-('William Shakespeare', 'William Shakespeare', 'author')
-('author', 'William Shakespeare', 'Cymbeline')
-('author', 'author', 'William Shakespeare')
-('Cymbeline', 'author', 'William Shakespeare')
-('William Shakespeare', 'William Shakespeare', 'author')
-('Cymbeline', 'Cymbeline', 'notable work')
-('notable work', 'William Shakespeare', 'Cymbeline')
-('author', 'author', 'William Shakespeare')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('Nothing to do', 'opposite of', 'want to')
+('want to', 'opposite of', 'Nothing to do')
+('2008 Summer Olympics', 'point in time', '2008')
+('Cumbria', 'located in the administrative territorial entity', 'England')
+('England', 'England', 'located in the administrative territorial entity')
+('Cumbria', 'England', 'contains administrative territorial entity')
+('contains administrative territorial entity', 'Cumbria', 'England')
+('contains administrative territorial entity', 'located in the administrative territorial entity', 'England')
+('Can you talk to them?', 'subclass of', 'talk')
+('Love a duck, yes!', 'performer', 'Lor’')
+('Happy Cook-queen', 'spouse', 'cook-queen')
+('cook-queen', 'spouse', 'Happy Cook-queen')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('Dinner', 'followed by', 'I want a drink')
+('I want a drink', 'follows', 'Dinner')
+('Don’t want anything', 'followed by', 'Don’t Want Anything')
+('Don’t Want Anything', 'follows', 'Don’t want anything')
+('Anthea', 'spouse', 'Joseph')
+('Joseph', 'spouse', 'Anthea')
+('Not me', 'said to be the same as', 'miss')
+('miss', 'said to be the same as', 'Not me')
+('Queen Elizabeth II', 'spouse', 'Prince Philip')
+('Prince Philip', 'spouse', 'Queen Elizabeth II')
+('Anthea', 'present in work', 'Goodwill')
+('Goodwill', 'Goodwill', 'present in work')
+('Anthea', 'Anthea', 'characters')
+('characters', 'Goodwill', 'Anthea')
+('present in work', 'present in work', 'Goodwill')
+('Goodwill', 'characters', 'Anthea')
+('Anthea', 'Anthea', 'characters')
+('characters', 'Goodwill', 'Anthea')
+('present in work', 'present in work', 'Goodwill')
+('carpet', 'part of', 'nursery floor')
+('Anthea', 'said to be the same as', 'She’s all right')
+('She’s all right', 'said to be the same as', 'Anthea')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'has part', 'John F. Kennedy School of Government')
+('Mother', 'spouse', 'father')
+('father', 'spouse', 'Mother')
 ('William Shakespeare', 'notable work', 'Cymbeline')
 ('Cymbeline', 'Cymbeline', 'notable work')
 ('William Shakespeare', 'Cymbeline', 'author')
-('I’m a-goin’ into the next room', 'instance of', 'execution of my duty')
-('I’m a-goin’ to use my eyes—my ears have gone off their chumps', 'has cause', 'cats')
-('cats', 'has effect', 'I’m a-goin’ to use my eyes—my ears have gone off their chumps')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('Don’t say I didn’t warn you', 'author', 'Robert')
-('tiger', 'said to be the same as', 'REALLY')
-('REALLY', 'said to be the same as', 'tiger')
-('Father', 'said to be the same as', 'Father said so')
-('Father said so', 'said to be the same as', 'Father')
-('I wouldn’t go in', 'said to be the same as', 'I were you')
-('I were you', 'said to be the same as', 'I wouldn’t go in')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('followed by', 'George Orwell', 'Nineteen Eighty-Four')
-('author', 'follows', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'George Orwell')
-('police', 'has part', 'policeman')
-('Murder', 'has cause', 'murder')
-('Murder', 'has effect', 'Murder')
-('Stop thief!', 'main subject', 'thief')
-('Tony Blair', 'position held', 'Prime Minister')
-('Eh?', 'different from Eh', 'Eh')
-('different from', 'Eh?', 'Eh')
-('2008 Summer Olympics', 'point in time', '2008')
-("St. Paul's Cathedral", 'located in the administrative territorial entity', 'London')
-('London', 'capital of', 'England')
-('England', 'capital', 'London')
-('Robert', 'child', 'Robert')
-('Robert', 'father', 'Robert')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
+('William Shakespeare', 'Cymbeline', 'author')
+('St. Augustine', 'located in the administrative territorial entity', 'Florida')
+('Florida', 'contains administrative territorial entity', 'St. Augustine')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('Mowing', 'subclass of', 'squeaking')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'Cymbeline', 'notable work')
-('William Shakespeare', 'William Shakespeare', 'author')
-('author', 'William Shakespeare', 'Cymbeline')
-('author', 'author', 'William Shakespeare')
-('Cymbeline', 'author', 'William Shakespeare')
-('William Shakespeare', 'William Shakespeare', 'author')
-('Cymbeline', 'Cymbeline', 'notable work')
-('notable work', 'William Shakespeare', 'Cymbeline')
-('author', 'author', 'William Shakespeare')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('Nothing to do', 'opposite of', 'want to')
+('want to', 'opposite of', 'Nothing to do')
+('2008 Summer Olympics', 'point in time', '2008')
+('Cumbria', 'located in the administrative territorial entity', 'England')
+('England', 'England', 'located in the administrative territorial entity')
+('Cumbria', 'England', 'contains administrative territorial entity')
+('contains administrative territorial entity', 'Cumbria', 'England')
+('contains administrative territorial entity', 'located in the administrative territorial entity', 'England')
+('Can you talk to them?', 'subclass of', 'talk')
+('Love a duck, yes!', 'performer', 'Lor’')
+('Happy Cook-queen', 'spouse', 'cook-queen')
+('cook-queen', 'spouse', 'Happy Cook-queen')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('Dinner', 'followed by', 'I want a drink')
+('I want a drink', 'follows', 'Dinner')
+('Don’t want anything', 'followed by', 'Don’t Want Anything')
+('Don’t Want Anything', 'follows', 'Don’t want anything')
+('Anthea', 'spouse', 'Joseph')
+('Joseph', 'spouse', 'Anthea')
+('Not me', 'said to be the same as', 'miss')
+('miss', 'said to be the same as', 'Not me')
+('Queen Elizabeth II', 'spouse', 'Prince Philip')
+('Prince Philip', 'spouse', 'Queen Elizabeth II')
+('Anthea', 'present in work', 'Goodwill')
+('Goodwill', 'Goodwill', 'present in work')
+('Anthea', 'Anthea', 'characters')
+('characters', 'Goodwill', 'Anthea')
+('present in work', 'present in work', 'Goodwill')
+('Goodwill', 'characters', 'Anthea')
+('Anthea', 'Anthea', 'characters')
+('characters', 'Goodwill', 'Anthea')
+('present in work', 'present in work', 'Goodwill')
+('carpet', 'part of', 'nursery floor')
+('Anthea', 'said to be the same as', 'She’s all right')
+('She’s all right', 'said to be the same as', 'Anthea')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'has part', 'John F. Kennedy School of Government')
+('Mother', 'spouse', 'father')
+('father', 'spouse', 'Mother')
 ('William Shakespeare', 'notable work', 'Cymbeline')
 ('Cymbeline', 'Cymbeline', 'notable work')
 ('William Shakespeare', 'Cymbeline', 'author')
-('I’m a-goin’ into the next room', 'instance of', 'execution of my duty')
-('I’m a-goin’ to use my eyes—my ears have gone off their chumps', 'has cause', 'cats')
-('cats', 'has effect', 'I’m a-goin’ to use my eyes—my ears have gone off their chumps')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('Don’t say I didn’t warn you', 'author', 'Robert')
-('tiger', 'said to be the same as', 'REALLY')
-('REALLY', 'said to be the same as', 'tiger')
-('Father', 'said to be the same as', 'Father said so')
-('Father said so', 'said to be the same as', 'Father')
-('I wouldn’t go in', 'said to be the same as', 'I were you')
-('I were you', 'said to be the same as', 'I wouldn’t go in')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('followed by', 'George Orwell', 'Nineteen Eighty-Four')
-('author', 'follows', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'George Orwell')
-('police', 'has part', 'policeman')
-('Murder', 'has cause', 'murder')
-('Murder', 'has effect', 'Murder')
-('Stop thief!', 'main subject', 'thief')
-('Tony Blair', 'position held', 'Prime Minister')
-('Eh?', 'different from Eh', 'Eh')
-('different from', 'Eh?', 'Eh')
-('2008 Summer Olympics', 'point in time', '2008')
-("St. Paul's Cathedral", 'located in the administrative territorial entity', 'London')
-('London', 'capital of', 'England')
-('England', 'capital', 'London')
-('Robert', 'child', 'Robert')
-('Robert', 'father', 'Robert')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
+('William Shakespeare', 'Cymbeline', 'author')
+('St. Augustine', 'located in the administrative territorial entity', 'Florida')
+('Florida', 'contains administrative territorial entity', 'St. Augustine')
 
 And here is the original text:
-His voice was drowned in a wild burst of mewing and squeaking. And as soon as it died down all four children began to explain at once; and though the squeaking and mewing were not at their very loudest, yet there was quite enough of both to make it very hard for the policeman to understand a single word of any of the four wholly different explanations now poured out to him.
-‘Stow it,’ he said at last. ‘I’m a-goin’ into the next room in the execution of my duty. I’m a-goin’ to use my eyes—my ears have gone off their chumps, what with you and them cats.’
-And he pushed Robert aside, and strode through the door.
-‘Don’t say I didn’t warn you,’ said Robert.
-‘It’s tigers REALLY,’ said Jane. ‘Father said so. I wouldn’t go in, if I were you.’
-But the policeman was quite stony; nothing any one said seemed to make any difference to him. Some policemen are like this, I believe. He strode down the passage, and in another moment he would have been in the room with all the cats and all the rats (musk), but at that very instant a thin, sharp voice screamed from the street outside—
-‘Murder—murder! Stop thief!’
-The policeman stopped, with one regulation boot heavily poised in the air.
-‘Eh?’ he said.
-And again the shrieks sounded shrilly and piercingly from the dark street outside.
-‘Come on,’ said Robert. ‘Come and look after cats while somebody’s being killed outside.’ For Robert had an inside feeling that told him quite plainly WHO it was that was screaming.
+‘I believe you, my dear,’ said the cook, heartily. ‘Nothing to do unless you want to. But I’m getting rested now. Tomorrow I’m going to start cleaning out my hut, if the dream keeps on, and I shall teach them cooking; they burns everything to a cinder now unless they eats it raw.’
+‘But can you talk to them?’
+‘Lor’ love a duck, yes!’ the happy cook-queen replied; ‘it’s quite easy to pick up. I always thought I should be quick at foreign languages. I’ve taught them to understand “dinner,” and “I want a drink,” and “You leave me be,” already.’
+‘Then you don’t want anything?’ Anthea asked earnestly and anxiously.
+‘Not me, miss; except if you’d only go away. I’m afraid of me waking up with that bell a-going if you keep on stopping here a-talking to me. Long as this here dream keeps up I’m as happy as a queen.’
+‘Goodbye, then,’ said Anthea, gaily, for her conscience was clear now.
+She hurried into the wood, threw herself on the ground, and said ‘Home’—and there she was, rolled in the carpet on the nursery floor.
+‘SHE’S all right, anyhow,’ said Anthea, and went back to bed. ‘I’m glad somebody’s pleased. But mother will never believe me when I tell her.’
+The story is indeed a little difficult to believe. Still, you might try.
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s": "His voice", "r": "was drowned in", "o": "a wild burst of mewing and squeaking"},
-  {"s": "the four children", "r": "began to explain at once", "o": "to the policeman"},
-  {"s": "the squeaking and mewing", "r": "were not", "o": "at their very loudest"},
-  {"s": "the policeman", "r": "couldn't understand", "o": "a single word of any of the four explanations"},
-  {"s": "policeman", "r": "said", "o": "Stow it"},
-  {"s": "policeman", "r": "said", "o": "I'm a-goin' into the next room in the execution of my duty"},
-  {"s": "policeman", "r": "said", "o": "I'm a-goin' to use my eyes—my ears have gone off their chumps, what with you and them cats"},
-  {"s": "policeman", "r": "pushed", "o": "Robert aside"},
-  {"s": "policeman", "r": "strode", "o": "through the door"},
-  {"s": "Robert", "r": "said", "o": "Don't say I didn't warn you"},
-  {"s": "Jane", "r": "said", "o": "It's tigers REALLY"},
-  {"s": "Jane", "r": "said", "o": "Father said so. I wouldn't go in, if I were you"},
-  {"s": "policeman", "r": "stood", "o": "stony; nothing anyone said seemed to make any difference to him"},
-  {"s": "policeman", "r": "strode down", "o": "the passage toward the room with all the cats and all the rats"},
-  {"s": "street outside", "r": "screamed", "o": "Murder—murder! Stop thief!"},
-  {"s": "policeman", "r": "stopped", "o": "with one regulation boot heavily poised in the air"},
-  {"s": "policeman", "r": "said", "o": "Eh?"},
-  {"s": "Robert", "r": "had", "o": "an inside feeling that told him quite plainly who it was that was screaming"}
+  {"s":"cook","r":"says","o":"I believe you, my dear"},
+  {"s":"cook","r":"says","o":"Nothing to do unless you want to"},
+  {"s":"cook","r":"plans to","o":"start cleaning out her hut tomorrow"},
+  {"s":"cook","r":"plans to","o":"teach them cooking"},
+  {"s":"they","r":"burn","o":"everything to a cinder unless eaten raw"},
+  {"s":"Anthea","r":"asks","o":"Can you talk to them?"},
+  {"s":"cook-queen","r":"replies","o":"Lor’ love a duck, yes!"},
+  {"s":"cook-queen","r":"states","o":"it’s quite easy to pick up foreign languages"},
+  {"s":"cook-queen","r":"states","o":"I have taught them to understand 'dinner', 'I want a drink', and 'You leave me be'"},
+  {"s":"Anthea","r":"asks","o":"Then you don’t want anything?"},
+  {"s":"cook-queen","r":"answers","o":"Not me, miss; except if you’d only go away."},
+  {"s":"cook-queen","r":"fears","o":"waking up with that bell a-going if you keep on stopping here talking to me"},
+  {"s":"cook-queen","r":"states","o":"Long as this dream keeps up I’m as happy as a queen"},
+  {"s":"Anthea","r":"says","o":"Goodbye, then"},
+  {"s":"Anthea","r":"goes","o":"into the wood"},
+  {"s":"Anthea","r":"says","o":"'Home'"},
+  {"s":"Anthea","r":"is","o":"rolled in the carpet on the nursery floor"},
+  {"s":"Anthea","r":"says","o":"'SHE’S all right, anyhow'"},
+  {"s":"Anthea","r":"returns","o":"to bed"},
+  {"s":"Anthea","r":"says","o":"I’m glad somebody’s pleased. But mother will never believe me when I tell her."},
+  {"s":"narrator","r":"notes","o":"The story is difficult to believe. Still, you might try."},
+  {"s":"dream","r":"persists","o":"keeps up"}
 ]
 
 ==================================================
 
 
 Valid JSON
-His voice was drowned in a wild burst of mewing and squeaking
-the four children began to explain at once to the policeman
-the squeaking and mewing were not at their very loudest
-the policeman couldn't understand a single word of any of the four explanations
-policeman said Stow it
-policeman said I'm a-goin' into the next room in the execution of my duty
-policeman said I'm a-goin' to use my eyes—my ears have gone off their chumps, what with you and them cats
-policeman pushed Robert aside
-policeman strode through the door
-Robert said Don't say I didn't warn you
-Jane said It's tigers REALLY
-Jane said Father said so. I wouldn't go in, if I were you
-policeman stood stony; nothing anyone said seemed to make any difference to him
-policeman strode down the passage toward the room with all the cats and all the rats
-street outside screamed Murder—murder! Stop thief!
-policeman stopped with one regulation boot heavily poised in the air
-policeman said Eh?
-Robert had an inside feeling that told him quite plainly who it was that was screaming
+cook says I believe you, my dear
+cook says Nothing to do unless you want to
+cook plans to start cleaning out her hut tomorrow
+cook plans to teach them cooking
+they burn everything to a cinder unless eaten raw
+Anthea asks Can you talk to them?
+cook-queen replies Lor’ love a duck, yes!
+cook-queen states it’s quite easy to pick up foreign languages
+cook-queen states I have taught them to understand 'dinner', 'I want a drink', and 'You leave me be'
+Anthea asks Then you don’t want anything?
+cook-queen answers Not me, miss; except if you’d only go away.
+cook-queen fears waking up with that bell a-going if you keep on stopping here talking to me
+cook-queen states Long as this dream keeps up I’m as happy as a queen
+Anthea says Goodbye, then
+Anthea goes into the wood
+Anthea says 'Home'
+Anthea is rolled in the carpet on the nursery floor
+Anthea says 'SHE’S all right, anyhow'
+Anthea returns to bed
+Anthea says I’m glad somebody’s pleased. But mother will never believe me when I tell her.
+narrator notes The story is difficult to believe. Still, you might try.
+dream persists keeps up
 
 Most relevant nodes:
-   node_name  edge_count
-0  policeman           9
-1     Robert           2
-2       Jane           2
+    node_name  edge_count
+0      Anthea           9
+1  cook_queen           6
+2        cook           4
 
 Triples which best represent the graph:
-policeman said Eh_
-policeman stopped with_one_regulation_boot_heavily_poised_in_the_air
-policeman strode_down the_passage_toward_the_room_with_all_the_cats_and_all_the_rats
-policeman stood stony__nothing_anyone_said_seemed_to_make_any_difference_to_him
-policeman strode through_the_door
-policeman pushed Robert_aside
-policeman said I_m_a_goin__to_use_my_eyes_my_ears_have_gone_off_their_chumps__what_with_you_and_them_cats
-policeman said I_m_a_goin__into_the_next_room_in_the_execution_of_my_duty
-policeman said Stow_it
-Robert had an_inside_feeling_that_told_him_quite_plainly_who_it_was_that_was_screaming
-Robert said Don_t_say_I_didn_t_warn_you
-Jane said Father_said_so__I_wouldn_t_go_in__if_I_were_you
-Jane said It_s_tigers_REALLY
+Anthea says I_m_glad_somebody_s_pleased__But_mother_will_never_believe_me_when_I_tell_her_
+Anthea returns to_bed
+Anthea says _SHE_S_all_right__anyhow_
+Anthea is rolled_in_the_carpet_on_the_nursery_floor
+Anthea says _Home_
+Anthea goes into_the_wood
+Anthea says Goodbye__then
+Anthea asks Then_you_don_t_want_anything_
+Anthea asks Can_you_talk_to_them_
+cook_queen states Long_as_this_dream_keeps_up_I_m_as_happy_as_a_queen
+cook_queen fears waking_up_with_that_bell_a_going_if_you_keep_on_stopping_here_talking_to_me
+cook_queen answers Not_me__miss__except_if_you_d_only_go_away_
+cook_queen states I_have_taught_them_to_understand__dinner____I_want_a_drink___and__You_leave_me_be_
+cook_queen states it_s_quite_easy_to_pick_up_foreign_languages
+cook_queen replies Lor__love_a_duck__yes_
+cook plans_to teach_them_cooking
+cook plans_to start_cleaning_out_her_hut_tomorrow
+cook says Nothing_to_do_unless_you_want_to
+cook says I_believe_you__my_dear
 
 
 Generated summary:
-A policeman, impatient and determined, moves down a passage toward a room described as housing all the cats and all the rats. He stops with a boot raised, pushes Robert aside, and then strides through the door, declaring he will enter the next room to perform his duty and telling everyone to stop talking. Robert senses who is screaming and warns, "Don't say I didn't warn you." Jane says Father said not to go in and adds, "It's tigers, really."
-Sending payload to Blazor at http://172.30.48.1:5055/api/metrics
+Anthea experiences a dreamlike sequence in which she is glad somebody is pleased but fears her mother won’t believe her when she tells her; she moves from the nursery floor to the wood, returns to bed, and quietly says “Home” and “Goodbye,” asking if anyone else wants something or can talk to them. A cook queen appears in the dream, content while the dream lasts and fearing waking up if the bell keeps ringing; she says she has taught them to understand dinner, wants a drink and to be left alone, and plans to teach cooking and start cleaning out her hut tomorrow, noting there is nothing to do unless someone wants something and that she believes Anthea.
+Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'A policeman, impatient and determined, moves down a passage toward a room described as housing all the cats and all the rats. He stops with a boot raised, pushes Robert aside, and then strides through the door, declaring he will enter the next room to perform his duty and telling everyone to stop talking. Robert senses who is screaming and warns, "Don\'t say I didn\'t warn you." Jane says Father said not to go in and adds, "It\'s tigers, really."', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Anthea experiences a dreamlike sequence in which she is glad somebody is pleased but fears her mother won’t believe her when she tells her; she moves from the nursery floor to the wood, returns to bed, and quietly says “Home” and “Goodbye,” asking if anyone else wants something or can talk to them. A cook queen appears in the dream, content while the dream lasts and fearing waking up if the bell keeps ringing; she says she has taught them to understand dinner, wants a drink and to be left alone, and plans to teach cooking and start cleaning out her hut tomorrow, noting there is nothing to do unless someone wants something and that she believes Anthea.', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
 
 Output sent to web app.
 # exit
