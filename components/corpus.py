@@ -155,14 +155,24 @@ def fuzzy_merge_titles(df1, df2, suffix1, suffix2, key="title", threshold=90, sc
     return pd.DataFrame(matches)
 
 
-# git clone https://github.com/salesforce/booksum.git datasets/booksum
+
+
+
+from components.metrics import post_basic_output
+
 if __name__ == "__main__":
 	df_booksum = load_booksum()
 	df_nqa = load_narrativeqa()
 	#df = merge_dataframes(df_booksum, df_nqa, "_booksum", "_nqa", ["title"])
 	df = fuzzy_merge_titles(df_booksum, df_nqa, "_booksum", "_nqa", key="title", threshold=70)
 
+	df_booksum.to_csv("./datasets/metrics/booksum.csv", index=False)
+	df_nqa.to_csv("./datasets/metrics/nqa.csv", index=False)
+	df.to_csv("./datasets/metrics/merged.csv", index=False)
+
 	print(f"BookSum rows: {len(df_booksum)}")
 	print(f"NarrativeQA rows: {len(df_nqa)}")
 	print(f"Fuzzy matches: {len(df)}")
+
+	post_basic_output(1, df.loc[0, 'title_nqa'], df.loc[0, 'summary_booksum'], df.loc[0, 'summary_booksum'])
 

@@ -1,7 +1,12 @@
 from dotenv import load_dotenv
 import os
 import requests
+import evaluate
+from questeval.questeval_metric import QuestEval
 
+bertscore = evaluate.load("bertscore")
+rouge = evaluate.load("rouge")
+questeval = QuestEval(no_cuda=True)
 
 # Read environment variables at compile time
 load_dotenv(".env")
@@ -134,13 +139,36 @@ def post_example_results():
     )
 
 
-def post_basic_output(book_id, book_title, summary, **kwargs):
+def post_basic_output(book_id, book_title, summary, gold_summary="", chunk="", **kwargs):
     """Send book information and a summary to the web app.
     @param book_id  Integer book identifier
     @param book_title  Book title
-    @param summary  Summary text string
+    @param summary  A text string containing a book summary
+    @param summary  A summary to compare against
     @param **kwargs  Any other metric parameters to override defaults (e.g., rouge_f1=0.75)
     """
-    metrics = generate_default_metrics(**kwargs)
+
+    rouge_result = rouge.compute(predictions=[summary],
+                             references=[gold_summary])["rougeL"]
+    print("Computed ROUGE!")
+    bertscore_result = bertscore.compute(predictions=[summary],
+                                     references=[gold_summary],
+                                     model_type="roberta-large")
+    print("Computed BERTScore!")
+    qeval_score = questeval.corpus_questeval(
+        hypothesis=summary, 
+        sources=[chunk],
+        list_reference=[gold_summary]
+    )['corpus_score']
+    print("Computed QuestEval!")
+    metrics = generate_default_metrics(
+        rouge_precision = rouge_result["precision"][0],
+        rouge_recall = rouge_result["recall"][0],
+        rouge_f1 = rouge_result["f1"][0],
+        bert_precision = bertscore_result["precision"][0],
+        bert_recall = bertscore_result["recall"][0],
+        bert_f1 = bertscore_result["f1"][0],
+        questeval_score = qeval_score,
+        **kwargs)
     payload = create_summary_payload(book_id, book_title, summary, metrics)
     return post_payload(payload)

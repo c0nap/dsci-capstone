@@ -1,13 +1,16 @@
 # Core dependencies
+numpy==1.26.4
+pandas==1.5.3  # compatible with numpy 1.23
+evaluate==0.4.0
+booookscore==0.1.3
 python-dotenv
-pandas
 pytest
 pytest-order
 sqlparse
 pypandoc
 lxml
 rapidfuzz
-evaluate
+git+https://github.com/ThomasScialom/QuestEval.git
 
 # Database drivers
 sqlalchemy
@@ -21,7 +24,7 @@ mongoengine
 openai
 langchain
 langchain-openai
-spacy
+spacy==3.0.8
 transformers
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch
