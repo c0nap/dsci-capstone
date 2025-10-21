@@ -30,27 +30,27 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
 
-      # Need Makefile for pull
+      # Need Makefile here for pull
       - name: Download code from repository
         uses: actions/checkout@v4
 
 
       # 1. Start from a checkpoint to speed up the build process.
       # Automatically retagged as "dev"
-      - name: Pull last successful Docker images
-        run: |
-          echo "🔹 Trying private GHCR images..."
-          if make docker-pull-dev; then
-            make docker-retag-dev-local DEVTAG=${{ inputs.image-tag }}
-            echo "✅ Pulled from private namespace."
-          else
-            echo "⚠️ Private pull failed, trying public images..."
-            if make docker-pull; then
-              echo "✅ Pulled from public namespace."
-            else
-              echo "🚫 No cached images found — continuing with rebuild."
-            fi
-          fi
+      # - name: Pull last successful Docker images
+      #   run: |
+      #     echo "🔹 Trying private GHCR images..."
+      #     if make docker-pull-dev; then
+      #       make docker-retag-dev-local DEVTAG=${{ inputs.image-tag }}
+      #       echo "✅ Pulled from private namespace."
+      #     else
+      #       echo "⚠️ Private pull failed, trying public images..."
+      #       if make docker-pull; then
+      #         echo "✅ Pulled from public namespace."
+      #       else
+      #         echo "🚫 No cached images found — continuing with rebuild."
+      #       fi
+      #     fi
 
 
       # 2. Set up environment with required files
