@@ -31,3 +31,8 @@ jobs:
     with:
       public-namespace: c0nap/dsci-capstone
 
+  doxygen:
+    uses: ./.github/workflows/doxygen.yml
+    needs: test
+    secrets: inherit
+
