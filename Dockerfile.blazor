@@ -1,0 +1,40 @@
+# multi-stage build: build with sdk, run with runtime
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+
+# Connect the generated Docker image to this repository
+LABEL org.opencontainers.image.source="https://github.com/c0nap/dsci-capstone"
+
+# Enable relative paths - helpful name for container's root folder
+WORKDIR /web-app/BlazorApp
+
+# Copy .csproj & restore early to optimize dependency cache
+COPY web-app/BlazorApp/BlazorApp.csproj .
+RUN dotnet restore ./BlazorApp.csproj
+RUN apt-get update && apt-get install -y --no-install-recommends make && rm -rf /var/lib/apt/lists/*
+
+
+# Copy source code
+COPY web-app/BlazorApp ./BlazorApp/
+RUN dotnet publish ./BlazorApp/BlazorApp.csproj -c Release -o /web-app/publish
+
+
+# Declare build args - whether to include .env or .env.dummy
+ARG ENV_FILE
+ARG APPSET_FILE
+
+# Create appsettings.json
+WORKDIR /
+COPY Makefile .
+COPY ${APPSET_FILE} ./web-app/BlazorApp/appsettings.json
+COPY ${ENV_FILE} .env
+
+# Generates appsettings.Docker.json with mapped hostnames
+RUN make appsettings-docker
+WORKDIR /web-app/BlazorApp
+RUN mv appsettings.Docker.json appsettings.json
+
+
+# Run the app using dotnet
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+COPY --from=build /web-app/publish .
+ENTRYPOINT ["dotnet", "BlazorApp.dll"]

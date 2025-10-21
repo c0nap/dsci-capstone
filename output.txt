@@ -1,3 +1,7 @@
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python
+container-python
+c97c69e0480bd767b44d9a04a757ad2675a872e9669cba57bd2363a7f9b947aa
+Network 'capstone_default' already exists; continue...
 
 
 ==================================================
@@ -7,172 +11,223 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 Total chunks: 254
 
 Chunk details:
-  index: Chunk(len=1451, book=2, chapter=8, story=1, lines=[1624,1648], story%=24.856, chapter%=61.577)
+  index: Chunk(len=1237, book=2, chapter=8, story=1, lines=[1840,1865], story%=28.475, chapter%=96.429)
 
-Without an instant’s hesitation the four children turned and ran back along the forest path; the only pause was Anthea’s. She stood back to let Cyril pass, because he was carrying the Lamb, who screamed with delight. (He had not whooping-coughed a single once since the carpet landed him on the island.)
-‘Gee-up, Squirrel; gee-gee,’ he shouted, and Cyril did gee-up. The path was a shorter cut to the beach than the creeper-covered way by which they had come, and almost directly they saw through the trees the shining blue-and-gold-and-opal of sand and sea.
-‘Stick to it,’ cried Cyril, breathlessly.
-They did stick to it; they tore down the sands—they could hear behind them as they ran the patter of feet which they knew, too well, were copper-coloured.
-The sands were golden and opal-coloured—and BARE. There were wreaths of tropic seaweed, there were rich tropic shells of the kind you would not buy in the Kentish Town Road under at least fifteen pence a pair. There were turtles basking lumpily on the water’s edge—but no cook, no clothes, and no carpet.
-‘On, on! Into the sea!’ gasped Cyril. ‘They MUST hate water. I’ve—heard—savages always—dirty.’
-Their feet were splashing in the warm shallows before his breathless words were ended. The calm baby-waves were easy to go through. It is warm work running for your life in the tropics, and the coolness of the water was delicious. They were up to their arm-pits now, and Jane was up to her chin.
+‘I believe you, my dear,’ said the cook, heartily. ‘Nothing to do unless you want to. But I’m getting rested now. Tomorrow I’m going to start cleaning out my hut, if the dream keeps on, and I shall teach them cooking; they burns everything to a cinder now unless they eats it raw.’
+‘But can you talk to them?’
+‘Lor’ love a duck, yes!’ the happy cook-queen replied; ‘it’s quite easy to pick up. I always thought I should be quick at foreign languages. I’ve taught them to understand “dinner,” and “I want a drink,” and “You leave me be,” already.’
+‘Then you don’t want anything?’ Anthea asked earnestly and anxiously.
+‘Not me, miss; except if you’d only go away. I’m afraid of me waking up with that bell a-going if you keep on stopping here a-talking to me. Long as this here dream keeps up I’m as happy as a queen.’
+‘Goodbye, then,’ said Anthea, gaily, for her conscience was clear now.
+She hurried into the wood, threw herself on the ground, and said ‘Home’—and there she was, rolled in the carpet on the nursery floor.
+‘SHE’S all right, anyhow,’ said Anthea, and went back to bed. ‘I’m glad somebody’s pleased. But mother will never believe me when I tell her.’
+The story is indeed a little difficult to believe. Still, you might try.
 
 NLP output:
-('Anthea', 'part of', 'four children')
-('Cyril', 'owner of', 'Lamb')
-('Lamb', 'owned by', 'Cyril')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
 ('Nineteen Eighty-Four', 'author', 'Orwell')
-('Gee-up, Squirrel; gee-gee,’ he shouted', 'performer', 'Cyril')
-('beach', 'part of', 'sea')
-('Stick to it', 'author', 'Cyril')
-('copper-coloured', 'facet of', 'feet')
-('opal', 'subclass of', 'golden')
-('Town Road', 'located in the administrative territorial entity', 'Kentish')
-('no clothes', 'different from', 'carpet')
-('carpet', 'different from', 'no clothes')
-('On', 'followed by', 'On, on!')
-('On, on!', 'follows', 'On')
-('Into the sea!', 'main subject', 'sea')
-('Gasped', 'author', 'Cyril')
-('water', 'said to be the same as', 'MUST hate water')
-('MUST hate water', 'said to be the same as', 'water')
-('I’ve—heard—savages always—dirty', 'has part', 'I’ve—heard—savages always—dirty')
-('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
-('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
-('Henry Wadsworth Longfellow', 'notable work', 'The Merchant of Venice')
-('The Merchant of Venice', 'author', 'Henry Wadsworth Longfellow')
-('baby-waves', 'subclass of', 'calm')
-('tropical', 'has part', 'tropics')
-('tropics', 'subclass of', 'tropical')
-('Jane', 'instance of', 'arm-pits')
+('Nothing to do', 'opposite of', 'want to')
+('want to', 'opposite of', 'Nothing to do')
+('2008 Summer Olympics', 'point in time', '2008')
+('Cumbria', 'located in the administrative territorial entity', 'England')
+('England', 'England', 'located in the administrative territorial entity')
+('Cumbria', 'England', 'contains administrative territorial entity')
+('contains administrative territorial entity', 'Cumbria', 'England')
+('contains administrative territorial entity', 'located in the administrative territorial entity', 'England')
+('Can you talk to them?', 'subclass of', 'talk')
+('Love a duck, yes!', 'performer', 'Lor’')
+('Happy Cook-queen', 'spouse', 'cook-queen')
+('cook-queen', 'spouse', 'Happy Cook-queen')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('Dinner', 'followed by', 'I want a drink')
+('I want a drink', 'follows', 'Dinner')
+('Don’t want anything', 'followed by', 'Don’t Want Anything')
+('Don’t Want Anything', 'follows', 'Don’t want anything')
+('Anthea', 'spouse', 'Joseph')
+('Joseph', 'spouse', 'Anthea')
+('Not me', 'said to be the same as', 'miss')
+('miss', 'said to be the same as', 'Not me')
+('Queen Elizabeth II', 'spouse', 'Prince Philip')
+('Prince Philip', 'spouse', 'Queen Elizabeth II')
+('Anthea', 'present in work', 'Goodwill')
+('Goodwill', 'Goodwill', 'present in work')
+('Anthea', 'Anthea', 'characters')
+('characters', 'Goodwill', 'Anthea')
+('present in work', 'present in work', 'Goodwill')
+('Goodwill', 'characters', 'Anthea')
+('Anthea', 'Anthea', 'characters')
+('characters', 'Goodwill', 'Anthea')
+('present in work', 'present in work', 'Goodwill')
+('carpet', 'part of', 'nursery floor')
+('Anthea', 'said to be the same as', 'She’s all right')
+('She’s all right', 'said to be the same as', 'Anthea')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'has part', 'John F. Kennedy School of Government')
+('Mother', 'spouse', 'father')
+('father', 'spouse', 'Mother')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Cymbeline', 'author')
+('William Shakespeare', 'Cymbeline', 'author')
+('St. Augustine', 'located in the administrative territorial entity', 'Florida')
+('Florida', 'contains administrative territorial entity', 'St. Augustine')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('Anthea', 'part of', 'four children')
-('Cyril', 'owner of', 'Lamb')
-('Lamb', 'owned by', 'Cyril')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
 ('Nineteen Eighty-Four', 'author', 'Orwell')
-('Gee-up, Squirrel; gee-gee,’ he shouted', 'performer', 'Cyril')
-('beach', 'part of', 'sea')
-('Stick to it', 'author', 'Cyril')
-('copper-coloured', 'facet of', 'feet')
-('opal', 'subclass of', 'golden')
-('Town Road', 'located in the administrative territorial entity', 'Kentish')
-('no clothes', 'different from', 'carpet')
-('carpet', 'different from', 'no clothes')
-('On', 'followed by', 'On, on!')
-('On, on!', 'follows', 'On')
-('Into the sea!', 'main subject', 'sea')
-('Gasped', 'author', 'Cyril')
-('water', 'said to be the same as', 'MUST hate water')
-('MUST hate water', 'said to be the same as', 'water')
-('I’ve—heard—savages always—dirty', 'has part', 'I’ve—heard—savages always—dirty')
-('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
-('I’ve—heard—savages always—dirty', 'part of', 'I’ve—heard—savages always—dirty')
-('Henry Wadsworth Longfellow', 'notable work', 'The Merchant of Venice')
-('The Merchant of Venice', 'author', 'Henry Wadsworth Longfellow')
-('baby-waves', 'subclass of', 'calm')
-('tropical', 'has part', 'tropics')
-('tropics', 'subclass of', 'tropical')
-('Jane', 'instance of', 'arm-pits')
+('Nothing to do', 'opposite of', 'want to')
+('want to', 'opposite of', 'Nothing to do')
+('2008 Summer Olympics', 'point in time', '2008')
+('Cumbria', 'located in the administrative territorial entity', 'England')
+('England', 'England', 'located in the administrative territorial entity')
+('Cumbria', 'England', 'contains administrative territorial entity')
+('contains administrative territorial entity', 'Cumbria', 'England')
+('contains administrative territorial entity', 'located in the administrative territorial entity', 'England')
+('Can you talk to them?', 'subclass of', 'talk')
+('Love a duck, yes!', 'performer', 'Lor’')
+('Happy Cook-queen', 'spouse', 'cook-queen')
+('cook-queen', 'spouse', 'Happy Cook-queen')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
+('Dinner', 'followed by', 'I want a drink')
+('I want a drink', 'follows', 'Dinner')
+('Don’t want anything', 'followed by', 'Don’t Want Anything')
+('Don’t Want Anything', 'follows', 'Don’t want anything')
+('Anthea', 'spouse', 'Joseph')
+('Joseph', 'spouse', 'Anthea')
+('Not me', 'said to be the same as', 'miss')
+('miss', 'said to be the same as', 'Not me')
+('Queen Elizabeth II', 'spouse', 'Prince Philip')
+('Prince Philip', 'spouse', 'Queen Elizabeth II')
+('Anthea', 'present in work', 'Goodwill')
+('Goodwill', 'Goodwill', 'present in work')
+('Anthea', 'Anthea', 'characters')
+('characters', 'Goodwill', 'Anthea')
+('present in work', 'present in work', 'Goodwill')
+('Goodwill', 'characters', 'Anthea')
+('Anthea', 'Anthea', 'characters')
+('characters', 'Goodwill', 'Anthea')
+('present in work', 'present in work', 'Goodwill')
+('carpet', 'part of', 'nursery floor')
+('Anthea', 'said to be the same as', 'She’s all right')
+('She’s all right', 'said to be the same as', 'Anthea')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'has part', 'John F. Kennedy School of Government')
+('Mother', 'spouse', 'father')
+('father', 'spouse', 'Mother')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Cymbeline', 'author')
+('William Shakespeare', 'Cymbeline', 'author')
+('St. Augustine', 'located in the administrative territorial entity', 'Florida')
+('Florida', 'contains administrative territorial entity', 'St. Augustine')
 
 And here is the original text:
-Without an instant’s hesitation the four children turned and ran back along the forest path; the only pause was Anthea’s. She stood back to let Cyril pass, because he was carrying the Lamb, who screamed with delight. (He had not whooping-coughed a single once since the carpet landed him on the island.)
-‘Gee-up, Squirrel; gee-gee,’ he shouted, and Cyril did gee-up. The path was a shorter cut to the beach than the creeper-covered way by which they had come, and almost directly they saw through the trees the shining blue-and-gold-and-opal of sand and sea.
-‘Stick to it,’ cried Cyril, breathlessly.
-They did stick to it; they tore down the sands—they could hear behind them as they ran the patter of feet which they knew, too well, were copper-coloured.
-The sands were golden and opal-coloured—and BARE. There were wreaths of tropic seaweed, there were rich tropic shells of the kind you would not buy in the Kentish Town Road under at least fifteen pence a pair. There were turtles basking lumpily on the water’s edge—but no cook, no clothes, and no carpet.
-‘On, on! Into the sea!’ gasped Cyril. ‘They MUST hate water. I’ve—heard—savages always—dirty.’
-Their feet were splashing in the warm shallows before his breathless words were ended. The calm baby-waves were easy to go through. It is warm work running for your life in the tropics, and the coolness of the water was delicious. They were up to their arm-pits now, and Jane was up to her chin.
+‘I believe you, my dear,’ said the cook, heartily. ‘Nothing to do unless you want to. But I’m getting rested now. Tomorrow I’m going to start cleaning out my hut, if the dream keeps on, and I shall teach them cooking; they burns everything to a cinder now unless they eats it raw.’
+‘But can you talk to them?’
+‘Lor’ love a duck, yes!’ the happy cook-queen replied; ‘it’s quite easy to pick up. I always thought I should be quick at foreign languages. I’ve taught them to understand “dinner,” and “I want a drink,” and “You leave me be,” already.’
+‘Then you don’t want anything?’ Anthea asked earnestly and anxiously.
+‘Not me, miss; except if you’d only go away. I’m afraid of me waking up with that bell a-going if you keep on stopping here a-talking to me. Long as this here dream keeps up I’m as happy as a queen.’
+‘Goodbye, then,’ said Anthea, gaily, for her conscience was clear now.
+She hurried into the wood, threw herself on the ground, and said ‘Home’—and there she was, rolled in the carpet on the nursery floor.
+‘SHE’S all right, anyhow,’ said Anthea, and went back to bed. ‘I’m glad somebody’s pleased. But mother will never believe me when I tell her.’
+The story is indeed a little difficult to believe. Still, you might try.
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s": "Anthea", "r": "part of", "o": "four children"},
-  {"s": "Cyril", "r": "owner of", "o": "Lamb"},
-  {"s": "Lamb", "r": "owned by", "o": "Cyril"},
-  {"s": "George Orwell", "r": "notable work", "o": "Nineteen Eighty-Four"},
-  {"s": "Nineteen Eighty-Four", "r": "author", "o": "Orwell"},
-  {"s": "Cyril", "r": "shouted", "o": "Gee-up, Squirrel; gee-gee"},
-  {"s": "Cyril", "r": "said", "o": "Stick to it"},
-  {"s": "feet", "r": "were", "o": "copper-coloured"},
-  {"s": "no clothes", "r": "present in", "o": "the scene"},
-  {"s": "carpet", "r": "present in", "o": "the scene"},
-  {"s": "Anthea", "r": "paused", "o": "to let Cyril pass"},
-  {"s": "Anthea", "r": "stood back to let", "o": "Cyril pass"},
-  {"s": "Cyril", "r": "carried", "o": "the Lamb"},
-  {"s": "Lamb", "r": "screamed with delight", "o": "delight"},
-  {"s": "carpet", "r": "landed", "o": "Lamb on the island"},
-  {"s": "On", "r": "followed by", "o": "On, on!"},
-  {"s": "On, on!", "r": "follows", "o": "On"},
-  {"s": "Into the sea!", "r": "main subject", "o": "sea"},
-  {"s": "Cyril", "r": "gasped", "o": "Into the sea!"},
-  {"s": "water", "r": "said to be the same as", "o": "MUST hate water"},
-  {"s": "MUST hate water", "r": "said to be the same as", "o": "water"},
-  {"s": "baby-waves", "r": "described as", "o": "calm"},
-  {"s": "sand", "r": "were", "o": "golden and opal-coloured"},
-  {"s": "turtles", "r": "basked on", "o": "water's edge"},
-  {"s": "they", "r": "were up to their arm-pits in", "o": "water"},
-  {"s": "Jane", "r": "was up to", "o": "her chin in water"}
+  {"s":"cook","r":"says","o":"I believe you, my dear"},
+  {"s":"cook","r":"says","o":"Nothing to do unless you want to"},
+  {"s":"cook","r":"plans to","o":"start cleaning out her hut tomorrow"},
+  {"s":"cook","r":"plans to","o":"teach them cooking"},
+  {"s":"they","r":"burn","o":"everything to a cinder unless eaten raw"},
+  {"s":"Anthea","r":"asks","o":"Can you talk to them?"},
+  {"s":"cook-queen","r":"replies","o":"Lor’ love a duck, yes!"},
+  {"s":"cook-queen","r":"states","o":"it’s quite easy to pick up foreign languages"},
+  {"s":"cook-queen","r":"states","o":"I have taught them to understand 'dinner', 'I want a drink', and 'You leave me be'"},
+  {"s":"Anthea","r":"asks","o":"Then you don’t want anything?"},
+  {"s":"cook-queen","r":"answers","o":"Not me, miss; except if you’d only go away."},
+  {"s":"cook-queen","r":"fears","o":"waking up with that bell a-going if you keep on stopping here talking to me"},
+  {"s":"cook-queen","r":"states","o":"Long as this dream keeps up I’m as happy as a queen"},
+  {"s":"Anthea","r":"says","o":"Goodbye, then"},
+  {"s":"Anthea","r":"goes","o":"into the wood"},
+  {"s":"Anthea","r":"says","o":"'Home'"},
+  {"s":"Anthea","r":"is","o":"rolled in the carpet on the nursery floor"},
+  {"s":"Anthea","r":"says","o":"'SHE’S all right, anyhow'"},
+  {"s":"Anthea","r":"returns","o":"to bed"},
+  {"s":"Anthea","r":"says","o":"I’m glad somebody’s pleased. But mother will never believe me when I tell her."},
+  {"s":"narrator","r":"notes","o":"The story is difficult to believe. Still, you might try."},
+  {"s":"dream","r":"persists","o":"keeps up"}
 ]
 
 ==================================================
 
 
 Valid JSON
-Anthea part of four children
-Cyril owner of Lamb
-Lamb owned by Cyril
-George Orwell notable work Nineteen Eighty-Four
-Nineteen Eighty-Four author Orwell
-Cyril shouted Gee-up, Squirrel; gee-gee
-Cyril said Stick to it
-feet were copper-coloured
-no clothes present in the scene
-carpet present in the scene
-Anthea paused to let Cyril pass
-Anthea stood back to let Cyril pass
-Cyril carried the Lamb
-Lamb screamed with delight delight
-carpet landed Lamb on the island
-On followed by On, on!
-On, on! follows On
-Into the sea! main subject sea
-Cyril gasped Into the sea!
-water said to be the same as MUST hate water
-MUST hate water said to be the same as water
-baby-waves described as calm
-sand were golden and opal-coloured
-turtles basked on water's edge
-they were up to their arm-pits in water
-Jane was up to her chin in water
+cook says I believe you, my dear
+cook says Nothing to do unless you want to
+cook plans to start cleaning out her hut tomorrow
+cook plans to teach them cooking
+they burn everything to a cinder unless eaten raw
+Anthea asks Can you talk to them?
+cook-queen replies Lor’ love a duck, yes!
+cook-queen states it’s quite easy to pick up foreign languages
+cook-queen states I have taught them to understand 'dinner', 'I want a drink', and 'You leave me be'
+Anthea asks Then you don’t want anything?
+cook-queen answers Not me, miss; except if you’d only go away.
+cook-queen fears waking up with that bell a-going if you keep on stopping here talking to me
+cook-queen states Long as this dream keeps up I’m as happy as a queen
+Anthea says Goodbye, then
+Anthea goes into the wood
+Anthea says 'Home'
+Anthea is rolled in the carpet on the nursery floor
+Anthea says 'SHE’S all right, anyhow'
+Anthea returns to bed
+Anthea says I’m glad somebody’s pleased. But mother will never believe me when I tell her.
+narrator notes The story is difficult to believe. Still, you might try.
+dream persists keeps up
 
 Most relevant nodes:
-  node_name  edge_count
-0     Cyril           6
-1      Lamb           3
-2     water           3
+    node_name  edge_count
+0      Anthea           9
+1  cook_queen           6
+2        cook           4
 
 Triples which best represent the graph:
-Cyril gasped Into_the_sea_
-Cyril carried the_Lamb
-Cyril said Stick_to_it
-Cyril shouted Gee_up__Squirrel__gee_gee
-Cyril owner_of Lamb
-Lamb screamed_with_delight delight
-Lamb owned_by Cyril
-water said_to_be_the_same_as MUST_hate_water
+Anthea says I_m_glad_somebody_s_pleased__But_mother_will_never_believe_me_when_I_tell_her_
+Anthea returns to_bed
+Anthea says _SHE_S_all_right__anyhow_
+Anthea is rolled_in_the_carpet_on_the_nursery_floor
+Anthea says _Home_
+Anthea goes into_the_wood
+Anthea says Goodbye__then
+Anthea asks Then_you_don_t_want_anything_
+Anthea asks Can_you_talk_to_them_
+cook_queen states Long_as_this_dream_keeps_up_I_m_as_happy_as_a_queen
+cook_queen fears waking_up_with_that_bell_a_going_if_you_keep_on_stopping_here_talking_to_me
+cook_queen answers Not_me__miss__except_if_you_d_only_go_away_
+cook_queen states I_have_taught_them_to_understand__dinner____I_want_a_drink___and__You_leave_me_be_
+cook_queen states it_s_quite_easy_to_pick_up_foreign_languages
+cook_queen replies Lor__love_a_duck__yes_
+cook plans_to teach_them_cooking
+cook plans_to start_cleaning_out_her_hut_tomorrow
+cook says Nothing_to_do_unless_you_want_to
+cook says I_believe_you__my_dear
 
 
 Generated summary:
-Cyril gasped as he went into the sea and carried a Lamb that he owns. The Lamb screamed with delight. Cyril affirmed his ownership of the Lamb, urged someone to “Stick to it,” and shouted “Gee up, Squirrel, gee-gee.”
+Anthea experiences a dreamlike sequence in which she is glad somebody is pleased but fears her mother won’t believe her when she tells her; she moves from the nursery floor to the wood, returns to bed, and quietly says “Home” and “Goodbye,” asking if anyone else wants something or can talk to them. A cook queen appears in the dream, content while the dream lasts and fearing waking up if the bell keeps ringing; she says she has taught them to understand dinner, wants a drink and to be left alone, and plans to teach cooking and start cleaning out her hut tomorrow, noting there is nothing to do unless someone wants something and that she believes Anthea.
+Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Cyril gasped as he went into the sea and carried a Lamb that he owns. The Lamb screamed with delight. Cyril affirmed his ownership of the Lamb, urged someone to “Stick to it,” and shouted “Gee up, Squirrel, gee-gee.”', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Anthea experiences a dreamlike sequence in which she is glad somebody is pleased but fears her mother won’t believe her when she tells her; she moves from the nursery floor to the wood, returns to bed, and quietly says “Home” and “Goodbye,” asking if anyone else wants something or can talk to them. A cook queen appears in the dream, content while the dream lasts and fearing waking up if the bell keeps ringing; she says she has taught them to understand dinner, wants a drink and to be left alone, and plans to teach cooking and start cleaning out her hut tomorrow, noting there is nothing to do unless someone wants something and that she believes Anthea.', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
 
 Output sent to web app.
+# exit

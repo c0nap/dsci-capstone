@@ -1,6 +1,7 @@
 import pytest
 import sys
 import os
+import time
 from src.setup import Session
 from src.util import Log
 
@@ -18,42 +19,46 @@ def session():
 def relational_db(session):
     """Fixture to get relational database connection."""
     relational_db = session.relational_db
-    saved_config = {
-        "verbose": relational_db.verbose,
-        "working_database": relational_db.verbose,
-    }
+    saved_verbose = relational_db.verbose
     relational_db.verbose = True
-    relational_db.change_database(relational_db._default_database)
+
+    # Removed default database reference; test_connection handles creation
     yield relational_db
-    relational_db.verbose = saved_config["verbose"]
-    relational_db.change_database(saved_config["working_database"])
+
+    # Restore verbose
+    relational_db.verbose = saved_verbose
 
 
 @pytest.mark.order(1)
 def test_relational(relational_db):
     """Tests if the relational database is working correctly.
     @note  Database connectors have internal tests, so use those instead."""
-    assert relational_db.test_connection(
-        print_results=True
-    ), "Basic tests on relational database connection failed."
+    assert relational_db.test_connection(), "Basic tests on relational database connection failed."
 
 
 @pytest.mark.order(2)
 def test_sql_examples(relational_db):
     """Run queries from test files."""
-    _test_sql_file(relational_db, "./tests/reset.sql", expect_df=False)
+    if relational_db.db_type == "MYSQL":
+        _test_sql_file(relational_db, "./db/tables_mysql.sql", expect_df=False)
+    elif relational_db.db_type == "POSTGRES":
+        _test_sql_file(relational_db, "./db/tables_postgres.sql", expect_df=False)
+    else:
+        raise Exception(f"Unknown database engine '{relational_db.db_type}'")
+
     _test_sql_file(
         relational_db,
-        "./tests/example1.sql",
+        "./db/example1.sql",
         expect_df=True,
         df_header="EntityName table:",
     )
     _test_sql_file(
         relational_db,
-        "./tests/example2.sql",
+        "./db/example2.sql",
         expect_df=True,
         df_header="ExampleEAV table:",
     )
+
     df = relational_db.get_dataframe(
         "EntityName"
     )  # Internal errors are handled by the class itself.
@@ -77,5 +82,5 @@ def _test_sql_file(relational_db, filename: str, expect_df: bool, df_header: str
             if df_header:
                 print(df_header)
                 print(df)
-    except:
-        Log.fail(f"Unexpected error while executing queries from '{filename}'.")
+    except Exception as e:
+        Log.fail(Log.pytest_db + Log.run_f, Log.msg_bad_exec_f(filename), raise_error=True, other_error=e)

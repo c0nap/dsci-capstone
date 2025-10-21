@@ -1,69 +1,129 @@
 class Log:
     """The Log class standardizes console output."""
 
+    ## Enable ANSI colors in output
+    USE_COLORS = True
+    ## ANSI code for green text
+    GREEN = "\033[32m"
+    ## ANSI code for red text
+    RED = "\033[31m"
+    ## ANSI code for bright yellow / cream
+    BRIGHT = "\033[93m"
+    ## ANSI code to reset color
+    WHITE = "\033[0m"
+
+    ## ANSI color applied to the prefix of success messages
+    SUCCESS_COLOR = GREEN
+    ## ANSI color applied to the prefix of fail messages
+    FAILURE_COLOR = RED
+    ## ANSI color applied to the body of every Log message
+    MSG_COLOR = BRIGHT
+
+
     # These functions can be used to print the standard prefix
     # before your own print(), or a message can be specified.
-    def success(msg: str = ""):
+
+    @staticmethod
+    def success(prefix: str = "PASS", msg: str = ""):
         """A success message begins with a Green Plus.
+        @param prefix  The context of the message.
         @param msg  The message to print."""
-        print("\033[32m+\033[0m - - ", end="")
-        if msg != "":
-            print(msg)
+        text = f"{Log.SUCCESS_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
+        print(text)
 
-    def fail(msg: str = ""):
+    @staticmethod
+    def fail(prefix: str = "ERROR", msg: str = "", raise_error=True, other_error=None):
         """A failure message begins with a Red X.
+        @param prefix  The context of the message.
+        @param msg  The message to print.
+        @param raise_error  Whether to raise an error.
+        @param other_error  Another Exception resulting from this failure.
+        @throws RuntimeError  If raise_error is True"""
+        text = f"{Log.FAILURE_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
+        if raise_error:
+            if isinstance(other_error, Exception):
+                raise RuntimeError(text) from other_error
+            else:
+                raise RuntimeError(text)
+        else:
+            print(text)
+
+    @staticmethod
+    def success_legacy(msg: str = ""):
+        """A legacy success message begins with a Green Plus.
         @param msg  The message to print."""
-        print("\033[31mX\033[0m - - ", end="")
         if msg != "":
-            print(msg)
+            Log.success(prefix="+", msg=f" - - {msg}")
 
-    # The below methods build upon the standardized success / fail messages.
-    def file_read_failure(filename: str):
-        """Prints a failure message when a file cannot be opened.
-        @param filename  The file which caused the error."""
-        Log.fail(f'Failed to read file "{filename}"')
+    @staticmethod
+    def fail_legacy(msg: str = ""):
+        """A legacy failure message begins with a Red X.
+        @param msg  The message to print."""
+        if msg != "":
+            Log.fail(prefix="X", msg=f" - - {msg}", raise_error=False)
 
-    def connect_success(database_name: str):
-        """Prints a failure message when a database connection fails.
-        @param database_name  The name of the database which was connected to."""
-        Log.success(f"Successfully connected to database: {database_name}")
 
-    def connect_fail(connection_string: str):
-        """Prints a failure message when a database connection fails.
-        @param connection_string  The connection string which caused the error."""
-        Log.fail(f"Failed to connect on {connection_string}")
+    # --------- Builder Pattern ---------
+    # Compose your own standardized error messages depending on the context
+    # Everything in the prefix will have color - a few words to contextualize the error source.
+    # The message body (msg_*) will be bright - easy to find inside long traceback.
 
-    def success_manage_db(database_name: str, managed: str):
-        """Prints a success message when a new database is created or dropped.
-        @param database_name  The name of the target database.
-        @param managed  Past-tense verb representing the database operation performed.
-        """
-        Log.success(f'{managed} database "{database_name}"')
+    conn_abc = "CONNECTOR (ABC): "
+    db_conn_abc = "DB CONNECTOR (ABC): "
+    rel_db = "REL DB: "
+    gr_db = "GRAPH DB: "
+    doc_db = "DOCS DB: "
 
-    def fail_manage_db(connection_string: str, database_name: str, manage: str):
-        """Prints a failure message when database creation or deletion fails.
-        @param connection_string  The database connector which had the error.
-        @param database_name  The name of the database which could not be created or dropped.
-        @param manage  Present-tense verb representing the database operation performed.
-        """
-        Log.fail(
-            f'Failed to {manage} database "{database_name}" on connection {connection_string}'
-        )
+    bad_addr = "BAD ADDRESS: "
+    msg_bad_addr = lambda connection_string: f"Failed to connect on {connection_string}"
 
-    def incorrect_result(observed, expected):
-        """Prints a failure message when a value is not what we expected.
-        @param observed  The value to check (must be same type as 'expected').
-        @param expected  The correct value (can be any printable type)."""
-        Log.fail(f"Incorrect result: Expected {expected}, got {observed}")
+    bad_path = "FILE NOT FOUND: "
+    msg_bad_path = lambda file_path: f"Failed to open file '{file_path}'"
+    msg_good_path = lambda file_path: f"Reading contents of file '{file_path}'"
 
-    def warn_parse(trace: str, expected_type: str, bad_value: str):
-        """Prints a failure message when parsing fails.
-        @param trace  Alias for the object to be converted.
-        @param expected_type  The type we are trying to convert to.
-        @param bad_value  Actual target value to be converted."""
-        Log.fail(
-            f"Could not convert {trace} with value {bad_value} to type {expected_type}"
-        )
+    msg_good_exec_f = lambda file_path: f"Finished executing queries from '{file_path}'"
+    msg_bad_exec_f = lambda file_path: f"Error occurred while executing queries from '{file_path}'"
+
+    msg_db_connect = lambda database_name: f"Successfully connected to database: {database_name}"
+
+    good_val = "VALID RESULT: "
+    bad_val = "INCORRECT RESULT: "
+    msg_compare = lambda observed, expected: f"Expected {expected}, got {observed}"
+    msg_result = lambda results: f"Query results:\n{results}"
+
+    test_conn = "CONNECTION TEST: "
+    test_basic = "BASIC: "
+    test_info = "DB INFO: "
+    test_df = "GET DF: "
+    test_tmp_db = "CREATE DB: "
+
+    msg_unknown_error = "An unhandled error occurred."
+
+    get_df = "GET_DF: "
+    create_db = "CREATE_DB: "
+    drop_db = "DROP_DB: "
+    run_q = "QUERY: "
+    run_f = "FILE EXEC: "
+    msg_bad_table = lambda name: f"Table '{name}' not found"
+    msg_good_table = lambda name: f"Converted table '{name}' to Pandas DataFrame."
+    msg_bad_coll = lambda name: f"Collection '{name}' not found"
+    msg_good_coll = lambda name: f"Converted collection '{name}' to Pandas DataFrame."
+
+    msg_success_managed_db = lambda managed, database_name: f"Successfully {managed} database '{database_name}'"
+    """@brief  Handles various successful actions an admin could perform on a database.
+    @param managed  Past-tense verb representing the database operation performed, e.g. Created, Dropped."""
+    msg_fail_manage_db = lambda manage, database_name, connection_string: f"Failed to {manage} database '{database_name}' on connection {connection_string}"
+    """@brief  Handles various failed actions an admin could perform on a database.
+    @param manage  Present-tense verb representing the database operation performed, e.g. create, drop."""
+
+    msg_fail_parse = lambda alias, bad_value, expected_type: f"Could not convert {alias} with value {bad_value} to type {expected_type}"
+
+    msg_multiple_query = lambda n_queries, query: f"A combined query ({n_queries} results) was executed as a single query. Extra results were discarded. Query: {query}"
+    msg_good_exec_q = lambda query, results: f"Executed successfully: '{query}'\n{Log.msg_result(results)}"
+    msg_bad_exec_q = lambda query: f"Failed to execute query: '{query}'"
+
+    kg = "KG: "
+    pytest_db = "PYTEST (DB): "
 
 
 def all_none(*args):

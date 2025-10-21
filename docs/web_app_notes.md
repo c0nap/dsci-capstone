@@ -2,6 +2,7 @@
 Data Science Capstone - Patrick Conan
 ---
 
+Make sure you copy and rename `appsettings.Example.json` to `appsettings.json`and complete the appropriate fields. `appsettings.Development.json` can be ignored - it will override values temporarily when Development mode is selected, but is not used in this project.
 
 #### Tips for designing a Blazor.Diagrams page
 
