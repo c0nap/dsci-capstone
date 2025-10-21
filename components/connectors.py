@@ -38,7 +38,7 @@ class Connector(ABC):
         """Establish a basic connection to the database.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
         pass
 
     @abstractmethod
@@ -115,7 +115,6 @@ class DatabaseConnector(Connector):
     def change_database(self, new_database: str):
         """Update the connection URI to reference a different database in the same engine.
         @param new_database  The name of the database to connect to.
-        @param _route_db_name  Whether to use the database name in the connection string.
         """
         self.database_name = new_database
         if self._route_db_name:
@@ -277,7 +276,7 @@ class RelationalConnector(DatabaseConnector):
         @details  By default, Log.fail will raise an exception.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
         try:
             # Check if connection string is valid
             if self.check_connection(Log.test_conn, raise_error) == False:
@@ -350,7 +349,7 @@ class RelationalConnector(DatabaseConnector):
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
         try:
             # SQLAlchemy will not create the connection until we send a query
             engine = create_engine(self.connection_string, poolclass=NullPool)

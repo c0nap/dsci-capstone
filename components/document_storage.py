@@ -43,7 +43,7 @@ class DocumentConnector(DatabaseConnector):
         @details  By default, Log.fail will raise an exception.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
         try:
             # Check if connection string is valid
             if self.check_connection(Log.test_conn, raise_error) == False:
@@ -63,7 +63,7 @@ class DocumentConnector(DatabaseConnector):
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
         try:
             mongoengine.connect(host=self.connection_string)
         except Exception as e:
@@ -229,6 +229,7 @@ class DocumentConnector(DatabaseConnector):
         @details
         	- Will explode / flatten nested dicts only if json_normalize() is successful
             - Different approach than GraphConnector because our documents usually contain nesting.
+        
         Steps:
           1. Convert ObjectId fields (_id) to strings so Pandas can handle them.
           2. Flatten nested JSON structures using Pandas.json_normalize.

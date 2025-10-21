@@ -38,7 +38,7 @@ class Log:
         @param msg  The message to print.
         @param raise_error  Whether to raise an error.
         @param other_error  Another Exception resulting from this failure.
-        @raises RuntimeError  If raise_error is True"""
+        @throws RuntimeError  If raise_error is True"""
         text = f"{Log.FAILURE_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
         if raise_error:
             if isinstance(other_error, Exception):

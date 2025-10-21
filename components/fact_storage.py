@@ -33,7 +33,7 @@ class GraphConnector(DatabaseConnector):
         @details  By default, Log.fail will raise an exception.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
         try:
             # Check if connection string is valid
             if self.check_connection(Log.test_conn, raise_error) == False:
@@ -53,7 +53,7 @@ class GraphConnector(DatabaseConnector):
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @raises RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
         try:
             # Automatically connected, just try a basic query
             db.cypher_query("RETURN 1")
