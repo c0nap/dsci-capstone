@@ -1,5 +1,6 @@
 from datasets import load_dataset
 import re
+import pandas as pd
 
 # --------------------------------------
 # BookSum
@@ -12,19 +13,31 @@ def load_booksum():
 	train = booksum["train"]
 	# val = booksum["validation"]
 	# test = booksum["test"]
-	print(train[0])
 	
 	# inspect one sample
+	print(train.column_names)
 	df_booksum = to_df_booksum(booksum)
+	df_booksum = df_booksum[df_booksum["summary_type"] == "book"]
 	return df_booksum
 
 
 def to_df_booksum(ds):
+    import re
+
+    def clean(s):
+        if not isinstance(s, str):
+            return ""
+        s = s.lower().strip()
+        s = re.sub(r"[\W_]+", " ", s)
+        return s
+
     return pd.DataFrame({
-        "title": [x.get("book_title", "").strip().lower() for x in ds],
-        "author": [x.get("book_author", "").strip().lower() for x in ds],
-        "booksum_id": [x.get("book_id") for x in ds],
+        # summary_name is usually like "Alice in Wonderland by Lewis Carroll"
+        "title": [clean(x.split(" by ")[0]) for x in ds["summary_name"]],
+        "author": [clean(x.split(" by ")[1]) if " by " in x else "" for x in ds["summary_name"]],
+        "booksum_id": ds["book_id"]
     })
+
 
 
 # --------------------------------------
@@ -37,14 +50,14 @@ def load_narrativeqa():
 	train = nqa["train"]
 	# val = nqa["validation"]
 	# test = nqa["test"]
-	print(train[0])
 	
+	print(train.column_names)
 	df_nqa = to_df_nqa(nqa)
 	return df_nqa
 
 
 def to_df_nqa(ds):
-    docs = [d["document"] for d in ds]
+    docs = ds["document"]
     return pd.DataFrame({
         "title": [d.get("title", "").strip().lower() for d in docs],
         "author": [d.get("author", "").strip().lower() for d in docs],
@@ -53,6 +66,28 @@ def to_df_nqa(ds):
 
 
 
+
+# --------------------------------------
+# Cross-Reference
+# --------------------------------------
+def normalize_title(t):
+    t = re.sub(r"[\W_]+", " ", t)  # remove punctuation
+    return t.strip()
+
+def merge_dataframes(df1, df2, suffix1, suffix2, key_columns):
+	for key in key_columns:
+		df1[key] = df1[key].map(normalize_title)
+		df1[key] = df1[key].map(normalize_title)
+	merged = pd.merge(
+	    df1, df2,
+	    on=key_columns,
+	    how="inner",
+	    suffixes=(suffix1, suffix2)
+	)
+	print(f"Exact matches: {len(merged)}")
+
+
 if __name__ == "__main__":
 	df_booksum = load_booksum()
 	df_nqa = load_narrativeqa()
+	merge_dataframes(df_booksum, df_nqa, "_booksum", "_nqa", ["title", "author"])
