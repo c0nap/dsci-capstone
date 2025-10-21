@@ -26,7 +26,7 @@ jobs:
 
   push:
     uses: ./.github/workflows/push-dev.yml
-    needs: test
+    needs: [build, test]
     secrets: inherit
     with:
       artifact-name: ${{ needs.build.outputs.artifact }}
