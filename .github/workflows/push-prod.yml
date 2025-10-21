@@ -7,7 +7,7 @@ on:
         type: string
 
 jobs:
-  push-images-prod:
+  prod-images:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Deploying to '${{ inputs.public-namespace }}' with image tag 'latest'"
