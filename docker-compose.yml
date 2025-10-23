@@ -26,7 +26,7 @@ services:
       - "5055:5055"
 
 
-  qeval_service:
+  qeval_worker:
     container_name: container-qeval
     networks:
       - default
@@ -34,12 +34,11 @@ services:
     # Do NOT fall back to building from scratch if image does not exist
     # ^ might revert, but compose will only use prod for now
     image: dsci-cap-img-questeval-prod:latest
-    environment:
-      - TARGET_METRIC=questeval
-    command: ["python", "-m", "src.flask", "--metric", "${TARGET_METRIC}"]
-    ports: ["5001:5001"]
+    command: python -m src.flasks --task questeval --port ${WORKER_QUESTEVAL_PORT}
+    ports:
+      - "${WORKER_QUESTEVAL_PORT}:${WORKER_QUESTEVAL_PORT}"
 
-  bscore_service:
+  bscore_worker:
     container_name: container-bscore
     networks:
       - default
@@ -47,10 +46,10 @@ services:
     # Do NOT fall back to building from scratch if image does not exist
     # ^ might revert, but compose will only use prod for now
     image: dsci-cap-img-bookscore-prod:latest
-    environment:
-      - TARGET_METRIC=bookscore
-    command: ["python", "-m", "src.flask", "--metric", "${TARGET_METRIC}"]
-    ports: ["5002:5002"]
+    command: python -m src.flasks --task bookscore --port ${WORKER_BOOKSCORE_PORT}
+    ports:
+      - "${WORKER_BOOKSCORE_PORT}:${WORKER_BOOKSCORE_PORT}"
+
 
 
 

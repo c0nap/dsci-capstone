@@ -571,46 +571,59 @@ CHAPTER 12. THE END OF THE END\n
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 """Boss microservice for orchestrating distributed task processing.
 Manages task distribution to workers and tracks completion order."""
 
 from flask import Flask, request, jsonify
-from pymongo import MongoClient
 import requests
 import os
 from dotenv import load_dotenv
 from typing import Dict, List, Any, Optional
 from collections import defaultdict
+from src.session import Session
 
 
 
-def load_worker_config() -> Dict[str, str]:
+def load_worker_config(task_types: List[str]) -> Dict[str, str]:
     """Load worker service URLs from environment variables.
-    @return Dictionary mapping task names to worker URLs."""
+    @param task_types  List of valid task keys to use when searching the .env
+    @return  Dictionary mapping task names to worker URLs."""
     load_dotenv(".env")
     
-    # Expected environment variables: WORKER_BOOKSCORE_HOST, WORKER_QUESTEVAL_HOST, etc.
+    # Expected environment variables: WORKER_BOOKSCORE_PORT, WORKER_QUESTEVAL_HOST, etc.
     workers = {}
     
-    # You can expand this based on your task types
-    task_types = ["bookscore", "questeval"]
-    
     for task in task_types:
-        env_key = f"WORKER_{task.upper()}_HOST"
-        host = os.getenv(env_key)
-        if host:
-            workers[task] = f"http://{host}:5000/start"
+        host_key = f"WORKER_{task.upper()}_HOST"
+        port_key = f"WORKER_{task.upper()}_PORT"
+        HOST = os.getenv(host_key)
+        PORT = os.getenv(port_key)
+        if HOST and PORT:
+            workers[task] = f"http://{HOST}:{PORT}/start"
     
     return workers
 
 
-def clear_task_data(mongo_db: Any, story_id: str, chunk_id: str, task_name: str) -> None:
+def clear_task_data(mongo_db: Any, collection_name: str, story_id: str, chunk_id: str, task_name: str) -> None:
     """Clear any existing task data before assigning new task to worker.
-    @param mongo_db MongoDB database instance.
+    @param mongo_db MongoDB database handle.
+    @param collection_name The name of our primary chunk storage collection in Mongo.
     @param story_id Unique identifier for the story.
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the task to clear."""
-    collection = mongo_db.chunks
+    collection = getattr(mongo_db, collection_name)
     
     collection.update_one(
         {"story_id": story_id, "chunk_id": chunk_id},
@@ -637,16 +650,16 @@ def assign_task_to_worker(worker_url: str, story_id: str, chunk_id: str) -> bool
         return False
 
 
-def create_app(mongo_uri: str, database_name: str, worker_urls: Dict[str, str]) -> Flask:
+def create_app(docs_db: str, database_name: str, collection_name: str, worker_urls: Dict[str, str]) -> Flask:
     """Create and configure Flask application for boss service.
-    @param mongo_uri MongoDB connection URI.
+    @param docs_db MongoDB connector class.
     @param database_name Name of the MongoDB database to use.
+    @param collection_name The name of our primary chunk storage collection in Mongo.
     @param worker_urls Dictionary mapping task names to worker URLs.
     @return Configured Flask application instance."""
     app = Flask(__name__)
-    
-    mongo_client = MongoClient(mongo_uri)
-    mongo_db = mongo_client[database_name]
+    docs_db.change_database(database_name)
+    mongo_db = docs_db.get_unmanaged_handle()
     
     # Track task completion order
     # Key: story_id, Value: dict with 'expected_order' and 'completed' sets
@@ -665,16 +678,15 @@ def create_app(mongo_uri: str, database_name: str, worker_urls: Dict[str, str]) 
         
         if not story_id or not task_type:
             return jsonify({"error": "Missing story_id or task_type"}), 400
-        
         if task_type not in worker_urls:
             return jsonify({"error": f"Unknown task type: {task_type}"}), 400
         
         # Get all chunks for this story
-        chunks = list(mongo_db.chunks.find(
+        collection = getattr(mongo_db, collection_name)
+        chunks = list(collection.find(
             {"story_id": story_id},
             {"chunk_id": 1}
         ).sort("chunk_id", 1))
-        
         if not chunks:
             return jsonify({"error": "No chunks found for story"}), 404
         
@@ -691,7 +703,7 @@ def create_app(mongo_uri: str, database_name: str, worker_urls: Dict[str, str]) 
             chunk_id = chunk["chunk_id"]
             
             # Clear any existing task data
-            clear_task_data(mongo_db, story_id, chunk_id, task_type)
+            clear_task_data(mongo_db, collection_name, story_id, chunk_id, task_type)
             
             # Assign task to worker
             if assign_task_to_worker(worker_url, story_id, chunk_id):
@@ -767,15 +779,17 @@ def create_app(mongo_uri: str, database_name: str, worker_urls: Dict[str, str]) 
 
 load_dotenv(".env")
 if __name__ == "__main__":
-    
-    # Load configuration
     session = Session(verbose=False)
-    database_name = os.getenv("DB_NAME")
-    worker_urls = load_worker_config()
-    
+    DB_NAME = os.getenv("DB_NAME")
+    BOSS_PORT = os.getenv("PYTHON_PORT")
+    collection_name = "story_chunks"
+
+    # Load configuration
+    task_types = ["questeval", "bookscore"]
+    worker_urls = load_worker_config(task_types)
     if not worker_urls:
-        print("Warning: No worker URLs configured. Set WORKER_<TASKNAME>_HOST environment variables.")
+        print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
     
     # Create and run app
-    app = create_app(session.docs_db, database_name, worker_urls)
-    app.run(host="0.0.0.0", port=5054)
+    app = create_app(session.docs_db, DB_NAME, collection_name, worker_urls)
+    app.run(host="0.0.0.0", port=BOSS_PORT)
