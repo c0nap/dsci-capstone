@@ -1,5 +1,5 @@
 # Use a small python base, include the minor version for reproducibility
-FROM python:3.8-slim
+FROM python:3.10-slim
 
 # Connect the generated Docker image to this repository
 LABEL org.opencontainers.image.source="https://github.com/c0nap/dsci-capstone"
@@ -10,17 +10,13 @@ WORKDIR /flask
 # Make Python stdout/stderr unbuffered so logs show immediately
 ENV PYTHONUNBUFFERED=1
 
-# Install compilation dependencies, some Python packages may need these
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*
+# Copy dependency list first to leverage build cacheRUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential make \
+ && pip install --upgrade pip setuptools wheel \
+ && rm -rf /var/lib/apt/lists/*
 
-# Copy dependency list first to leverage build cache
-RUN apt-get update && apt-get install -y --no-install-recommends pandoc make git && pip install --upgrade pip setuptools wheel build && rm -rf /var/lib/apt/lists/*
-
-# Direct installs (no requirements.txt)
-RUN pip install --no-cache-dir \
-    --extra-index-url https://download.pytorch.org/whl/cpu \
-    torch \
-    git+https://github.com/ThomasScialom/QuestEval.git
+COPY req/ .
+RUN pip install --no-cache-dir -r flask-worker.txt bookscore.txt
 
 
 # Copy source code into the container (optional .dockerignore)
@@ -30,7 +26,7 @@ COPY Makefile pyproject.toml ./
 
 # Declare build args - whether to include .env or .env.dummy
 ARG ENV_FILE
-ARG TARGET_METRIC
+ARG TASK
 
 # Create .env file
 COPY ${ENV_FILE} .env
@@ -38,5 +34,5 @@ COPY ${ENV_FILE} .env
 RUN make env-docker
 RUN mv .env.docker .env
 
-# supply mode as arg
-CMD ["python", "-m", "src.flask", "--metric", "${TARGET_METRIC}"]
+# Supply task as arg
+CMD ["python", "-m", "src.flask", "--task", "${TASK}"]
