@@ -13,7 +13,8 @@ load_dotenv(".env")
 
 # REST API endpoint
 HOST = os.getenv(f"BLAZOR_HOST")
-url = f"http://{HOST}:5055/api/metrics"
+PORT = os.getenv(f"BLAZOR_PORT")
+url = f"http://{HOST}:{PORT}/api/metrics"
 
 
 def generate_default_metrics(

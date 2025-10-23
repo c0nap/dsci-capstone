@@ -35,8 +35,9 @@ def load_boss_config() -> str:
     """Load boss service callback URL from environment variables.
     @return Full callback URL for the boss service.
     @throws KeyError If PYTHON_HOST environment variable is missing."""
-    boss_host = os.getenv("PYTHON_HOST")
-    return f"http://{boss_host}:5054/callback"
+    BOSS_HOST = os.getenv("PYTHON_HOST")
+    BOSS_PORT = os.getenv("PYTHON_PORT")
+    return f"http://{BOSS_HOST}:{BOSS_PORT}/callback"
 
 
 def get_task_handler(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
