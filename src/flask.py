@@ -11,9 +11,10 @@ from dotenv import load_dotenv
 from typing import Dict, Any, Callable, Optional
 
 
-def load_mongo_config() -> tuple[str, str]:
+def load_mongo_config(database: str) -> str:
     """Load MongoDB configuration from environment variables.
-    @return Tuple of (mongo_uri, database_name)
+    @param database Name of the MongoDB database to connect to.
+    @return MongoDB connection string.
     @throws KeyError If required environment variables are missing."""
     load_dotenv(".env")
     
@@ -23,12 +24,11 @@ def load_mongo_config() -> tuple[str, str]:
     password = os.getenv(f"{db_prefix}_PASSWORD")
     host = os.getenv(f"{db_prefix}_HOST")
     port = os.getenv(f"{db_prefix}_PORT")
-    database = os.getenv("DB_NAME")
     
     auth_suffix = "?authSource=admin&uuidRepresentation=standard"
     mongo_uri = f"{engine}://{username}:{password}@{host}:{port}/{database}{auth_suffix}"
     
-    return mongo_uri, database
+    return mongo_uri
 
 
 def load_boss_config() -> str:
@@ -56,14 +56,15 @@ def get_task_handler(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any
         raise ValueError(f"Unknown task type: {task_name}")
 
 
-def mark_task_in_progress(mongo_db: Any, story_id: str, chunk_id: str, task_name: str) -> None:
+def mark_task_in_progress(mongo_db: Any, collection_name: str, story_id: str, chunk_id: str, task_name: str) -> None:
     """Mark a task as in-progress in MongoDB before processing begins.
     @param mongo_db MongoDB database instance.
+    @param collection_name The name of our primary chunk storage collection in Mongo.
     @param story_id Unique identifier for the story.
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the task being executed.
     @throws RuntimeError If task data already exists (preventing overwrites)."""
-    collection = mongo_db.chunks
+    collection = getattr(mongo_db, collection_name)
     
     # Check if task result already exists
     existing = collection.find_one(
@@ -85,14 +86,15 @@ def mark_task_in_progress(mongo_db: Any, story_id: str, chunk_id: str, task_name
     )
 
 
-def save_task_result(mongo_db: Any, story_id: str, chunk_id: str, task_name: str, result: Dict[str, Any]) -> None:
+def save_task_result(mongo_db: Any, collection_name: str, story_id: str, chunk_id: str, task_name: str, result: Dict[str, Any]) -> None:
     """Save completed task results to MongoDB.
     @param mongo_db MongoDB database instance.
+    @param collection_name The name of our primary chunk storage collection in Mongo.
     @param story_id Unique identifier for the story.
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the task that was executed.
     @param result Dictionary containing task results to be stored."""
-    collection = mongo_db.chunks
+    collection = getattr(mongo_db, collection_name)
     
     update_data = {
         f"{task_name}.status": "completed",
@@ -125,17 +127,12 @@ def notify_boss(boss_url: str, story_id: str, chunk_id: str, task_name: str, sta
         print(f"Failed to notify boss: {e}")
 
 
-def create_app(task_name: str, mongo_uri: str, database_name: str, boss_url: str) -> Flask:
+def create_app(task_name: str, boss_url: str) -> Flask:
     """Create and configure Flask application for task processing.
     @param task_name Type of task this worker will process.
-    @param mongo_uri MongoDB connection URI.
-    @param database_name Name of the MongoDB database to use.
     @param boss_url Callback URL for the boss service.
     @return Configured Flask application instance."""
     app = Flask(__name__)
-    
-    mongo_client = MongoClient(mongo_uri)
-    mongo_db = mongo_client[database_name]
     
     # Load task handler on startup
     task_handler = get_task_handler(task_name)
@@ -147,28 +144,36 @@ def create_app(task_name: str, mongo_uri: str, database_name: str, boss_url: str
         data = request.json
         story_id = data.get("story_id")
         chunk_id = data.get("chunk_id")
-        
+        database_name = data.get("database_name")
+        collection_name = data.get("collection_name")
+        if not database_name or not collection_name:
+            return jsonify({"error": "Missing database_name or collection_name"}), 400
         if not story_id or not chunk_id:
             return jsonify({"error": "Missing story_id or chunk_id"}), 400
         
+        # Reconnect to the database since DB_NAME or COLLECTION may have changed
+        mongo_uri = load_mongo_config()
+        mongo_client = MongoClient(mongo_uri)
+    	mongo_db = mongo_client[database_name]
+
         # Retrieve chunk data from MongoDB
-        chunk_doc = mongo_db.chunks.find_one({
+        collection = getattr(mongo_db, collection_name)
+        chunk_doc = collection.find_one({
             "story_id": story_id,
             "chunk_id": chunk_id
         })
-        
         if not chunk_doc:
             return jsonify({"error": "Chunk not found"}), 404
         
         try:
             # Mark task as in-progress
-            mark_task_in_progress(mongo_db, story_id, chunk_id, task_name)
+            mark_task_in_progress(mongo_db, collection_name, story_id, chunk_id, task_name)
             
             # Execute task
             result = task_handler(chunk_doc)
             
             # Save results
-            save_task_result(mongo_db, story_id, chunk_id, task_name, result)
+            save_task_result(mongo_db, collection_name, story_id, chunk_id, task_name, result)
             
             # Notify boss
             notify_boss(boss_url, story_id, chunk_id, task_name, "completed")
@@ -187,13 +192,12 @@ def create_app(task_name: str, mongo_uri: str, database_name: str, boss_url: str
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Flask worker microservice")
     parser.add_argument("--task", required=True, help="Task type to execute")
-    parser.add_argument("--port", type=int, default=5000, help="Port to run on")
+    parser.add_argument("--port", type=int, help="Port to run on")
     args = parser.parse_args()
     
-    # Load configuration
-    mongo_uri, database_name = load_mongo_config()
+    # Boss URL never changes, but MongoDB connection might
     boss_url = load_boss_config()
     
     # Create and run app
-    app = create_app(args.task, mongo_uri, database_name, boss_url)
+    app = create_app(args.task, boss_url)
     app.run(host="0.0.0.0", port=args.port)

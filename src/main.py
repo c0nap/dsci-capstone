@@ -631,13 +631,17 @@ def clear_task_data(mongo_db: Any, collection_name: str, story_id: str, chunk_id
     )
 
 
-def assign_task_to_worker(worker_url: str, story_id: str, chunk_id: str) -> bool:
+def assign_task_to_worker(worker_url: str, database_name: str, collection_name: str, story_id: str, chunk_id: str) -> bool:
     """Assign a task to a worker microservice.
     @param worker_url Full URL of the worker's /start endpoint.
+    @param database_name Name of the MongoDB database to use.
+    @param collection_name The name of our primary chunk storage collection in Mongo.
     @param story_id Unique identifier for the story.
     @param chunk_id Unique identifier for the chunk within the story.
     @return True if task was successfully assigned, False otherwise."""
     payload = {
+        "database_name": database_name,
+        "collection_name": collection_name,
         "story_id": story_id,
         "chunk_id": chunk_id
     }
@@ -706,7 +710,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             clear_task_data(mongo_db, collection_name, story_id, chunk_id, task_type)
             
             # Assign task to worker
-            if assign_task_to_worker(worker_url, story_id, chunk_id):
+            if assign_task_to_worker(worker_url, database_name, collection_name, story_id, chunk_id):
                 assigned += 1
         
         return jsonify({
@@ -782,7 +786,7 @@ if __name__ == "__main__":
     session = Session(verbose=False)
     DB_NAME = os.getenv("DB_NAME")
     BOSS_PORT = os.getenv("PYTHON_PORT")
-    collection_name = "story_chunks"
+    COLLECTION = os.getenv("COLLECTION_NAME")
 
     # Load configuration
     task_types = ["questeval", "bookscore"]
@@ -791,5 +795,5 @@ if __name__ == "__main__":
         print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
     
     # Create and run app
-    app = create_app(session.docs_db, DB_NAME, collection_name, worker_urls)
+    app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
     app.run(host="0.0.0.0", port=BOSS_PORT)
