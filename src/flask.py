@@ -9,6 +9,56 @@ import requests
 import os
 from dotenv import load_dotenv
 from typing import Dict, Any, Callable, Optional
+import queue, threading
+
+
+######################################################################################
+# Background threading system for non-blocking task handling.
+# Allows Flask to immediately respond to the boss service (202: accepted)
+# while processing continues asynchronously in a separate thread.
+######################################################################################
+task_queue = queue.Queue()
+def task_worker():
+    """Continuously process tasks from the global queue in the background.
+    Each task runs sequentially (or with limited concurrency if multiple workers are started).
+    @throws Exception Logs any runtime errors that occur during task execution."""
+    while True:
+        func, args = task_queue.get()
+        try:
+            func(*args)
+        except Exception as e:
+            print(f"Worker thread error: {e}")
+        finally:
+            task_queue.task_done()
+
+# Start one background worker thread (can increase to 2–4 for limited concurrency)
+threading.Thread(target=task_worker, daemon=True).start()
+
+
+def process_task(mongo_db, collection_name, story_id, chunk_id, task_name, chunk_doc, boss_url, task_handler):
+    """Perform the assigned task in a background thread.
+    This includes updating task status, running the handler, saving results,
+    and notifying the boss service when complete.
+    @param mongo_db MongoDB database instance.
+    @param collection_name The name of the target MongoDB collection.
+    @param story_id Unique identifier for the story being processed.
+    @param chunk_id Unique identifier for the chunk within the story.
+    @param task_name Name of the task being executed.
+    @param chunk_doc Document data for the current chunk.
+    @param boss_url Callback URL for the boss service.
+    @param task_handler Function that performs the actual task computation.
+    @throws Exception Logs and reports failures to the boss service."""
+    try:
+        mark_task_in_progress(mongo_db, collection_name, story_id, chunk_id, task_name)
+        result = task_handler(chunk_doc)
+        save_task_result(mongo_db, collection_name, story_id, chunk_id, task_name, result)
+        notify_boss(boss_url, story_id, chunk_id, task_name, "completed")
+    except Exception as e:
+        notify_boss(boss_url, story_id, chunk_id, task_name, "failed")
+        print(f"Error in background task: {e}")
+######################################################################################
+
+
 
 
 def load_mongo_config(database: str) -> str:
@@ -152,9 +202,9 @@ def create_app(task_name: str, boss_url: str) -> Flask:
             return jsonify({"error": "Missing story_id or chunk_id"}), 400
         
         # Reconnect to the database since DB_NAME or COLLECTION may have changed
-        mongo_uri = load_mongo_config()
+        mongo_uri = load_mongo_config(database_name)
         mongo_client = MongoClient(mongo_uri)
-    	mongo_db = mongo_client[database_name]
+        mongo_db = mongo_client[database_name]
 
         # Retrieve chunk data from MongoDB
         collection = getattr(mongo_db, collection_name)
@@ -165,26 +215,9 @@ def create_app(task_name: str, boss_url: str) -> Flask:
         if not chunk_doc:
             return jsonify({"error": "Chunk not found"}), 404
         
-        try:
-            # Mark task as in-progress
-            mark_task_in_progress(mongo_db, collection_name, story_id, chunk_id, task_name)
-            
-            # Execute task
-            result = task_handler(chunk_doc)
-            
-            # Save results
-            save_task_result(mongo_db, collection_name, story_id, chunk_id, task_name, result)
-            
-            # Notify boss
-            notify_boss(boss_url, story_id, chunk_id, task_name, "completed")
-            
-            return jsonify({"status": "accepted"}), 202
-            
-        except RuntimeError as e:
-            return jsonify({"error": str(e)}), 409
-        except Exception as e:
-            notify_boss(boss_url, story_id, chunk_id, task_name, "failed")
-            return jsonify({"error": str(e)}), 500
+        # Enqueue the background task
+        task_queue.put((process_task, (mongo_db, collection_name, story_id, chunk_id, task_name, chunk_doc, boss_url, task_handler)))
+        return jsonify({"status": "accepted"}), 202
     
     return app
 
