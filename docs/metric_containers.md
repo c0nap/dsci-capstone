@@ -5,141 +5,189 @@ Docker-based microservices for running QuestEval and BooookScore metrics with di
 ## Architecture
 
 ```
-┌─────────────────┐
-│   Main Python   │  (Your application)
-│     Pipeline    │  - Makes HTTP requests
-│   Python 3.12   │  - Receives callbacks
-└────────┬────────┘  
-         │
-         ├─────────────────┬───────────────────┐
-         │                 │                   │
-    ┌────▼──────┐     ┌────▼───────┐     ┌─────▼─────┐
-    │ QuestEval │     │BooookScore │     │  Blazor   │
-    │  Service  │     │  Service   │     │    UI     │
-    │  :5001    │     │   :5002    │     │ (Future)  │
-    │ Python 3.8│     │ Python 3.10│     │           │
-    └───────────┘     └────────────┘     └───────────┘
+        ┌──────────────┐
+        │  PostgreSQL  │
+        │  Book Table  │─────────┐
+        └───────┬──────┘         │
+                │                │
+                ▼                ▲
+        ┌───────┴─────┐    ┌─────┴─────┐
+        │  Blazor UI  │    │    Boss   │
+        │    :5055    │    │  Pipeline │──────┐
+        │             │    │   :5054   │      │
+        │             │    │Python 3.12│      │
+        └───────┬─────┘    └─────┬─────┘      │
+                │                │            │
+                ▲                ▼            │
+        ┌───────┴────────────────┴─┐          │
+        │           MongoDB        │          │
+        │           (Shared)       │          │
+        └─────┬───────────────┬────┘          │
+              ▲               ▲               │
+     ┌────────┴────┐   ┌──────┴───────┐       │
+     │  QuestEval  │   │  BooookScore │       │
+     │   Worker    │   │    Worker    │       │
+     │    :5001    │   │    :5002     │       │
+     │ Python 3.8  │   │ Python 3.10  │       │
+     └────────┬────┘   └──────┬───────┘       │
+              ▼               ▼               │
+              └───────┬───────┘               │
+                      │                       │
+              HTTP POST /callback             │
+                      │                       │
+                      └───────────────────────┘
 ```
 
 ## 📦 Project Structure
 
 ```
-.
-├── flask_app.py                          # Main Flask application
-├── metrics_client.py                     # Client library for main app
-├── websocket_client.py                   # WebSocket client (optional)
-├── Makefile                      # Container management
-│
+.                                                                     
 ├── src/
-│   └── flask.py                     # Workers reuse the same Flask code
-│    ── main.py                      # Boss assigns work via HTTP POST
-│    
-│
+│   ├── main.py                           # Boss orchestration service
+│   ├── flasks.py                         # Reusable worker Flask code
+│   └── session.py                        # MongoDB connection manager
+│                                                                     
+├── components/
+│   └── metrics.py
+│       ├── run_questeval()               # QuestEval task handler
+│       └── run_bookscore()               # BooookScore task handler
+│                                                                     
 ├── docker/
-│   ├── Dockerfile.questeval              # QuestEval container
-│   └── Dockerfile.bookscore              # BooookScore container
-│
-├── requirements/
+│   ├── Dockerfile.boss                   # Boss service container
+│   ├── Dockerfile.questeval              # QuestEval worker container
+│   └── Dockerfile.bookscore              # BooookScore worker container
+│                                                                     
+├── req/
+│   ├── requirements.txt                  # Boss service dependencies
 │   ├── questeval-requirements.txt        # QuestEval dependencies
-│   └── booookscore-requirements.txt      # BooookScore dependencies
-│
-└── data/                                 # Shared data directory
+│   └── bookscore-requirements.txt        # BooookScore dependencies
+│                                                                     
+├── docker-compose.yml                    # Service orchestration
+├── Dockerfile.python                     # Boss build instructions
+├── Dockerfile.questeval                  # Worker build instructions
+├── Dockerfile.bookscore                  # Worker build instructions
+│                                                                     
+├── .env                                  # Shared configuration
+└── Makefile                              # Container management
 ```
 
-## 🔌 API Usage
+## 🏗️ Design Decisions
 
-### QuestEval Service
+### Distributed Computing with Worker Containers
 
-**Endpoint:** `POST http://localhost:5001/calculate`
+**Challenge:** Our essential summary metrics are mutually exclusive. They use different Python versions and have conflicting dependencies.
 
-**Request:**
-```json
+**Solution:** Each Dockerfile installs only its required dependencies, preventing conflicts.
+
+**Why separate containers:**
+- QuestEval requires Python 3.8 (legacy transformers compatibility)
+- BooookScore requires Python 3.10 (newer spaCy/torch)
+- Boss runs Python 3.12 (modern features)
+
+**Implementation:** Single `flasks.py` file used by all workers, with task-specific logic imported dynamically via command-line arguments.
+
+- Same Flask codebase = consistent error handling, logging, and API contract
+- Workers import task handlers lazily: `from src.metrics import run_questeval`
+- Minimal base imports (flask, requests, pymongo, os, dotenv, argparse) to avoid further conflicts
+- Add new workers by updating .env + docker-compose.yml
+- No code changes required for new task types
+
+### Boss Task Distribution (Async with Order Tracking)
+
+**Challenge:** Boss distributes tasks asynchronously (may arrive/complete out of order), but needs to track original sequence.
+
+**Implementation:**
+```python
+# main.py - Flask entrypoint
+# Boss stores expected completion order
+task_tracker[story_id]["expected_order"] = [chunk1, chunk2, chunk3, ...]
+task_tracker[story_id]["completed"] = set()
+
+# Workers complete in any order, boss tracks gaps
+# On callback, find next incomplete chunk to identify progress
+```
+
+- Tasks posted by boss simultaneously via HTTP (non-blocking)
+- Workers complete independently, POST callbacks when done
+- Boss tracks which chunks remain incomplete vs original order
+- Enables parallel processing while maintaining sequence awareness
+
+### PostgreSQL as State Manager
+
+**Challenge:** Workers finish tasks asynchonously, boss needs to notify Blazor UI with pipeline progress.
+
+**Solution:**
+- Boss hides Postgres from workers to minimize dependencies
+- Blazor has full completion picture available to render multiple progress bars
+
+### MongoDB as Shared Storage
+
+**Challenge:** Workers and boss need persistent storage, both need to prevent data overwrites.
+
+**Implementation:**
+- **Boss clears data before assignment:** `$unset` existing task data to prevent stale results
+- **Workers validate before processing:** Raise error if data already exists
+- **Workers mark in-progress:** `$set {task.status: "in_progress"}` before computation
+- **Workers save results:** `$set {task.status: "completed", task.result: {...}}`
+
+**MongoDB Schema:**
+```javascript
 {
-  "job_id": "my-questeval-job-1",
-  "callback_url": "http://main-app:8080/metrics/callback",
-  "data": {
-    "text": "Source document text here...",
-    "summary": "Generated summary here...",
-    "gold_summary": "Reference summary (optional)"
+  story_id: "story_123",
+  chunk_id: "chunk_5",
+  text: "...",  // Original content
+  questeval: {
+    status: "completed",
+    result: { score: 0.75, ... }
+  },
+  bookscore: {
+    status: "in_progress"  // Another worker processing
   }
 }
 ```
 
-**Response (202 Accepted):**
-```json
-{
-  "status": "accepted",
-  "job_id": "my-questeval-job-1",
-  "metric": "questeval",
-  "message": "Calculation started. Results will be POSTed to callback_url."
-}
-```
+### Unmanaged MongoDB Connections
 
-**Callback (to your app):**
-```json
-{
-  "job_id": "my-questeval-job-1",
-  "metric": "questeval",
-  "status": "success",
-  "result": {
-    "questeval_score": 0.75,
-    "detailed_scores": {...},
-    "has_reference": true
-  }
-}
-```
+**Challenge:** Boss and workers need long-lived database connections, but Session class uses MongoEngine's context managers designed for short operations.
 
-### BooookScore Service
+**Solution:** Added `get_unmanaged_handle()` to Session class.
 
-**Endpoint:** `POST http://localhost:5002/calculate`
+**Trade-offs:**
+- ✅ Connection persists for Flask app lifetime
+- ✅ Unique alias never conflicts with DocumentConnector's managed connections
+- ✅ Automatic cleanup on process termination
+- ⚠️ No explicit disconnect (acceptable for microservices)
+- ⚠️ Relies on process death for cleanup (standard pattern)
 
-**Request:**
-```json
-{
-  "job_id": "my-booookscore-job-1",
-  "callback_url": "http://main-app:8080/metrics/callback",
-  "data": {
-    "file_data": "base64-encoded-pickled-gzipped-data"
-  }
-}
-```
+This is only used by the boss container `main.py`, and worker dependencies are kept minimal by using only `pymongo.MongoClient` in `flask.py`.
 
-**Callback:**
-```json
-{
-  "job_id": "my-booookscore-job-1",
-  "metric": "booookscore",
-  "status": "success",
-  "result": {
-    "booookscore": 0.82,
-    "detailed_metrics": {...},
-    "input_stats": {...}
-  }
-}
-```
 
-## 🐍 Python Client Usage
 
-## 🛠️ Make Commands
+## 🚀 Container Management
 
 ```bash
+# Build and start all services
 make docker-all-workers
-```
 
+# Individual services
+docker-compose up qeval_worker
+docker-compose up bscore_worker
+```
 
 ## 📊 Performance Notes
 
-- **QuestEval**: ~10-30 seconds per summary (GPU recommended)
-- **BooookScore**: ~30-60 seconds for full book (GPU recommended)
+- **QuestEval**: ~10-30 seconds per chunk (GPU recommended)
+- **BooookScore**: ~30-60 seconds per chunk (GPU recommended)  
 - Both services support CUDA if available
 - Memory: ~2-4GB per service with models loaded
+- Parallel processing: Boss can distribute 10+ tasks simultaneously
 
-## 🔒 Security Notes
+## 🔐 Security Notes
 
-- Services are exposed on localhost by default
-- For production, add authentication
-- Consider using reverse proxy (nginx)
-- Rate limit endpoints if exposing publicly
+- Services communicate on private Docker network
+- MongoDB credentials in .env (gitignored)
+- No external exposure by default (only boss port accessible)
+- For production: Add authentication, TLS, rate limiting
 
 ## 📚 References
 
