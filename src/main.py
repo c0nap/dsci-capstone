@@ -8,8 +8,6 @@ from src.setup import Session
 import traceback
 
 
-session = Session(verbose=False)
-
 
 def convert_single():
     """Converts one EPUB file to TEI format."""
@@ -533,7 +531,9 @@ def full_pipeline(epub_path, book_chapters, start_str, end_str, book_id, story_i
     print("\nOutput sent to web app.")
 
 
-if __name__ == "__main__":
+def old_main():
+#if __name__ == "__main__":
+    # session = Session(verbose=False)
     # convert_from_csv()
     # chunk_single()
     # process_single()
@@ -563,3 +563,219 @@ CHAPTER 12. THE END OF THE END\n
         story_id=1,
         book_title="The Phoenix and the Carpet",
     )
+
+
+
+
+
+
+
+
+"""Boss microservice for orchestrating distributed task processing.
+Manages task distribution to workers and tracks completion order."""
+
+from flask import Flask, request, jsonify
+from pymongo import MongoClient
+import requests
+import os
+from dotenv import load_dotenv
+from typing import Dict, List, Any, Optional
+from collections import defaultdict
+
+
+
+def load_worker_config() -> Dict[str, str]:
+    """Load worker service URLs from environment variables.
+    @return Dictionary mapping task names to worker URLs."""
+    load_dotenv(".env")
+    
+    # Expected environment variables: WORKER_BOOKSCORE_HOST, WORKER_QUESTEVAL_HOST, etc.
+    workers = {}
+    
+    # You can expand this based on your task types
+    task_types = ["bookscore", "questeval"]
+    
+    for task in task_types:
+        env_key = f"WORKER_{task.upper()}_HOST"
+        host = os.getenv(env_key)
+        if host:
+            workers[task] = f"http://{host}:5000/start"
+    
+    return workers
+
+
+def clear_task_data(mongo_db: Any, story_id: str, chunk_id: str, task_name: str) -> None:
+    """Clear any existing task data before assigning new task to worker.
+    @param mongo_db MongoDB database instance.
+    @param story_id Unique identifier for the story.
+    @param chunk_id Unique identifier for the chunk within the story.
+    @param task_name Name of the task to clear."""
+    collection = mongo_db.chunks
+    
+    collection.update_one(
+        {"story_id": story_id, "chunk_id": chunk_id},
+        {"$unset": {task_name: ""}}
+    )
+
+
+def assign_task_to_worker(worker_url: str, story_id: str, chunk_id: str) -> bool:
+    """Assign a task to a worker microservice.
+    @param worker_url Full URL of the worker's /start endpoint.
+    @param story_id Unique identifier for the story.
+    @param chunk_id Unique identifier for the chunk within the story.
+    @return True if task was successfully assigned, False otherwise."""
+    payload = {
+        "story_id": story_id,
+        "chunk_id": chunk_id
+    }
+    
+    try:
+        response = requests.post(worker_url, json=payload, timeout=5)
+        return response.status_code == 202
+    except requests.RequestException as e:
+        print(f"Failed to assign task to {worker_url}: {e}")
+        return False
+
+
+def create_app(mongo_uri: str, database_name: str, worker_urls: Dict[str, str]) -> Flask:
+    """Create and configure Flask application for boss service.
+    @param mongo_uri MongoDB connection URI.
+    @param database_name Name of the MongoDB database to use.
+    @param worker_urls Dictionary mapping task names to worker URLs.
+    @return Configured Flask application instance."""
+    app = Flask(__name__)
+    
+    mongo_client = MongoClient(mongo_uri)
+    mongo_db = mongo_client[database_name]
+    
+    # Track task completion order
+    # Key: story_id, Value: dict with 'expected_order' and 'completed' sets
+    task_tracker: Dict[str, Dict[str, Any]] = defaultdict(lambda: {
+        "expected_order": [],
+        "completed": set()
+    })
+    
+    @app.route("/process_story", methods=["POST"])
+    def process_story():
+        """Initiate processing for a story by distributing tasks to workers.
+        @return JSON response indicating success or failure."""
+        data = request.json
+        story_id = data.get("story_id")
+        task_type = data.get("task_type")
+        
+        if not story_id or not task_type:
+            return jsonify({"error": "Missing story_id or task_type"}), 400
+        
+        if task_type not in worker_urls:
+            return jsonify({"error": f"Unknown task type: {task_type}"}), 400
+        
+        # Get all chunks for this story
+        chunks = list(mongo_db.chunks.find(
+            {"story_id": story_id},
+            {"chunk_id": 1}
+        ).sort("chunk_id", 1))
+        
+        if not chunks:
+            return jsonify({"error": "No chunks found for story"}), 404
+        
+        # Initialize task tracker
+        chunk_ids = [chunk["chunk_id"] for chunk in chunks]
+        task_tracker[story_id]["expected_order"] = chunk_ids
+        task_tracker[story_id]["completed"] = set()
+        
+        # Distribute tasks to workers (async)
+        worker_url = worker_urls[task_type]
+        assigned = 0
+        
+        for chunk in chunks:
+            chunk_id = chunk["chunk_id"]
+            
+            # Clear any existing task data
+            clear_task_data(mongo_db, story_id, chunk_id, task_type)
+            
+            # Assign task to worker
+            if assign_task_to_worker(worker_url, story_id, chunk_id):
+                assigned += 1
+        
+        return jsonify({
+            "status": "tasks_assigned",
+            "story_id": story_id,
+            "task_type": task_type,
+            "total_chunks": len(chunks),
+            "assigned": assigned
+        }), 200
+    
+    @app.route("/callback", methods=["POST"])
+    def callback():
+        """Receive completion notifications from worker services.
+        @return Simple acknowledgment response."""
+        data = request.json
+        
+        story_id = data.get("story_id")
+        chunk_id = data.get("chunk_id")
+        task = data.get("task")
+        status = data.get("status")
+        
+        print(f"[CALLBACK] story_id={story_id}, chunk_id={chunk_id}, task={task}, status={status}")
+        
+        # Track completion
+        if story_id and chunk_id:
+            task_tracker[story_id]["completed"].add(chunk_id)
+            
+            # Check completion order
+            expected = task_tracker[story_id]["expected_order"]
+            completed = task_tracker[story_id]["completed"]
+            
+            # Find the next expected chunk that hasn't been completed
+            next_incomplete_idx = None
+            for idx, expected_chunk_id in enumerate(expected):
+                if expected_chunk_id not in completed:
+                    next_incomplete_idx = idx
+                    break
+            
+            if next_incomplete_idx is not None:
+                print(f"[ORDER] Next expected chunk: {expected[next_incomplete_idx]} "
+                      f"(index {next_incomplete_idx})")
+            else:
+                print(f"[ORDER] All {len(expected)} chunks completed for story {story_id}!")
+        
+        return jsonify({"status": "received"}), 200
+    
+    @app.route("/status/<story_id>", methods=["GET"])
+    def get_status(story_id: str):
+        """Get processing status for a story.
+        @param story_id Unique identifier for the story.
+        @return JSON response with completion status."""
+        if story_id not in task_tracker:
+            return jsonify({"error": "Story not found"}), 404
+        
+        tracker = task_tracker[story_id]
+        expected = tracker["expected_order"]
+        completed = tracker["completed"]
+        
+        return jsonify({
+            "story_id": story_id,
+            "total_chunks": len(expected),
+            "completed_chunks": len(completed),
+            "completion_percentage": (len(completed) / len(expected) * 100) if expected else 0,
+            "all_complete": len(completed) == len(expected)
+        }), 200
+    
+    return app
+
+
+
+load_dotenv(".env")
+if __name__ == "__main__":
+    
+    # Load configuration
+    session = Session(verbose=False)
+    database_name = os.getenv("DB_NAME")
+    worker_urls = load_worker_config()
+    
+    if not worker_urls:
+        print("Warning: No worker URLs configured. Set WORKER_<TASKNAME>_HOST environment variables.")
+    
+    # Create and run app
+    app = create_app(session.docs_db, database_name, worker_urls)
+    app.run(host="0.0.0.0", port=5054)
