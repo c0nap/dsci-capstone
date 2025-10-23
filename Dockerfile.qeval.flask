@@ -30,7 +30,7 @@ COPY Makefile pyproject.toml ./
 
 # Declare build args - whether to include .env or .env.dummy
 ARG ENV_FILE
-ARG METRIC
+ARG TARGET_METRIC
 
 # Create .env file
 COPY ${ENV_FILE} .env
@@ -39,4 +39,4 @@ RUN make env-docker
 RUN mv .env.docker .env
 
 # supply mode as arg
-CMD ["python", "-m", "src.flask", "--metric", "${METRIC}"]
+CMD ["python", "-m", "src.flask", "--metric", "${TARGET_METRIC}"]
