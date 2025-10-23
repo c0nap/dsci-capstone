@@ -16,6 +16,7 @@ services:
     container_name: container-blazor
     networks:
       - default
+    restart: unless-stopped
     # Do NOT fall back to building from scratch if image does not exist
     # ^ might revert, but compose will only use prod for now
     image: dsci-cap-img-blazor-prod:latest
@@ -25,20 +26,30 @@ services:
       - "5055:5055"
 
 
-  questeval_service:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  qeval_service:
+    container_name: container-qeval
+    networks:
+      - default
+    restart: unless-stopped
+    # Do NOT fall back to building from scratch if image does not exist
+    # ^ might revert, but compose will only use prod for now
+    image: dsci-cap-img-questeval-prod:latest
     environment:
-      - METRIC=questeval
+      - TARGET_METRIC=questeval
+    command: ["python", "-m", "src.flask", "--metric", "${TARGET_METRIC}"]
     ports: ["5001:5001"]
 
-  bookscore_service:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  bscore_service:
+    container_name: container-bscore
+    networks:
+      - default
+    restart: unless-stopped
+    # Do NOT fall back to building from scratch if image does not exist
+    # ^ might revert, but compose will only use prod for now
+    image: dsci-cap-img-bookscore-prod:latest
     environment:
-      - METRIC=bookscore
+      - TARGET_METRIC=bookscore
+    command: ["python", "-m", "src.flask", "--metric", "${TARGET_METRIC}"]
     ports: ["5002:5002"]
 
 
