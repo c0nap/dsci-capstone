@@ -172,3 +172,75 @@ def post_basic_output(book_id, book_title, summary, gold_summary="", chunk="", *
         **kwargs)
     payload = create_summary_payload(book_id, book_title, summary, metrics)
     return post_payload(payload)
+
+
+
+
+
+
+
+
+from typing import Dict, Any, Optional, Callable
+from src.utils.Log import Log
+
+
+def run_questeval(payload: Dict[str, Any],
+    progress_callback: Optional[Callable[[int, str, str], None]] = None
+) -> Dict[str, Any]:
+    """Run QuestEval metric calculation.
+    @details
+        Based on: https://github.com/ThomasScialom/QuestEval
+        Computes question-answering based evaluation metrics for text summarization.
+    @param payload  Job data containing:
+                    - text: Source document text
+                    - summary: Generated summary to evaluate
+                    - gold_summary: (Optional) Reference summary
+    @param progress_callback  Optional callback for progress updates:
+                              (progress: int, message: str, status: str) -> None
+    @return  Dictionary containing QuestEval scores and metadata.
+    @throws Log.Failure  If questeval package is not installed or calculation fails.
+    """
+    try:
+        from questeval.questeval_metric import QuestEval
+    except ImportError as e:
+        raise Log.Failure("QUESTEVAL", " Not installed. Install with: pip install questeval") from e
+    
+    try:
+        if progress_callback:
+            progress_callback(20, "Loading QuestEval model", "running")
+        
+        questeval = QuestEval(task='summarization', no_cuda=False)
+        
+        if progress_callback:
+            progress_callback(40, "Model loaded, computing scores", "running")
+        
+        source_text = payload.get('text', '')
+        hypothesis = payload.get('summary', '')
+        reference = payload.get('gold_summary')
+        
+        if reference:
+            score = questeval.corpus_questeval(
+                hypothesis=[hypothesis],
+                sources=[source_text],
+                list_references=[[reference]]
+            )
+        else:
+            score = questeval.corpus_questeval(
+                hypothesis=[hypothesis],
+                sources=[source_text]
+            )
+        
+        if progress_callback:
+            progress_callback(80, "Calculation complete", "running")
+        
+        Log.success("QUESTEVAL", f" Score computed: {score}")
+        
+        return {
+            'questeval_score': score.get('ex_level_scores', [None])[0] if isinstance(score, dict) else score,
+            'detailed_scores': score if isinstance(score, dict) else {},
+            'has_reference': reference is not None
+        }
+        
+    except Exception as e:
+        raise Log.Failure("QUESTEVAL", f" Calculation failed: {str(e)}") from e
+
