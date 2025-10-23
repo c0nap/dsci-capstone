@@ -59,8 +59,9 @@ Docker-based microservices for running QuestEval and BooookScore metrics with di
 │                                                                     
 ├── req/
 │   ├── requirements.txt                  # Boss service dependencies
-│   ├── questeval-requirements.txt        # QuestEval dependencies
-│   └── bookscore-requirements.txt        # BooookScore dependencies
+│   ├── flask-worker.txt                  # Worker service base
+│   ├── questeval.txt                     # QuestEval dependencies
+│   └── bookscore.txt                     # BooookScore dependencies
 │                                                                     
 ├── docker-compose.yml                    # Service orchestration
 ├── Dockerfile.python                     # Boss build instructions

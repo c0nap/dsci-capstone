@@ -225,12 +225,12 @@ def create_app(task_name: str, boss_url: str) -> Flask:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Flask worker microservice")
     parser.add_argument("--task", required=True, help="Task type to execute")
-    parser.add_argument("--port", type=int, help="Port to run on")
     args = parser.parse_args()
     
     # Boss URL never changes, but MongoDB connection might
     boss_url = load_boss_config()
+    PORT = os.getenv(f"{args.task.upper()}_PORT")
     
     # Create and run app
     app = create_app(args.task, boss_url)
-    app.run(host="0.0.0.0", port=args.port)
+    app.run(host="0.0.0.0", port=PORT)
