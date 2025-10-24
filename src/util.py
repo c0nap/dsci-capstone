@@ -62,7 +62,7 @@ class Log:
         @param msg  The message to print.
         @param raise_error  Whether to raise an error.
         @param other_error  Another Exception resulting from this failure.
-        @raises RuntimeError  If raise_error is True"""
+        @throws Log.Failure  If raise_error is True"""
         _FAIL_COLOR = Log.FAILURE_COLOR if raise_error else Log.WARNING_COLOR
         text = f"{_FAIL_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
         if raise_error:
@@ -227,7 +227,7 @@ def check_values(results: List[Any], expected: List[Any], verbose: bool, log_sou
     @param verbose  Whether to print success messages.
     @param log_source  The Log class prefix indicating which method is performing the check.
     @param raise_error  Whether to raise an error on connection failure.
-    @raises RuntimeError  If any result does not match what was expected."""
+    @throws Log.Failure  If any result does not match what was expected."""
     for i in range(len(results)):
         if results[i] == expected[i]:
             Log.success(log_source + Log.good_val, Log.msg_compare(results[i], expected[i]), verbose)

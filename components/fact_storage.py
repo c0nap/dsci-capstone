@@ -58,7 +58,7 @@ class GraphConnector(DatabaseConnector):
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @raises RuntimeError  If raise_error is True and the connection test fails to complete.
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete.
         """
         # Check if connection string is valid
         if self.check_connection(Log.test_conn, raise_error) == False:
@@ -152,7 +152,7 @@ class GraphConnector(DatabaseConnector):
         @note  If a result is returned, it will be converted to a DataFrame.
         @param query  A single query to perform on the database.
         @return  DataFrame containing the result of the query, or None
-        @raises RuntimeError  If the query fails to execute.
+        @throws Log.Failure  If the query fails to execute.
         """
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
         result = super().execute_query(query)
@@ -195,7 +195,7 @@ class GraphConnector(DatabaseConnector):
             - Different approach than DocumentConnector because our node attributes are usually flat key:value already.
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None
-        @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
+        @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
         if self._created_dummy:
             self.check_connection(Log.get_df, raise_error=True)
 
@@ -232,7 +232,7 @@ class GraphConnector(DatabaseConnector):
         @details  Queries all nodes in the database and extracts distinct values for the given key.
         @param key  The node property name to extract unique values from (e.g. 'db' or 'kg').
         @return  A list of unique values for the specified key, or an empty list if none exist.
-        @raises RuntimeError  If the query fails to execute."""
+        @throws Log.Failure  If the query fails to execute."""
         if self._created_dummy:
             self.check_connection(Log.get_unique, raise_error=True)
 
@@ -250,7 +250,7 @@ class GraphConnector(DatabaseConnector):
         """Create a fresh pseudo-database if it does not already exist.
         @note  This change will apply to any new nodes created after @ref components.connectors.DatabaseConnector.change_database is called.
         @param database_name  A database ID specifying the pseudo-database.
-        @raises RuntimeError  If we fail to create the requested database for any reason."""
+        @throws Log.Failure  If we fail to create the requested database for any reason."""
         super().create_database(database_name)  # Check if exists
         if self._created_dummy:
             self.check_connection(Log.create_db, raise_error=True)
@@ -266,7 +266,7 @@ class GraphConnector(DatabaseConnector):
     def drop_database(self, database_name: str) -> None:
         """Delete all nodes stored under a particular database name.
         @param database_name  A database ID specifying the pseudo-database.
-        @raises RuntimeError  If we fail to drop the target database for any reason."""
+        @throws Log.Failure  If we fail to drop the target database for any reason."""
         super().drop_database(database_name)  # Check if exists
         if self._created_dummy:
             self.check_connection(Log.drop_db, raise_error=True)
@@ -311,9 +311,9 @@ class GraphConnector(DatabaseConnector):
             2. Creates a relationship between them with the given label.
         @param subject  A string representing the entity performing an action.
         @param relation  A string describing the action.
-        @param object  A string representing the entity being acted upon.
+        @param object_  A string representing the entity being acted upon.
         @param _delete_init  Whether to delete the dummy node added during database creation.
-        @raises RuntimeError  If the triple cannot be added to our graph database."""
+        @throws Log.Failure  If the triple cannot be added to our graph database."""
         if _delete_init:
             self.delete_dummy()
 
@@ -340,7 +340,7 @@ class GraphConnector(DatabaseConnector):
         """Return node names and their edge counts, ordered by edge count descending.
         @param top_n  Number of top nodes to return (by edge count). Default is 10.
         @return  DataFrame with columns: node_name, edge_count
-        @raises RuntimeError  If the query fails to retrieve the requested DataFrame.
+        @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
         query = f"""
         MATCH (n {self.SAME_DB_KG_()})
@@ -359,7 +359,7 @@ class GraphConnector(DatabaseConnector):
 
     def get_all_triples(self) -> DataFrame:
         """Return all triples in the current pseudo-database as a pandas DataFrame.
-        @raises RuntimeError  If the query fails to retrieve the requested DataFrame."""
+        @throws Log.Failure  If the query fails to retrieve the requested DataFrame."""
         query = f"""
         MATCH (s {self.SAME_DB_KG_()})-[r]->(o {self.SAME_DB_KG_()})
         WHERE {self.NOT_DUMMY_('s')} AND {self.NOT_DUMMY_('o')}

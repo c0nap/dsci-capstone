@@ -57,7 +57,7 @@ class DocumentConnector(DatabaseConnector):
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @raises RuntimeError  If raise_error is True and the connection test fails to complete.
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete.
         """
         # Check if connection string is valid
         if self.check_connection(Log.test_conn, raise_error) == False:
@@ -147,7 +147,7 @@ class DocumentConnector(DatabaseConnector):
           - The query must be a valid JSON command object (e.g. {"find": "users", "filter": {...}}).
           - Mongo shell syntax such as `db.users.find({...})` or `.js` files will NOT work.
           - If a result is returned, it will be converted to a DataFrame.
-        @raises RuntimeError  If the query fails to execute.
+        @throws Log.Failure  If the query fails to execute.
         """
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
         result = super().execute_query(query)
@@ -254,7 +254,7 @@ class DocumentConnector(DatabaseConnector):
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None
-        @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
+        @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
         with mongo_handle(host=self.connection_string, alias="get_df") as db:
             # Results will be a list of documents
@@ -273,7 +273,7 @@ class DocumentConnector(DatabaseConnector):
         """Use the current database connection to create a sibling database in this engine.
         @note  Forces MongoDB to actually create it by inserting a small init document.
         @param database_name  The name of the new database to create.
-        @raises RuntimeError  If we fail to create the requested database for any reason."""
+        @throws Log.Failure  If we fail to create the requested database for any reason."""
         super().create_database(database_name)  # Check if exists
         self.check_connection(Log.create_db, raise_error=True)
         working_database = self.database_name
@@ -295,7 +295,7 @@ class DocumentConnector(DatabaseConnector):
     def drop_database(self, database_name: str) -> None:
         """Delete all data stored in a particular database.
         @param database_name  The name of an existing database.
-        @raises RuntimeError  If we fail to drop the target database for any reason."""
+        @throws Log.Failure  If we fail to drop the target database for any reason."""
         super().drop_database(database_name)  # Check if exists
         self.check_connection(Log.drop_db, raise_error=True)
         try:
@@ -528,7 +528,7 @@ def _docs_to_df(docs: List[Dict[str, Any]], merge_unspecified: bool = True) -> D
     @param merge_unspecified  If True, merge primitives into type-compatible nested columns
                               using aggressive type casting (int→float, bool→int→float).
                               If False, keep as _unspecified_type columns.
-    @raises RuntimeError  If parsing query results to JSON fails.
+    @throws Log.Failure  If parsing query results to JSON fails.
     """
     if not docs:
         return DataFrame()
