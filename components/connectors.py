@@ -308,7 +308,12 @@ class RelationalConnector(DatabaseConnector):
                 if not result or check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.rel_db, raise_error) == False:
                     return False
                 results = self.execute_combined("SELECT 3; SELECT 4;")
-                if not result or not results[0] or not results[1] or check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], self.verbose, Log.rel_db, raise_error) == False:
+                if (
+                    not result
+                    or not results[0]
+                    or not results[1]
+                    or check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], self.verbose, Log.rel_db, raise_error) == False
+                ):
                     return False
                 result = self.execute_query("SELECT 5, 6;")
                 if not result or check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error) == False:

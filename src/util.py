@@ -1,5 +1,5 @@
 from pandas import DataFrame
-from typing import List, Any, Optional
+from typing import Any, List, Optional
 
 
 class Log:

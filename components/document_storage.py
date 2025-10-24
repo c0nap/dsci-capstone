@@ -7,12 +7,12 @@ from mongoengine import (
     Document,
     DynamicDocument,
 )
-from pymongo.database import Database
 import os
 from pandas import DataFrame, json_normalize
+from pymongo.database import Database
 from src.util import check_values, df_natural_sorted, Log
 from time import time
-from typing import Dict, List, Optional, Set, Type, Any, Generator
+from typing import Any, Dict, Generator, List, Optional, Set, Type
 
 
 # Read environment variables at compile time
