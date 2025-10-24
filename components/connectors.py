@@ -163,14 +163,14 @@ class DatabaseConnector(Connector):
         @param filename  The path to a specified query file (.sql, .cql, .json).
         @return  Whether the query was performed successfully.
         @raises RuntimeError  If any query in the file fails to execute."""
-        
+
         try:  # Read the entire file as a multi-query string
             with open(filename, "r") as file:
                 multi_query = file.read()
                 Log.success(Log.db_conn_abc + Log.run_f, Log.msg_good_path(filename), self.verbose)
         except Exception as e:
             raise Log.Failure(Log.db_conn_abc + Log.run_f, Log.msg_bad_path(filename)) from e
-        
+
         try:  # Attempt to run the multi-query
             results = self.execute_combined(multi_query)
             Log.success(Log.db_conn_abc + Log.run_f, Log.msg_good_exec_f(filename), self.verbose)
@@ -275,8 +275,7 @@ class RelationalConnector(DatabaseConnector):
             return mysqlConnector(verbose)
         elif engine == "POSTGRES":
             return postgresConnector(verbose)
-        raise Log.Failure(Log.rel_db + "FROM_ENV: ", 
-            f"Database engine '{engine}' not supported. Did you mean 'MYSQL' or 'POSTGRES'?")
+        raise Log.Failure(Log.rel_db + "FROM_ENV: ", f"Database engine '{engine}' not supported. Did you mean 'MYSQL' or 'POSTGRES'?")
 
     def change_database(self, new_database: str):
         """Update the connection URI to reference a different database in the same engine.
@@ -285,7 +284,6 @@ class RelationalConnector(DatabaseConnector):
         Log.success(Log.rel_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database), self.verbose)
         self.database_name = new_database
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
-
 
     def test_connection(self, raise_error=True) -> bool:
         """Establish a basic connection to the database.
@@ -300,7 +298,7 @@ class RelationalConnector(DatabaseConnector):
 
         engine = create_engine(self.connection_string, poolclass=NullPool)
         with engine.begin() as connection:
-            try:    # Run universal test queries
+            try:  # Run universal test queries
                 result = connection.execute(text("SELECT 1")).fetchone()[0]
                 if check_values([result], [1], self.verbose, Log.rel_db, raise_error) == False:
                     return False
@@ -314,30 +312,35 @@ class RelationalConnector(DatabaseConnector):
                 if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error) == False:
                     return False
             except Exception as e:
-                if not raise_error: return False
+                if not raise_error:
+                    return False
                 raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
 
-            try:   # Display useful information on existing databases
+            try:  # Display useful information on existing databases
                 db_name = self.execute_query(self._specific_queries[0]).iloc[0, 0]
                 check_values([db_name], [self.database_name], self.verbose, Log.rel_db, raise_error)
                 databases = self.execute_query(self._specific_queries[1])
                 Log.success(Log.rel_db, Log.msg_result(databases), self.verbose)
             except Exception as e:
-                if not raise_error: return False
+                if not raise_error:
+                    return False
                 raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
 
-            try:   # Create a table, insert dummy data, and use get_dataframe
+            try:  # Create a table, insert dummy data, and use get_dataframe
                 tmp_table = f"test_table_{int(time())}"
                 self.execute_query(f"DROP TABLE IF EXISTS {tmp_table} CASCADE;")
-                self.execute_query(f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');")
+                self.execute_query(
+                    f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');"
+                )
                 df = self.get_dataframe(f"{tmp_table}")
                 check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
                 self.execute_query(f"DROP TABLE {tmp_table};")
             except Exception as e:
-                if not raise_error: return False
+                if not raise_error:
+                    return False
                 raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
 
-            try:   # Test create/drop functionality with tmp database
+            try:  # Test create/drop functionality with tmp database
                 tmp_db = f"test_db_{int(time())}"
                 working_database = self.database_name
                 if self.database_exists(tmp_db):
@@ -348,13 +351,13 @@ class RelationalConnector(DatabaseConnector):
                 self.change_database(working_database)
                 self.drop_database(tmp_db)
             except Exception as e:
-                if not raise_error: return False
+                if not raise_error:
+                    return False
                 raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
 
         # Finish with no errors = connection test successful
         Log.success(Log.rel_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
-
 
     def check_connection(self, log_source: str, raise_error: bool) -> bool:
         """Minimal connection test to determine if our connection string is valid.
@@ -369,11 +372,11 @@ class RelationalConnector(DatabaseConnector):
             with engine.begin() as connection:
                 connection.execute(text("SELECT 1"))
         except Exception:  # These errors are usually nasty, so dont print the original.
-            if not raise_error: return False
+            if not raise_error:
+                return False
             raise Log.Failure(Log.rel_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
         Log.success(Log.rel_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
         return True
-
 
     def execute_query(self, query: str) -> Optional[DataFrame]:
         """Send a single command to the database connection.
@@ -445,9 +448,7 @@ class RelationalConnector(DatabaseConnector):
         self.check_connection(Log.create_db, raise_error=True)
         try:
             engine = create_engine(self.connection_string, poolclass=NullPool)
-            with engine.connect().execution_options(
-                isolation_level="AUTOCOMMIT"
-            ) as connection:
+            with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
                 connection.execute(text(f"CREATE DATABASE {database_name}"))
 
             Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("created", database_name), self.verbose)
@@ -462,11 +463,9 @@ class RelationalConnector(DatabaseConnector):
         self.check_connection(Log.drop_db, raise_error=True)
         try:
             engine = create_engine(self.connection_string, poolclass=NullPool)
-            with engine.connect().execution_options(
-                isolation_level="AUTOCOMMIT"
-            ) as connection:
+            with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
                 connection.execute(text(f"DROP DATABASE IF EXISTS {database_name}"))
-            
+
             Log.success(Log.rel_db + Log.create_db, Log.msg_success_managed_db("dropped", database_name), self.verbose)
         except Exception as e:
             raise Log.Failure(Log.rel_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string)) from e
@@ -486,15 +485,13 @@ class mysqlConnector(RelationalConnector):
     def __init__(self, verbose=False):
         """Configures the relational connector.
         @param verbose  Whether to print success and failure messages."""
-        super().__init__(
-            verbose, self.specific_queries["MYSQL"]
-        )
+        super().__init__(verbose, self.specific_queries["MYSQL"])
 
     # A list of basic test queries used by RelationalConnector
     specific_queries = {
         "MYSQL": [
             "SELECT DATABASE();",  # Single value, name of the current database.
-            "SHOW DATABASES;",     # List of databases the secondary user can access.
+            "SHOW DATABASES;",  # List of databases the secondary user can access.
         ]  # List of all databases in the database engine.
     }
 
@@ -506,9 +503,7 @@ class postgresConnector(RelationalConnector):
     def __init__(self, verbose=False):
         """Configures the relational connector.
         @param verbose  Whether to print success and failure messages."""
-        super().__init__(
-            verbose, self.specific_queries["POSTGRES"]
-        )
+        super().__init__(verbose, self.specific_queries["POSTGRES"])
 
     # A list of basic test queries used by RelationalConnector
     specific_queries = {
@@ -517,4 +512,3 @@ class postgresConnector(RelationalConnector):
             "SELECT datname FROM pg_database;",  # List of ALL databases, even ones we cannot access.
         ]  # List of all databases in the database engine.
     }
-

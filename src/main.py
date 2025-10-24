@@ -194,9 +194,7 @@ def chunk_single():
     for i in range(min(10, len(chunks))):
         c = chunks[i]
         snippet = (c.text[:80] + "...") if len(c.text) > 80 else c.text
-        print(
-            f"  [{i}] Story:{c.story_percent:.1f}% Chapter:{c.chapter_percent:.1f}% - {snippet}"
-        )
+        print(f"  [{i}] Story:{c.story_percent:.1f}% Chapter:{c.chapter_percent:.1f}% - {snippet}")
 
     print("\n\nFull chunks (last 3):")
     for i in range(len(chunks) - 3, len(chunks)):
@@ -411,9 +409,7 @@ def output_single():
     print("\nOutput sent to web app.")
 
 
-def full_pipeline(
-    epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title
-):
+def full_pipeline(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     """Connects all components to convert an EPUB file to a book summary.
     @details
         Data conversions

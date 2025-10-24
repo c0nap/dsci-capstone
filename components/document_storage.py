@@ -51,7 +51,6 @@ class DocumentConnector(DatabaseConnector):
         @note  PyMongo requires a lookup location for user permissions, and MongoEngine will show warnings if 'uuidRepresentation' is not set."""
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
 
-
     def test_connection(self, raise_error=True) -> bool:
         """Establish a basic connection to the MongoDB database.
         @details  Can be configured to fail silently, which enables retries or external handling.
@@ -62,9 +61,9 @@ class DocumentConnector(DatabaseConnector):
         # Check if connection string is valid
         if self.check_connection(Log.test_conn, raise_error) == False:
             return False
-        
+
         with mongo_handle(host=self.connection_string, alias="test_conn") as db:
-            try:    # Run universal test queries - some require admin
+            try:  # Run universal test queries - some require admin
                 result = db.command({"ping": 1})
                 if check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
                     return False
@@ -75,17 +74,19 @@ class DocumentConnector(DatabaseConnector):
                 if check_values([isinstance(result, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
                     return False
             except Exception as e:
-                if not raise_error: return False
+                if not raise_error:
+                    return False
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
-    
-            try:   # Display useful information on existing databases
+
+            try:  # Display useful information on existing databases
                 databases = db.client.list_database_names()
                 Log.success(Log.doc_db, Log.msg_result(databases), self.verbose)
             except Exception as e:
-                if not raise_error: return False
+                if not raise_error:
+                    return False
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
-    
-            try:   # Create a collection, insert dummy data, and use get_dataframe
+
+            try:  # Create a collection, insert dummy data, and use get_dataframe
                 tmp_collection = f"test_collection_{int(time())}"
                 if tmp_collection in db.list_collection_names():
                     db.drop_collection(tmp_collection)
@@ -94,10 +95,11 @@ class DocumentConnector(DatabaseConnector):
                 check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
                 db.drop_collection(tmp_collection)
             except Exception as e:
-                if not raise_error: return False
+                if not raise_error:
+                    return False
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
-    
-            try:   # Test create/drop functionality with tmp database
+
+            try:  # Test create/drop functionality with tmp database
                 tmp_db = f"test_db_{int(time())}"
                 working_database = self.database_name
                 if self.database_exists(tmp_db):
@@ -108,9 +110,10 @@ class DocumentConnector(DatabaseConnector):
                 self.change_database(working_database)
                 self.drop_database(tmp_db)
             except Exception as e:
-                if not raise_error: return False
+                if not raise_error:
+                    return False
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
-    
+
         # Finish with no errors = connection test successful
         Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
@@ -129,7 +132,8 @@ class DocumentConnector(DatabaseConnector):
             with mongo_handle(host=self.connection_string, alias="check_conn") as db:
                 db.command({"ping": 1})
         except Exception:  # These errors are usually nasty, so dont print the original.
-            if not raise_error: return False
+            if not raise_error:
+                return False
             raise Log.Failure(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
         Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
         return True
@@ -162,10 +166,10 @@ class DocumentConnector(DatabaseConnector):
                         json_cmd_doc = json.loads(query)
                     except json.JSONDecodeError:
                         raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_fail_parse("sanitized query", query, "JSON command object"))
-        
+
                 # Execute via PyMongo
                 results = db.command(json_cmd_doc)
-        
+
                 # Mongo queries can return a dict or list
                 # Standardize everything to a list of documents
                 docs = []
@@ -179,7 +183,7 @@ class DocumentConnector(DatabaseConnector):
                         docs = [results]
                 elif isinstance(results, list):
                     docs = results
-                
+
                 # Convert document list to DataFrame if any docs exist
                 df = _docs_to_df(docs)
                 if df is None or df.empty:
@@ -191,8 +195,6 @@ class DocumentConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
 
-
-
     def _split_combined(self, multi_query: str) -> list[str]:
         """Divides a string into non-divisible MongoDB commands by splitting on semicolons at depth 0.
         @details  Handles nested brackets and semicolons inside JSON strings.
@@ -203,7 +205,7 @@ class DocumentConnector(DatabaseConnector):
         depth = 0
         in_string = False
         escape_next = False
-        
+
         # Remove all comments and normalize whitespace
         cleaned = _sanitize_json(multi_query)
         for c in cleaned:
@@ -216,7 +218,7 @@ class DocumentConnector(DatabaseConnector):
                 buffer += c
                 escape_next = True
                 continue
-            
+
             # Track whether we're inside a string
             if c == '"':
                 in_string = not in_string
@@ -240,13 +242,12 @@ class DocumentConnector(DatabaseConnector):
                     buffer += c
             else:
                 buffer += c
-        
+
         # Append any remaining buffer
         stripped = buffer.strip()
         if stripped:
             queries.append(stripped)
         return queries
-
 
     def get_dataframe(self, name: str) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified collection.
@@ -266,7 +267,6 @@ class DocumentConnector(DatabaseConnector):
         # If not found, warn but do not fail
         Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
         return None
-
 
     def create_database(self, database_name: str):
         """Use the current database connection to create a sibling database in this engine.
@@ -291,7 +291,6 @@ class DocumentConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.doc_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string)) from e
 
-
     def drop_database(self, database_name: str):
         """Delete all data stored in a particular database.
         @param database_name  The name of an existing database.
@@ -306,18 +305,16 @@ class DocumentConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.doc_db + Log.create_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string)) from e
 
-
     def database_exists(self, database_name: str) -> bool:
         """Search for an existing database using the provided name.
         @param database_name  The name of a database to search for.
         @return  Whether the database is visible to this connector."""
         with mongo_handle(host=self.connection_string, alias="db_exists") as db:
-            #result = self.execute_query('{"dbstats": 1}')
-            #print(result)
+            # result = self.execute_query('{"dbstats": 1}')
+            # print(result)
             databases = db.client.list_database_names()
-        #print(databases)
+        # print(databases)
         return database_name in databases
-
 
     def delete_dummy(self):
         """Delete the initial dummy collection from the database.
@@ -352,7 +349,6 @@ def mongo_handle(host: str, alias: str):
         yield db  # <-- your code runs here
     finally:
         mongoengine.disconnect(alias=alias)
-
 
 
 def _flatten_recursive(df: DataFrame) -> DataFrame:
@@ -405,7 +401,7 @@ def _sanitize_json(text: str) -> str:
     i = 0
     in_string = False
     last_was_space = False
-    
+
     while i < len(text):
         c = text[i]
 
@@ -424,7 +420,7 @@ def _sanitize_json(text: str) -> str:
             last_was_space = False
             i += 1
             continue
-        
+
         # Inside strings: preserve everything exactly
         if in_string:
             result.append(c)
@@ -434,16 +430,16 @@ def _sanitize_json(text: str) -> str:
 
         # Outside strings: process comments and normalize whitespace
         # Check for block comment /* */
-        if i < len(text) - 1 and text[i:i+2] == '/*':
+        if i < len(text) - 1 and text[i : i + 2] == '/*':
             i += 2
             while i < len(text) - 1:
-                if text[i:i+2] == '*/':
+                if text[i : i + 2] == '*/':
                     i += 2
                     break
                 i += 1
             continue
         # Check for single-line comment //
-        if i < len(text) - 1 and text[i:i+2] == '//':
+        if i < len(text) - 1 and text[i : i + 2] == '//':
             while i < len(text) and text[i] != '\n':
                 i += 1
             if i < len(text):
@@ -467,12 +463,12 @@ def _sanitize_json(text: str) -> str:
             if j < len(text) and text[j] in '}]':
                 i += 1
                 continue
-        
+
         # Regular character
         result.append(c)
         last_was_space = False
         i += 1
-    
+
     # Strip trailing whitespace
     return ''.join(result).strip()
 
@@ -495,7 +491,7 @@ def _sanitize_document(doc: Dict, type_registry: Dict[str, Set[Type]]) -> Dict:
     @return  Document with all fields as lists.
     """
     sanitized = {}
-    
+
     for key, value in doc.items():
         # Convert ObjectId to string
         if key == "_id":
@@ -509,7 +505,7 @@ def _sanitize_document(doc: Dict, type_registry: Dict[str, Set[Type]]) -> Dict:
             if key not in type_registry:
                 type_registry[key] = set()
             type_registry[key].add(original_type)
-            
+
             # Wrap everything as a list
             if value is None:
                 sanitized[key] = []
@@ -517,7 +513,7 @@ def _sanitize_document(doc: Dict, type_registry: Dict[str, Set[Type]]) -> Dict:
                 sanitized[key] = value if value else []
             else:
                 sanitized[key] = [value]
-    
+
     return sanitized
 
 
@@ -535,7 +531,7 @@ def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
     """
     if not docs:
         return DataFrame()
-    
+
     # First pass: discover nested columns and their value types
     nested_schema = {}  # Maps base field -> {nested_key: set of value types}
     for doc in docs:
@@ -556,11 +552,11 @@ def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
                             if nested_key not in nested_schema[key]:
                                 nested_schema[key][nested_key] = set()
                             nested_schema[key][nested_key].add(type(nested_val))
-    
+
     # Second pass: sanitize with type-aware column mapping
     type_registry = {}
     sanitized_docs = []
-    
+
     for doc in docs:
         sanitized = {}
         for key, value in doc.items():
@@ -576,40 +572,35 @@ def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
                 if key not in type_registry:
                     type_registry[key] = set()
                 type_registry[key].add(original_type)
-                
+
                 # Wrap values with type-aware nested column mapping
                 if value is None:
                     sanitized[key] = []
                 elif isinstance(value, list):
                     # If field has nested schema and list contains primitives, wrap in dicts
                     if key in nested_schema and value and not isinstance(value[0], dict):
-                        target_key = _find_compatible_nested_key(
-                            type(value[0]), nested_schema.get(key, {}), merge_unspecified
-                        )
+                        target_key = _find_compatible_nested_key(type(value[0]), nested_schema.get(key, {}), merge_unspecified)
                         sanitized[key] = [{target_key: item} for item in value]
                     else:
                         sanitized[key] = value if value else []
                 else:
                     # Single value: wrap in list, check for nested column mapping
                     if key in nested_schema and not isinstance(value, dict):
-                        target_key = _find_compatible_nested_key(
-                            type(value), nested_schema.get(key, {}), merge_unspecified
-                        )
+                        target_key = _find_compatible_nested_key(type(value), nested_schema.get(key, {}), merge_unspecified)
                         sanitized[key] = [{target_key: value}]
                     else:
                         sanitized[key] = [value]
-        
+
         sanitized_docs.append(sanitized)
-    
+
     # Create DataFrame and flatten
     df = DataFrame(sanitized_docs)
     df = _flatten_recursive(df)
-    
+
     return df
 
 
-def _find_compatible_nested_key(value_type: Type, nested_schema: Dict[str, Set[Type]], 
-                                  merge_unspecified: bool) -> str:
+def _find_compatible_nested_key(value_type: Type, nested_schema: Dict[str, Set[Type]], merge_unspecified: bool) -> str:
     """Find a nested column compatible with the given primitive type.
     @details  Uses type compatibility hierarchy for aggressive merging:
               bool → int → float (numeric types)
@@ -622,22 +613,22 @@ def _find_compatible_nested_key(value_type: Type, nested_schema: Dict[str, Set[T
     """
     if not merge_unspecified:
         return f"_unspecified_{value_type.__name__}"
-    
+
     # Define type compatibility: value_type can be cast to these types
     type_compatibility = {
-        int: [int, float],          # int can go to float
-        float: [float],             # float only to float
-        str: [str],                 # str only to str
-        bool: [bool]                # bool only to bool
+        int: [int, float],  # int can go to float
+        float: [float],  # float only to float
+        str: [str],  # str only to str
+        bool: [bool],  # bool only to bool
     }
-    
+
     compatible_types = type_compatibility.get(value_type, [value_type])
-    
+
     # Search for compatible columns in order of preference (exact match first)
     for target_type in compatible_types:
         for nested_key, observed_types in nested_schema.items():
             if target_type in observed_types:
                 return nested_key
-    
+
     # No compatible column found
     return f"_unspecified_{value_type.__name__}"

@@ -1,6 +1,7 @@
 from typing import List
 from pandas import DataFrame
 
+
 class Log:
     """The Log class standardizes console output."""
 
@@ -25,7 +26,6 @@ class Log:
     FAILURE_COLOR = RED
     ## ANSI color applied to the body of every Log message
     MSG_COLOR = BRIGHT
-
 
     ## When printing the results of a query
     FULL_DF = False
@@ -73,19 +73,17 @@ class Log:
         else:
             print(text)
 
-
     class Failure(RuntimeError):
         def __init__(self, prefix: str = "ERROR", msg: str = ""):
             self.prefix = prefix
             self.msg = msg if msg else Log.msg_unknown_error
             super().__init__(self.__str__())
-    
+
         def __str__(self):
             if Log.USE_COLORS:
                 return f"{Log.FAILURE_COLOR}{self.prefix}{Log.MSG_COLOR}{self.msg}{Log.WHITE}"
             else:
                 return f"{self.prefix}{self.msg}"
-
 
     @staticmethod
     def success_legacy(msg: str = ""):
@@ -100,7 +98,6 @@ class Log:
         @param msg  The message to print."""
         if msg != "":
             Log.fail(prefix="X", msg=f" - - {msg}", raise_error=False)
-
 
     # --------- Builder Pattern ---------
     # Compose your own standardized error messages depending on the context
@@ -129,17 +126,25 @@ class Log:
     bad_val = "INCORRECT RESULT: "
     msg_compare = lambda observed, expected: f"Expected {expected}, got {observed}"
 
-    msg_result = lambda results: f"""Fetched results: {Log.WHITE if Log.USE_COLORS else ''}
+    msg_result = (
+        lambda results: f"""Fetched results: {Log.WHITE if Log.USE_COLORS else ''}
     {DataFrame(results).to_string(max_rows=None, max_cols=None) if Log.FULL_DF else results} {Log.MSG_COLOR if Log.USE_COLORS else ''}"""
+    )
 
-    msg_good_table = lambda name, df: f"""Exported table '{name}' to DataFrame:{Log.WHITE if Log.USE_COLORS else ''}
+    msg_good_table = (
+        lambda name, df: f"""Exported table '{name}' to DataFrame:{Log.WHITE if Log.USE_COLORS else ''}
     {DataFrame(df).to_string(max_rows=None, max_cols=None) if Log.FULL_DF else df} {Log.MSG_COLOR if Log.USE_COLORS else ''}"""
+    )
 
-    msg_good_coll = lambda name, df: f"""Exported collection '{name}' to DataFrame:{Log.WHITE if Log.USE_COLORS else ''}
+    msg_good_coll = (
+        lambda name, df: f"""Exported collection '{name}' to DataFrame:{Log.WHITE if Log.USE_COLORS else ''}
     {DataFrame(df).to_string(max_rows=None, max_cols=None) if Log.FULL_DF else df} {Log.MSG_COLOR if Log.USE_COLORS else ''}"""
+    )
 
-    msg_good_graph = lambda name, df: f"""Exported graph '{name}' to DataFrame:{Log.WHITE if Log.USE_COLORS else ''}
+    msg_good_graph = (
+        lambda name, df: f"""Exported graph '{name}' to DataFrame:{Log.WHITE if Log.USE_COLORS else ''}
     {DataFrame(df).to_string(max_rows=None, max_cols=None) if Log.FULL_DF else df} {Log.MSG_COLOR if Log.USE_COLORS else ''}"""
+    )
 
     msg_bad_table = lambda name: f"Table '{name}' not found"
     msg_bad_coll = lambda name: f"Collection '{name}' not found"
@@ -162,13 +167,17 @@ class Log:
     msg_success_managed_db = lambda managed, database_name: f"Successfully {managed} database '{database_name}'"
     """@brief  Handles various successful actions an admin could perform on a database.
     @param managed  Past-tense verb representing the database operation performed, e.g. Created, Dropped."""
-    msg_fail_manage_db = lambda manage, database_name, connection_string: f"Failed to {manage} database '{database_name}' on connection {connection_string}"
+    msg_fail_manage_db = (
+        lambda manage, database_name, connection_string: f"Failed to {manage} database '{database_name}' on connection {connection_string}"
+    )
     """@brief  Handles various failed actions an admin could perform on a database.
     @param manage  Present-tense verb representing the database operation performed, e.g. create, drop."""
 
     msg_fail_parse = lambda alias, bad_value, expected_type: f"Could not convert {alias} with value {bad_value} to type {expected_type}"
 
-    msg_multiple_query = lambda n_queries, query: f"A combined query ({n_queries} results) was executed as a single query. Extra results were discarded. Query:\n{query}"
+    msg_multiple_query = (
+        lambda n_queries, query: f"A combined query ({n_queries} results) was executed as a single query. Extra results were discarded. Query:\n{query}"
+    )
     msg_good_exec_q = lambda query: f"Executed successfully:\n'{query}'"
     msg_good_exec_qr = lambda query, results: f"Executed successfully:\n'{query}'\n{Log.msg_result(results)}"
     msg_bad_exec_q = lambda query: f"Failed to execute query:\n'{query}'"
@@ -189,7 +198,6 @@ class Log:
     get_unique = "UNIQUE: "
 
 
-
 def all_none(*args):
     """Checks if all provided args are None."""
     return all(arg is None for arg in args)
@@ -205,8 +213,7 @@ def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = []) -> DataFra
     if df is None or df.empty:
         return df
     # Exclude non-hashable columns e.g. lists and dicts
-    safe_cols = [c for c in df.columns
-        if c not in ignored_columns and not isinstance(df[c].iloc[0], (list, dict))]
+    safe_cols = [c for c in df.columns if c not in ignored_columns and not isinstance(df[c].iloc[0], (list, dict))]
     # If we have no columns to sort on, just reset the row indexing.
     if not safe_cols:
         return df.reset_index(drop=True)

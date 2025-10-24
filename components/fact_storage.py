@@ -24,7 +24,7 @@ class GraphConnector(DatabaseConnector):
         super().configure("NEO4J", database)
         # Connect neomodel - URL never needs to change for Neo4j
         config.DATABASE_URL = self.connection_string
-        
+
         ## The name of the current graph. Matches node.kg for all nodes in the graph.
         self.graph_name = None
         self.change_graph("default")
@@ -35,7 +35,6 @@ class GraphConnector(DatabaseConnector):
         Instead, we create the dummy node on first successful connection. See @ref components.fact_storage.GraphConnector.check_connection
         """
 
-        
     def change_database(self, new_database: str):
         """Update the connection URI to reference a different database in the same engine.
         @note  Neo4j does not accept database names routed through the connection string.
@@ -54,7 +53,6 @@ class GraphConnector(DatabaseConnector):
         Log.success(Log.gr_db + Log.swap_kg, Log.msg_swap_kg(self.graph_name, graph_name), self.verbose)
         self.graph_name = graph_name
 
-
     def test_connection(self, raise_error=True) -> bool:
         """Establish a basic connection to the Neo4j database.
         @details  Can be configured to fail silently, which enables retries or external handling.
@@ -66,7 +64,7 @@ class GraphConnector(DatabaseConnector):
         if self.check_connection(Log.test_conn, raise_error) == False:
             return False
 
-        try:    # Run universal test queries
+        try:  # Run universal test queries
             result, _ = db.cypher_query("RETURN 1")
             if check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error) == False:
                 return False
@@ -77,19 +75,21 @@ class GraphConnector(DatabaseConnector):
             if check_values([result[0][0], result[0][1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
                 return False
         except Exception as e:
-            if not raise_error: return False
+            if not raise_error:
+                return False
             raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
 
-        try:   # Display useful information on existing databases
+        try:  # Display useful information on existing databases
             databases = self.get_unique(key="db")
             Log.success(Log.gr_db, Log.msg_result(databases), self.verbose)
             graphs = self.get_unique(key="kg")
             Log.success(Log.gr_db, Log.msg_result(graphs), self.verbose)
         except Exception as e:
-            if not raise_error: return False
+            if not raise_error:
+                return False
             raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
 
-        try:   # Create nodes, insert dummy data, and use get_dataframe
+        try:  # Create nodes, insert dummy data, and use get_dataframe
             tmp_graph = "test_graph"
             query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
             self.execute_query(query)
@@ -102,10 +102,11 @@ class GraphConnector(DatabaseConnector):
             query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
             self.execute_query(query)
         except Exception as e:
-            if not raise_error: return False
+            if not raise_error:
+                return False
             raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
 
-        try:   # Test create/drop functionality with tmp database
+        try:  # Test create/drop functionality with tmp database
             tmp_db = f"test_db_{int(time())}"
             working_database = self.database_name
             if self.database_exists(tmp_db):
@@ -116,9 +117,10 @@ class GraphConnector(DatabaseConnector):
             self.change_database(working_database)
             self.drop_database(tmp_db)
         except Exception as e:
-            if not raise_error: return False
+            if not raise_error:
+                return False
             raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
-    
+
         # Finish with no errors = connection test successful
         Log.success(Log.gr_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
@@ -134,7 +136,8 @@ class GraphConnector(DatabaseConnector):
             # Automatically connected, just try a basic query
             db.cypher_query("RETURN 1")
         except Exception:  # These errors are usually nasty, so dont print the original.
-            if not raise_error: return False
+            if not raise_error:
+                return False
             raise Log.Failure(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
         Log.success(Log.gr_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
 
@@ -173,7 +176,6 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
 
-
     def _split_combined(self, multi_query: str) -> List[str]:
         """Divides a string into non-divisible CQL queries, ignoring comments.
         @param multi_query  A string containing multiple queries.
@@ -184,7 +186,6 @@ class GraphConnector(DatabaseConnector):
         multi_query = re.sub(r'/\*.*?\*/', '', multi_query, flags=re.DOTALL)
         # 3. Split by ; and strip
         return [q.strip() for q in multi_query.split(";") if q.strip()]
-
 
     def get_dataframe(self, name: str) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified Knowledge Graph collection.
@@ -206,7 +207,7 @@ class GraphConnector(DatabaseConnector):
         query = f"MATCH (n {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} RETURN n"
         results, _ = db.cypher_query(query)
         self.change_graph(working_graph)
-        
+
         # Create a row for each node with attributes as columns - might be unbalanced
         rows = []
         for record in results:
@@ -228,7 +229,6 @@ class GraphConnector(DatabaseConnector):
         Log.warn(Log.gr_db + Log.get_df, Log.msg_bad_graph(name), self.verbose)
         return None
 
-
     def get_unique(self, key: str) -> List[str]:
         """Retrieve all unique values for a specified node property.
         @details  Queries all nodes in the database and extracts distinct values for the given key.
@@ -244,10 +244,9 @@ class GraphConnector(DatabaseConnector):
         if df is None or df.empty:
             return []
         unique_values = df[key].tolist()
-            
+
         Log.success(Log.gr_db + Log.get_unique, Log.msg_result(unique_values), self.verbose)
         return unique_values
-
 
     def create_database(self, database_name: str):
         """Create a fresh pseudo-database if it does not already exist.
@@ -336,7 +335,6 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
 
-
     def get_edge_counts(self, top_n: int = 10) -> DataFrame:
         """Return node names and their edge counts, ordered by edge count descending.
         @param top_n  Number of top nodes to return (by edge count). Default is 10.
@@ -357,7 +355,6 @@ class GraphConnector(DatabaseConnector):
             return df
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.") from e
-
 
     def get_all_triples(self) -> DataFrame:
         """Return all triples in the current pseudo-database as a pandas DataFrame.
@@ -380,15 +377,12 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch all_triples DataFrame.") from e
 
-
-
     def print_nodes(self, max_rows: int = 20, max_col_width: int = 50):
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
         nodes_df = self.get_dataframe()
 
         # Set pandas display options only within scope
-        with option_context("display.max_rows", max_rows,
-            "display.max_colwidth", max_col_width):
+        with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
             print(f"Graph nodes ({len(nodes_df)} total):")
             print(nodes_df)
 
@@ -397,8 +391,7 @@ class GraphConnector(DatabaseConnector):
         triples_df = self.get_all_triples()
 
         # Set pandas display options only within scope
-        with option_context("display.max_rows", max_rows,
-            "display.max_colwidth", max_col_width):
+        with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
             print(f"Graph triples ({len(triples_df)} total):")
             print(triples_df)
 
@@ -418,11 +411,10 @@ class GraphConnector(DatabaseConnector):
         @return  A string containing Cypher code.
         """
         return f"({alias}._init IS NULL OR {alias}._init = false)"
-    
+
     def SAME_DB_KG_(self):
         """Generates a Cypher pattern dictionary to match nodes by current database and graph name.
         @details  Usage: MATCH (n {self.SAME_DB_KG_()})
         @return  A string containing Cypher code.
         """
         return f"{{db: '{self.database_name}', kg: '{self.graph_name}'}}"
-
