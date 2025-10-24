@@ -497,8 +497,8 @@ def _sanitize_document(doc: Dict, type_registry: Dict[str, Set[Type]]) -> Dict:
         if key == "_id":
             try:
                 sanitized[key] = [str(value)]
-            except Exception:
-                raise Log.Failure(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str"))
+            except Exception as e:
+                raise Log.Failure(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str")) from e
         else:
             # Track the original type before wrapping
             original_type = type(value)
@@ -564,8 +564,8 @@ def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
             if key == "_id":
                 try:
                     sanitized[key] = [str(value)]
-                except Exception:
-                    raise Log.Failure(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str"))
+                except Exception as e:
+                    raise Log.Failure(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str")) from e
             else:
                 # Track the original type
                 original_type = type(value)
