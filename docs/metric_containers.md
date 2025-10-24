@@ -168,7 +168,7 @@ This is only used by the boss container `main.py`, and worker dependencies are k
 
 ```bash
 # Build and start all services
-make docker-all-workers
+make docker-all-tasks
 
 # Individual services
 docker-compose up qeval_worker

@@ -180,6 +180,11 @@ docker-all-dbs:
 		exit 1
 	fi
 
+.PHONY: docker-all-tasks
+docker-all-tasks:
+	docker compose up -d bscore_worker
+	docker compose up -d qeval_worker
+
 ###############################################################################
 # Create containers for individual databases
 ###############################################################################
