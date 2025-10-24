@@ -193,6 +193,11 @@ This problem will spread as we scale in future versions; a remote Blazor server 
 6. Instead of allowing full access to out-of-network machines, use a VPN to connect with the secured network remotely.
 
 
+## Other Notes
 
+- Postgres is case-insensitive, and stores tables as all lowercase. MySQL is not. Our logic in `get_dataframe` will try again with an all-lowercase name if the table isn't found.
 
-Note: Postgres is case-insensitive, and stores tables as all lowercase. MySQL is not
+- **MYSQL_USERNAME cannot be root.** You must create a secondary user if you want to use an existing database installation.
+
+- Any `.sql` example files should have UNIX line endings to work on Docker. Same with `.env`.
+

@@ -1,0 +1,27 @@
+[tool.black]                # Configuration for Black code formatter
+line-length = 150                   # Set max line length to 88: balances readability and line-wrapping
+target-version = ["py312"]          # Target Python 3.12 syntax for formatting
+skip-string-normalization = true    # Preserve original quote style; avoids messy escaping in JSON strings
+
+[tool.isort]                # Configuration for isort (import sorting tool)
+profile = "black"                   # Match Black’s style for import sorting; avoids conflicts between tools
+line_length = 100                   # Keep import lines shorter than Black for readability
+include_trailing_comma = true       # Add trailing commas to multi-line imports; compatible with Black formatting
+#multi_line_output = 5               # Use vertical hanging indent for multi-line imports; improves readability
+
+[tool.pytest.ini_options]   # Configuration for pytest (test runner)
+minversion = "8.0"                  # Require pytest 8.0+; ensures features/options used are supported
+addopts = "-ra -q --color=yes"      # -ra: show extra summary for skipped/failed tests, -q: reduce verbosity for clarity
+testpaths = ["tests"]               # Only look in the tests/ directory for test discovery; avoids running irrelevant files
+
+[tool.mypy]                 # Configuration for mypy (static type checker)
+python_version = 3.12               # Type check using Python 3.12 rules for consistency with your code
+ignore_missing_imports = true       # Don’t error on imports without stubs; prevents noise from third-party libraries
+strict = true                       # Enable strict mode; catches subtle type errors for safer, more maintainable code
+
+# Handled by Doxyfile already
+# [tool.doxygen]              # Configuration for Doxygen (documentation generator)
+# INPUT = "src"                        # Specify source code folder; tells Doxygen what to document
+# RECURSIVE = "YES"                    # Include subdirectories; ensures complete documentation
+# OUTPUT_DIRECTORY = "docs/doxygen"    # Output folder for generated docs; keeps documentation separate from code
+

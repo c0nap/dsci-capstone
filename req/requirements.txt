@@ -1,0 +1,27 @@
+# Core dependencies
+python-dotenv
+pytest
+pytest-order
+pandas
+sqlparse
+pypandoc
+lxml
+rapidfuzz
+evaluate
+
+# Database drivers
+sqlalchemy
+pymysql
+cryptography
+psycopg2-binary
+neomodel
+mongoengine
+
+# NLP / LLM (CPU only, minimal)
+openai
+langchain
+langchain-openai
+spacy
+transformers
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch

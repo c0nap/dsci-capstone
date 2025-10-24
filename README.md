@@ -110,10 +110,6 @@ Create OpenAI and HuggingFace API keys, and copy them into `OPENAI_API_KEY` and 
 
 ## 3 - Additional Information
 
-#### Code Documentation with Doxygen
-
-Pre-compiled code diagrams can be accessed from `docs/html/annotated.html`. We discuss our process in more detail [here](docs/code_style.md).
-
 #### Database Connections / Network Troubleshooting
 
 We have also compiled a [detailed guide](docs/database_instructions.md) addressing issues found when connecting the various components.
@@ -125,3 +121,17 @@ Optionally, Docker can be used to run our exact setup with test datasets and min
 #### Web Application
 
 To extend the provided web app or to build your own, please reference our [Blazor UI Notes](docs/web_app_notes.md).
+
+#### Code Review Tools
+
+- Doxygen
+- Black
+- isort
+- mypy
+- Gource
+- git-story
+- GitClear
+
+#### Code Documentation with Doxygen
+
+Pre-compiled code diagrams can be accessed from `docs/html/annotated.html`. We discuss our process in more detail [here](docs/code_style.md).
