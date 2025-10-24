@@ -1,8 +1,7 @@
 (env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python
 container-python
-c97c69e0480bd767b44d9a04a757ad2675a872e9669cba57bd2363a7f9b947aa
+63a9ae848cdd7b66ed2299378423b61dfc0bf67639525d631b10fdf5dc598e4f
 Network 'capstone_default' already exists; continue...
-
 
 ==================================================
 Processing: ./datasets/examples/trilogy-wishes-2.epub
@@ -11,223 +10,236 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 Total chunks: 254
 
 Chunk details:
-  index: Chunk(len=1237, book=2, chapter=8, story=1, lines=[1840,1865], story%=28.475, chapter%=96.429)
+  index: Chunk(len=1441, book=2, chapter=14, story=1, lines=[4744,4772], story%=74.504, chapter%=60.033)
 
-‘I believe you, my dear,’ said the cook, heartily. ‘Nothing to do unless you want to. But I’m getting rested now. Tomorrow I’m going to start cleaning out my hut, if the dream keeps on, and I shall teach them cooking; they burns everything to a cinder now unless they eats it raw.’
-‘But can you talk to them?’
-‘Lor’ love a duck, yes!’ the happy cook-queen replied; ‘it’s quite easy to pick up. I always thought I should be quick at foreign languages. I’ve taught them to understand “dinner,” and “I want a drink,” and “You leave me be,” already.’
-‘Then you don’t want anything?’ Anthea asked earnestly and anxiously.
-‘Not me, miss; except if you’d only go away. I’m afraid of me waking up with that bell a-going if you keep on stopping here a-talking to me. Long as this here dream keeps up I’m as happy as a queen.’
-‘Goodbye, then,’ said Anthea, gaily, for her conscience was clear now.
-She hurried into the wood, threw herself on the ground, and said ‘Home’—and there she was, rolled in the carpet on the nursery floor.
-‘SHE’S all right, anyhow,’ said Anthea, and went back to bed. ‘I’m glad somebody’s pleased. But mother will never believe me when I tell her.’
-The story is indeed a little difficult to believe. Still, you might try.
+It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—
+‘Well, stow it, will you?’
+And the boots went heavily away, along the passage and up some sounding stone stairs.
+‘Now then,’ whispered Anthea.
+‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.
+‘On the carpet,’ said Jane, truly.
+‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’
+‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’
+‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’
+‘Well, then,’ Cyril went on, ignoring this appeal to his brother, ‘just try to believe what we tell you and act accordingly. It can’t do you any HARM, you know,’ he went on in hoarse whispered earnestness. ‘You can’t be very much worse off than you are now, you know. But if you’ll just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?’
+‘I’d like to go to Boolong,’ was the instant reply of the burglar. ‘I’ve always wanted to go on that there trip, but I’ve never ‘ad the ready at the right time of the year.’
+‘Boolong is a town like London,’ said Cyril, well meaning, but inaccurate, ‘how could you get a living there?’
+The burglar scratched his head in deep doubt.
 
 NLP output:
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
-('Nothing to do', 'opposite of', 'want to')
-('want to', 'opposite of', 'Nothing to do')
 ('2008 Summer Olympics', 'point in time', '2008')
-('Cumbria', 'located in the administrative territorial entity', 'England')
-('England', 'England', 'located in the administrative territorial entity')
-('Cumbria', 'England', 'contains administrative territorial entity')
-('contains administrative territorial entity', 'Cumbria', 'England')
-('contains administrative territorial entity', 'located in the administrative territorial entity', 'England')
-('Can you talk to them?', 'subclass of', 'talk')
-('Love a duck, yes!', 'performer', 'Lor’')
-('Happy Cook-queen', 'spouse', 'cook-queen')
-('cook-queen', 'spouse', 'Happy Cook-queen')
-('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
-('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
-('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
-('Dinner', 'followed by', 'I want a drink')
-('I want a drink', 'follows', 'Dinner')
-('Don’t want anything', 'followed by', 'Don’t Want Anything')
-('Don’t Want Anything', 'follows', 'Don’t want anything')
-('Anthea', 'spouse', 'Joseph')
-('Joseph', 'spouse', 'Anthea')
-('Not me', 'said to be the same as', 'miss')
-('miss', 'said to be the same as', 'Not me')
-('Queen Elizabeth II', 'spouse', 'Prince Philip')
-('Prince Philip', 'spouse', 'Queen Elizabeth II')
-('Anthea', 'present in work', 'Goodwill')
-('Goodwill', 'Goodwill', 'present in work')
-('Anthea', 'Anthea', 'characters')
-('characters', 'Goodwill', 'Anthea')
-('present in work', 'present in work', 'Goodwill')
-('Goodwill', 'characters', 'Anthea')
-('Anthea', 'Anthea', 'characters')
-('characters', 'Goodwill', 'Anthea')
-('present in work', 'present in work', 'Goodwill')
-('carpet', 'part of', 'nursery floor')
-('Anthea', 'said to be the same as', 'She’s all right')
-('She’s all right', 'said to be the same as', 'Anthea')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'has part', 'John F. Kennedy School of Government')
-('Mother', 'spouse', 'father')
-('father', 'spouse', 'Mother')
+('boots', 'different from', 'voice')
+('voice', 'different from', 'boots')
+('Yes', 'instance of', 'Yes!')
+('No', 'instance of', 'No!')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
 ('William Shakespeare', 'notable work', 'Cymbeline')
 ('Cymbeline', 'Cymbeline', 'notable work')
 ('William Shakespeare', 'Cymbeline', 'author')
 ('William Shakespeare', 'Cymbeline', 'author')
-('St. Augustine', 'located in the administrative territorial entity', 'Florida')
-('Florida', 'contains administrative territorial entity', 'St. Augustine')
+('Now then,’ whispered Anthea', 'characters', 'Anthea')
+('Anthea', 'present in work', 'Now then,’ whispered Anthea')
+('How the blue Moses did you get in?', 'characters', 'Moses')
+('Moses', 'present in work', 'How the blue Moses did you get in?')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('On the carpet', 'cast member', 'Jane')
+('Stow that', 'participant', 'burglar')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Milton', 'Milton', 'author')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('Cyril', 'owner of', 'nursery')
+('nursery', 'owned by', 'Cyril')
+('John F. Kennedy', 'significant event', 'assassinated')
+('assassinated', 'facet of', 'John F. Kennedy')
+('Cyril', 'sibling', 'his brother')
+('his brother', 'sibling', 'Cyril')
+('HARM', 'has effect', 'fever')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
+('Boolong', 'located in the administrative territorial entity', 'Boolong')
+('World Rugby League', 'sport', 'Rugby League')
+('Rugby League', 'organizer', 'World Rugby League')
+('Boolong', 'located in the administrative territorial entity', 'London')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
-('Nothing to do', 'opposite of', 'want to')
-('want to', 'opposite of', 'Nothing to do')
 ('2008 Summer Olympics', 'point in time', '2008')
-('Cumbria', 'located in the administrative territorial entity', 'England')
-('England', 'England', 'located in the administrative territorial entity')
-('Cumbria', 'England', 'contains administrative territorial entity')
-('contains administrative territorial entity', 'Cumbria', 'England')
-('contains administrative territorial entity', 'located in the administrative territorial entity', 'England')
-('Can you talk to them?', 'subclass of', 'talk')
-('Love a duck, yes!', 'performer', 'Lor’')
-('Happy Cook-queen', 'spouse', 'cook-queen')
-('cook-queen', 'spouse', 'Happy Cook-queen')
-('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
-('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
-('I always thought I should be quick at foreign languages', 'said to be the same as', 'I always thought I should be quick at foreign languages')
-('Dinner', 'followed by', 'I want a drink')
-('I want a drink', 'follows', 'Dinner')
-('Don’t want anything', 'followed by', 'Don’t Want Anything')
-('Don’t Want Anything', 'follows', 'Don’t want anything')
-('Anthea', 'spouse', 'Joseph')
-('Joseph', 'spouse', 'Anthea')
-('Not me', 'said to be the same as', 'miss')
-('miss', 'said to be the same as', 'Not me')
-('Queen Elizabeth II', 'spouse', 'Prince Philip')
-('Prince Philip', 'spouse', 'Queen Elizabeth II')
-('Anthea', 'present in work', 'Goodwill')
-('Goodwill', 'Goodwill', 'present in work')
-('Anthea', 'Anthea', 'characters')
-('characters', 'Goodwill', 'Anthea')
-('present in work', 'present in work', 'Goodwill')
-('Goodwill', 'characters', 'Anthea')
-('Anthea', 'Anthea', 'characters')
-('characters', 'Goodwill', 'Anthea')
-('present in work', 'present in work', 'Goodwill')
-('carpet', 'part of', 'nursery floor')
-('Anthea', 'said to be the same as', 'She’s all right')
-('She’s all right', 'said to be the same as', 'Anthea')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'has part', 'John F. Kennedy School of Government')
-('Mother', 'spouse', 'father')
-('father', 'spouse', 'Mother')
+('boots', 'different from', 'voice')
+('voice', 'different from', 'boots')
+('Yes', 'instance of', 'Yes!')
+('No', 'instance of', 'No!')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
 ('William Shakespeare', 'notable work', 'Cymbeline')
 ('Cymbeline', 'Cymbeline', 'notable work')
 ('William Shakespeare', 'Cymbeline', 'author')
 ('William Shakespeare', 'Cymbeline', 'author')
-('St. Augustine', 'located in the administrative territorial entity', 'Florida')
-('Florida', 'contains administrative territorial entity', 'St. Augustine')
+('Now then,’ whispered Anthea', 'characters', 'Anthea')
+('Anthea', 'present in work', 'Now then,’ whispered Anthea')
+('How the blue Moses did you get in?', 'characters', 'Moses')
+('Moses', 'present in work', 'How the blue Moses did you get in?')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('On the carpet', 'cast member', 'Jane')
+('Stow that', 'participant', 'burglar')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Milton', 'Milton', 'author')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('Cyril', 'owner of', 'nursery')
+('nursery', 'owned by', 'Cyril')
+('John F. Kennedy', 'significant event', 'assassinated')
+('assassinated', 'facet of', 'John F. Kennedy')
+('Cyril', 'sibling', 'his brother')
+('his brother', 'sibling', 'Cyril')
+('HARM', 'has effect', 'fever')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
+('Boolong', 'located in the administrative territorial entity', 'Boolong')
+('World Rugby League', 'sport', 'Rugby League')
+('Rugby League', 'organizer', 'World Rugby League')
+('Boolong', 'located in the administrative territorial entity', 'London')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
 
 And here is the original text:
-‘I believe you, my dear,’ said the cook, heartily. ‘Nothing to do unless you want to. But I’m getting rested now. Tomorrow I’m going to start cleaning out my hut, if the dream keeps on, and I shall teach them cooking; they burns everything to a cinder now unless they eats it raw.’
-‘But can you talk to them?’
-‘Lor’ love a duck, yes!’ the happy cook-queen replied; ‘it’s quite easy to pick up. I always thought I should be quick at foreign languages. I’ve taught them to understand “dinner,” and “I want a drink,” and “You leave me be,” already.’
-‘Then you don’t want anything?’ Anthea asked earnestly and anxiously.
-‘Not me, miss; except if you’d only go away. I’m afraid of me waking up with that bell a-going if you keep on stopping here a-talking to me. Long as this here dream keeps up I’m as happy as a queen.’
-‘Goodbye, then,’ said Anthea, gaily, for her conscience was clear now.
-She hurried into the wood, threw herself on the ground, and said ‘Home’—and there she was, rolled in the carpet on the nursery floor.
-‘SHE’S all right, anyhow,’ said Anthea, and went back to bed. ‘I’m glad somebody’s pleased. But mother will never believe me when I tell her.’
-The story is indeed a little difficult to believe. Still, you might try.
+It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—
+‘Well, stow it, will you?’
+And the boots went heavily away, along the passage and up some sounding stone stairs.
+‘Now then,’ whispered Anthea.
+‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.
+‘On the carpet,’ said Jane, truly.
+‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’
+‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’
+‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’
+‘Well, then,’ Cyril went on, ignoring this appeal to his brother, ‘just try to believe what we tell you and act accordingly. It can’t do you any HARM, you know,’ he went on in hoarse whispered earnestness. ‘You can’t be very much worse off than you are now, you know. But if you’ll just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?’
+‘I’d like to go to Boolong,’ was the instant reply of the burglar. ‘I’ve always wanted to go on that there trip, but I’ve never ‘ad the ready at the right time of the year.’
+‘Boolong is a town like London,’ said Cyril, well meaning, but inaccurate, ‘how could you get a living there?’
+The burglar scratched his head in deep doubt.
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s":"cook","r":"says","o":"I believe you, my dear"},
-  {"s":"cook","r":"says","o":"Nothing to do unless you want to"},
-  {"s":"cook","r":"plans to","o":"start cleaning out her hut tomorrow"},
-  {"s":"cook","r":"plans to","o":"teach them cooking"},
-  {"s":"they","r":"burn","o":"everything to a cinder unless eaten raw"},
-  {"s":"Anthea","r":"asks","o":"Can you talk to them?"},
-  {"s":"cook-queen","r":"replies","o":"Lor’ love a duck, yes!"},
-  {"s":"cook-queen","r":"states","o":"it’s quite easy to pick up foreign languages"},
-  {"s":"cook-queen","r":"states","o":"I have taught them to understand 'dinner', 'I want a drink', and 'You leave me be'"},
-  {"s":"Anthea","r":"asks","o":"Then you don’t want anything?"},
-  {"s":"cook-queen","r":"answers","o":"Not me, miss; except if you’d only go away."},
-  {"s":"cook-queen","r":"fears","o":"waking up with that bell a-going if you keep on stopping here talking to me"},
-  {"s":"cook-queen","r":"states","o":"Long as this dream keeps up I’m as happy as a queen"},
-  {"s":"Anthea","r":"says","o":"Goodbye, then"},
-  {"s":"Anthea","r":"goes","o":"into the wood"},
-  {"s":"Anthea","r":"says","o":"'Home'"},
-  {"s":"Anthea","r":"is","o":"rolled in the carpet on the nursery floor"},
-  {"s":"Anthea","r":"says","o":"'SHE’S all right, anyhow'"},
-  {"s":"Anthea","r":"returns","o":"to bed"},
-  {"s":"Anthea","r":"says","o":"I’m glad somebody’s pleased. But mother will never believe me when I tell her."},
-  {"s":"narrator","r":"notes","o":"The story is difficult to believe. Still, you might try."},
-  {"s":"dream","r":"persists","o":"keeps up"}
+  {"s": "2008 Summer Olympics", "r": "point in time", "o": "2008"},
+  {"s": "boots", "r": "different from", "o": "voice"},
+  {"s": "voice", "r": "different from", "o": "boots"},
+  {"s": "Yes", "r": "instance of", "o": "Yes!"},
+  {"s": "No", "r": "instance of", "o": "No!"},
+  {"s": "William Shakespeare", "r": "notable work", "o": "Cymbeline"},
+  {"s": "Cymbeline", "r": "author", "o": "William Shakespeare"},
+  {"s": "Now then,” whispered Anthea", "r": "characters", "o": "Anthea"},
+  {"s": "Anthea", "r": "present in work", "o": "Now then,” whispered Anthea"},
+  {"s": "How the blue Moses did you get in?", "r": "characters", "o": "Moses"},
+  {"s": "Moses", "r": "present in work", "o": "How the blue Moses did you get in?"},
+  {"s": "John Milton", "r": "notable work", "o": "Paradise Lost"},
+  {"s": "Paradise Lost", "r": "author", "o": "John Milton"},
+  {"s": "On the carpet", "r": "cast member", "o": "Jane"},
+  {"s": "Cyril", "r": "owner of", "o": "nursery"},
+  {"s": "nursery", "r": "owned by", "o": "Cyril"},
+  {"s": "John F. Kennedy", "r": "significant event", "o": "assassinated"},
+  {"s": "John F. Kennedy School of Government", "r": "part of", "o": "Harvard University"},
+  {"s": "Harvard University", "r": "subsidiary", "o": "John F. Kennedy School of Government"},
+  {"s": "George Orwell", "r": "notable work", "o": "Nineteen Eighty-Four"},
+  {"s": "Nineteen Eighty-Four", "r": "author", "o": "Orwell"},
+  {"s": "World Rugby League", "r": "sport", "o": "Rugby League"},
+  {"s": "Rugby League", "r": "organizer", "o": "World Rugby League"},
+  {"s": "Boolong", "r": "located in the administrative territorial entity", "o": "London"},
+  {"s": "nursery", "r": "contains", "o": "cow and cats"},
+  {"s": "cow", "r": "found in", "o": "nursery"},
+  {"s": "cats", "r": "found in", "o": "nursery"},
+  {"s": "burglar", "r": "desires", "o": "Boolong"},
+  {"s": "burglar", "r": "asks", "o": "How the blue Moses did you get in?"},
+  {"s": "Jane", "r": "present in", "o": "On the carpet"},
+  {"s": "the voice", "r": "dialogue", "o": "Well, stow it, will you?"},
+  {"s": "burglar", "r": "feels", "o": "doubt"}
 ]
 
 ==================================================
 
 
 Valid JSON
-cook says I believe you, my dear
-cook says Nothing to do unless you want to
-cook plans to start cleaning out her hut tomorrow
-cook plans to teach them cooking
-they burn everything to a cinder unless eaten raw
-Anthea asks Can you talk to them?
-cook-queen replies Lor’ love a duck, yes!
-cook-queen states it’s quite easy to pick up foreign languages
-cook-queen states I have taught them to understand 'dinner', 'I want a drink', and 'You leave me be'
-Anthea asks Then you don’t want anything?
-cook-queen answers Not me, miss; except if you’d only go away.
-cook-queen fears waking up with that bell a-going if you keep on stopping here talking to me
-cook-queen states Long as this dream keeps up I’m as happy as a queen
-Anthea says Goodbye, then
-Anthea goes into the wood
-Anthea says 'Home'
-Anthea is rolled in the carpet on the nursery floor
-Anthea says 'SHE’S all right, anyhow'
-Anthea returns to bed
-Anthea says I’m glad somebody’s pleased. But mother will never believe me when I tell her.
-narrator notes The story is difficult to believe. Still, you might try.
-dream persists keeps up
+2008 Summer Olympics point in time 2008
+boots different from voice
+voice different from boots
+Yes instance of Yes!
+No instance of No!
+William Shakespeare notable work Cymbeline
+Cymbeline author William Shakespeare
+Now then,” whispered Anthea characters Anthea
+Anthea present in work Now then,” whispered Anthea
+How the blue Moses did you get in? characters Moses
+Moses present in work How the blue Moses did you get in?
+John Milton notable work Paradise Lost
+Paradise Lost author John Milton
+On the carpet cast member Jane
+Cyril owner of nursery
+nursery owned by Cyril
+John F. Kennedy significant event assassinated
+John F. Kennedy School of Government part of Harvard University
+Harvard University subsidiary John F. Kennedy School of Government
+George Orwell notable work Nineteen Eighty-Four
+Nineteen Eighty-Four author Orwell
+World Rugby League sport Rugby League
+Rugby League organizer World Rugby League
+Boolong located in the administrative territorial entity London
+nursery contains cow and cats
+cow found in nursery
+cats found in nursery
+burglar desires Boolong
+burglar asks How the blue Moses did you get in?
+Jane present in On the carpet
+the voice dialogue Well, stow it, will you?
+burglar feels doubt
 
 Most relevant nodes:
-    node_name  edge_count
-0      Anthea           9
-1  cook_queen           6
-2        cook           4
+                            node_name  edge_count
+0                             nursery           5
+1                             burglar           3
+2  How_the_blue_Moses_did_you_get_in_           3
 
 Triples which best represent the graph:
-Anthea says I_m_glad_somebody_s_pleased__But_mother_will_never_believe_me_when_I_tell_her_
-Anthea returns to_bed
-Anthea says _SHE_S_all_right__anyhow_
-Anthea is rolled_in_the_carpet_on_the_nursery_floor
-Anthea says _Home_
-Anthea goes into_the_wood
-Anthea says Goodbye__then
-Anthea asks Then_you_don_t_want_anything_
-Anthea asks Can_you_talk_to_them_
-cook_queen states Long_as_this_dream_keeps_up_I_m_as_happy_as_a_queen
-cook_queen fears waking_up_with_that_bell_a_going_if_you_keep_on_stopping_here_talking_to_me
-cook_queen answers Not_me__miss__except_if_you_d_only_go_away_
-cook_queen states I_have_taught_them_to_understand__dinner____I_want_a_drink___and__You_leave_me_be_
-cook_queen states it_s_quite_easy_to_pick_up_foreign_languages
-cook_queen replies Lor__love_a_duck__yes_
-cook plans_to teach_them_cooking
-cook plans_to start_cleaning_out_her_hut_tomorrow
-cook says Nothing_to_do_unless_you_want_to
-cook says I_believe_you__my_dear
+nursery contains cow_and_cats
+nursery owned_by Cyril
+burglar feels doubt
+burglar asks How_the_blue_Moses_did_you_get_in_
+burglar desires Boolong
+How_the_blue_Moses_did_you_get_in_ characters Moses
 
 
 Generated summary:
-Anthea experiences a dreamlike sequence in which she is glad somebody is pleased but fears her mother won’t believe her when she tells her; she moves from the nursery floor to the wood, returns to bed, and quietly says “Home” and “Goodbye,” asking if anyone else wants something or can talk to them. A cook queen appears in the dream, content while the dream lasts and fearing waking up if the bell keeps ringing; she says she has taught them to understand dinner, wants a drink and to be left alone, and plans to teach cooking and start cleaning out her hut tomorrow, noting there is nothing to do unless someone wants something and that she believes Anthea.
+Cyril owns a nursery that contains a cow and cats. A burglar, feeling doubt, asks how the blue Moses got in and expresses a desire for Boolong. Moses is a character referenced in the inquiry.
 Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Anthea experiences a dreamlike sequence in which she is glad somebody is pleased but fears her mother won’t believe her when she tells her; she moves from the nursery floor to the wood, returns to bed, and quietly says “Home” and “Goodbye,” asking if anyone else wants something or can talk to them. A cook queen appears in the dream, content while the dream lasts and fearing waking up if the bell keeps ringing; she says she has taught them to understand dinner, wants a drink and to be left alone, and plans to teach cooking and start cleaning out her hut tomorrow, noting there is nothing to do unless someone wants something and that she believes Anthea.', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Cyril owns a nursery that contains a cow and cats. A burglar, feeling doubt, asks how the blue Moses got in and expresses a desire for Boolong. Moses is a character referenced in the inquiry.', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
 
 Output sent to web app.
 # exit
