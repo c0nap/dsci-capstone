@@ -1,9 +1,10 @@
-import os
-from dotenv import load_dotenv
-from src.util import all_none
 from components.connectors import RelationalConnector
 from components.document_storage import DocumentConnector
 from components.fact_storage import GraphConnector
+from dotenv import load_dotenv
+import os
+from src.util import all_none
+
 
 # Read environment variables at compile time
 load_dotenv(".env")

@@ -1,10 +1,10 @@
-import pytest
-import sys
 import os
-import time
-from typing import List
+import pytest
 from src.setup import Session
 from src.util import Log
+import sys
+import time
+from typing import List
 
 
 # ------------------------------------------------------------------------------

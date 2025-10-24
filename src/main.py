@@ -1,11 +1,12 @@
-from src.setup import Session
-from components.book_conversion import Book, Chunk, EPUBToTEI, Story, ParagraphStreamTEI
-from components.metrics import post_example_results, post_basic_output
-import pandas as pd
-import random
-import traceback
+from components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
+from components.metrics import post_basic_output, post_example_results
 import json
 import os
+import pandas as pd
+import random
+from src.setup import Session
+import traceback
+
 
 session = Session(verbose=False)
 
@@ -215,7 +216,7 @@ def test_relation_extraction():
 
 def process_single():
     """Uses NLP and LLM to process an existing TEI file."""
-    from components.text_processing import RelationExtractor, LLMConnector
+    from components.text_processing import LLMConnector, RelationExtractor
 
     try:
         df = pd.read_csv("datasets/books.csv")
@@ -419,7 +420,7 @@ def full_pipeline(epub_path, book_chapters, start_str, end_str, book_id, story_i
             - Neo4j graph database
             - Output summary
             - Blazor graph and metrics pages"""
-    from components.text_processing import RelationExtractor, LLMConnector
+    from components.text_processing import LLMConnector, RelationExtractor
 
     # convert EPUB file
     print(f"\n{'='*50}")

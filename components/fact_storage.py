@@ -1,11 +1,11 @@
 from components.connectors import DatabaseConnector
-from src.util import Log, check_values, df_natural_sorted
-from typing import List, Optional
-from pandas import DataFrame
 from neomodel import config, db
-from time import time
 import os
+from pandas import DataFrame
 import re
+from src.util import check_values, df_natural_sorted, Log
+from time import time
+from typing import List, Optional
 
 
 class GraphConnector(DatabaseConnector):

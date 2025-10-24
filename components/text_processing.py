@@ -1,8 +1,9 @@
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import re
-import os
 from dotenv import load_dotenv
+import os
+import re
 import spacy
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+
 
 nlp = spacy.blank("en")  # blank English model, no pipeline
 sentencizer = nlp.add_pipe("sentencizer")
@@ -46,13 +47,13 @@ class RelationExtractor:
         return out
 
 
-from langchain_openai import ChatOpenAI
+from components.connectors import Connector
 from langchain_core.prompts import (
     ChatPromptTemplate,
-    SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
 )
-from components.connectors import Connector
+from langchain_openai import ChatOpenAI
 
 
 class LLMConnector(Connector):
