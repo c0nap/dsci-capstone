@@ -14,9 +14,9 @@ ENV PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency list first to leverage build cache
+RUN apt-get update && apt-get install -y --no-install-recommends pandoc make && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN apt-get update && apt-get install -y --no-install-recommends pandoc make && rm -rf /var/lib/apt/lists/*
 
 
 # Copy source code into the container (optional .dockerignore)
@@ -36,6 +36,7 @@ COPY Makefile .
 RUN make env-docker
 RUN mv .env.docker .env
 
+COPY pyproject.toml .
 
 # default command
 CMD ["python", "-m", "src.main"]

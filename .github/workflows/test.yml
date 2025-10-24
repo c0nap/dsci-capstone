@@ -1,0 +1,57 @@
+name: PyTest Job
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        required: true
+        type: string
+      secrets-name:
+        required: true
+        type: string
+
+jobs:
+  run-all-pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Downloading images from artifact ${{ inputs.artifact-name }}"
+
+      # 1. Download artifacts
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: .
+
+      - name: Load Docker images
+        run: docker load < docker-images-ci.tar
+
+
+      # 2. Create test environment
+      - name: Download code from repository
+        uses: actions/checkout@v4
+
+      - name: Download dummy secrets artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.secrets-name }}
+          path: .
+
+      - name: Unpack secrets artifact
+        run: unzip -o secret-files.zip
+
+      - name: Start database containers
+        run: make docker-all-dbs
+
+      - name: Wait for databases to be ready
+        run: sleep 20   # Postgres, MySQL, MongoDB, Neo4j
+
+
+      # 3. Start web app and run all pytests
+      - name: Start Blazor container in background
+        run: make docker-blazor-silent
+
+      - name: Run PyTests with existing images
+        run: make docker-test VERBY=1 COLORS=1
+
+
+

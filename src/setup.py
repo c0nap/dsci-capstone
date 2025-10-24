@@ -1,9 +1,10 @@
-import os
-from dotenv import load_dotenv
-from src.util import all_none
 from components.connectors import RelationalConnector
 from components.document_storage import DocumentConnector
 from components.fact_storage import GraphConnector
+from dotenv import load_dotenv
+import os
+from src.util import all_none
+
 
 # Read environment variables at compile time
 load_dotenv(".env")
@@ -42,65 +43,17 @@ class Session:
         self.graph_db = GraphConnector(verbose=verbose)
 
         # TODO: Do not interact with these directly, provide them to EAV Model and Knowledge Graph classes
-        self.setup()
 
-    def setup(self):
+    def test_database_connections(self):
         """Configure the databases and verify they are working correctly."""
         self.relational_db.test_connection()
-
-        self.setup1()
-
-    def setup1(self):
-        """Sanity check for Neo4j GraphConnector."""
-        # Test connection to default "database" (really just a database_id)
-        default_database = "default"  # Neo4j community doesn’t have real DBs
-        self.graph_db.change_database(default_database)
+        self.docs_db.test_connection()
         self.graph_db.test_connection()
-        if self.verbose:
-            print()
-
-        # Test connection to working database ".env/DB_NAME" (stored as database_id)
-        working_database = os.getenv("DB_NAME")
-        self.graph_db.change_database(working_database)
-        already_exists = self.graph_db.test_connection()
-
-        # Ensures the working database was created (pseudo)
-        if not already_exists:
-            self.graph_db.change_database(default_database)
-            self.graph_db.create_database(working_database)
-            self.graph_db.change_database(working_database)
-            self.graph_db.test_connection()
-
-        # Test database management explicitly
-        self.graph_db.drop_database(working_database)
-        self.graph_db.create_database(working_database)
-
-        # Test query execution
-        self.graph_db.execute_query(
-            f"""
-        CREATE (n:Person {{name:'Alice', database_id:'{working_database}'}})
-        RETURN n
-        """
-        )
-        self.graph_db.execute_query(
-            f"""
-        CREATE (n:Person {{name:'Bob', database_id:'{working_database}'}})
-        RETURN n
-        """
-        )
-
-        # Test retrieving nodes as DataFrame
-        df = self.graph_db.get_dataframe("Person")
-        if self.verbose:
-            print("Retrieved nodes:\n", df)
-
-        # Cleanup
-        self.graph_db.create_database(working_database)  # clears existing nodes
 
     def reset(self):
         """Deletes all created databases and tables."""
         # TODO
 
 
-session = Session()
-print()
+if __name__ == "__main__":
+    session = Session()

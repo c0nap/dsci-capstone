@@ -7,6 +7,13 @@ MAKEFLAGS += --no-print-directory
 # Run each recipe in a single shell so helper functions persist and local variables remain in scope
 .ONESHELL:
 
+# TODO: apply these variables to all make recipes
+#    --verbose is reserved flag for pytest
+#    VERBOSE in this file was created first (for env-docker)
+VERBOSE ?= 0
+VERBY ?=
+COLOR ?=
+
 ###############################################################################
 .PHONY: db-start-local db-start-docker db-stop-local
 DATABASES = MYSQL POSTGRES MONGO NEO4J
@@ -111,18 +118,35 @@ docker-blazor-dev:
 ###############################################################################
 # Bypass the original pipeline and run pytests instead.
 ###############################################################################
-.PHONY: docker-test docker-test-dev docker-test-raw docker-all-tests docker-all
-# Note: uses existing container images
+.PHONY: docker-test docker-test-dev docker-test-raw docker-all-tests docker-all-main
+
+# Run pytests using existing container images.
+# Default to VERBY=0 and COLOR=1.
 docker-test:
-	make docker-python CMD="pytest ."
-# Recompiles docker images for the latest source code
+	make docker-python CMD="pytest \
+		$(if $(filter 1,$(VERBY)),--log-success) \
+		$(if $(filter 1,$(COLOR)),,--no-log-colors)  ."
+
+# Recompiles docker images to test the latest source code
+# Pytest will capture all console output - see non-capturing targets below.
 docker-test-dev:
 	make docker-build-dev-python
 	make docker-test
-# Shows Python print statements at the expense of fancy pytest formatting
+
+# Default to NOT verbose, and NO colors in messages from the Log class.
 docker-test-raw:
 	make docker-build-dev-python
-	make docker-python CMD="python -m pytest -s ."
+	make docker-python CMD="python -m pytest -s \
+		$(if $(filter 1,$(VERBY)),--log-success) \
+		$(if $(filter 1,$(COLOR)),,--no-log-colors) ."
+
+# Shows Python print statements, but pytest output is messy.
+# Default to verbose and colorful.
+docker-test-fancy:
+	make docker-build-dev-python
+	make docker-python CMD="python -m pytest -s \
+		$(if $(filter 0,$(VERBY)),,--log-success) \
+		$(if $(filter 0,$(COLOR)),--no-log-colors) ."
 	
 # Deploy everything to docker, but only run pytests
 docker-all-tests:
@@ -131,7 +155,7 @@ docker-all-tests:
 	make docker-test
 
 # Deploy everything to docker and run the full pipeline
-docker-all:
+docker-all-main:
 	make docker-all-dbs
 	make docker-blazor-silent
 	make docker-python
@@ -175,34 +199,61 @@ docker-neo4j:
 ###############################################################################
 # Pulls the latest container images from GHCR, and gives them identical names to locally-generated images
 ###############################################################################
+.PHONY: docker-pull docker-pull-python docker-pull-blazor
 docker-pull:
 	make docker-pull-python
 	make docker-pull-blazor
 docker-pull-python:
 	# Python: pull, rename to local, and delete old names
-	docker pull ghcr.io/c0nap/dsci-cap-img-python-prod:latest
-	docker tag ghcr.io/c0nap/dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
+	docker pull ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest
+	docker tag ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
 	# Remove the GHCR tagged alias (keeps local image)
-	docker rmi ghcr.io/c0nap/dsci-cap-img-python-prod:latest
+	docker rmi ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest
 docker-pull-blazor:
 	# Blazor: pull, rename to local, and delete old names
-	docker pull ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
-	docker tag ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
+	docker pull ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest
+	docker tag ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
 	# Remove the GHCR tagged alias (keeps local image)
-	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
+	docker rmi ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest
+docker-retag-prod-dev:
+	docker tag dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
+	docker tag dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
+
 
 ###############################################################################
-# Creates the images locally using the latest Dockerfiles (for development)
+# Pulls images from our private namespace and gives them identical names to locally-generated images
 ###############################################################################
+# DEVELOPMENT USE ONLY
+DEVTAG ?= latest
+.PHONY: docker-pull-dev docker-pull-dev-python docker-pull-dev-blazor
+docker-pull-dev:
+	make docker-pull-dev-python
+	make docker-pull-dev-blazor
+docker-pull-dev-python:
+	docker pull ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)
+docker-pull-dev-blazor:
+	docker pull ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG)
+docker-retag-dev-local:
+	docker tag ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG) dsci-cap-img-python-dev:latest
+	docker rmi ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)
+	docker tag ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG) dsci-cap-img-blazor-dev:latest
+	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG)
+
+###############################################################################
+# Creates the images locally using the Dockerfiles (for development)
+###############################################################################
+DOCKER_BUILD := docker buildx build --load
+CACHE_ARGS ?=
+.PHONY: docker-build-dev docker-build-dev-python docker-build-dev-blazor
 docker-build-dev:
 	make docker-build-dev-python
 	make docker-build-dev-blazor
 docker-build-dev-python:
-	docker build -f Dockerfile.python \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.python \
 		--build-arg ENV_FILE=".env" \
 		-t dsci-cap-img-python-dev:latest .
 docker-build-dev-blazor:
-	docker build -f Dockerfile.blazor \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.blazor \
 		--build-arg ENV_FILE=".env" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.json \
 		-t dsci-cap-img-blazor-dev:latest .
@@ -213,26 +264,22 @@ docker-build-dev-blazor:
 # Risks sharing secrets if used improperly - these are for automatic CI/CD only
 ###############################################################################
 # DO NOT USE
-.PHONY: docker-build-prod docker-build-dev-python docker-build-prod-blazor docker-retag-to-dev
+.PHONY: docker-build-prod docker-build-prod-python docker-build-prod-blazor docker-retag-to-dev
 docker-build-prod:
 	make docker-build-prod-python
 	make docker-build-prod-blazor
 docker-build-prod-python:
 	make env-dummy  # Generates .env.dummy from .env.example
-	docker build -f Dockerfile.python \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.python \
 		--build-arg ENV_FILE=".env.dummy" \
 		-t dsci-cap-img-python-prod:latest .
 docker-build-prod-blazor:
 	make env-dummy  # Generates .env.dummy from .env.example
 	make appsettings-dummy  # Generates appsettings.Dummy.json from .env.dummy and appsettings.Example.json
-	docker build -f Dockerfile.blazor \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.blazor \
 		--build-arg ENV_FILE=".env.dummy" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.Dummy.json \
 		-t dsci-cap-img-blazor-prod:latest .
-docker-retag-to-dev:
-	docker tag dsci-cap-img-python-prod:latest dsci-cap-img-python-dev:latest
-	docker tag dsci-cap-img-blazor-prod:latest dsci-cap-img-blazor-dev:latest
-	# keep the prod images - they will be used later in docker-publish
 
 ###############################################################################
 # Builds the latest container images, and attempt to push to this repository
@@ -244,22 +291,44 @@ docker-publish:
 	make docker-publish-python
 	make docker-publish-blazor
 docker-publish-python:
-	make docker-build-prod-python || exit 1  # Stop if build fails
-	# Python: tag for GHCR & push
-	docker tag dsci-cap-img-python-prod:latest ghcr.io/c0nap/dsci-cap-img-python-prod:latest
-	docker push ghcr.io/c0nap/dsci-cap-img-python-prod:latest
+	# Use a dummy environment, and stop if build fails
+	make docker-build-prod-python || exit 1
+	# Python: tag for GHCR & push PUBLIC
+	docker tag dsci-cap-img-python-prod:latest ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest
+	docker push ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest
 	# Remove the GHCR tagged alias (keeps local image)
-	docker rmi ghcr.io/c0nap/dsci-cap-img-python-prod:latest
+	docker rmi ghcr.io/c0nap/dsci-capstone/dsci-cap-img-python-prod:latest
 docker-publish-blazor:
-	make docker-build-prod-blazor || exit 1  # Stop if build fails
-	# Blazor: tag for GHCR & push
-	docker tag dsci-cap-img-blazor-prod:latest ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
-	docker push ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
+	# Use a dummy environment, and stop if build fails
+	make docker-build-prod-blazor || exit 1
+	# Blazor: tag for GHCR & push PUBLIC
+	docker tag dsci-cap-img-blazor-prod:latest ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest
+	docker push ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest
 	# Remove the GHCR tagged alias (keeps local image)
-	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-prod:latest
+	docker rmi ghcr.io/c0nap/dsci-capstone/dsci-cap-img-blazor-prod:latest
 
 
-
+###############################################################################
+# Push existing images to a private GHCR namespace.
+# wont work until authenticated using 'docker login'
+###############################################################################
+# DEVELOPMENT USE ONLY
+.PHONY: docker-push-dev docker-push-dev-python docker-push-dev-blazor
+docker-push-dev:
+	make docker-push-dev-python
+	make docker-push-dev-blazor
+docker-push-dev-python:
+	# Python: tag for GHCR & push
+	docker tag dsci-cap-img-python-dev:latest ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)
+	docker push ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)
+	# Remove the GHCR tagged alias (keeps local image)
+	docker rmi ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)
+docker-push-dev-blazor:
+	# Blazor: tag for GHCR & push
+	docker tag dsci-cap-img-blazor-dev:latest ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG)
+	docker push ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG)
+	# Remove the GHCR tagged alias (keeps local image)
+	docker rmi ghcr.io/c0nap/dsci-cap-img-blazor-dev:$(DEVTAG)
 
 
 
@@ -310,9 +379,15 @@ docker-delete-volumes:
 docker-full-reset:
 	make docker-clean
 	make docker-delete
+	sudo service docker restart
 	echo "=== Full Docker cleanup complete - all containers, images, volumes, and networks removed! ==="
 ###############################################################################
-
+docker-python-size:
+	 docker run --rm dsci-cap-img-python-dev:latest sh -c "
+	  	echo '=== Largest packages ===' && \
+	  	du -sh /usr/local/lib/python3.12/site-packages/* 2>/dev/null | sort -hr | head -15 && \
+	  	echo '=== Torch version ===' && \
+	  	python -c \"import torch; print(f'Torch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')\""
 
 
 
@@ -546,9 +621,6 @@ ENV_FILE := .env
 ENV_DOCKER := .env.docker
 APPSET := web-app/BlazorApp/appsettings.json
 APPSET_DOCKER := web-app/BlazorApp/appsettings.Docker.json
-
-# VERBOSE=1 prints detailed mapping info for debugging
-VERBOSE ?= 0
 
 ###############################################################################
 # Detect whether Make is running on Windows (OS) or WSL

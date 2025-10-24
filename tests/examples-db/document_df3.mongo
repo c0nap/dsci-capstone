@@ -1,0 +1,100 @@
+// Safely delete existing data
+{"delete": "potions", "deletes": [{"q": {}, "limit": 0}]};
+
+// 1. Insert a single document with nested fields
+{"insert": "potions",
+  "documents": [
+    {
+        "potion_name": "Elixir of Wisdom",
+        "ingredients": ["Dragon Scale", "Unicorn Hair", "Phoenix Feather"], // array of simple values
+        "effects": ["Grants knowledge", "Enhances memory"] // array of simple values
+    }
+]};  // Result with flatten_recursive: df has 6 rows, 3 columns.
+{"find": "potions"};
+
+// 2. Insert with missing values
+{"insert": "potions",
+  "documents": [
+    {
+        "potion_name": "Chicken Noodle Soup",
+        "ingredients": ["Carrot", "Noodles", "Chicken Broth"],
+            // note: missing 'effects' (handled as NaN by json_normalize)
+    }
+]};  // Result with json_normalize: df gains 3 rows, with NaN in the "effects" column.
+{"find": "potions"};
+
+
+// 3. Insert dict with unfamiliar key;
+// In JSON, the value of a key can be any valid JSON type
+//     e.g. string, number, object, array, boolean, or null.
+// It does NOT enforce a consistent schema.
+{"insert": "potions",
+  "documents": [
+    {
+         "potion_name": "Invisibility Draught",
+         "ingredients": "Shadowroot",       // single value instead of array (TODO: wrap as list)
+         "effects": {"description": "Silent movement"} // single dict instead of list of dicts (TODO: wrap as list)
+     }
+]};  // DESIRED RESULT: the generated df has a new column "effects.description" and 1 new row
+  // behavior is controlled by setting:
+  // 1. existing column has the name effects._unspecified_{type} in the df
+  // 2. we merge with the first column of the same type. since "effects" is string, all data becomes "effects.description"
+  // Result: 0 or 1 new column
+{"find": "potions"};
+
+// 4. Insert more normal data
+{"insert": "potions",
+  "documents": [
+    {
+         "potion_name": "Fire Resistance Brew",
+         "ingredients": ["Salamander Skin", "Fire Lily"],
+         "effects": "Protects against flame"  // solo string instead of list or dict
+     }
+]};  // Result: df gains 2 new rows, 0 columns. Since the collection already has both "effects" and "effects.description",
+  // the next time we generate a df nothing needs to happen beyond our existing logic.
+{"find": "potions"};
+
+
+
+// 5. Insert multiple documents with inconsistent schema:
+{"insert": "potions",
+  "documents": [
+    {
+        "potion_name": "Heavenly Coffee",
+            // note: missing 'ingredients' (handled as NaN by json_normalize)
+        "effects": {"seconds": 12600.0, "cost": 6.95}  // dict with missing values  (handled as NaN; not merged since different type)
+    },
+    {
+        "potion_name": "Catkin Tincture",
+        "ingredients": [
+            {"name": "Moon Lily", "location": "Eldermist Abyss"},
+            {"name": "Mirage Powder", "location": "Hamlet of Duskwraith"},
+            {"name": "Gleaming Stardrop", "location": "Joja Mountain"}
+        ],
+        "effects": 0  // single ambiguous value; interpreted as "effects._unspecified_int" OR "effects.seconds"
+    }
+]};
+{"find": "potions"};
+
+
+
+// 6. Insert severe edge cases:
+{"insert": "potions",
+  "documents": [
+    {   // new top-level key
+        "valid": false
+    },
+    {   // null value for existing key - creates 1 fully NaN row
+        "ingredients": null
+    },
+    {   // null key - creates 1 column called "null" with 1 fully NaN row
+        "null": null
+    },
+    {   // blank document - creates 1 fully NaN row
+
+    },
+    {   // blank key - creates 1 column with no name, and 1 row with empty string value
+        "": ""
+    }
+]};
+{"find": "potions"};

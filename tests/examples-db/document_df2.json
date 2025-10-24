@@ -1,0 +1,34 @@
+{
+  // This is a single-document QA example to execute multiple JSON commands.
+  // True JSON would not allow comments, but our robust _sanitize_json logic can handle it.
+  "aggregate": 1,   // make a dummy collection; dont read any existing collections
+  "pipeline": [
+    { 
+      "$documents": [
+        {
+          "question": "Who becomes the ruler of Arrakis?",
+          "gold_answer": "Paul Atreides",
+          "answer": "Paul Atreides",
+          "is_correct": true,
+          "explanation": "// Even though Dune's ruler changes several times, the plot builds up to \"Paul\" gaining power."
+        },
+        {
+          "question": "What is the name of the desert-dwelling people on Arrakis?",
+          "gold_answer": "The Fremen",
+          "answer": "The Sardaukar",
+          "is_correct": false,
+          "explanation": "/* The Fremen are deeply attached to the desert; the Imperial city-dwellers are comparatively insignificant. */"
+        }
+      ]
+    },
+    {
+      // Overwrite any existing data
+      "$merge": {
+        "into": "qa_exam",
+        "whenMatched": "replace",    // replace existing docs
+        "whenNotMatched": "insert"  // insert new docs
+      }
+    }
+  ],
+  "cursor": {}  // required for aggregrate
+}

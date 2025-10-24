@@ -8,6 +8,8 @@ services:
     # Do NOT fall back to building from scratch if image does not exist
     # ^ might revert, but compose will only use prod for now
     image: dsci-cap-img-python-prod:latest
+    volumes:
+      - ./pyproject.toml:/pipeline/pyproject.toml:ro   # change settings locally = applied instantly with no rebuild
 
   # Blazor server container, exposes port for HTTP and REST
   blazor_service:

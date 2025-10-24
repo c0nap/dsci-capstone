@@ -1,8 +1,9 @@
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import re
-import os
 from dotenv import load_dotenv
+import os
+import re
 import spacy
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+
 
 nlp = spacy.blank("en")  # blank English model, no pipeline
 sentencizer = nlp.add_pipe("sentencizer")
@@ -37,9 +38,7 @@ class RelationExtractor:
             outputs = self.model.generate(**inputs)
             decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             if parse_tuples:
-                parts = [
-                    str(element).strip() for element in decoded.split(self.tuple_delim)
-                ]
+                parts = [str(element).strip() for element in decoded.split(self.tuple_delim)]
                 # group 3 at a time using zip
                 for subj, obj, rel in zip(parts[0::3], parts[1::3], parts[2::3]):
                     out.append(tuple([subj, rel, obj]))
@@ -48,13 +47,13 @@ class RelationExtractor:
         return out
 
 
-from langchain_openai import ChatOpenAI
+from components.connectors import Connector
 from langchain_core.prompts import (
     ChatPromptTemplate,
-    SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate,
 )
-from components.connectors import Connector
+from langchain_openai import ChatOpenAI
 
 
 class LLMConnector(Connector):
@@ -105,9 +104,7 @@ class LLMConnector(Connector):
         )
 
         formatted_prompt = prompt.format_prompt()  # <-- returns ChatPromptValue
-        response = self.llm.invoke(
-            formatted_prompt.to_messages()
-        )  # <-- to_messages() returns list of BaseMessage
+        response = self.llm.invoke(formatted_prompt.to_messages())  # <-- to_messages() returns list of BaseMessage
         return response.content
 
     def execute_query(self, query: str) -> str:

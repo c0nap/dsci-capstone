@@ -1,13 +1,14 @@
-import os
-import re
-import pandas as pd
-import spacy
-from datetime import datetime
-from typing import Dict, List, Iterator, Tuple
-import pypandoc
-from lxml import etree
-from io import BytesIO
 from abc import ABC, abstractmethod
+from datetime import datetime
+from io import BytesIO
+from lxml import etree
+import os
+import pandas as pd
+import pypandoc
+import re
+import spacy
+from typing import Dict, Iterator, List, Tuple
+
 
 nlp = spacy.blank("en")  # blank English model, no pipeline
 sentencizer = nlp.add_pipe("sentencizer")
@@ -60,10 +61,7 @@ class Chunk:
         self.length: int = self.char_count(False)
 
         if max_chunk_length > 0 and self.length > max_chunk_length:
-            raise ValueError(
-                f"Invalid chunk: text has {self.length} chars; "
-                f"expected ≤ {max_chunk_length}"
-            )
+            raise ValueError(f"Invalid chunk: text has {self.length} chars; " f"expected ≤ {max_chunk_length}")
 
     def char_count(self, prune_newlines: bool = False) -> int:
         """Computes the character count.
@@ -124,9 +122,7 @@ class Story:
         for seg in self.reader.stream_segments():
             # Case 1: paragraph itself is too long
             if max_chunk_length > 0 and seg.char_count() > max_chunk_length:
-                if (
-                    buffer
-                ):  # clear anything left over - we need the entire buffer for this operation
+                if buffer:  # clear anything left over - we need the entire buffer for this operation
                     self._merge_chunks(buffer, max_chunk_length)
                     buffer = []
 
@@ -146,11 +142,7 @@ class Story:
                             print(f"Uh oh! {len(sentence)} > {max_chunk_length}")
                             print(sentence)
                         if previous_sentences:
-                            self.chunks.append(
-                                self._make_single(
-                                    seg, previous_sentences.strip(), max_chunk_length
-                                )
-                            )
+                            self.chunks.append(self._make_single(seg, previous_sentences.strip(), max_chunk_length))
                         # start new chunk with this sentence
                         previous_sentences = sentence
                     else:  # otherwise valid, and accept the candidate
@@ -158,17 +150,11 @@ class Story:
 
                 # flush whatever is left
                 if previous_sentences:
-                    self.chunks.append(
-                        self._make_single(
-                            seg, previous_sentences.strip(), max_chunk_length
-                        )
-                    )
+                    self.chunks.append(self._make_single(seg, previous_sentences.strip(), max_chunk_length))
                 continue
 
             # Case 2: try combining paragraphs
-            candidate = (
-                "\n".join([c.text for c in buffer] + [seg.text]) if buffer else seg.text
-            )
+            candidate = "\n".join([c.text for c in buffer] + [seg.text]) if buffer else seg.text
             if max_chunk_length > 0 and len(candidate) > max_chunk_length:
                 self._merge_chunks(buffer, max_chunk_length)
                 buffer = [seg]
@@ -262,9 +248,7 @@ class ParagraphStreamTEI(StoryStreamAdapter):
             chapter_counter += 1
             div_type = div.get("type", "unknown")
             head = div.find("tei:head", self.xml_namespace)
-            chapter_name = (
-                (head.text or div_type).strip() if head is not None else div_type
-            )
+            chapter_name = (head.text or div_type).strip() if head is not None else div_type
 
             # Skip divs not in allowed_chapters
             if self.allowed_chapters and chapter_name not in self.allowed_chapters:
@@ -296,9 +280,7 @@ class ParagraphStreamTEI(StoryStreamAdapter):
                     end_pos = paragraph_text.find(self.end_inclusive)
                     if end_pos >= 0:
                         # Include the end boundary itself
-                        paragraph_text = paragraph_text[
-                            : end_pos + len(self.end_inclusive)
-                        ].strip()
+                        paragraph_text = paragraph_text[: end_pos + len(self.end_inclusive)].strip()
                         end_reached = True
 
                 # Line numbers from TEI file
@@ -331,9 +313,7 @@ class ParagraphStreamTEI(StoryStreamAdapter):
             total_chapter_chars = sum(chunk.char_count() for chunk in chapter_chunks)
             cumulative_chars = 0
             for chunk in chapter_chunks:
-                chunk.chapter_percent = (
-                    100.0 * cumulative_chars / max(total_chapter_chars, 1)
-                )
+                chunk.chapter_percent = 100.0 * cumulative_chars / max(total_chapter_chars, 1)
                 cumulative_chars += chunk.char_count()
             # merge lists
             book_chunks += chapter_chunks
@@ -407,9 +387,7 @@ class EPUBToTEI:
     def convert_to_tei(self):
         """Uses Pandoc to draft a TEI string from EPUB."""
         if self.save_pandoc:
-            pypandoc.convert_file(
-                self.epub_path, "tei", outputfile=self.pandoc_xml_path
-            )
+            pypandoc.convert_file(self.epub_path, "tei", outputfile=self.pandoc_xml_path)
             with open(self.pandoc_xml_path, encoding=self.encoding) as f:
                 self.raw_tei_content = f.read()
         else:
@@ -417,10 +395,7 @@ class EPUBToTEI:
 
     def clean_tei(self):
         """Wrap root if missing, sanitize ids, and save cleaned TEI."""
-        content = (
-            self.raw_tei_content
-            or open(self.pandoc_xml_path, encoding=self.encoding).read()
-        )
+        content = self.raw_tei_content or open(self.pandoc_xml_path, encoding=self.encoding).read()
 
         # Ensure root <TEI>
         if not content.lstrip().startswith("<TEI"):
@@ -432,9 +407,7 @@ class EPUBToTEI:
 
         if self.save_tei:
             root = etree.fromstring(content.encode(self.encoding))
-            etree.ElementTree(root).write(
-                self.tei_path, encoding=self.encoding, xml_declaration=True
-            )
+            etree.ElementTree(root).write(self.tei_path, encoding=self.encoding, xml_declaration=True)
 
     def _sanitize_ids(self, content: str) -> str:
         """Sanitize XML IDs in the TEI content to ensure they are valid and consistent.

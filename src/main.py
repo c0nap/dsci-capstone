@@ -1,11 +1,12 @@
-from src.setup import Session
-from components.book_conversion import Book, Chunk, EPUBToTEI, Story, ParagraphStreamTEI
-from components.metrics import post_example_results, post_basic_output
-import pandas as pd
-import random
-import traceback
+from components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
+from components.metrics import post_basic_output, post_example_results
 import json
 import os
+import pandas as pd
+import random
+from src.setup import Session
+import traceback
+
 
 session = Session(verbose=False)
 
@@ -194,9 +195,7 @@ def chunk_single():
     for i in range(min(10, len(chunks))):
         c = chunks[i]
         snippet = (c.text[:80] + "...") if len(c.text) > 80 else c.text
-        print(
-            f"  [{i}] Story:{c.story_percent:.1f}% Chapter:{c.chapter_percent:.1f}% - {snippet}"
-        )
+        print(f"  [{i}] Story:{c.story_percent:.1f}% Chapter:{c.chapter_percent:.1f}% - {snippet}")
 
     print("\n\nFull chunks (last 3):")
     for i in range(len(chunks) - 3, len(chunks)):
@@ -217,7 +216,7 @@ def test_relation_extraction():
 
 def process_single():
     """Uses NLP and LLM to process an existing TEI file."""
-    from components.text_processing import RelationExtractor, LLMConnector
+    from components.text_processing import LLMConnector, RelationExtractor
 
     try:
         df = pd.read_csv("datasets/books.csv")
@@ -411,9 +410,7 @@ def output_single():
     print("\nOutput sent to web app.")
 
 
-def full_pipeline(
-    epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title
-):
+def full_pipeline(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     """Connects all components to convert an EPUB file to a book summary.
     @details
         Data conversions
@@ -423,7 +420,7 @@ def full_pipeline(
             - Neo4j graph database
             - Output summary
             - Blazor graph and metrics pages"""
-    from components.text_processing import RelationExtractor, LLMConnector
+    from components.text_processing import LLMConnector, RelationExtractor
 
     # convert EPUB file
     print(f"\n{'='*50}")

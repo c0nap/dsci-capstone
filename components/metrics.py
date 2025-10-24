@@ -1,6 +1,7 @@
-import requests
-import os
 from dotenv import load_dotenv
+import os
+import requests
+
 
 # Read environment variables at compile time
 load_dotenv(".env")
