@@ -268,7 +268,7 @@ class RelationalConnector(DatabaseConnector):
         assert len(specific_queries) == 2
 
     @classmethod
-    def from_env(cls, verbose: bool = False) -> RelationalConnector:
+    def from_env(cls, verbose: bool = False) -> "RelationalConnector":
         """Decides what type of relational connector to create using the .env file.
         @param verbose  Whether to print success and failure messages.
         @raises RuntimeError  If the .env file contains an invalid DB_ENGINE value."""
@@ -302,21 +302,16 @@ class RelationalConnector(DatabaseConnector):
         with engine.begin() as connection:
             try:  # Run universal test queries
                 result = connection.execute(text("SELECT 1")).fetchone()
-                if not result or not result[0] or check_values([result[0]], [1], self.verbose, Log.rel_db, raise_error) == False:
+                if check_values([result[0]], [1], self.verbose, Log.rel_db, raise_error) == False:
                     return False
                 result = self.execute_query("SELECT 'TWO';")
-                if not result or check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.rel_db, raise_error) == False:
+                if check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.rel_db, raise_error) == False:
                     return False
                 results = self.execute_combined("SELECT 3; SELECT 4;")
-                if (
-                    not result
-                    or not results[0]
-                    or not results[1]
-                    or check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], self.verbose, Log.rel_db, raise_error) == False
-                ):
+                if check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], self.verbose, Log.rel_db, raise_error) == False:
                     return False
                 result = self.execute_query("SELECT 5, 6;")
-                if not result or check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error) == False:
+                if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error) == False:
                     return False
             except Exception as e:
                 if not raise_error:
@@ -325,8 +320,7 @@ class RelationalConnector(DatabaseConnector):
 
             try:  # Display useful information on existing databases
                 db_name = self.execute_query(self._specific_queries[0])
-                if db_name is not None:
-                    check_values([db_name.iloc[0, 0]], [self.database_name], self.verbose, Log.rel_db, raise_error)
+                check_values([db_name.iloc[0, 0]], [self.database_name], self.verbose, Log.rel_db, raise_error)
                 databases = self.execute_query(self._specific_queries[1])
                 Log.success(Log.rel_db, Log.msg_result(databases), self.verbose)
             except Exception as e:
@@ -341,8 +335,7 @@ class RelationalConnector(DatabaseConnector):
                     f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');"
                 )
                 df = self.get_dataframe(f"{tmp_table}")
-                if df is not None:
-                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
+                check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
                 self.execute_query(f"DROP TABLE {tmp_table};")
             except Exception as e:
                 if not raise_error:

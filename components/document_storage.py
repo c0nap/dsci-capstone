@@ -66,13 +66,13 @@ class DocumentConnector(DatabaseConnector):
         with mongo_handle(host=self.connection_string, alias="test_conn") as db:
             try:  # Run universal test queries - some require admin
                 result = db.command({"ping": 1})
-                if not result or check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
+                if check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
                     return False
                 status = db.command({"serverStatus": 1})
-                if not result or check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
+                if check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
                     return False
                 databases = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
-                if not databases or check_values([isinstance(databases, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
+                if check_values([isinstance(databases, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
                     return False
             except Exception as e:
                 if not raise_error:
@@ -93,8 +93,7 @@ class DocumentConnector(DatabaseConnector):
                     db.drop_collection(tmp_collection)
                 db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
                 df = self.get_dataframe(tmp_collection)
-                if df is not None:
-                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
+                check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
                 db.drop_collection(tmp_collection)
             except Exception as e:
                 if not raise_error:

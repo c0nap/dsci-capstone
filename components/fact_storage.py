@@ -66,13 +66,13 @@ class GraphConnector(DatabaseConnector):
 
         try:  # Run universal test queries
             result, _ = db.cypher_query("RETURN 1")
-            if not result or check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error) == False:
+            if check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error) == False:
                 return False
             result, _ = db.cypher_query("RETURN 'TWO'")
-            if not result or check_values([result[0][0]], ["TWO"], self.verbose, Log.gr_db, raise_error) == False:
+            if check_values([result[0][0]], ["TWO"], self.verbose, Log.gr_db, raise_error) == False:
                 return False
             result, _ = db.cypher_query("RETURN 5, 6")
-            if not result or check_values([result[0][0], result[0][1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
+            if check_values([result[0][0], result[0][1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
                 return False
         except Exception as e:
             if not raise_error:
@@ -97,7 +97,7 @@ class GraphConnector(DatabaseConnector):
                         CREATE (n2:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}', name: 'Bob', age: 25}}) RETURN n1, n2"""
             self.execute_query(query)
             df = self.get_dataframe(tmp_graph)
-            if not df or check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
+            if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
                 return False
             query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
             self.execute_query(query)
