@@ -1,7 +1,7 @@
 from components.connectors import DatabaseConnector
 from neomodel import config, db
 import os
-from pandas import DataFrame
+from pandas import DataFrame, option_context
 import re
 from src.util import check_values, df_natural_sorted, Log
 from time import time
@@ -16,26 +16,26 @@ class GraphConnector(DatabaseConnector):
         - This is achieved by using a 'db' property (database name) and 'kg' property (graph name) on nodes.
     """
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose: bool = False) -> None:
         """Creates a new Neo4j connector.
         @param verbose  Whether to print success and failure messages."""
         super().__init__(verbose)
-        database = os.getenv("DB_NAME")
+        database = os.environ["DB_NAME"]
         super().configure("NEO4J", database)
         # Connect neomodel - URL never needs to change for Neo4j
         config.DATABASE_URL = self.connection_string
 
         ## The name of the current graph. Matches node.kg for all nodes in the graph.
-        self.graph_name = None
+        self.graph_name: Optional[str] = None
         self.change_graph("default")
-        self._created_dummy = False
+        self._created_dummy: bool = False
         """Flag used to safely create a dummy node.
         @details  We cannot create it here since a database query is necessary, which could fail.
         Failure in __init__ means failure of Session.__init__, which will fail unrelated PyTests.
         Instead, we create the dummy node on first successful connection. See @ref components.fact_storage.GraphConnector.check_connection
         """
 
-    def change_database(self, new_database: str):
+    def change_database(self, new_database: str) -> None:
         """Update the connection URI to reference a different database in the same engine.
         @note  Neo4j does not accept database names routed through the connection string.
         @param new_database  The name of the database to connect to.
@@ -45,7 +45,7 @@ class GraphConnector(DatabaseConnector):
         self.graph_name = "default"
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}"
 
-    def change_graph(self, graph_name: str):
+    def change_graph(self, graph_name: str) -> None:
         """Sets graph_name to create new a Knowledge Graph (collection of triples).
         @details  Similar to creating tables in SQL and collections in Mongo.
         @note  This change will apply to any new nodes created.
@@ -53,7 +53,7 @@ class GraphConnector(DatabaseConnector):
         Log.success(Log.gr_db + Log.swap_kg, Log.msg_swap_kg(self.graph_name, graph_name), self.verbose)
         self.graph_name = graph_name
 
-    def test_connection(self, raise_error=True) -> bool:
+    def test_connection(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the Neo4j database.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
@@ -66,13 +66,13 @@ class GraphConnector(DatabaseConnector):
 
         try:  # Run universal test queries
             result, _ = db.cypher_query("RETURN 1")
-            if check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error) == False:
+            if not result or check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error) == False:
                 return False
             result, _ = db.cypher_query("RETURN 'TWO'")
-            if check_values([result[0][0]], ["TWO"], self.verbose, Log.gr_db, raise_error) == False:
+            if not result or check_values([result[0][0]], ["TWO"], self.verbose, Log.gr_db, raise_error) == False:
                 return False
             result, _ = db.cypher_query("RETURN 5, 6")
-            if check_values([result[0][0], result[0][1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
+            if not result or check_values([result[0][0], result[0][1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
                 return False
         except Exception as e:
             if not raise_error:
@@ -97,7 +97,7 @@ class GraphConnector(DatabaseConnector):
                         CREATE (n2:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}', name: 'Bob', age: 25}}) RETURN n1, n2"""
             self.execute_query(query)
             df = self.get_dataframe(tmp_graph)
-            if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
+            if not df or check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
                 return False
             query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
             self.execute_query(query)
@@ -196,8 +196,6 @@ class GraphConnector(DatabaseConnector):
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None
         @raises RuntimeError  If we fail to create the requested DataFrame for any reason."""
-        if name == "":
-            name = self.graph_name
         if self._created_dummy:
             self.check_connection(Log.get_df, raise_error=True)
 
@@ -248,7 +246,7 @@ class GraphConnector(DatabaseConnector):
         Log.success(Log.gr_db + Log.get_unique, Log.msg_result(unique_values), self.verbose)
         return unique_values
 
-    def create_database(self, database_name: str):
+    def create_database(self, database_name: str) -> None:
         """Create a fresh pseudo-database if it does not already exist.
         @note  This change will apply to any new nodes created after @ref components.connectors.DatabaseConnector.change_database is called.
         @param database_name  A database ID specifying the pseudo-database.
@@ -265,7 +263,7 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string)) from e
 
-    def drop_database(self, database_name: str):
+    def drop_database(self, database_name: str) -> None:
         """Delete all nodes stored under a particular database name.
         @param database_name  A database ID specifying the pseudo-database.
         @raises RuntimeError  If we fail to drop the target database for any reason."""
@@ -289,10 +287,13 @@ class GraphConnector(DatabaseConnector):
             WHERE n.db = '{database_name}'
             RETURN count(n) AS count"""
         # Result includes multiple collections & any dummy nodes
-        count = self.execute_query(query).iloc[0, 0]
+        result = self.execute_query(query)
+        if result is None:
+            return False
+        count = result.iloc[0, 0]
         return count > 0
 
-    def delete_dummy(self):
+    def delete_dummy(self) -> None:
         """Delete the initial dummy node from the database.
         @note  Call this method whenever real data is being added to avoid pollution."""
         query = f"MATCH (n) WHERE {self.IS_DUMMY_()} DETACH DELETE n"
@@ -303,7 +304,7 @@ class GraphConnector(DatabaseConnector):
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
     # ------------------------------------------------------------------------
-    def add_triple(self, subject: str, relation: str, object_: str, _delete_init: bool = True):
+    def add_triple(self, subject: str, relation: str, object_: str, _delete_init: bool = True) -> None:
         """Add a semantic triple to the graph using raw Cypher.
         @details
             1. Finds nodes by exact match on `name` attribute.
@@ -330,8 +331,8 @@ class GraphConnector(DatabaseConnector):
 
         try:
             df = self.execute_query(query)
-            Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
-            return df
+            if df is not None:
+                Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
 
@@ -377,18 +378,22 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch all_triples DataFrame.") from e
 
-    def print_nodes(self, max_rows: int = 20, max_col_width: int = 50):
+    def print_nodes(self, max_rows: int = 20, max_col_width: int = 50) -> None:
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
-        nodes_df = self.get_dataframe()
+        nodes_df = self.get_dataframe(self.graph_name)
+        if nodes_df is None:
+            return
 
         # Set pandas display options only within scope
         with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
             print(f"Graph nodes ({len(nodes_df)} total):")
             print(nodes_df)
 
-    def print_triples(self, max_rows: int = 20, max_col_width: int = 50):
+    def print_triples(self, max_rows: int = 20, max_col_width: int = 50) -> None:
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
         triples_df = self.get_all_triples()
+        if triples_df is None:
+            return
 
         # Set pandas display options only within scope
         with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
@@ -398,21 +403,21 @@ class GraphConnector(DatabaseConnector):
 
 
 
-    def IS_DUMMY_(self, alias: str = 'n'):
+    def IS_DUMMY_(self, alias: str = 'n') -> str:
         """Generates Cypher code to select dummy nodes inside a WHERE clause.
         @details  Usage: MATCH (n) WHERE {self.IS_DUMMY_('n')};
         @return  A string containing Cypher code.
         """
         return f"({alias}._init = true)"
 
-    def NOT_DUMMY_(self, alias: str = 'n'):
+    def NOT_DUMMY_(self, alias: str = 'n') -> str:
         """Generates Cypher code to select non-dummy nodes inside a WHERE clause.
         @details  Usage: MATCH (n) WHERE {self.NOT_DUMMY_('n')};
         @return  A string containing Cypher code.
         """
         return f"({alias}._init IS NULL OR {alias}._init = false)"
 
-    def SAME_DB_KG_(self):
+    def SAME_DB_KG_(self) -> str:
         """Generates a Cypher pattern dictionary to match nodes by current database and graph name.
         @details  Usage: MATCH (n {self.SAME_DB_KG_()})
         @return  A string containing Cypher code.

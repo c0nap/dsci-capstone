@@ -1,5 +1,5 @@
 from pandas import DataFrame
-from typing import List
+from typing import List, Any, Optional
 
 
 class Log:
@@ -34,7 +34,7 @@ class Log:
     # before your own print(), or a message can be specified.
 
     @staticmethod
-    def success(prefix: str = "PASS", msg: str = "", verbose: bool = True):
+    def success(prefix: str = "PASS", msg: str = "", verbose: bool = True) -> None:
         """A success message begins with a green prefix.
         @param prefix  The context of the message.
         @param msg  The message to print.
@@ -45,7 +45,7 @@ class Log:
         print(text)
 
     @staticmethod
-    def warn(prefix: str = "PASS", msg: str = "", verbose: bool = True):
+    def warn(prefix: str = "PASS", msg: str = "", verbose: bool = True) -> None:
         """A warning message begins with a yellow prefix.
         @param prefix  The context of the message.
         @param msg  The message to print.
@@ -56,7 +56,7 @@ class Log:
         print(text)
 
     @staticmethod
-    def fail(prefix: str = "ERROR", msg: str = "", raise_error=True, other_error=None):
+    def fail(prefix: str = "ERROR", msg: str = "", raise_error: bool = True, other_error: Optional[Exception] = None) -> None:
         """A failure message begins with a red prefix.
         @param prefix  The context of the message.
         @param msg  The message to print.
@@ -86,14 +86,14 @@ class Log:
                 return f"{self.prefix}{self.msg}"
 
     @staticmethod
-    def success_legacy(msg: str = ""):
+    def success_legacy(msg: str = "") -> None:
         """A legacy success message begins with a Green Plus.
         @param msg  The message to print."""
         if msg != "":
             Log.success(prefix="+", msg=f" - - {msg}")
 
     @staticmethod
-    def fail_legacy(msg: str = ""):
+    def fail_legacy(msg: str = "") -> None:
         """A legacy failure message begins with a Red X.
         @param msg  The message to print."""
         if msg != "":
@@ -220,7 +220,7 @@ def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = []) -> DataFra
     return df.sort_values(by=safe_cols, kind="stable").reset_index(drop=True)
 
 
-def check_values(results: List, expected: List, verbose: str, log_source: str, raise_error: bool) -> bool:
+def check_values(results: List[Any], expected: List[Any], verbose: bool, log_source: str, raise_error: bool) -> bool:
     """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_connection
     @param results  A list of observed values from the database.
     @param expected  A list of correct values to compare against.

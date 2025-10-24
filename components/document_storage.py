@@ -7,11 +7,12 @@ from mongoengine import (
     Document,
     DynamicDocument,
 )
+from pymongo.database import Database
 import os
 from pandas import DataFrame, json_normalize
 from src.util import check_values, df_natural_sorted, Log
 from time import time
-from typing import Dict, List, Optional, Set, Type
+from typing import Dict, List, Optional, Set, Type, Any, Generator
 
 
 # Read environment variables at compile time
@@ -31,15 +32,15 @@ class DocumentConnector(DatabaseConnector):
         - create_database uses an init collection insertion (MongoDB is lazy).
     """
 
-    def __init__(self, verbose: bool = False):
+    def __init__(self, verbose: bool = False) -> None:
         """Creates a new MongoDB connector.
         @param verbose  Whether to print debug messages.
         """
         super().__init__(verbose)
-        database = os.getenv("DB_NAME")
+        database = os.environ["DB_NAME"]
         super().configure("MONGO", database)
 
-    def change_database(self, new_database: str):
+    def change_database(self, new_database: str) -> None:
         """Update the connection URI to reference a different database in the same engine.
         @note  Additional settings are appended as a suffix to the MongoDB connection string.
         @param new_database  The name of the database to connect to.
@@ -51,7 +52,7 @@ class DocumentConnector(DatabaseConnector):
         @note  PyMongo requires a lookup location for user permissions, and MongoEngine will show warnings if 'uuidRepresentation' is not set."""
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
 
-    def test_connection(self, raise_error=True) -> bool:
+    def test_connection(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the MongoDB database.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
@@ -65,13 +66,13 @@ class DocumentConnector(DatabaseConnector):
         with mongo_handle(host=self.connection_string, alias="test_conn") as db:
             try:  # Run universal test queries - some require admin
                 result = db.command({"ping": 1})
-                if check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
+                if not result or check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
                     return False
                 status = db.command({"serverStatus": 1})
-                if check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
+                if not result or check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
                     return False
-                result = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
-                if check_values([isinstance(result, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
+                databases = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
+                if not databases or check_values([isinstance(databases, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
                     return False
             except Exception as e:
                 if not raise_error:
@@ -92,7 +93,8 @@ class DocumentConnector(DatabaseConnector):
                     db.drop_collection(tmp_collection)
                 db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
                 df = self.get_dataframe(tmp_collection)
-                check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
+                if df is not None:
+                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
                 db.drop_collection(tmp_collection)
             except Exception as e:
                 if not raise_error:
@@ -268,7 +270,7 @@ class DocumentConnector(DatabaseConnector):
         Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
         return None
 
-    def create_database(self, database_name: str):
+    def create_database(self, database_name: str) -> None:
         """Use the current database connection to create a sibling database in this engine.
         @note  Forces MongoDB to actually create it by inserting a small init document.
         @param database_name  The name of the new database to create.
@@ -291,7 +293,7 @@ class DocumentConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.doc_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string)) from e
 
-    def drop_database(self, database_name: str):
+    def drop_database(self, database_name: str) -> None:
         """Delete all data stored in a particular database.
         @param database_name  The name of an existing database.
         @raises RuntimeError  If we fail to drop the target database for any reason."""
@@ -316,7 +318,7 @@ class DocumentConnector(DatabaseConnector):
         # print(databases)
         return database_name in databases
 
-    def delete_dummy(self):
+    def delete_dummy(self) -> None:
         """Delete the initial dummy collection from the database.
         @note  Call this method whenever real data is being added to avoid pollution."""
         with mongo_handle(host=self.connection_string, alias="drop_dum") as db:
@@ -332,7 +334,7 @@ class DocumentConnector(DatabaseConnector):
 
 
 @contextmanager
-def mongo_handle(host: str, alias: str):
+def mongo_handle(host: str, alias: str) -> Generator[Database[Any], None, None]:
     """Establish a temporary connection to MongoDB.
     @param host  A valid MongoDB connection string.
     @param alias  A unique name for the usage of this connection.
@@ -480,7 +482,7 @@ def _sanitize_json(text: str) -> str:
 
 
 
-def _sanitize_document(doc: Dict, type_registry: Dict[str, Set[Type]]) -> Dict:
+def _sanitize_document(doc: Dict[str, Any], type_registry: Dict[str, Set[Type[Any]]]) -> Dict[str, Any]:
     """Normalize document fields to consistent types for DataFrame construction.
     @details  Converts all field values to lists and tracks type patterns.
               - ObjectId → string
@@ -490,7 +492,7 @@ def _sanitize_document(doc: Dict, type_registry: Dict[str, Set[Type]]) -> Dict:
     @param type_registry  Tracks observed types per field path (e.g., {"effects": {str, list}}).
     @return  Document with all fields as lists.
     """
-    sanitized = {}
+    sanitized: Dict[str, Any] = {}
 
     for key, value in doc.items():
         # Convert ObjectId to string
@@ -517,7 +519,7 @@ def _sanitize_document(doc: Dict, type_registry: Dict[str, Set[Type]]) -> Dict:
     return sanitized
 
 
-def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
+def _docs_to_df(docs: List[Dict[str, Any]], merge_unspecified: bool = True) -> DataFrame:
     """Convert raw MongoDB documents to a Pandas DataFrame.
     @details  Handles schema inconsistencies by:
               1. First pass: identify all nested column names and their types
@@ -533,7 +535,7 @@ def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
         return DataFrame()
 
     # First pass: discover nested columns and their value types
-    nested_schema = {}  # Maps base field -> {nested_key: set of value types}
+    nested_schema: Dict[str, Dict[str, Set[Type[Any]]]] = {}  # Maps base field -> {nested_key: set of value types}
     for doc in docs:
         for key, value in doc.items():
             if isinstance(value, dict):
@@ -554,11 +556,11 @@ def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
                             nested_schema[key][nested_key].add(type(nested_val))
 
     # Second pass: sanitize with type-aware column mapping
-    type_registry = {}
-    sanitized_docs = []
+    type_registry: Dict[str, Set[Type[Any]]] = {}
+    sanitized_docs: List[Dict[str, Any]] = []
 
     for doc in docs:
-        sanitized = {}
+        sanitized: Dict[str, Any] = {}
         for key, value in doc.items():
             # Convert ObjectId to string
             if key == "_id":
@@ -600,7 +602,7 @@ def _docs_to_df(docs: List[Dict], merge_unspecified: bool = True) -> DataFrame:
     return df
 
 
-def _find_compatible_nested_key(value_type: Type, nested_schema: Dict[str, Set[Type]], merge_unspecified: bool) -> str:
+def _find_compatible_nested_key(value_type: Type[Any], nested_schema: Dict[str, Set[Type[Any]]], merge_unspecified: bool) -> str:
     """Find a nested column compatible with the given primitive type.
     @details  Uses type compatibility hierarchy for aggressive merging:
               bool → int → float (numeric types)
@@ -615,7 +617,7 @@ def _find_compatible_nested_key(value_type: Type, nested_schema: Dict[str, Set[T
         return f"_unspecified_{value_type.__name__}"
 
     # Define type compatibility: value_type can be cast to these types
-    type_compatibility = {
+    type_compatibility: Dict[Type[Any], List[Type[Any]]] = {
         int: [int, float],  # int can go to float
         float: [float],  # float only to float
         str: [str],  # str only to str

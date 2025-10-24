@@ -28,14 +28,14 @@ class Connector(ABC):
     """
 
     @abstractmethod
-    def configure(self, DB: str, database_name: str):
+    def configure(self, DB: str, database_name: str) -> None:
         """Read connection settings from the .env file.
         @param DB  The prefix of fetched credentials.
         @param database_name  The specific service to connect to."""
         pass
 
     @abstractmethod
-    def test_connection(self, raise_error=True) -> bool:
+    def test_connection(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the database.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
@@ -44,7 +44,7 @@ class Connector(ABC):
         pass
 
     @abstractmethod
-    def execute_query(self, query: str) -> object:
+    def execute_query(self, query: str) -> Optional[DataFrame]:
         """Send a single command through the connection.
         @param query  A single query to perform on the database.
         @return  The result of the query, or None
@@ -52,7 +52,7 @@ class Connector(ABC):
         pass
 
     @abstractmethod
-    def execute_file(self, filename: str) -> list:
+    def execute_file(self, filename: str) -> List[Optional[DataFrame]]:
         """Run several commands from a file.
         @param filename  The path to a specified query or prompt file (.sql, .txt).
         @return  Whether the query was performed successfully."""
@@ -74,31 +74,31 @@ class DatabaseConnector(Connector):
         - @ref components.connectors.DatabaseConnector.database_exists
     """
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose: bool = False) -> None:
         """Initialize the connector.
         @param verbose  Whether to print debug messages.
         @note  Attributes will be set to None until @ref components.connectors.DatabaseConnector.configure() is called.
         """
         ## The common name for the type of database as observed in the .env prefixes (MYSQL, POSTGRES, MONGO, or NEO4J).
-        self.db_type = None
+        self.db_type: Optional[str] = None
         ## The protocol specifying the database type, syntax is usually dialect+driver.
-        self.db_engine = None
+        self.db_engine: Optional[str] = None
         ## The username used to access the database.
-        self.username = None
+        self.username: Optional[str] = None
         ## The password used to access the database.
-        self.password = None
+        self.password: Optional[str] = None
         ## The IP address where the database service is hosted.
-        self.host = None
+        self.host: Optional[str] = None
         ## The port number where the database service is hosted.
-        self.port = None
+        self.port: Optional[str] = None
         ## The collection being modified by this connector (Optional since Neo4j does not have one).
-        self.database_name = None
+        self.database_name: Optional[str] = None
         ## URI of the database connection: syntax is engine://username:password@host:port/database.
-        self.connection_string = None
+        self.connection_string: Optional[str] = None
         ## Whether to print debug messages.
         self.verbose = verbose
 
-    def configure(self, DB: str, database_name: str):
+    def configure(self, DB: str, database_name: str) -> None:
         """Read connection settings from the .env file.
         @param DB  The prefix of fetched database credentials.
         @param database_name  The name of the database to connect to.
@@ -106,22 +106,23 @@ class DatabaseConnector(Connector):
         self.db_type = DB
         # The .env file contains multiple credentials.
         # Here we select environment variables corresponding to our database engine.
-        self.db_engine = os.getenv(f"{DB}_ENGINE")
-        self.username = os.getenv(f"{DB}_USERNAME")
-        self.password = os.getenv(f"{DB}_PASSWORD")
-        self.host = os.getenv(f"{DB}_HOST")
-        self.port = os.getenv(f"{DB}_PORT")
+        self.db_engine = os.environ[f"{DB}_ENGINE"]
+        self.username = os.environ[f"{DB}_USERNAME"]
+        self.password = os.environ[f"{DB}_PASSWORD"]
+        self.host = os.environ[f"{DB}_HOST"]
+        self.port = os.environ[f"{DB}_PORT"]
         # Condense the above variables into a connection string
         self.change_database(database_name)
 
     @abstractmethod
-    def change_database(self, new_database: str):
+    def change_database(self, new_database: str) -> None:
         """Update the connection URI to reference a different database in the same engine.
         @param new_database  The name of the database to connect to.
         """
         pass
 
-    @abstractmethod
+    # Avoid making this abstract, even though derived classes treat it like one.
+    # Otherwise MyPy will complain about the partial logic inside.
     def execute_query(self, query: str) -> Optional[DataFrame]:
         """Send a single command through the connection.
         @note  If a result is returned, it will be converted to a DataFrame.
@@ -143,9 +144,9 @@ class DatabaseConnector(Connector):
                 Log.warn(Log.db_conn_abc + Log.run_q, Log.msg_multiple_query(len(results), query), self.verbose)
             return results[-1]
         # Derived classes MUST implement single-query execution.
-        pass
+        return None
 
-    def execute_combined(self, multi_query: str) -> List[DataFrame]:
+    def execute_combined(self, multi_query: str) -> List[Optional[DataFrame]]:
         """Run several database commands in sequence.
         @param multi_query  A string containing multiple queries.
         @return  A list of query results converted to DataFrames."""
@@ -158,7 +159,7 @@ class DatabaseConnector(Connector):
                 results.append(df)
         return results
 
-    def execute_file(self, filename: str) -> List[DataFrame]:
+    def execute_file(self, filename: str) -> List[Optional[DataFrame]]:
         """Run several database commands from a file.
         @note  Loads the entire file into memory at once.
         @param filename  The path to a specified query file (.sql, .cql, .json).
@@ -187,7 +188,7 @@ class DatabaseConnector(Connector):
         pass
 
     @abstractmethod
-    def create_database(self, database_name: str):
+    def create_database(self, database_name: str) -> None:
         """Use the current database connection to create a sibling database in this engine.
         @param database_name  The name of the new database to create.
         @raises RuntimeError  If the database already exists."""
@@ -196,7 +197,7 @@ class DatabaseConnector(Connector):
         pass
 
     @abstractmethod
-    def drop_database(self, database_name: str):
+    def drop_database(self, database_name: str) -> None:
         """Delete all data stored in a particular database.
         @param database_name  The name of an existing database.
         @raises RuntimeError  If the database does not exist."""
@@ -251,34 +252,34 @@ class RelationalConnector(DatabaseConnector):
         Hard-coded queries are used for testing purposes, and depend on the specific engine.
     """
 
-    def __init__(self, verbose, specific_queries: list):
+    def __init__(self, verbose: bool, specific_queries: List[str]) -> None:
         """Creates a new database connector. Use @ref components.connectors.RelationalConnector.from_env instead (this is called by derived classes).
         @param verbose  Whether to print success and failure messages.
         @param specific_queries  A list of helpful SQL queries.
         """
         super().__init__(verbose)
-        engine = os.getenv("DB_ENGINE")
-        database = os.getenv("DB_NAME")
+        engine = os.environ["DB_ENGINE"]
+        database = os.environ["DB_NAME"]
         super().configure(engine, database)
 
-        self._specific_queries = specific_queries
+        self._specific_queries: List[str] = specific_queries
         """@brief  Hard-coded queries which depend in the specific engine, and cannot be abstracted with SQLAlchemy.
         @note  This is set by derived classes e.g. 'mysqlConnector' for lanugage-sensitive syntax."""
         assert len(specific_queries) == 2
 
     @classmethod
-    def from_env(cls, verbose=False):
+    def from_env(cls, verbose: bool = False) -> RelationalConnector:
         """Decides what type of relational connector to create using the .env file.
         @param verbose  Whether to print success and failure messages.
         @raises RuntimeError  If the .env file contains an invalid DB_ENGINE value."""
-        engine = os.getenv("DB_ENGINE")
+        engine = os.environ["DB_ENGINE"]
         if engine == "MYSQL":
             return mysqlConnector(verbose)
         elif engine == "POSTGRES":
             return postgresConnector(verbose)
         raise Log.Failure(Log.rel_db + "FROM_ENV: ", f"Database engine '{engine}' not supported. Did you mean 'MYSQL' or 'POSTGRES'?")
 
-    def change_database(self, new_database: str):
+    def change_database(self, new_database: str) -> None:
         """Update the connection URI to reference a different database in the same engine.
         @param new_database  The name of the database to connect to.
         """
@@ -286,7 +287,7 @@ class RelationalConnector(DatabaseConnector):
         self.database_name = new_database
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
 
-    def test_connection(self, raise_error=True) -> bool:
+    def test_connection(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the database.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
@@ -300,17 +301,17 @@ class RelationalConnector(DatabaseConnector):
         engine = create_engine(self.connection_string, poolclass=NullPool)
         with engine.begin() as connection:
             try:  # Run universal test queries
-                result = connection.execute(text("SELECT 1")).fetchone()[0]
-                if check_values([result], [1], self.verbose, Log.rel_db, raise_error) == False:
+                result = connection.execute(text("SELECT 1")).fetchone()
+                if not result or not result[0] or check_values([result[0]], [1], self.verbose, Log.rel_db, raise_error) == False:
                     return False
-                result = self.execute_query("SELECT 'TWO';").iloc[0, 0]
-                if check_values([result], ["TWO"], self.verbose, Log.rel_db, raise_error) == False:
+                result = self.execute_query("SELECT 'TWO';")
+                if not result or check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.rel_db, raise_error) == False:
                     return False
                 results = self.execute_combined("SELECT 3; SELECT 4;")
-                if check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], self.verbose, Log.rel_db, raise_error) == False:
+                if not result or not results[0] or not results[1] or check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], self.verbose, Log.rel_db, raise_error) == False:
                     return False
                 result = self.execute_query("SELECT 5, 6;")
-                if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error) == False:
+                if not result or check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error) == False:
                     return False
             except Exception as e:
                 if not raise_error:
@@ -318,8 +319,9 @@ class RelationalConnector(DatabaseConnector):
                 raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
 
             try:  # Display useful information on existing databases
-                db_name = self.execute_query(self._specific_queries[0]).iloc[0, 0]
-                check_values([db_name], [self.database_name], self.verbose, Log.rel_db, raise_error)
+                db_name = self.execute_query(self._specific_queries[0])
+                if db_name is not None:
+                    check_values([db_name.iloc[0, 0]], [self.database_name], self.verbose, Log.rel_db, raise_error)
                 databases = self.execute_query(self._specific_queries[1])
                 Log.success(Log.rel_db, Log.msg_result(databases), self.verbose)
             except Exception as e:
@@ -334,7 +336,8 @@ class RelationalConnector(DatabaseConnector):
                     f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');"
                 )
                 df = self.get_dataframe(f"{tmp_table}")
-                check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
+                if df is not None:
+                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
                 self.execute_query(f"DROP TABLE {tmp_table};")
             except Exception as e:
                 if not raise_error:
@@ -343,7 +346,7 @@ class RelationalConnector(DatabaseConnector):
 
             try:  # Test create/drop functionality with tmp database
                 tmp_db = f"test_db_{int(time())}"
-                working_database = self.database_name
+                working_database = str(self.database_name)
                 if self.database_exists(tmp_db):
                     self.drop_database(tmp_db)
                 self.create_database(tmp_db)
@@ -441,7 +444,7 @@ class RelationalConnector(DatabaseConnector):
         Log.warn(Log.rel_db + Log.get_df, Log.msg_bad_table(name), self.verbose)
         return None
 
-    def create_database(self, database_name: str):
+    def create_database(self, database_name: str) -> None:
         """Use the current database connection to create a sibling database in this engine.
         @param database_name  The name of the new database to create.
         @raises RuntimeError  If we fail to create the requested database for any reason."""
@@ -456,7 +459,7 @@ class RelationalConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.rel_db + Log.create_db, Log.msg_fail_manage_db("create", database_name, self.connection_string)) from e
 
-    def drop_database(self, database_name: str = ""):
+    def drop_database(self, database_name: str = "") -> None:
         """Delete all data stored in a particular database.
         @param database_name  The name of an existing database.
         @raises RuntimeError  If we fail to drop the target database for any reason."""
@@ -475,7 +478,10 @@ class RelationalConnector(DatabaseConnector):
         """Search for an existing database using the provided name.
         @param database_name  The name of a database to search for.
         @return  Whether the database is visible to this connector."""
-        databases = self.execute_query(self._specific_queries[1]).iloc[:, 0].tolist()
+        result = self.execute_query(self._specific_queries[1])
+        if result is None:
+            return False
+        databases = result.iloc[:, 0].tolist()
         return database_name in databases
 
 
@@ -483,7 +489,7 @@ class mysqlConnector(RelationalConnector):
     """A relational database connector configured for MySQL.
     @note  Should be hidden from the user using a factory method."""
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose: bool = False) -> None:
         """Configures the relational connector.
         @param verbose  Whether to print success and failure messages."""
         super().__init__(verbose, self.specific_queries["MYSQL"])
@@ -501,7 +507,7 @@ class postgresConnector(RelationalConnector):
     """A relational database connector configured for PostgreSQL.
     @note  Should be hidden from the user using a factory method."""
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose: bool = False) -> None:
         """Configures the relational connector.
         @param verbose  Whether to print success and failure messages."""
         super().__init__(verbose, self.specific_queries["POSTGRES"])

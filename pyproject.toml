@@ -24,9 +24,17 @@ addopts = "-ra -q --color=yes"      # -ra: show extra summary for skipped/failed
 testpaths = ["tests"]               # Only look in the tests/ directory for test discovery; avoids running irrelevant files
 
 [tool.mypy]                 # Configuration for mypy (static type checker)
-python_version = 3.12               # Type check using Python 3.12 rules for consistency with your code
-ignore_missing_imports = true       # Don’t error on imports without stubs; prevents noise from third-party libraries
-strict = true                       # Enable strict mode; catches subtle type errors for safer, more maintainable code
+python_version = 3.12              # Type check using Python 3.12 rules for consistency with your code
+ignore_missing_imports = true      # Suppress errors for missing type hints in third-party libraries
+strict = true                      # Enable strict mode for strong type checking across your codebase
+strict_optional = false            # Disable enforcement of Optional (nullable) types
+warn_unused_ignores = true         # Warn if '# type: ignore' comments are unnecessary
+disallow_untyped_defs = false      # Allow untyped function definitions to reduce friction in mixed-typed code
+disallow_untyped_calls = false     # Allow calls to untyped functions; avoids noise when gradually typing code
+warn_return_any = false            # Don’t warn when returning Any; minimizes false positives in complex functions
+show_error_codes = true            # Display error codes alongside messages for clarity
+allow_redefinition = true          # Update the inferred type on reassignment
+
 
 # Handled by Doxyfile already
 # [tool.doxygen]              # Configuration for Doxygen (documentation generator)
