@@ -138,6 +138,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Doxygen
+docs/html/**
+docs/latex/**
+
 # Spyder project settings
 .spyderproject
 .spyproject
