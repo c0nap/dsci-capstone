@@ -6,9 +6,10 @@ Data Science Capstone - Patrick Conan
 
 Doxygen is an external tool which automatically generates code documentation. We include pre-generated docs in our `/docs/html` folder which can be viewed by opening `annotated.html` in your web browser.
 
-### Guidelines for Understanding Doxygen-Style Code
 
-#### Project Notes
+## Guidelines for Understanding Doxygen-Style Code
+
+### Project Notes
 
 - Docstrings are the preferred way to specify class signatures. Some useful tags are `@brief`, `@details`, `@param`, `@return`, `@raises`, and `@ref`.
 
@@ -26,7 +27,7 @@ Doxygen is an external tool which automatically generates code documentation. We
 
 - Doxygen tags like `@brief` may also be used in C# code with triple-slash blocks `///`.
 
-#### Code Sample
+### Code Sample
 
 ```python
 class DatabaseConnector:
@@ -78,11 +79,12 @@ class DatabaseConnector:
         pass
 ```
 
-### Generating Documentation with Doxygen
+
+## Manually Generating Documentation with Doxygen
 
 These instructions are based on a [tutorial](https://www.woolseyworkshop.com/2020/06/25/documenting-python-programs-with-doxygen/) created by John Woolsey in 2020.
 
-#### 1. Install required packages
+### 1. Install required packages
 
 ```bash
 sudo apt install doxygen
@@ -91,14 +93,14 @@ sudo apt install graphviz
 
 The `Graphviz` package is required by Doxygen to generate class diagrams.
 
-#### 2. Create the Doxygen config file
+### 2. Create the Doxygen config file
 
 ```bash
 cd docs
 doxygen -g
 ```
 
-#### 3. Configure the new Doxyfile
+### 3. Configure the new Doxyfile
 
 Preferences used in our setup:
 
@@ -114,13 +116,32 @@ Preferences used in our setup:
 - `EXTRACT_STATIC`         = YES
 
 
-#### 4. Generate the HTML and LaTeX folders
+### 4. Generate the HTML and LaTeX folders
 
-If these folders already exist, you must delete their contents first.
+If the `/docs/html/` and `/docs/latex/` folders already exist, you must delete their contents first.
+
+```bash
+rm -rf html/ latex/
+```
+
+Generate the latest code documentation:
 
 ```bash
 doxygen
 ```
 
-Open `annotated.html` with your Chrome browser to view the generated documentation pages.
+Open `index.html` or `annotated.html` with your Chrome browser to view the generated documentation pages.
+
+
+## Automated Doxygen
+
+The manual Doxygen instructions are useful for PRs. Contributors should regenerate the documentation locally, and fix any console warnings before review.
+
+However, updating the canonical documentation on our [origin/docs](https://github.com/c0nap/dsci-capstone/tree/docs) branch is locked behind a GitHub Actions job which runs automatically after pushing to main.
+
+To manually dispatch this workflow during development, visit [GitHub Actions](https://github.com/c0nap/dsci-capstone/actions/workflows/doxygen.yml), click `Run Workflow`, and select your development branch. NOTE: This will rewrite the public code documentation, and should be used sparingly.
+
+Once the `docs` branch contains `index.html`, you're ready to set up [GitHub Pages](https://github.com/c0nap/dsci-capstone/settings/pages). This will create a new `github-pages` deployment based on the contents of `origin/docs`.
+
+The updated code documentation can be found at the URL [c0nap.github.io/dsci-capstone](https://c0nap.github.io/dsci-capstone/).
 
