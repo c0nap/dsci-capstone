@@ -35,4 +35,6 @@ jobs:
     uses: ./.github/workflows/doxygen.yml
     needs: test
     secrets: inherit
+    permissions:
+      contents: write  # Required for pushing to the docs branch
 
