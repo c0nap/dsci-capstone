@@ -36,21 +36,21 @@ jobs:
 
 
       # 1. Start from a checkpoint to speed up the build process.
-      # Automatically retagged as "dev"
-      # - name: Pull last successful Docker images
-      #   run: |
-      #     echo "🔹 Trying private GHCR images..."
-      #     if make docker-pull-dev; then
-      #       make docker-retag-dev-local DEVTAG=${{ inputs.image-tag }}
-      #       echo "✅ Pulled from private namespace."
-      #     else
-      #       echo "⚠️ Private pull failed, trying public images..."
-      #       if make docker-pull; then
-      #         echo "✅ Pulled from public namespace."
-      #       else
-      #         echo "🚫 No cached images found — continuing with rebuild."
-      #       fi
-      #     fi
+      # Retag as "dev:latest" for pull-dev, done automatically for make-pull.
+      - name: Pull last successful Docker images
+        run: |
+          echo "🔹 Trying private GHCR images..."
+          if make docker-pull-dev DEVTAG=${{ inputs.image-tag }}; then
+            make docker-retag-dev-local DEVTAG=${{ inputs.image-tag }}
+            echo "✅ Pulled from private namespace."
+          else
+            echo "⚠️ Private pull failed, trying public images..."
+            if make docker-pull; then
+              echo "✅ Pulled from public namespace."
+            else
+              echo "🚫 No cached images found — continuing with rebuild."
+            fi
+          fi
 
 
       # 2. Set up environment with required files
@@ -73,6 +73,7 @@ jobs:
       # 3. Update the local Docker images with latest code
       # This creates the images with baked-in .env and appsettings.json files.
       # gha = GitHub Actions, matches ANY suitable image layer regardless of image name.
+      # Requires "dev:latest" images; creates "dev:latest" images
       - name: Build new Docker images
         run: make docker-build-dev CACHE_ARGS="--cache-from type=gha --cache-to type=gha,mode=max"
 
@@ -81,6 +82,7 @@ jobs:
           docker save -o docker-images-ci.tar \
             dsci-cap-img-python-dev:latest \
             dsci-cap-img-blazor-dev:latest
+
 
       # 4. Send these images over to the main CI/CD workflow
       # Faster than uploading + downloading with GHCR

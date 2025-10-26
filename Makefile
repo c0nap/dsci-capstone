@@ -227,8 +227,8 @@ docker-retag-prod-dev:
 DEVTAG ?= latest
 .PHONY: docker-pull-dev docker-pull-dev-python docker-pull-dev-blazor
 docker-pull-dev:
-	make docker-pull-dev-python
-	make docker-pull-dev-blazor
+	make docker-pull-dev-python DEVTAG=$(DEVTAG)
+	make docker-pull-dev-blazor DEVTAG=$(DEVTAG)
 docker-pull-dev-python:
 	docker pull ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)
 docker-pull-dev-blazor:
@@ -315,8 +315,8 @@ docker-publish-blazor:
 # DEVELOPMENT USE ONLY
 .PHONY: docker-push-dev docker-push-dev-python docker-push-dev-blazor
 docker-push-dev:
-	make docker-push-dev-python
-	make docker-push-dev-blazor
+	make docker-push-dev-python DEVTAG=$(DEVTAG)
+	make docker-push-dev-blazor DEVTAG=$(DEVTAG)
 docker-push-dev-python:
 	# Python: tag for GHCR & push
 	docker tag dsci-cap-img-python-dev:latest ghcr.io/c0nap/dsci-cap-img-python-dev:$(DEVTAG)

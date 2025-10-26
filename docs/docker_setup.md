@@ -516,6 +516,7 @@ When communicating with another container in the same Docker network, we use the
 
 Refer to the conversion table below for specific network targets. Please note that `.env` is manually completed by referencing this table, and our current Makefile simply converts the hostnames to their Docker equivalents.
 
+
 ### Network Hostnames Table
 
 This table displays the valid hostname (for any `*_HOST` in `.env`) when the current container is deployed to Windows (Docker Desktop application) or WSL (docker-ce binary). Rows indicate different targets that this container might want to communicate with.
@@ -528,6 +529,33 @@ This table displays the valid hostname (for any `*_HOST` in `.env`) when the cur
 | **External Container**  | `WSL_LOCAL_IP`           | `OS_LOCAL_IP`   |
 | **Same Container**      | `localhost`              | `localhost`     |
 
+
+
+<details>
+  <summary><h2>Hostname Mapping Details</h2></summary>
+
+When swapping from a WSL setup to a `docker-ce` setup, most hard-coded LAN IPs will still work since the CLI version of Docker runs on the same WSL instance.
+
+Blazor is different since it expects IPs relative to Windows by default, so `appsettings.json` must be reconfigured for WSL deployment. We match up the `.env` hostnames depending on `PYTHON_SIDE` and `BLAZOR_SIDE`. If their values are not the same, we know the hostnames in Python are invalid for Blazor.
+
+The typical approach to secret files would be setting the environment variables directly in `docker-compose.yml` as shown below. But doing this would definitely break `load_dotenv(".env")` in Python, requiring extra handling logic.
+
+```yml
+services:
+  python:
+    ...
+    env_file:
+      - .env          # primary (used for manual runs)
+      - .env.docker   # overrides for container runs (last wins)
+```
+
+Instead, this process is automated by `make env-docker` and `make appsettings-docker` in the provided Makefile (see below). These create local copies of our secrets files for each container with mapped hostnames depending on 1) the intended deployment and 2) the observed operating system.
+
+As such, the local copies of `.env` and `appsettings.json` are never modified by the program, and are kept as ground-truth for manual runs of the pipeline. Specifically, `.env` is mapped, and then used to regenerate `appsettings.json` as necessary.
+
+</details>
+
+
 ### Makefile Commands for Docker
 
 You can safely run these commands even if your project doesn't use Docker.
@@ -538,16 +566,16 @@ Verify settings used for hostname mapping (diagnostic only).
 VERBOSE=1 make docker-detect
 ```
 
-#### docker-env
+#### env-docker
 Generate `.env.docker` with Docker-appropriate hostnames
 ```bash
-VERBOSE=1 make docker-env
+VERBOSE=1 make env-docker
 ```
 
-#### docker-appsettings
+#### appsettings-docker
 Generate `appsettings.Docker.json` with Docker-appropriate hostnames.
 ```bash
-VERBOSE=1 make docker-appsettings
+VERBOSE=1 make appsettings-docker
 ```
 
 ### Makefile Helper Functions
@@ -562,26 +590,28 @@ VERBOSE=1 make docker-appsettings
 
 
 
+## Dockerfile Optimization
 
+Image size may not matter much for local development, but our CI/CD pipeline performs automatic testing and deployment. A large Docker image can significantly add to workflow execution time.
 
+### Minimizing Image Size (Dockerfile)
 
-The CLI version of Docker runs on WSL, so the normal hostnames and IPs specified in `.env` should still work. The Blazor app expects IPs relative to Windows by default, so `appsettings.json` is reconfigured for WSL deployment. Similarly, the containers from Docker Desktop run from Windows. This is fine for the Blazor app, but hostnames in `.env` must be fixed. This process is automated by `make docker-env` and `make docker-appsettings` in the provided Makefile.
+- Avoid saving massive images inside a runner. Each GitHub Actions process has around 14 GB storage, and if we exceed that restriction, the workflow will fail.
 
-The typical approach would be setting the environment variables directly in `docker-compose.yml` as shown below. But doing this would definitely break `load_dotenv(".env")` in Python, requiring extra handling logic.
+- Revisit your `requirements.txt` and see if you can downgrade to a 'slim' version of some packages.
 
-```yml
-services:
+- For example, `torch` runs on GPU by default and has `cuda` dependencies. This adds ~6 GB to images. We can use the CPU version instead by specifying `--extra-index-url`, but as a result the `requirements.txt` is more messy.
 
-  python:
-    ...
-    env_file:
-      - .env        # primary (used for manual runs)
-      - .env.docker # overrides for container runs (last wins)
+- Execution order matters; the builder can reuse earlier layers if the only difference is something minor.
 
-  blazor:
-    ...
-    volumes:
-      - ./appsettings.Docker.json:/web-app/BlazorApp/appsettings.Docker.json
-```
+- For example, generate `.env` and read ARGS as late as possible.
 
-As such, `.env` and `appsettings.json` are never modified by the program, and are just kept as ground-truth for manual runs of the pipeline. When deployed to Docker, these files are sent to their respective Docker containers, which automatically apply the necessary changes to convert between hostnames depending on the intended deployment and the observed operating system.
+- In a multi-stage dockerfile _e.g._ Blazor, LABEL must be defined after the last FROM.
+
+### Faster Workflows
+
+- For maximum speed, each workflow would be a single massive job. But if reusable workflows are desired for improved Separation of Concern, we need a way to transfer data between runners.
+
+- Artifacts can be used to make compressed files available for all runners. For images, this is much faster than downloading from and uploading to GCHR.
+
+- We still use GHCR as a checkpoint for Docker images. Successful PRs upload their tagged images automatically to speed up future runs.

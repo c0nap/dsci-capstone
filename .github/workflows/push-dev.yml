@@ -1,4 +1,4 @@
-name: Push Job
+name: Push Checkpoint Job
 on:
   workflow_call:
     inputs:

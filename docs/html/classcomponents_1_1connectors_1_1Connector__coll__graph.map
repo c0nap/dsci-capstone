@@ -1,5 +1,0 @@
-<map id="Connector" name="Connector">
-<area shape="rect" id="Node000001" title="Abstract base class for external connectors." alt="" coords="5,79,93,104"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="25,5,74,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="52,44,52,79,47,79,47,44"/>
-</map>

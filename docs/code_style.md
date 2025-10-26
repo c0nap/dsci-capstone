@@ -6,15 +6,18 @@ Data Science Capstone - Patrick Conan
 
 Doxygen is an external tool which automatically generates code documentation. We include pre-generated docs in our `/docs/html` folder which can be viewed by opening `annotated.html` in your web browser.
 
-### Guidelines for Understanding Doxygen-Style Code
 
-#### Project Notes
+## Guidelines for Understanding Doxygen-Style Code
+
+### Project Notes
 
 - Docstrings are the preferred way to specify class signatures. Some useful tags are `@brief`, `@details`, `@param`, `@return`, `@raises`, and `@ref`.
 
 - Attributes defined in `__init__` can use Doxygen-style inline comments `##` before the declaration or alternatively a docstring after it.
 
 - Low-level implemetation comments should not be given to Doxygen. Keep those as normal Python comments, or leave a note in the method header.
+
+- Doxygen cannot handle special characters like `\n`, or HTML tags `<div>` inside docstrings (since it will attempt to wrap the docstring in HTML).
 
 - Since `AUTOBRIEF` is enabled, you may omit `@brief` for the first line in a docstring. The convention in this project is to take advantage of `AUTOBRIEF` to enhance code readability. We additionally put an extra space between the tag and its text description, _e.g._ `param x  An integer`, and prefer condensed docstrings, _i.e._ minimal whitespace with triple-quotes placed on the same line as text.
 
@@ -26,7 +29,8 @@ Doxygen is an external tool which automatically generates code documentation. We
 
 - Doxygen tags like `@brief` may also be used in C# code with triple-slash blocks `///`.
 
-#### Code Sample
+
+### Code Sample
 
 ```python
 class DatabaseConnector:
@@ -78,11 +82,34 @@ class DatabaseConnector:
         pass
 ```
 
-### Generating Documentation with Doxygen
+### More Style Tips
+
+- To avoid MyPy complaints, use **type hints** everywhere. All function parameters should have at least `arg1: Any`, void functions should return `None`, and sometimes local variables inside functions need typing.
+
+- MyPy warnings about `Optional` types are disabled in `pyproject.toml`, but if you do care about nullables, use `Optional[str]` instead of `str | None` notation to support older Python versions (pre-3.10).
+
+- **Fail loudly:** In PyTests, there should not be try-except blocks in most cases.
+
+- Be very careful when creating objects outside of classes. PyTest will fail during collection which is more ugly than a runtime failure.
+
+- To contain unwanted imports, they must be added to a method inside a class, since `from module1 import my_function` will pull along everything at module- or class-level. See `metrics.py` for an example.
+
+- Since our `Session` class is used as a PyTest fixture, any failure in its `__init__`constructor will cause ALL PyTests to fail. Since `Session` creates a reference to `RelationalConnector`, `DocumentConnector`, and `GraphConnector`, these classes must also have clean constructors which never fail!
+
+- Instead of `os.getenv()`, use `os.environ[]` to raise an exception if not found. This is useful because otherwise a downstream task could silently fail.
+
+- **Basic function etiquette:** If a function is used exclusively by 1 class, but does not modify the state of that class, it should be converted to a module-scoped function outside the class. See `DocumentConnector` for an example.
+
+- If a module contains multiple classes and the helper function wouldn't make sense under that module name (_e.g._ `parse_json` does not make sense under `database_connectors` module), it should be kept inside the class.
+
+- Helper function names should be prefixed with an underscore _e.g._ `_parse_json`.
+
+
+## Manually Generating Documentation with Doxygen
 
 These instructions are based on a [tutorial](https://www.woolseyworkshop.com/2020/06/25/documenting-python-programs-with-doxygen/) created by John Woolsey in 2020.
 
-#### 1. Install required packages
+### 1. Install required packages
 
 ```bash
 sudo apt install doxygen
@@ -91,14 +118,14 @@ sudo apt install graphviz
 
 The `Graphviz` package is required by Doxygen to generate class diagrams.
 
-#### 2. Create the Doxygen config file
+### 2. Create the Doxygen config file
 
 ```bash
 cd docs
 doxygen -g
 ```
 
-#### 3. Configure the new Doxyfile
+### 3. Configure the new Doxyfile
 
 Preferences used in our setup:
 
@@ -114,13 +141,32 @@ Preferences used in our setup:
 - `EXTRACT_STATIC`         = YES
 
 
-#### 4. Generate the HTML and LaTeX folders
+### 4. Generate the HTML and LaTeX folders
 
-If these folders already exist, you must delete their contents first.
+If the `/docs/html/` and `/docs/latex/` folders already exist, you must delete their contents first.
+
+```bash
+rm -rf html/ latex/
+```
+
+Generate the latest code documentation:
 
 ```bash
 doxygen
 ```
 
-Open `annotated.html` with your Chrome browser to view the generated documentation pages.
+Open `index.html` or `annotated.html` with your Chrome browser to view the generated documentation pages.
+
+
+## Automated Doxygen
+
+The manual Doxygen instructions are useful for PRs. Contributors should regenerate the documentation locally, and fix any console warnings before review.
+
+However, updating the canonical documentation on our [origin/docs](https://github.com/c0nap/dsci-capstone/tree/docs) branch is locked behind a GitHub Actions job which runs automatically after pushing to main.
+
+To manually dispatch this workflow during development, visit [GitHub Actions](https://github.com/c0nap/dsci-capstone/actions/workflows/doxygen.yml), click `Run Workflow`, and select your development branch. NOTE: This will rewrite the public code documentation, and should be used sparingly.
+
+Once the `docs` branch contains `index.html`, you're ready to set up [GitHub Pages](https://github.com/c0nap/dsci-capstone/settings/pages). This will create a new `github-pages` deployment based on the contents of `origin/docs`.
+
+The updated code documentation can be found at the URL [c0nap.github.io/dsci-capstone](https://c0nap.github.io/dsci-capstone/).
 
