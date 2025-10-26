@@ -30,22 +30,10 @@ sudo service mysql start
 ```
 </details>
 
----
 
-### Other Issues
-
-
-Running MySQL on local machine: Must allow external connections.
-```sql
--- Allow root from all IPs (not secure):
-CREATE USER 'root'@'%' IDENTIFIED BY 'your_root_password';
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
-```
-
-DB_NAME in .env must be all lowercase for Postgres.
-
-
+<details>
+  <summary><h3>Neo4j</h3></summary>
+  
 ### Neo4j Installation for WSL (Ubuntu)
 
 1. Install prerequisites `wget`, `gnupg`, and `apt-transport-https`
@@ -111,7 +99,12 @@ MATCH (n) RETURN count(n);
 MATCH ()-[r]->() RETURN count(r);
 ```
 
-#### If you are also running the web application:
+</details>
+
+<details>
+  <summary><h3>Blazor App with Neo4j</h3></summary>
+  
+#### After following the Neo4j setup guide:
 
 5. Allow external connections to database (e.g. web app)
 
@@ -135,19 +128,75 @@ telnet <ip> 7687
 
 8. To allow HTTP requests from WSL to reach Blazor app, find local IP from PowerShell with `ipconfig`, and test the connection from WSL using `curl http://<local_ip>:5055/metrics`. In Blazor, listening for all IPs is generally unsafe, so Windows Firewall may try to block it. Allowing only on Private networks is fine. If you press Cancel accidentally and need to reverse it, open Windows Firewall -> Inbound Rules, and allow BlazorApp.
 
+</details>
 
-### Hostname Resolution
+<details>
+  <summary><h3>Blazor App with MongoDB</h3></summary>
+  
+TODO
+</details>
 
-For a comprehensive guide on how to configure your `.env` values to work across Docker containers, please use our Hostname Reference Table in the [Docker Guide](docs/docker_setup.md).
+<details>
+  <summary><h3>Blazor App with Postgres</h3></summary>
+  
+TODO
+</details>
 
 
-### Makefile Commands
+
+
+
+---
+
+## Common Issues
+
+### MySQL
+
+External connections have different permissions than local connections. So if you sign in as `root` (via `mysql -u root -p` or `docker exec`) you'll normally have full access, but connecting externally (using a non-localhost connection string) will restrict permissions, even as root! 
+
+As a workaround, you must allow external connections when running MySQL on local machine. Our init script does this automatically when using Docker.
+```sql
+-- Allow root from all IPs (not secure):
+CREATE USER 'root'@'%' IDENTIFIED BY 'your_root_password';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+```
+
+If you want to use an existing MySQL installation and login as root, nothing will prevent you from doing so. However, we recommend creating a secondary user with appropriate permissions.
+
+
+### PostgreSQL
+
+Postgres is case-sensitive, but is inconsistent about automatic lowercasing. For example, it will convert all database names to lowercase before storing them, but will NOT auto-lowercase when requesting a specific table.
+
+For example, `CREATE TABLE ExamTable ...` will internally create a table called `examtable`, and running `SELECT * FROM ExamTable` will fail.
+
+For this reason, we recommend keeping `DB_NAME` lowercase in your .env file, but our logic in `get_dataframe` should be able to handle this.
+
+### SQL Query Files
+- For Docker compatibility, all database query files should have UNIX line endings (especially `.sql`).
+- Keep in mind MySQL and PostgreSQL have slightly different syntax - you will need a version-specific query to create tables.
+- Our PyTests use single quotes inside queries to avoid parsing issues.
+
+
+## Makefile Commands
 
 #### db-start-local
 Start only the `localhost` databases specified in `.env`
 ```bash
 make db-start-local
 ```
+
+#### docker-all-dbs
+Start one of each database type according to `.env` specification
+```bash
+make docker-all-dbs
+```
+
+## Hostname Resolution
+
+For a comprehensive guide on how to configure your `.env` values to work across Docker containers, please use our Hostname Reference Table in the [Docker Guide](docs/docker_setup.md).
+
 
 
 ## Network Security
@@ -192,12 +241,4 @@ This problem will spread as we scale in future versions; a remote Blazor server 
 
 6. Instead of allowing full access to out-of-network machines, use a VPN to connect with the secured network remotely.
 
-
-## Other Notes
-
-- Postgres is case-insensitive, and stores tables as all lowercase. MySQL is not. Our logic in `get_dataframe` will try again with an all-lowercase name if the table isn't found.
-
-- **MYSQL_USERNAME cannot be root.** You must create a secondary user if you want to use an existing database installation.
-
-- Any `.sql` example files should have UNIX line endings to work on Docker. Same with `.env`.
 
