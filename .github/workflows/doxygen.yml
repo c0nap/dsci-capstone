@@ -48,8 +48,11 @@ jobs:
           git fetch origin docs
           git switch docs
 
-      - name: Clear existing files
+      - name: Clear existing files and folders
         run: rm -rf ./*
+
+      - name: Clear hidden files safely
+        run: rm -rf ./.??*
 
       - name: Copy generated HTML and PDF
         run: |
