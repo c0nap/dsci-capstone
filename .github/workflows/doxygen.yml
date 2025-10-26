@@ -36,7 +36,6 @@ jobs:
       - name: Build PDF from LaTeX output
         working-directory: /tmp/doxygen/latex
         run: make
-        continue-on-error: true
 
       - name: Configure Git
         run: |
@@ -54,9 +53,9 @@ jobs:
 
       - name: Copy generated HTML and PDF
         run: |
-          cp -r /tmp/doxygen/html/* ./ || true
+          cp -r /tmp/doxygen/html/* ./
           mkdir -p latex
-          cp /tmp/doxygen/latex/refman.pdf latex/ || true
+          cp /tmp/doxygen/latex/refman.pdf latex/
 
       - name: Insert "Download PDF" link into Doxygen homepage
         run: |
