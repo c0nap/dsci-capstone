@@ -1,4 +1,4 @@
-name: CI with Docker
+name: CI with Docker (on-PR main)
 
 on:
   pull_request:

@@ -1,4 +1,4 @@
-name: Generate and Publish Doxygen Docs
+name: Update Docs Job
 on:
   workflow_call:
   workflow_dispatch:
