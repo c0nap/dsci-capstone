@@ -17,6 +17,8 @@ Doxygen is an external tool which automatically generates code documentation. We
 
 - Low-level implemetation comments should not be given to Doxygen. Keep those as normal Python comments, or leave a note in the method header.
 
+- Doxygen cannot handle special characters like `\n`, or HTML tags `<div>` inside docstrings (since it will attempt to wrap the docstring in HTML).
+
 - Since `AUTOBRIEF` is enabled, you may omit `@brief` for the first line in a docstring. The convention in this project is to take advantage of `AUTOBRIEF` to enhance code readability. We additionally put an extra space between the tag and its text description, _e.g._ `param x  An integer`, and prefer condensed docstrings, _i.e._ minimal whitespace with triple-quotes placed on the same line as text.
 
 - In Python, `@ref` requires a fully-qualified method name. Even if `from_env()` is contained within the same class or file, Doxygen requires something like `@ref components.connectors.RelationalConnector.from_env`.
@@ -26,6 +28,7 @@ Doxygen is an external tool which automatically generates code documentation. We
 - Since the Jetbrains Rider IDE is used for our C# code, we simply run the `Built-in: Reformat Code` routine.
 
 - Doxygen tags like `@brief` may also be used in C# code with triple-slash blocks `///`.
+
 
 ### Code Sample
 
@@ -78,6 +81,28 @@ class DatabaseConnector:
         """
         pass
 ```
+
+### More Style Tips
+
+- To avoid MyPy complaints, use **type hints** everywhere. All function parameters should have at least `arg1: Any`, void functions should return `None`, and sometimes local variables inside functions need typing.
+
+- MyPy warnings about `Optional` types are disabled in `pyproject.toml`, but if you do care about nullables, use `Optional[str]` instead of `str | None` notation to support older Python versions (pre-3.10).
+
+- **Fail loudly:** In PyTests, there should not be try-except blocks in most cases.
+
+- Be very careful when creating objects outside of classes. PyTest will fail during collection which is more ugly than a runtime failure.
+
+- To contain unwanted imports, they must be added to a method inside a class, since `from module1 import my_function` will pull along everything at module- or class-level. See `metrics.py` for an example.
+
+- Since our `Session` class is used as a PyTest fixture, any failure in its `__init__`constructor will cause ALL PyTests to fail. Since `Session` creates a reference to `RelationalConnector`, `DocumentConnector`, and `GraphConnector`, these classes must also have clean constructors which never fail!
+
+- Instead of `os.getenv()`, use `os.environ[]` to raise an exception if not found. This is useful because otherwise a downstream task could silently fail.
+
+- **Basic function etiquette:** If a function is used exclusively by 1 class, but does not modify the state of that class, it should be converted to a module-scoped function outside the class. See `DocumentConnector` for an example.
+
+- If a module contains multiple classes and the helper function wouldn't make sense under that module name (_e.g._ `parse_json` does not make sense under `database_connectors` module), it should be kept inside the class.
+
+- Helper function names should be prefixed with an underscore _e.g._ `_parse_json`.
 
 
 ## Manually Generating Documentation with Doxygen
