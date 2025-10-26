@@ -25,34 +25,45 @@ jobs:
         working-directory: docs
         run: doxygen
 
+      # Carry docs/html and docs/latex over to the 'docs' branch
+      - name: Stash generated files
+        run: |
+          mkdir -p /tmp/doxygen/html /tmp/doxygen/latex
+          cp -r docs/html/* /tmp/doxygen/html/ || true
+          cp -r docs/latex/* /tmp/doxygen/latex/ || true
+
       - name: Build PDF from LaTeX output
-        working-directory: docs/latex
+        working-directory: /tmp/doxygen/latex
         run: make
         continue-on-error: true
-
-      - name: Insert "Download PDF" link into Doxygen homepage
-        run: |
-          HTML_HOME="docs/html/index.html"
-          PDF_PATH="latex/refman.pdf"
-          if [ -f "$HTML_HOME" ]; then
-            sed -i "s|</body>|<p style='text-align:center;margin-top:2em;'><a href='$PDF_PATH' style='font-weight:bold;'>📄 Download Full Documentation (PDF)</a></p></body>|" "$HTML_HOME"
-          fi
 
       - name: Configure Git
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
 
-      - name: Publish documentation to docs branch
+      - name: Switch to docs branch
         run: |
           git fetch origin docs
-          git switch docs || git checkout -b docs origin/docs
-          rm -rf ./*
+          git switch docs
 
-          cp -r docs/html/* .
+      - name: Clear existing files
+        run: rm -rf ./*
+
+      - name: Copy generated HTML and PDF
+        run: |
+          cp -r /tmp/doxygen/html/* ./ || true
           mkdir -p latex
-          cp -r docs/latex/refman.pdf latex/
+          cp /tmp/doxygen/latex/refman.pdf latex/ || true
 
+      - name: Insert "Download PDF" link into Doxygen homepage
+        run: |
+          if [ -f "index.html" ]; then
+            sed -i "s|</body>|<p style='text-align:center;margin-top:2em;'><a href='latex/refman.pdf' style='font-weight:bold;'>📄 Download Full Documentation (PDF)</a></p></body>|" "index.html"
+          fi
+
+      - name: Commit and push changes
+        run: |
           git add .
           git commit -m "Auto-generate Doxygen HTML + PDF [skip ci]" || echo "No changes to commit"
           git push origin docs --force
