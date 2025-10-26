@@ -6,6 +6,8 @@ on:
 jobs:
   update-docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for pushing to the docs branch
 
     steps:
       - name: Checkout main branch
