@@ -1,0 +1,22 @@
+var searchData=
+[
+  ['generate_5fdefault_5fmetrics_0',['generate_default_metrics',['../namespacecomponents_1_1metrics.html#aa94f32efb32b4cc37045d8a89b95acfd',1,'components::metrics']]],
+  ['generatedanswer_1',['GeneratedAnswer',['../classBlazorApp_1_1Models_1_1QAItem.html#a8654edd26ad2ba686ef9f2ca7d2ae2f5',1,'BlazorApp::Models::QAItem']]],
+  ['get_5fall_5ftriples_2',['get_all_triples',['../classcomponents_1_1fact__storage_1_1GraphConnector.html#ad7705e1a657e9b8a8b5308bbe2aeea10',1,'components::fact_storage::GraphConnector']]],
+  ['get_5fdataframe_3',['get_dataframe',['../classcomponents_1_1connectors_1_1DatabaseConnector.html#a38925627d8e23d63389e322b97ca956e',1,'components.connectors.DatabaseConnector.get_dataframe()'],['../classcomponents_1_1connectors_1_1RelationalConnector.html#a38925627d8e23d63389e322b97ca956e',1,'components.connectors.RelationalConnector.get_dataframe()'],['../classcomponents_1_1document__storage_1_1DocumentConnector.html#a38925627d8e23d63389e322b97ca956e',1,'components.document_storage.DocumentConnector.get_dataframe()'],['../classcomponents_1_1fact__storage_1_1GraphConnector.html#a38925627d8e23d63389e322b97ca956e',1,'components.fact_storage.GraphConnector.get_dataframe()']]],
+  ['get_5fdf_4',['get_df',['../classsrc_1_1util_1_1Log.html#a13a150fbfd6311f47f7ae4edacbedec2',1,'src::util::Log']]],
+  ['get_5fedge_5fcounts_5',['get_edge_counts',['../classcomponents_1_1fact__storage_1_1GraphConnector.html#a6dce8a16fdd5290fbb52fb299a4d6e07',1,'components::fact_storage::GraphConnector']]],
+  ['get_5funique_6',['get_unique',['../classsrc_1_1util_1_1Log.html#a29aea5ea16bcebae8f1184252ab4e5d5',1,'src.util.Log.get_unique'],['../classcomponents_1_1fact__storage_1_1GraphConnector.html#a501693a7bc060cfe87ad3e1bacdc753a',1,'components.fact_storage.GraphConnector.get_unique()']]],
+  ['getall_7',['GetAll',['../classBlazorApp_1_1Controllers_1_1MetricsController.html#a69a72678ffa13e14adb0ca3fe73a24c5',1,'BlazorApp::Controllers::MetricsController']]],
+  ['getdefault_8',['GetDefault',['../classBlazorApp_1_1Models_1_1SummaryMetrics.html#a7134edf500dd6bd6c2e27cfca80836e1',1,'BlazorApp::Models::SummaryMetrics']]],
+  ['getindex_9',['GetIndex',['../classBlazorApp_1_1Controllers_1_1MetricsController.html#a173681be77c5cdaef7727cd15acec369',1,'BlazorApp::Controllers::MetricsController']]],
+  ['goldanswer_10',['GoldAnswer',['../classBlazorApp_1_1Models_1_1QAItem.html#a50bf441d9e209f33762bc4e8d917f5f3',1,'BlazorApp::Models::QAItem']]],
+  ['good_5fval_11',['good_val',['../classsrc_1_1util_1_1Log.html#aa4d290d077f1bb441b7e684190cd0fe0',1,'src::util::Log']]],
+  ['gr_5fdb_12',['gr_db',['../classsrc_1_1util_1_1Log.html#a421ce8c4b03709ee89aa8d4ebd1f5ae3',1,'src::util::Log']]],
+  ['graph_2erazor_13',['Graph.razor',['../Graph_8razor.html',1,'']]],
+  ['graph_5fdb_14',['graph_db',['../classsrc_1_1setup_1_1Session.html#ae5bee849733f293db1370cf241513a95',1,'src.setup.Session.graph_db'],['../namespacetests_1_1test__components.html#a922cc3d99e11b2c0a70fd25b9683e852',1,'tests.test_components.graph_db()']]],
+  ['graph_5fname_15',['graph_name',['../classcomponents_1_1fact__storage_1_1GraphConnector.html#a3323a9a6d1bacd1bf02e51e2b8ef5f4b',1,'components::fact_storage::GraphConnector']]],
+  ['graph_5ftriple_5ffiles_16',['graph_triple_files',['../namespacesrc_1_1main.html#a9f66810d9f2dbbcffa9be20907860046',1,'src::main']]],
+  ['graphconnector_17',['GraphConnector',['../classcomponents_1_1fact__storage_1_1GraphConnector.html',1,'components::fact_storage']]],
+  ['green_18',['GREEN',['../classsrc_1_1util_1_1Log.html#a50d6704e2a5f43eadb9abdf8a9eb0631',1,'src::util::Log']]]
+];

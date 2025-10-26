@@ -1,0 +1,17 @@
+<map id="DatabaseConnector" name="DatabaseConnector">
+<area shape="rect" id="Node000001" title="Abstract base class for database engine connectors." alt="" coords="253,152,403,177"/>
+<area shape="rect" id="Node000004" href="$classcomponents_1_1connectors_1_1RelationalConnector.html" title="Connector for relational databases (MySQL, PostgreSQL)." alt="" coords="72,225,227,251"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="288,185,180,228,178,223,286,180"/>
+<area shape="rect" id="Node000007" href="$classcomponents_1_1document__storage_1_1DocumentConnector.html" title="Connector for MongoDB (document database)" alt="" coords="251,225,405,251"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="331,191,331,225,325,225,325,191"/>
+<area shape="rect" id="Node000008" href="$classcomponents_1_1fact__storage_1_1GraphConnector.html" title="Connector for Neo4j (graph database)." alt="" coords="430,225,557,251"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="368,180,467,223,465,228,366,185"/>
+<area shape="rect" id="Node000002" href="$classcomponents_1_1connectors_1_1Connector.html" title="Abstract base class for external connectors." alt="" coords="284,79,372,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="331,118,331,152,325,152,325,118"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="303,5,353,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="331,44,331,79,325,79,325,44"/>
+<area shape="rect" id="Node000005" href="$classcomponents_1_1connectors_1_1mysqlConnector.html" title="A relational database connector configured for MySQL." alt="" coords="5,299,133,324"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="128,262,84,300,81,296,125,258"/>
+<area shape="rect" id="Node000006" href="$classcomponents_1_1connectors_1_1postgresConnector.html" title="A relational database connector configured for PostgreSQL." alt="" coords="157,299,301,324"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="174,258,218,296,214,300,170,262"/>
+</map>

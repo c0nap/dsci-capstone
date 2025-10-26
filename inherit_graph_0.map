@@ -1,0 +1,27 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,55,55,80"/>
+<area shape="rect" id="Node000001" href="$classcomponents_1_1book__conversion_1_1BookFactory.html" title=" " alt="" coords="129,5,231,31"/>
+<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="67,52,102,39,137,28,138,33,104,45,69,57"/>
+<area shape="rect" id="Node000002" href="$classcomponents_1_1book__conversion_1_1StoryStreamAdapter.html" title=" " alt="" coords="103,55,257,80"/>
+<area shape="poly" id="edge2_Node000000_Node000002" title=" " alt="" coords="69,65,102,65,102,70,69,70"/>
+<area shape="rect" id="Node000005" href="$classcomponents_1_1connectors_1_1Connector.html" title="Abstract base class for external connectors." alt="" coords="136,104,224,129"/>
+<area shape="poly" id="edge5_Node000000_Node000005" title=" " alt="" coords="69,77,104,89,141,101,140,106,102,94,67,82"/>
+<area shape="rect" id="Node000003" href="$classcomponents_1_1book__conversion_1_1BookStream.html" title=" " alt="" coords="331,5,434,31"/>
+<area shape="poly" id="edge3_Node000002_Node000003" title=" " alt="" coords="245,49,330,28,332,33,247,54"/>
+<area shape="rect" id="Node000004" href="$classcomponents_1_1book__conversion_1_1ParagraphStreamTEI.html" title="Streams paragraphs from a TEI file as Chunk objects." alt="" coords="305,55,460,80"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="271,65,305,65,305,70,271,70"/>
+<area shape="rect" id="Node000006" href="$classcomponents_1_1connectors_1_1DatabaseConnector.html" title="Abstract base class for database engine connectors." alt="" coords="307,104,458,129"/>
+<area shape="poly" id="edge6_Node000005_Node000006" title=" " alt="" coords="238,114,307,114,307,119,238,119"/>
+<area shape="rect" id="Node000012" href="$classcomponents_1_1text__processing_1_1LLMConnector.html" title="Connector for prompting and returning LLM output (raw text/JSON) via LangChain." alt="" coords="325,153,440,179"/>
+<area shape="poly" id="edge12_Node000005_Node000012" title=" " alt="" coords="238,128,330,151,329,156,237,133"/>
+<area shape="rect" id="Node000007" href="$classcomponents_1_1connectors_1_1RelationalConnector.html" title="Connector for relational databases (MySQL, PostgreSQL)." alt="" coords="508,55,663,80"/>
+<area shape="poly" id="edge7_Node000006_Node000007" title=" " alt="" coords="448,98,532,77,533,83,449,103"/>
+<area shape="rect" id="Node000010" href="$classcomponents_1_1document__storage_1_1DocumentConnector.html" title="Connector for MongoDB (document database)" alt="" coords="508,104,663,129"/>
+<area shape="poly" id="edge10_Node000006_Node000010" title=" " alt="" coords="472,114,508,114,508,119,472,119"/>
+<area shape="rect" id="Node000011" href="$classcomponents_1_1fact__storage_1_1GraphConnector.html" title="Connector for Neo4j (graph database)." alt="" coords="522,153,649,179"/>
+<area shape="poly" id="edge11_Node000006_Node000011" title=" " alt="" coords="449,130,533,151,532,156,448,135"/>
+<area shape="rect" id="Node000008" href="$classcomponents_1_1connectors_1_1mysqlConnector.html" title="A relational database connector configured for MySQL." alt="" coords="719,31,847,56"/>
+<area shape="poly" id="edge8_Node000007_Node000008" title=" " alt="" coords="676,54,718,48,719,54,677,59"/>
+<area shape="rect" id="Node000009" href="$classcomponents_1_1connectors_1_1postgresConnector.html" title="A relational database connector configured for PostgreSQL." alt="" coords="711,80,855,105"/>
+<area shape="poly" id="edge9_Node000007_Node000009" title=" " alt="" coords="677,76,711,81,710,86,676,82"/>
+</map>
