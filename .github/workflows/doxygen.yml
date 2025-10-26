@@ -48,11 +48,9 @@ jobs:
           git fetch origin docs
           git switch docs
 
-      - name: Clear existing files and folders
-        run: rm -rf ./*
-
-      - name: Clear hidden files safely
-        run: rm -rf ./.??*
+      - name: Clear existing files and folders (preserve .git)
+        run: |
+          ls -A | grep -v '^\.git$' | xargs -r rm -rf
 
       - name: Copy generated HTML and PDF
         run: |
