@@ -14,7 +14,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
-      image-tag: push-${{ github.sha }}   # Tag should never exist yet
+      image-tag: push-${{ github.sha }}   # Tag should never exist yet - not displayed anywhere
 
   test:
     uses: ./.github/workflows/test.yml
