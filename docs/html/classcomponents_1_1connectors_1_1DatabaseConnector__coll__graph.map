@@ -1,7 +1,0 @@
-<map id="DatabaseConnector" name="DatabaseConnector">
-<area shape="rect" id="Node000001" title="Abstract base class for database engine connectors." alt="" coords="5,152,156,177"/>
-<area shape="rect" id="Node000002" href="$classcomponents_1_1connectors_1_1Connector.html" title="Abstract base class for external connectors." alt="" coords="37,79,125,104"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="83,118,83,152,78,152,78,118"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="56,5,105,31"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="83,44,83,79,78,79,78,44"/>
-</map>
