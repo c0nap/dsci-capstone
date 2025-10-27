@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 COPY req/ .
-RUN pip install --no-cache-dir -r flask-worker.txt questeval.txt
+RUN pip install --no-cache-dir -r flask-worker.txt
+RUN pip install --no-cache-dir -r questeval.txt
 
 
 # Copy source code into the container (optional .dockerignore)

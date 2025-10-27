@@ -169,8 +169,8 @@ docker-all-main:
 ###############################################################################
 # Start worker services in their own containers.
 ###############################################################################
-.PHONY: docker-all-tasks docker-bscore docker-qeval
-docker-all-tasks:
+.PHONY: docker-all-workers docker-bscore docker-qeval
+docker-all-workers:
 	make docker-bscore
 	make docker-qeval
 docker-bscore:
@@ -273,6 +273,20 @@ docker-build-dev-blazor:
 		--build-arg ENV_FILE=".env" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.json \
 		-t dsci-cap-img-blazor-dev:latest .
+
+docker-build-workers-dev:
+	make docker-build-dev-python
+	make docker-build-dev-blazor
+docker-build-dev-bscore:
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.bookscore \
+		--build-arg ENV_FILE=".env" \
+		--build-arg TASK="bookscore" \
+		-t dsci-cap-img-bscore-dev:latest .
+docker-build-dev-qeval:
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.questeval \
+		--build-arg ENV_FILE=".env" \
+		--build-arg TASK="questeval" \
+		-t dsci-cap-img-qeval-dev:latest .
 
 
 ###############################################################################

@@ -167,10 +167,13 @@ This is only used by the boss container `main.py`, and worker dependencies are k
 ## 🚀 Container Management
 
 ```bash
-# Build and start all services
-make docker-all-tasks
+# Build worker images from their Dockerfiles
+make docker-build-workers-dev
 
-# Individual services
+# Start all services from existing dev:latest images
+make docker-all-workers
+
+# Individual services pull from public repo images
 docker-compose up qeval_worker
 docker-compose up bscore_worker
 ```
