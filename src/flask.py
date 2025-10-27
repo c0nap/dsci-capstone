@@ -69,11 +69,11 @@ def load_mongo_config(database: str) -> str:
     load_dotenv(".env")
     
     db_prefix = "MONGO"
-    engine = os.getenv(f"{db_prefix}_ENGINE")
-    username = os.getenv(f"{db_prefix}_USERNAME")
-    password = os.getenv(f"{db_prefix}_PASSWORD")
-    host = os.getenv(f"{db_prefix}_HOST")
-    port = os.getenv(f"{db_prefix}_PORT")
+    engine = os.environ[f"{db_prefix}_ENGINE"]
+    username = os.environ[f"{db_prefix}_USERNAME"]
+    password = os.environ[f"{db_prefix}_PASSWORD"]
+    host = os.environ[f"{db_prefix}_HOST"]
+    port = os.environ[f"{db_prefix}_PORT"]
     
     auth_suffix = "?authSource=admin&uuidRepresentation=standard"
     mongo_uri = f"{engine}://{username}:{password}@{host}:{port}/{database}{auth_suffix}"
@@ -85,8 +85,9 @@ def load_boss_config() -> str:
     """Load boss service callback URL from environment variables.
     @return Full callback URL for the boss service.
     @throws KeyError If PYTHON_HOST environment variable is missing."""
-    BOSS_HOST = os.getenv("PYTHON_HOST")
-    BOSS_PORT = os.getenv("PYTHON_PORT")
+    load_dotenv(".env")
+    BOSS_HOST = os.environ["PYTHON_HOST"]
+    BOSS_PORT = os.environ["PYTHON_PORT"]
     return f"http://{BOSS_HOST}:{BOSS_PORT}/callback"
 
 
@@ -97,10 +98,10 @@ def get_task_handler(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any
     @throws ImportError If the task module cannot be imported.
     @throws AttributeError If the task function is not found in the module."""
     if task_name == "bookscore":
-        from src.metrics import run_bookscore
+        from components.metrics import run_bookscore
         return run_bookscore
     elif task_name == "questeval":
-        from src.metrics import run_questeval
+        from components.metrics import run_questeval
         return run_questeval
     else:
         raise ValueError(f"Unknown task type: {task_name}")
@@ -228,8 +229,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Boss URL never changes, but MongoDB connection might
+    load_dotenv(".env")
     boss_url = load_boss_config()
-    PORT = os.getenv(f"{args.task.upper()}_PORT")
+    PORT = os.environ[f"{args.task.upper()}_PORT"]
     
     # Create and run app
     app = create_app(args.task, boss_url)

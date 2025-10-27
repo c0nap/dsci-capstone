@@ -38,7 +38,7 @@ services:
     image: dsci-cap-img-questeval-prod:latest
     command: python -m src.flasks --task questeval
     ports:
-      - "${WORKER_QUESTEVAL_PORT}:${WORKER_QUESTEVAL_PORT}"
+      - "${QUESTEVAL_PORT}:${QUESTEVAL_PORT}"
 
   bscore_worker:
     container_name: container-bscore
@@ -50,7 +50,7 @@ services:
     image: dsci-cap-img-bookscore-prod:latest
     command: python -m src.flasks --task bookscore
     ports:
-      - "${WORKER_BOOKSCORE_PORT}:${WORKER_BOOKSCORE_PORT}"
+      - "${BOOKSCORE_PORT}:${BOOKSCORE_PORT}"
 
 
 

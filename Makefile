@@ -109,9 +109,12 @@ docker-bookscore:
 # Starts container detached (no output) so we can continue using shell
 ###############################################################################
 docker-blazor-silent:
-	make docker-blazor DETACHED=1
+	make docker-blazor DETACHED=1 CMD="$(CMD)"
 docker-python-silent:
 	make docker-python DETACHED=1 CMD="$(CMD)"
+docker-workers-silent:
+	make docker-questeval DETACHED=1
+	make docker-bookscore DETACHED=1
 
 ###############################################################################
 # Recompile and launch containers so any source code changes will apply
@@ -122,7 +125,10 @@ docker-python-dev:
 	make docker-python CMD="$(CMD)"
 docker-blazor-dev:
 	make docker-build-dev-blazor || exit 1  # Stop if build fails
-	make docker-blazor
+	make docker-blazor-silent
+docker-workers-dev:
+	make docker-build-dev-workers || exit 1  # Stop if build fails
+	make docker-workers-silent
 
 ###############################################################################
 # Bypass the original pipeline and run pytests instead.
@@ -178,13 +184,8 @@ docker-all-main:
 ###############################################################################
 .PHONY: docker-all-workers docker-bscore docker-qeval
 docker-all-workers:
-	make docker-bscore
-	make docker-qeval
-docker-bscore:
 	docker compose up -d bscore_worker
-docker-qeval:
 	docker compose up -d qeval_worker
-
 
 ###############################################################################
 # Starts a relational DB, a document DB, and a graph DB in their own Docker containers
@@ -281,7 +282,7 @@ docker-build-dev-blazor:
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.json \
 		-t dsci-cap-img-blazor-dev:latest .
 
-docker-build-workers-dev:
+docker-build-dev-workers:
 	make docker-build-dev-bscore
 	make docker-build-dev-qeval
 docker-build-dev-bscore:

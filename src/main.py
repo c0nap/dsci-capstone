@@ -605,10 +605,11 @@ def load_worker_config(task_types: List[str]) -> Dict[str, str]:
     workers = {}
     
     for task in task_types:
-        host_key = f"WORKER_{task.upper()}_HOST"
-        port_key = f"WORKER_{task.upper()}_PORT"
-        HOST = os.getenv(host_key)
-        PORT = os.getenv(port_key)
+        host_key = f"{task.upper()}_HOST"
+        port_key = f"{task.upper()}_PORT"
+        load_dotenv(".env")
+        HOST = os.environ[host_key]
+        PORT = os.environ[port_key]
         if HOST and PORT:
             workers[task] = f"http://{HOST}:{PORT}/start"
     
@@ -784,9 +785,10 @@ load_dotenv(".env")
 if __name__ == "__main__":
     old_main()
     # session = Session(verbose=False)
-    # DB_NAME = os.getenv("DB_NAME")
-    # BOSS_PORT = os.getenv("PYTHON_PORT")
-    # COLLECTION = os.getenv("COLLECTION_NAME")
+    # load_dotenv(".env")
+    # DB_NAME = os.environ["DB_NAME"]
+    # BOSS_PORT = os.environ["PYTHON_PORT"]
+    # COLLECTION = os.environ["COLLECTION_NAME"]
 
     # # Load configuration
     # task_types = ["questeval", "bookscore"]
