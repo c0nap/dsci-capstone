@@ -406,17 +406,90 @@ def output_single(session):
     print("\nOutput sent to web app.")
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def full_pipeline(session, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
+    chunks = pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id)
+    triples = pipeline_2(chunks)
+    triples_string = pipeline_3(session, triples)
+    summary = pipeline_4(triples_string)
+    pipeline_5(summary, book_title, book_id)
+
+
+def old_main():
+    session = Session(verbose=False)
+    # convert_from_csv()
+    # chunk_single()
+    # process_single()
+    # graph_triple_files(session)
+    # (Metrics()).post_example_results()
+    # output_single(session)
+
+    full_pipeline(
+        epub_path="./datasets/examples/trilogy-wishes-2.epub",
+        book_chapters="""
+CHAPTER 1. THE EGG\n
+CHAPTER 2. THE TOPLESS TOWER\n
+CHAPTER 3. THE QUEEN COOK\n
+CHAPTER 4. TWO BAZAARS\n
+CHAPTER 5. THE TEMPLE\n
+CHAPTER 6. DOING GOOD\n
+CHAPTER 7. MEWS FROM PERSIA\n
+CHAPTER 8. THE CATS, THE COW, AND THE BURGLAR\n
+CHAPTER 9. THE BURGLAR’S BRIDE\n
+CHAPTER 10. THE HOLE IN THE CARPET\n
+CHAPTER 11. THE BEGINNING OF THE END\n
+CHAPTER 12. THE END OF THE END\n
+""",
+        start_str="",
+        end_str="end of the Phoenix and the Carpet.",
+        book_id=2,
+        story_id=1,
+        book_title="The Phoenix and the Carpet",
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     """Connects all components to convert an EPUB file to a book summary.
-    @details
-        Data conversions
-            - EPUB file
-            - XML (TEI)
-            - JSON triples (NLP & LLM)
-            - Neo4j graph database
-            - Output summary
-            - Blazor graph and metrics pages"""
-    from components.text_processing import LLMConnector, RelationExtractor
+    @details  Data conversions:
+        - EPUB file
+        - XML (TEI)
+    """
 
     # convert EPUB file
     print(f"\n{'='*50}")
@@ -442,6 +515,15 @@ def full_pipeline(session, epub_path, book_chapters, start_str, end_str, book_id
 
     print("\n=== STORY SUMMARY ===")
     print(f"Total chunks: {len(chunks)}")
+    return chunks
+
+
+def pipeline_2(chunks):
+    """Extracts triples from a random chunk.
+    @details
+        - JSON triples (NLP & LLM)"""
+    from components.text_processing import LLMConnector, RelationExtractor
+    import json
 
     re_rebel = "Babelscape/rebel-large"
     re_rst = "GAIR/rst-information-extraction-11b"
@@ -486,6 +568,15 @@ def full_pipeline(session, epub_path, book_chapters, start_str, end_str, book_id
         print("\nInvalid JSON:", e)
         return
 
+    return triples
+
+
+
+def pipeline_3(session, triples):
+    """Generates a LLM summary using Neo4j triples.
+    @details
+        - Neo4j graph database
+        - Blazor graph page"""
     for triple in triples:
         subj = triple["s"]
         rel = triple["r"]
@@ -511,6 +602,13 @@ def full_pipeline(session, epub_path, book_chapters, start_str, end_str, book_id
             triples_string += f"{subj} {rel} {obj}\n"
     print("\nTriples which best represent the graph:")
     print(triples_string)
+    return triples_string
+
+
+
+def pipeline_4(triples_string):
+    """Generate chunk summary"""
+    from components.text_processing import LLMConnector
 
     # Prompt LLM to generate summary
     llm = LLMConnector(
@@ -520,48 +618,29 @@ def full_pipeline(session, epub_path, book_chapters, start_str, end_str, book_id
     prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
     prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
     prompt += "Output your generated summary and nothing else."
-    response = llm.execute_query(prompt)
+    summary = llm.execute_query(prompt)
 
     print("\nGenerated summary:")
-    print(response)
+    print(summary)
 
+    return summary
+
+
+
+def pipeline_5(summary, book_title, book_id):
+    """Send metrics to Blazor
+    - Compute for basic metrics (ROUGE, BERTScore)
+    - Wait for advanced metrics (QuestEval, BooookScore)
+    - Post to Blazor metrics page"""
+    from components.metrics import Metrics
     m = Metrics()
     m.post_basic_output(book_id, book_title, summary=response)
     print("\nOutput sent to web app.")
 
 
-def old_main():
-    session = Session(verbose=False)
-    # convert_from_csv()
-    # chunk_single()
-    # process_single()
-    # graph_triple_files(session)
-    # (Metrics()).post_example_results()
-    # output_single(session)
 
-    full_pipeline(
-        session,
-        epub_path="./datasets/examples/trilogy-wishes-2.epub",
-        book_chapters="""
-CHAPTER 1. THE EGG\n
-CHAPTER 2. THE TOPLESS TOWER\n
-CHAPTER 3. THE QUEEN COOK\n
-CHAPTER 4. TWO BAZAARS\n
-CHAPTER 5. THE TEMPLE\n
-CHAPTER 6. DOING GOOD\n
-CHAPTER 7. MEWS FROM PERSIA\n
-CHAPTER 8. THE CATS, THE COW, AND THE BURGLAR\n
-CHAPTER 9. THE BURGLAR’S BRIDE\n
-CHAPTER 10. THE HOLE IN THE CARPET\n
-CHAPTER 11. THE BEGINNING OF THE END\n
-CHAPTER 12. THE END OF THE END\n
-""",
-        start_str="",
-        end_str="end of the Phoenix and the Carpet.",
-        book_id=2,
-        story_id=1,
-        book_title="The Phoenix and the Carpet",
-    )
+
+
 
 
 
