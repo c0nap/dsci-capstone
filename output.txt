@@ -1,7 +1,41 @@
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python-dev
+[+] Building 0.7s (20/20) FINISHED                                                                       docker:default
+ => [internal] load build definition from Dockerfile.python                                                        0.0s
+ => => transferring dockerfile: 1.29kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.2s
+ => [internal] load .dockerignore                                                                                  0.1s
+ => => transferring context: 79B                                                                                   0.0s
+ => [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:e97cf9a2e84d604941d9902f00616db7466ff302af4b1c3c67fb7c  0.0s
+ => [internal] load build context                                                                                  0.3s
+ => => transferring context: 4.05kB                                                                                0.3s
+ => CACHED [ 2/15] WORKDIR /pipeline                                                                               0.0s
+ => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make pand  0.0s
+ => CACHED [ 4/15] COPY req/requirements.txt requirements.txt                                                      0.0s
+ => CACHED [ 5/15] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
+ => CACHED [ 6/15] COPY src/ src/                                                                                  0.0s
+ => CACHED [ 7/15] COPY tests/ tests/                                                                              0.0s
+ => CACHED [ 8/15] COPY db/ db/                                                                                    0.0s
+ => CACHED [ 9/15] COPY components/ components/                                                                    0.0s
+ => CACHED [10/15] COPY datasets/ datasets/                                                                        0.0s
+ => CACHED [11/15] COPY .env .env                                                                                  0.0s
+ => CACHED [12/15] COPY Makefile .                                                                                 0.0s
+ => CACHED [13/15] RUN make env-docker                                                                             0.0s
+ => CACHED [14/15] RUN mv .env.docker .env                                                                         0.0s
+ => CACHED [15/15] COPY pyproject.toml .                                                                           0.0s
+ => exporting to image                                                                                             0.0s
+ => => exporting layers                                                                                            0.0s
+ => => writing image sha256:07927b48b17e3403c872a5a96e1e53dcb5754135149ad83083f86c0c791e0ad0                       0.0s
+ => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                                  0.0s
 container-python
-63a9ae848cdd7b66ed2299378423b61dfc0bf67639525d631b10fdf5dc598e4f
+9d27dc95c3938bce7f4ec3f048db67ceed16c7fb87c531e10275aff1278302c6
 Network 'capstone_default' already exists; continue...
+ * Serving Flask app 'main'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5054
+ * Running on http://172.17.0.4:5054
+Press CTRL+C to quit
 
 ==================================================
 Processing: ./datasets/examples/trilogy-wishes-2.epub
@@ -10,236 +44,132 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 Total chunks: 254
 
 Chunk details:
-  index: Chunk(len=1441, book=2, chapter=14, story=1, lines=[4744,4772], story%=74.504, chapter%=60.033)
+  index: Chunk(len=1079, book=2, chapter=9, story=1, lines=[1951,1969], story%=30.095, chapter%=14.065)
 
-It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—
-‘Well, stow it, will you?’
-And the boots went heavily away, along the passage and up some sounding stone stairs.
-‘Now then,’ whispered Anthea.
-‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.
-‘On the carpet,’ said Jane, truly.
-‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’
-‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’
-‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’
-‘Well, then,’ Cyril went on, ignoring this appeal to his brother, ‘just try to believe what we tell you and act accordingly. It can’t do you any HARM, you know,’ he went on in hoarse whispered earnestness. ‘You can’t be very much worse off than you are now, you know. But if you’ll just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?’
-‘I’d like to go to Boolong,’ was the instant reply of the burglar. ‘I’ve always wanted to go on that there trip, but I’ve never ‘ad the ready at the right time of the year.’
-‘Boolong is a town like London,’ said Cyril, well meaning, but inaccurate, ‘how could you get a living there?’
-The burglar scratched his head in deep doubt.
+So that when Wednesday afternoon brought an unexpected holiday, and every one decided to go somewhere on the carpet, the journey had to be undertaken without the Phoenix. They were debarred from any carpet excursions in the evening by a sudden promise to mother, exacted in the agitation of parting, that they would not be out after six at night, except on Saturday, when they were to go to the bazaar, and were pledged to put on their best clothes, to wash themselves to the uttermost, and to clean their nails—not with scissors, which are scratchy and bad, but with flat-sharpened ends of wooden matches, which do no harm to any one’s nails.
+‘Let’s go and see the Lamb,’ said Jane.
+But every one was agreed that if they appeared suddenly in Bournemouth it would frighten mother out of her wits, if not into a fit. So they sat on the carpet, and thought and thought and thought till they almost began to squint.
+‘Look here,’ said Cyril, ‘I know. Please carpet, take us somewhere where we can see the Lamb and mother and no one can see us.’
+‘Except the Lamb,’ said Jane, quickly.
 
 NLP output:
-('2008 Summer Olympics', 'point in time', '2008')
-('boots', 'different from', 'voice')
-('voice', 'different from', 'boots')
-('Yes', 'instance of', 'Yes!')
-('No', 'instance of', 'No!')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'Cymbeline', 'notable work')
-('William Shakespeare', 'Cymbeline', 'author')
-('William Shakespeare', 'Cymbeline', 'author')
-('Now then,’ whispered Anthea', 'characters', 'Anthea')
-('Anthea', 'present in work', 'Now then,’ whispered Anthea')
-('How the blue Moses did you get in?', 'characters', 'Moses')
-('Moses', 'present in work', 'How the blue Moses did you get in?')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('On the carpet', 'cast member', 'Jane')
-('Stow that', 'participant', 'burglar')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
-('notable work', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Milton', 'Milton', 'author')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('Cyril', 'owner of', 'nursery')
-('nursery', 'owned by', 'Cyril')
-('John F. Kennedy', 'significant event', 'assassinated')
-('assassinated', 'facet of', 'John F. Kennedy')
-('Cyril', 'sibling', 'his brother')
-('his brother', 'sibling', 'Cyril')
-('HARM', 'has effect', 'fever')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
 ('John F. Kennedy School of Government', 'part of', 'Harvard University')
 ('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('Boolong', 'located in the administrative territorial entity', 'Boolong')
-('World Rugby League', 'sport', 'Rugby League')
-('Rugby League', 'organizer', 'World Rugby League')
-('Boolong', 'located in the administrative territorial entity', 'London')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
+('matches', 'subclass of', 'cutlery')
+('the Lamb', 'spouse', 'Jane')
+('Jane', 'spouse', 'the Lamb')
+('Bournemouth', 'located in the administrative territorial entity', 'Bournemouth')
+('thought and thought and thought', 'has part', 'thought')
+('thought', 'thought', 'has part')
+('thought and thought and thought', 'thought', 'part of')
+('Cyril', 'present in work', 'I know')
+('I know', 'characters', 'Cyril')
+('Lamb', 'mother', 'mother')
+('Except the Lamb', 'spouse', 'Jane')
+('Jane', 'spouse', 'Except the Lamb')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('2008 Summer Olympics', 'point in time', '2008')
-('boots', 'different from', 'voice')
-('voice', 'different from', 'boots')
-('Yes', 'instance of', 'Yes!')
-('No', 'instance of', 'No!')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'Cymbeline', 'notable work')
-('William Shakespeare', 'Cymbeline', 'author')
-('William Shakespeare', 'Cymbeline', 'author')
-('Now then,’ whispered Anthea', 'characters', 'Anthea')
-('Anthea', 'present in work', 'Now then,’ whispered Anthea')
-('How the blue Moses did you get in?', 'characters', 'Moses')
-('Moses', 'present in work', 'How the blue Moses did you get in?')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('On the carpet', 'cast member', 'Jane')
-('Stow that', 'participant', 'burglar')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
-('notable work', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Milton', 'Milton', 'author')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('Cyril', 'owner of', 'nursery')
-('nursery', 'owned by', 'Cyril')
-('John F. Kennedy', 'significant event', 'assassinated')
-('assassinated', 'facet of', 'John F. Kennedy')
-('Cyril', 'sibling', 'his brother')
-('his brother', 'sibling', 'Cyril')
-('HARM', 'has effect', 'fever')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
 ('John F. Kennedy School of Government', 'part of', 'Harvard University')
 ('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('Boolong', 'located in the administrative territorial entity', 'Boolong')
-('World Rugby League', 'sport', 'Rugby League')
-('Rugby League', 'organizer', 'World Rugby League')
-('Boolong', 'located in the administrative territorial entity', 'London')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
+('matches', 'subclass of', 'cutlery')
+('the Lamb', 'spouse', 'Jane')
+('Jane', 'spouse', 'the Lamb')
+('Bournemouth', 'located in the administrative territorial entity', 'Bournemouth')
+('thought and thought and thought', 'has part', 'thought')
+('thought', 'thought', 'has part')
+('thought and thought and thought', 'thought', 'part of')
+('Cyril', 'present in work', 'I know')
+('I know', 'characters', 'Cyril')
+('Lamb', 'mother', 'mother')
+('Except the Lamb', 'spouse', 'Jane')
+('Jane', 'spouse', 'Except the Lamb')
 
 And here is the original text:
-It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—
-‘Well, stow it, will you?’
-And the boots went heavily away, along the passage and up some sounding stone stairs.
-‘Now then,’ whispered Anthea.
-‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.
-‘On the carpet,’ said Jane, truly.
-‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’
-‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’
-‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’
-‘Well, then,’ Cyril went on, ignoring this appeal to his brother, ‘just try to believe what we tell you and act accordingly. It can’t do you any HARM, you know,’ he went on in hoarse whispered earnestness. ‘You can’t be very much worse off than you are now, you know. But if you’ll just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?’
-‘I’d like to go to Boolong,’ was the instant reply of the burglar. ‘I’ve always wanted to go on that there trip, but I’ve never ‘ad the ready at the right time of the year.’
-‘Boolong is a town like London,’ said Cyril, well meaning, but inaccurate, ‘how could you get a living there?’
-The burglar scratched his head in deep doubt.
+So that when Wednesday afternoon brought an unexpected holiday, and every one decided to go somewhere on the carpet, the journey had to be undertaken without the Phoenix. They were debarred from any carpet excursions in the evening by a sudden promise to mother, exacted in the agitation of parting, that they would not be out after six at night, except on Saturday, when they were to go to the bazaar, and were pledged to put on their best clothes, to wash themselves to the uttermost, and to clean their nails—not with scissors, which are scratchy and bad, but with flat-sharpened ends of wooden matches, which do no harm to any one’s nails.
+‘Let’s go and see the Lamb,’ said Jane.
+But every one was agreed that if they appeared suddenly in Bournemouth it would frighten mother out of her wits, if not into a fit. So they sat on the carpet, and thought and thought and thought till they almost began to squint.
+‘Look here,’ said Cyril, ‘I know. Please carpet, take us somewhere where we can see the Lamb and mother and no one can see us.’
+‘Except the Lamb,’ said Jane, quickly.
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s": "2008 Summer Olympics", "r": "point in time", "o": "2008"},
-  {"s": "boots", "r": "different from", "o": "voice"},
-  {"s": "voice", "r": "different from", "o": "boots"},
-  {"s": "Yes", "r": "instance of", "o": "Yes!"},
-  {"s": "No", "r": "instance of", "o": "No!"},
-  {"s": "William Shakespeare", "r": "notable work", "o": "Cymbeline"},
-  {"s": "Cymbeline", "r": "author", "o": "William Shakespeare"},
-  {"s": "Now then,” whispered Anthea", "r": "characters", "o": "Anthea"},
-  {"s": "Anthea", "r": "present in work", "o": "Now then,” whispered Anthea"},
-  {"s": "How the blue Moses did you get in?", "r": "characters", "o": "Moses"},
-  {"s": "Moses", "r": "present in work", "o": "How the blue Moses did you get in?"},
-  {"s": "John Milton", "r": "notable work", "o": "Paradise Lost"},
-  {"s": "Paradise Lost", "r": "author", "o": "John Milton"},
-  {"s": "On the carpet", "r": "cast member", "o": "Jane"},
-  {"s": "Cyril", "r": "owner of", "o": "nursery"},
-  {"s": "nursery", "r": "owned by", "o": "Cyril"},
-  {"s": "John F. Kennedy", "r": "significant event", "o": "assassinated"},
-  {"s": "John F. Kennedy School of Government", "r": "part of", "o": "Harvard University"},
-  {"s": "Harvard University", "r": "subsidiary", "o": "John F. Kennedy School of Government"},
-  {"s": "George Orwell", "r": "notable work", "o": "Nineteen Eighty-Four"},
-  {"s": "Nineteen Eighty-Four", "r": "author", "o": "Orwell"},
-  {"s": "World Rugby League", "r": "sport", "o": "Rugby League"},
-  {"s": "Rugby League", "r": "organizer", "o": "World Rugby League"},
-  {"s": "Boolong", "r": "located in the administrative territorial entity", "o": "London"},
-  {"s": "nursery", "r": "contains", "o": "cow and cats"},
-  {"s": "cow", "r": "found in", "o": "nursery"},
-  {"s": "cats", "r": "found in", "o": "nursery"},
-  {"s": "burglar", "r": "desires", "o": "Boolong"},
-  {"s": "burglar", "r": "asks", "o": "How the blue Moses did you get in?"},
-  {"s": "Jane", "r": "present in", "o": "On the carpet"},
-  {"s": "the voice", "r": "dialogue", "o": "Well, stow it, will you?"},
-  {"s": "burglar", "r": "feels", "o": "doubt"}
+  {"s": "Wednesday afternoon", "r": "brought", "o": "an unexpected holiday"},
+  {"s": "they", "r": "decided", "o": "to go somewhere on the carpet"},
+  {"s": "the journey", "r": "had to be undertaken", "o": "without the Phoenix"},
+  {"s": "they", "r": "were_debarred_from", "o": "carpet excursions in the evening"},
+  {"s": "promise", "r": "made_to", "o": "mother"},
+  {"s": "promise", "r": "restricts", "o": "they would not be out after six at night"},
+  {"s": "Saturday", "r": "exception_for", "o": "going to the bazaar"},
+  {"s": "they", "r": "pledged_to", "o": "put on their best clothes"},
+  {"s": "they", "r": "pledged_to", "o": "wash themselves to the uttermost"},
+  {"s": "they", "r": "pledged_to", "o": "clean their nails with flat-sharpened ends of wooden matches"},
+  {"s": "Jane", "r": "said", "o": "Let's go and see the Lamb"},
+  {"s": "they", "r": "sat_on", "o": "the carpet"},
+  {"s": "they", "r": "thought_about", "o": "how to see the Lamb and mother without being seen"},
+  {"s": "Cyril", "r": "said", "o": "Look here"},
+  {"s": "Cyril", "r": "said", "o": "I know"},
+  {"s": "Cyril", "r": "said", "o": "Please carpet, take us somewhere where we can see the Lamb and mother and no one can see us."},
+  {"s": "Jane", "r": "said", "o": "Except the Lamb"}
 ]
 
 ==================================================
 
 
 Valid JSON
-2008 Summer Olympics point in time 2008
-boots different from voice
-voice different from boots
-Yes instance of Yes!
-No instance of No!
-William Shakespeare notable work Cymbeline
-Cymbeline author William Shakespeare
-Now then,” whispered Anthea characters Anthea
-Anthea present in work Now then,” whispered Anthea
-How the blue Moses did you get in? characters Moses
-Moses present in work How the blue Moses did you get in?
-John Milton notable work Paradise Lost
-Paradise Lost author John Milton
-On the carpet cast member Jane
-Cyril owner of nursery
-nursery owned by Cyril
-John F. Kennedy significant event assassinated
-John F. Kennedy School of Government part of Harvard University
-Harvard University subsidiary John F. Kennedy School of Government
-George Orwell notable work Nineteen Eighty-Four
-Nineteen Eighty-Four author Orwell
-World Rugby League sport Rugby League
-Rugby League organizer World Rugby League
-Boolong located in the administrative territorial entity London
-nursery contains cow and cats
-cow found in nursery
-cats found in nursery
-burglar desires Boolong
-burglar asks How the blue Moses did you get in?
-Jane present in On the carpet
-the voice dialogue Well, stow it, will you?
-burglar feels doubt
+Wednesday afternoon brought an unexpected holiday
+they decided to go somewhere on the carpet
+the journey had to be undertaken without the Phoenix
+they were_debarred_from carpet excursions in the evening
+promise made_to mother
+promise restricts they would not be out after six at night
+Saturday exception_for going to the bazaar
+they pledged_to put on their best clothes
+they pledged_to wash themselves to the uttermost
+they pledged_to clean their nails with flat-sharpened ends of wooden matches
+Jane said Let's go and see the Lamb
+they sat_on the carpet
+they thought_about how to see the Lamb and mother without being seen
+Cyril said Look here
+Cyril said I know
+Cyril said Please carpet, take us somewhere where we can see the Lamb and mother and no one can see us.
+Jane said Except the Lamb
 
 Most relevant nodes:
-                            node_name  edge_count
-0                             nursery           5
-1                             burglar           3
-2  How_the_blue_Moses_did_you_get_in_           3
+  node_name  edge_count
+0      they           7
+1     Cyril           3
+2   promise           2
 
 Triples which best represent the graph:
-nursery contains cow_and_cats
-nursery owned_by Cyril
-burglar feels doubt
-burglar asks How_the_blue_Moses_did_you_get_in_
-burglar desires Boolong
-How_the_blue_Moses_did_you_get_in_ characters Moses
+they thought_about how_to_see_the_Lamb_and_mother_without_being_seen
+they sat_on the_carpet
+they pledged_to clean_their_nails_with_flat_sharpened_ends_of_wooden_matches
+they pledged_to wash_themselves_to_the_uttermost
+they pledged_to put_on_their_best_clothes
+they were_debarred_from carpet_excursions_in_the_evening
+they decided to_go_somewhere_on_the_carpet
+Cyril said Please_carpet__take_us_somewhere_where_we_can_see_the_Lamb_and_mother_and_no_one_can_see_us_
+Cyril said I_know
+Cyril said Look_here
+promise restricts they_would_not_be_out_after_six_at_night
+promise made_to mother
 
 
 Generated summary:
-Cyril owns a nursery that contains a cow and cats. A burglar, feeling doubt, asks how the blue Moses got in and expresses a desire for Boolong. Moses is a character referenced in the inquiry.
+Several individuals plan to travel secretly on the carpet to glimpse the Lamb and their mother unseen by others. They prepare by sitting on the carpet, pledging to clean their nails with the flat ends of wooden matches, washing themselves thoroughly, and putting on their best clothes. Although barred from evening carpet excursions, they decide to go somewhere on the carpet. Cyril asks the carpet to take them to a place where they can see the Lamb and mother without being seen, claiming he knows. A promise to their mother restricts them from being out after six at night.
 Sending payload to Blazor at http://blazor_service:5055/api/metrics
-POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Cyril owns a nursery that contains a cow and cats. A burglar, feeling doubt, asks how the blue Moses got in and expresses a desire for Boolong. Moses is a character referenced in the inquiry.', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
+Request failed: HTTPConnectionPool(host='blazor_service', port=5055): Max retries exceeded with url: /api/metrics (Caused by NameResolutionError("<urllib3.connection.HTTPConnection object at 0x7d4755b97f50>: Failed to resolve 'blazor_service' ([Errno -3] Temporary failure in name resolution)"))
 
 Output sent to web app.
+127.0.0.1 - - [27/Oct/2025 21:00:54] "POST /process_story HTTP/1.1" 404 -
+127.0.0.1 - - [27/Oct/2025 21:00:54] "POST /process_story HTTP/1.1" 404 -
+Triggered bookscore: {'error': 'No chunks found for story'}
+Initial processing complete. Server listening for additional requests from Blazor...
+Press Ctrl+C to stop.
 # exit

@@ -430,11 +430,11 @@ def output_single(session):
 
 
 def full_pipeline(session, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
-    chunks = pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id)
-    triples = pipeline_2(chunks)
+    chunks = pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title)
+    triples, _ = pipeline_2(chunks)
     triples_string = pipeline_3(session, triples)
     summary = pipeline_4(triples_string)
-    pipeline_5(summary, book_title, book_id)
+    pipeline_5a(summary, book_title, book_id)
 
 
 def old_main():
@@ -484,7 +484,7 @@ CHAPTER 12. THE END OF THE END\n
 
 
 
-def pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id):
+def pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     """Connects all components to convert an EPUB file to a book summary.
     @details  Data conversions:
         - EPUB file
@@ -568,7 +568,7 @@ def pipeline_2(chunks):
         print("\nInvalid JSON:", e)
         return
 
-    return triples
+    return triples, unique_number
 
 
 
@@ -627,17 +627,23 @@ def pipeline_4(triples_string):
 
 
 
-def pipeline_5(summary, book_title, book_id):
+def pipeline_5a(summary, book_title, book_id):
+    """Send book info to Blazor
+    - Post to Blazor metrics page"""
+    from components.metrics import Metrics
+    m = Metrics()
+    m.post_basic_output(book_id, book_title, summary)
+    print("\nOutput sent to web app.")
+
+def pipeline_5b(summary, book_title, book_id, chunk, gold_summary="", bookscore=None, questeval=None):
     """Send metrics to Blazor
-    - Compute for basic metrics (ROUGE, BERTScore)
+    - Compute basic metrics (ROUGE, BERTScore)
     - Wait for advanced metrics (QuestEval, BooookScore)
     - Post to Blazor metrics page"""
     from components.metrics import Metrics
     m = Metrics()
-    m.post_basic_output(book_id, book_title, summary=response)
+    m.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
     print("\nOutput sent to web app.")
-
-
 
 
 
@@ -818,6 +824,25 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         if story_id and chunk_id:
             task_tracker[story_id]["completed"].add(chunk_id)
             
+            # FINALIZE PIPELINE
+            # if all workers finished via task_tracker:
+            if True:
+                # Get specific chunk by story_id AND chunk_id
+                collection = getattr(mongo_db, collection_name)
+                chunk = collection.find_one({"_id": chunk_id})
+                if not chunk:
+                    return jsonify({"error": f"Could not find chunk {chunk_id} in MongoDB."}), 404
+                
+                # Access fields directly from the MongoDB document
+                book_id = chunk["book_id"]
+                book_title = chunk["book_title"]
+                text = chunk["text"]
+                summary = chunk["summary"]
+                gold_summary = chunk.get("gold_summary", "")
+                bookscore = chunk["bookscore"]
+                questeval = chunk["questeval"]
+                pipeline_5b(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
+
             # Check completion order
             expected = task_tracker[story_id]["expected_order"]
             completed = task_tracker[story_id]["completed"]
@@ -887,17 +912,50 @@ if __name__ == "__main__":
     # Wait for boss to be ready
     time.sleep(1)
 
-    # TODO - PIPELINE HERE
 
-    # example_books = ["story_123", "story_456", "story_789"]
-    # for story_id in example_books:
-    #     # Simulate the request that would come from Blazor
-    #     with app.test_client() as client:
-    #         response = client.post('/process_story', json={
-    #             'story_id': story_id,
-    #             'task_type': 'some_task_type'
-    #         })
-    #         print(f"Processed {story_id}: {response.json}")
+
+    # TODO - PIPELINE HERE
+    story_id = 1
+    book_id = 2
+    book_title = "The Phoenix and the Carpet"
+    chunks = pipeline_1(
+        epub_path="./datasets/examples/trilogy-wishes-2.epub",
+        book_chapters="""
+CHAPTER 1. THE EGG\n
+CHAPTER 2. THE TOPLESS TOWER\n
+CHAPTER 3. THE QUEEN COOK\n
+CHAPTER 4. TWO BAZAARS\n
+CHAPTER 5. THE TEMPLE\n
+CHAPTER 6. DOING GOOD\n
+CHAPTER 7. MEWS FROM PERSIA\n
+CHAPTER 8. THE CATS, THE COW, AND THE BURGLAR\n
+CHAPTER 9. THE BURGLAR’S BRIDE\n
+CHAPTER 10. THE HOLE IN THE CARPET\n
+CHAPTER 11. THE BEGINNING OF THE END\n
+CHAPTER 12. THE END OF THE END\n
+""",
+        start_str="",
+        end_str="end of the Phoenix and the Carpet.",
+        book_id = book_id,
+        story_id = story_id,
+        book_title = book_title
+    )
+    triples, chunk_id = pipeline_2(chunks)
+    triples_string = pipeline_3(session, triples)
+    summary = pipeline_4(triples_string)
+    # pipeline_5 is moved to callback() to finalize asynchronously
+    pipeline_5a(summary, book_title, book_id)
+
+    # Post story - this will enqueue worker processing
+    for task_type in ["questeval", "bookscore"]:
+        response = requests.post(
+            f'http://localhost:{BOSS_PORT}/process_story',
+            json={'story_id': story_id, 'task_type': task_type}
+        )
+    print(f"Triggered {task_type}: {response.json()}")
+
+
+    
 
     # Hand off to Flask - keep main thread alive so daemon thread continues
     print("Initial processing complete. Server listening for additional requests from Blazor...")
