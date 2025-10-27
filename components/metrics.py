@@ -15,6 +15,7 @@ class Metrics:
         self.url = f"http://{self.HOST}:{self.PORT}/api/metrics"
 
 
+    @staticmethod
     def compute_basic_metrics(summary, gold_summary, chunk):
         """Compute ROUGE and BERTScore.
         @param summary  A text string containing a book summary
@@ -37,8 +38,8 @@ class Metrics:
 
 
     def post_basic_metrics(self, book_id, book_title, summary, gold_summary="", chunk="", **kwargs):
-        results = compute_basic_metrics(book_id, book_title, summary, gold_summary, chunk, **kwargs)
-        metrics = generate_default_metrics(
+        results = Metrics.compute_basic_metrics(book_id, book_title, summary, gold_summary, chunk, **kwargs)
+        metrics = Metrics.generate_default_metrics(
             rouge_precision = results["rouge"]["precision"][0],
             rouge_recall = results["rouge"]["recall"][0],
             rouge_f1 = results["rouge"]["f1"][0],
@@ -46,16 +47,17 @@ class Metrics:
             bert_recall = results["bertscore"]["recall"][0],
             bert_f1 = results["bertscore"]["f1"][0],
             **kwargs)
-        payload = create_summary_payload(book_id, book_title, summary, metrics)
+        payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
         self.post_payload(payload)
 
 
     def post_basic_output(self, book_id, book_title, summary):
-        metrics = generate_default_metrics()
-        payload = create_summary_payload(book_id, book_title, summary, metrics)
+        metrics = Metrics.generate_default_metrics()
+        payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
         self.post_payload(payload)
     
     
+    @staticmethod
     def generate_default_metrics(
         rouge_precision=0.0,
         rouge_recall=0.0,
@@ -117,10 +119,11 @@ class Metrics:
         }
     
     
+    @staticmethod
     def create_summary_payload(book_id, book_title, summary, metrics=None):
         """Create the full summary payload for the API"""
         if metrics is None:
-            metrics = generate_default_metrics()
+            metrics = Metrics.generate_default_metrics()
     
         return {
             "BookID": str(book_id),
@@ -133,6 +136,7 @@ class Metrics:
     
     def post_payload(self, payload):
         """Verify and post any given payload using the requests API."""
+        import requests
         try:
             print(f"Sending payload to Blazor at {self.url}")
             response = requests.post(self.url, json=payload)
@@ -151,9 +155,10 @@ class Metrics:
             return False
     
     
+    @staticmethod
     def generate_example_metrics():
         """Send placeholder values to the web app."""
-        return generate_default_metrics(
+        return Metrics.generate_default_metrics(
             "book-42",
             "Example Book",
             "This is an AI-generated summary of the entire book. It captures the key plot points and themes.",

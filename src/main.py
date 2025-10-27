@@ -4,7 +4,6 @@ import json
 import os
 import pandas as pd
 import random
-from src.setup import Session
 import traceback
 
 def convert_single():
@@ -313,7 +312,7 @@ triple_files = [
 ]
 
 
-def graph_triple_files():
+def graph_triple_files(session):
     """Loads JSON into Neo4j to test the Blazor graph page."""
     for json_path in triple_files:
         print(f"\n{'='*50}")
@@ -338,7 +337,7 @@ def graph_triple_files():
 response_files = ["./datasets/triples/chunk-160_story-1.txt"]
 
 
-def output_single():
+def output_single(session):
     """Generates a summary from triples stored in JSON, and posts data to Blazor."""
     from components.text_processing import LLMConnector
 
@@ -407,7 +406,7 @@ def output_single():
     print("\nOutput sent to web app.")
 
 
-def full_pipeline(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
+def full_pipeline(session, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     """Connects all components to convert an EPUB file to a book summary.
     @details
         Data conversions
@@ -532,15 +531,16 @@ def full_pipeline(epub_path, book_chapters, start_str, end_str, book_id, story_i
 
 
 def old_main():
-    # session = Session(verbose=False)
+    session = Session(verbose=False)
     # convert_from_csv()
     # chunk_single()
     # process_single()
-    # graph_triple_files()
+    # graph_triple_files(session)
     # (Metrics()).post_example_results()
-    # output_single()
+    # output_single(session)
 
     full_pipeline(
+        session,
         epub_path="./datasets/examples/trilogy-wishes-2.epub",
         book_chapters="""
 CHAPTER 1. THE EGG\n
