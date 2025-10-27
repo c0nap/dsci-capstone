@@ -11,6 +11,8 @@ set -e
 
 NEO4J_USERNAME=$1
 NEO4J_PASSWORD=$2
+NEO4J_PORT=$3
+NEO4J_HTTP_PORT=$4
 MAX_RETRIES=4
 RETRY_DELAY=5
 
@@ -22,7 +24,9 @@ neo4j-admin dbms set-initial-password "$NEO4J_PASSWORD"
 # Start the main Neo4j server process in the background so cypher-shell has a server to connect to.
 echo "$ECHO_PREFIX Starting Neo4j server in background..."
 # Docker Compose settings will not propagate since Neo4j is no longer the primary process
-echo "server.bolt.listen_address=0.0.0.0:7687" >> /var/lib/neo4j/conf/neo4j.conf
+echo "server.bolt.listen_address=0.0.0.0:$NEO4J_PORT" >> /var/lib/neo4j/conf/neo4j.conf
+echo "server.http.listen_address=0.0.0.0:$NEO4J_HTTP_PORT" >> /var/lib/neo4j/conf/neo4j.conf
+
 neo4j console &
 NEO4J_PID=$!
 

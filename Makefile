@@ -69,40 +69,42 @@ db-stop-local:
 
 
 ###############################################################################
-# Re-builds the Python container and runs it in the current shell.
-# Accepts optional entry-point override.   make python DETACHED=0 CMD="pytest ."
+# Re-builds the container and runs it in the current shell.
+# Accepts optional entry-point override.   make docker-python DETACHED=0 CMD="pytest ."
 ###############################################################################
+.PHONY: docker-start
+docker-start:
+	# remove the container if it exists; silence errors if it doesn’t
+	docker rm -f $(NAME) 2>/dev/null || true
+	# create container with optional args and entrypoint
+	docker create --name $(NAME) -p $(PORT) $(IMG) $(CMD)
+	# add a secondary network to container (docker compose compatible) and apply service_name as alias
+	make docker-network   # if does not exist
+	docker network connect --alias $(HOST) $(NETWORK) $(NAME)
+	# use interactive shell by default; attaches to container logs
+	docker start $(if $(DETACHED),, -a -i) $(NAME)
+
 .PHONY: docker-python docker-blazor
 docker-python:
-	# remove the container if it exists; silence errors if it doesn’t
-	docker rm -f container-python 2>/dev/null || true
-	# create container with optional args and entrypoint
-	docker create --name container-python dsci-cap-img-python-dev:latest $(CMD)
-	# add a secondary network to container (docker compose compatible) and apply service_name as alias
-	make docker-network   # if does not exist
-	docker network connect --alias python_service capstone_default container-python
-	# use interactive shell by default; attaches to container logs
-	docker start $(if $(DETACHED),, -a -i) container-python
-
-# Starts the Blazor Server in a new Docker container
+	make docker-start NAME="container-python" IMG="dsci-cap-img-python-dev:latest" \
+		HOST="python_service" NETWORK="capstone_default" PORT="5054:5054" \
+		DETACHED=$(DETACHED) CMD="$(CMD)"
 docker-blazor:
-	# remove the container if it exists; silence errors if it doesn’t
-	docker rm -f container-blazor 2>/dev/null || true
-	# create container with optional args. no entrypoint allowed because not viable for blazor
-	docker create --name container-blazor -p 5055:5055 dsci-cap-img-blazor-dev:latest
-	# add a secondary network to container (docker compose compatible) and apply service_name as alias
-	make docker-network   # if does not exist
-	docker network connect --alias blazor_service capstone_default container-blazor
-	# use interactive shell by default; attaches to container logs
-	docker start $(if $(DETACHED),, -a -i) container-blazor
+	make docker-start NAME="container-blazor" IMG="dsci-cap-img-blazor-dev:latest" \
+		HOST="blazor_service" NETWORK="capstone_default" PORT="5055:5055" \
+		DETACHED=$(DETACHED) CMD="$(CMD)"
 
 
+
+
+
+###############################################################################
 # Starts container detached (no output) so we can continue using shell
+###############################################################################
 docker-blazor-silent:
 	make docker-blazor DETACHED=1
 docker-python-silent:
 	make docker-python DETACHED=1 CMD="$(CMD)"
-
 
 ###############################################################################
 # Recompile and launch containers so any source code changes will apply
@@ -152,15 +154,29 @@ docker-test-fancy:
 docker-all-tests:
 	make docker-all-dbs
 	make docker-blazor-silent
+	sleep 15   # extra time needed for neo4j
 	make docker-test
 
 # Deploy everything to docker and run the full pipeline
 docker-all-main:
 	make docker-all-dbs
 	make docker-blazor-silent
+	sleep 5   # extra time needed for neo4j, but pipeline setup takes time too
 	make docker-python
 
 
+
+###############################################################################
+# Start worker services in their own containers.
+###############################################################################
+.PHONY: docker-all-tasks docker-bscore docker-qeval
+docker-all-tasks:
+	make docker-bscore
+	make docker-qeval
+docker-bscore:
+	docker compose up -d bscore_worker
+docker-qeval:
+	docker compose up -d qeval_worker
 
 
 ###############################################################################
@@ -179,11 +195,6 @@ docker-all-dbs:
 		echo "ERROR: Could not start relational DB_ENGINE; expected MYSQL or POSTGRES, but received $$MAIN_DB."
 		exit 1
 	fi
-
-.PHONY: docker-all-tasks
-docker-all-tasks:
-	docker compose up -d bscore_worker
-	docker compose up -d qeval_worker
 
 ###############################################################################
 # Create containers for individual databases
