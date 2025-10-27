@@ -1,13 +1,11 @@
 from components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
-from components.metrics import post_basic_output, post_example_results
+from components.metrics import Metrics
 import json
 import os
 import pandas as pd
 import random
 from src.setup import Session
 import traceback
-
-
 
 def convert_single():
     """Converts one EPUB file to TEI format."""
@@ -404,7 +402,8 @@ def output_single():
     print("\nGenerated summary:")
     print(response)
 
-    post_basic_output(book_id="1", book_title="Five Children and It", summary=response)
+    m = Metrics()
+    m.post_basic_output(book_id="1", book_title="Five Children and It", summary=response)
     print("\nOutput sent to web app.")
 
 
@@ -527,18 +526,18 @@ def full_pipeline(epub_path, book_chapters, start_str, end_str, book_id, story_i
     print("\nGenerated summary:")
     print(response)
 
-    post_basic_output(book_id, book_title, summary=response)
+    m = Metrics()
+    m.post_basic_output(book_id, book_title, summary=response)
     print("\nOutput sent to web app.")
 
 
 def old_main():
-#if __name__ == "__main__":
     # session = Session(verbose=False)
     # convert_from_csv()
     # chunk_single()
     # process_single()
     # graph_triple_files()
-    # post_example_results()
+    # (Metrics()).post_example_results()
     # output_single()
 
     full_pipeline(
@@ -592,7 +591,7 @@ import os
 from dotenv import load_dotenv
 from typing import Dict, List, Any, Optional
 from collections import defaultdict
-from src.session import Session
+from src.setup import Session
 
 
 
@@ -783,17 +782,18 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
 
 load_dotenv(".env")
 if __name__ == "__main__":
-    session = Session(verbose=False)
-    DB_NAME = os.getenv("DB_NAME")
-    BOSS_PORT = os.getenv("PYTHON_PORT")
-    COLLECTION = os.getenv("COLLECTION_NAME")
+    old_main()
+    # session = Session(verbose=False)
+    # DB_NAME = os.getenv("DB_NAME")
+    # BOSS_PORT = os.getenv("PYTHON_PORT")
+    # COLLECTION = os.getenv("COLLECTION_NAME")
 
-    # Load configuration
-    task_types = ["questeval", "bookscore"]
-    worker_urls = load_worker_config(task_types)
-    if not worker_urls:
-        print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
+    # # Load configuration
+    # task_types = ["questeval", "bookscore"]
+    # worker_urls = load_worker_config(task_types)
+    # if not worker_urls:
+    #     print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
     
-    # Create and run app
-    app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
-    app.run(host="0.0.0.0", port=BOSS_PORT)
+    # # Create and run app
+    # app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
+    # app.run(host="0.0.0.0", port=BOSS_PORT)

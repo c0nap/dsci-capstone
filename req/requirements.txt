@@ -8,6 +8,7 @@ pypandoc
 lxml
 rapidfuzz
 evaluate
+flask
 
 # Database drivers
 sqlalchemy

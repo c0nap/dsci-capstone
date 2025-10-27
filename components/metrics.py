@@ -1,7 +1,5 @@
-
-
-# Keep these imports inside a class so Worker imports dont pull them along
-
+from typing import Dict, Any
+# Keep most imports inside a class method, dont pull them along during Worker imports
 
 class Metrics:
     """Utility class for computing and posting evaluation metrics."""
@@ -16,31 +14,21 @@ class Metrics:
         self.PORT = os.getenv("BLAZOR_PORT")
         self.url = f"http://{self.HOST}:{self.PORT}/api/metrics"
 
-    # formerly post_basic_output
-    def compute_basic_metrics(self, book_id, book_title, summary, gold_summary, chunk, **kwargs):
+
+    def compute_basic_metrics(summary, gold_summary, chunk):
         """Compute ROUGE and BERTScore.
-        @param book_id  Integer book identifier
-        @param book_title  Book title
         @param summary  A text string containing a book summary
         @param gold_summary  A summary to compare against
-        @param chunk  The original text of the chunk.
-        @param **kwargs  Any other metric parameters to override defaults (e.g., rouge_f1=0.75)
-        """
+        @param chunk  The original text of the chunk."""
         import evaluate
-        from questeval.questeval_metric import QuestEval
-
         rouge = evaluate.load("rouge")
         bertscore = evaluate.load("bertscore")
-        questeval = QuestEval(no_cuda=True)
 
         rouge_result = rouge.compute(predictions=[summary],
                                      references=[gold_summary])["rougeL"]
-        print("Computed ROUGE!")
         bertscore_result = bertscore.compute(predictions=[summary],
                                              references=[gold_summary],
                                              model_type="roberta-large")
-        print("Computed BERTScore!")
-
         return {
             "rouge": rouge_result,
             "bertscore": bertscore_result
@@ -48,34 +36,24 @@ class Metrics:
 
 
 
-    def post_basic_output(book_id, book_title, summary, gold_summary="", chunk="", **kwargs):
-        
-    
-        rouge_result = rouge.compute(predictions=[summary],
-                                 references=[gold_summary])["rougeL"]
-        
-        bertscore_result = bertscore.compute(predictions=[summary],
-                                         references=[gold_summary],
-                                         model_type="roberta-large")
-        
-        qeval_score = questeval.corpus_questeval(
-            hypothesis=summary, 
-            sources=[chunk],
-            list_reference=[gold_summary]
-        )['corpus_score']
-        print("Computed QuestEval!")
+    def post_basic_metrics(self, book_id, book_title, summary, gold_summary="", chunk="", **kwargs):
+        results = compute_basic_metrics(book_id, book_title, summary, gold_summary, chunk, **kwargs)
         metrics = generate_default_metrics(
-            rouge_precision = rouge_result["precision"][0],
-            rouge_recall = rouge_result["recall"][0],
-            rouge_f1 = rouge_result["f1"][0],
-            bert_precision = bertscore_result["precision"][0],
-            bert_recall = bertscore_result["recall"][0],
-            bert_f1 = bertscore_result["f1"][0],
-            questeval_score = qeval_score,
+            rouge_precision = results["rouge"]["precision"][0],
+            rouge_recall = results["rouge"]["recall"][0],
+            rouge_f1 = results["rouge"]["f1"][0],
+            bert_precision = results["bertscore"]["precision"][0],
+            bert_recall = results["bertscore"]["recall"][0],
+            bert_f1 = results["bertscore"]["f1"][0],
             **kwargs)
         payload = create_summary_payload(book_id, book_title, summary, metrics)
-        return post_payload(payload)
+        self.post_payload(payload)
 
+
+    def post_basic_output(self, book_id, book_title, summary):
+        metrics = generate_default_metrics()
+        payload = create_summary_payload(book_id, book_title, summary, metrics)
+        self.post_payload(payload)
     
     
     def generate_default_metrics(
@@ -153,7 +131,7 @@ class Metrics:
         }
     
     
-    def post_payload(payload):
+    def post_payload(self, payload):
         """Verify and post any given payload using the requests API."""
         try:
             print(f"Sending payload to Blazor at {self.url}")
@@ -173,9 +151,9 @@ class Metrics:
             return False
     
     
-    def post_example_results():
+    def generate_example_metrics():
         """Send placeholder values to the web app."""
-        return post_basic_output(
+        return generate_default_metrics(
             "book-42",
             "Example Book",
             "This is an AI-generated summary of the entire book. It captures the key plot points and themes.",
