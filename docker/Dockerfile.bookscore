@@ -16,8 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && pip install --upgrade pip setuptools wheel \
  && rm -rf /var/lib/apt/lists/*
 
-COPY req/ .
-RUN pip install --no-cache-dir -r flask-worker.txt
+COPY req/bookscore.txt .
 RUN pip install --no-cache-dir -r bookscore.txt
 
 
@@ -28,7 +27,6 @@ COPY Makefile pyproject.toml ./
 
 # Declare build args - whether to include .env or .env.dummy
 ARG ENV_FILE
-ARG TASK
 
 # Create .env file
 COPY ${ENV_FILE} .env
@@ -36,5 +34,5 @@ COPY ${ENV_FILE} .env
 RUN make env-docker
 RUN mv .env.docker .env
 
-# Supply task as arg
-CMD ["python", "-m", "src.flask", "--task", "${TASK}"]
+# Supply task as command line flag to set worker behavior
+CMD ["python", "-m", "src.flask", "--task", "bookscore"]

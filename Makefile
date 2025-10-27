@@ -93,7 +93,14 @@ docker-blazor:
 	make docker-start NAME="container-blazor" IMG="dsci-cap-img-blazor-dev:latest" \
 		HOST="blazor_service" NETWORK="capstone_default" PORT="5055:5055" \
 		DETACHED=$(DETACHED) CMD="$(CMD)"
-
+docker-questeval:
+	make docker-start NAME="container-qeval" IMG="dsci-cap-img-qeval-dev:latest" \
+		HOST="qeval_worker" NETWORK="capstone_default" PORT="5001:5001" \
+		DETACHED=$(DETACHED) CMD="$(CMD)"
+docker-bookscore:
+	make docker-start NAME="container-bscore" IMG="dsci-cap-img-bscore-dev:latest" \
+		HOST="bscore_worker" NETWORK="capstone_default" PORT="5002:5002" \
+		DETACHED=$(DETACHED) CMD="$(CMD)"
 
 
 
@@ -275,8 +282,8 @@ docker-build-dev-blazor:
 		-t dsci-cap-img-blazor-dev:latest .
 
 docker-build-workers-dev:
-	make docker-build-dev-python
-	make docker-build-dev-blazor
+	make docker-build-dev-bscore
+	make docker-build-dev-qeval
 docker-build-dev-bscore:
 	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.bookscore \
 		--build-arg ENV_FILE=".env" \

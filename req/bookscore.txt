@@ -1,1 +1,8 @@
+# Worker-specific
 booookscore
+
+# Base worker dependencies
+flask
+pymongo
+requests
+python-dotenv
