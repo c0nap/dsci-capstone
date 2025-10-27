@@ -254,11 +254,11 @@ docker-build-dev:
 	make docker-build-dev-python
 	make docker-build-dev-blazor
 docker-build-dev-python:
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.python \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.python \
 		--build-arg ENV_FILE=".env" \
 		-t dsci-cap-img-python-dev:latest .
 docker-build-dev-blazor:
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.blazor \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.blazor \
 		--build-arg ENV_FILE=".env" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.json \
 		-t dsci-cap-img-blazor-dev:latest .
@@ -275,13 +275,13 @@ docker-build-prod:
 	make docker-build-prod-blazor
 docker-build-prod-python:
 	make env-dummy  # Generates .env.dummy from .env.example
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.python \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.python \
 		--build-arg ENV_FILE=".env.dummy" \
 		-t dsci-cap-img-python-prod:latest .
 docker-build-prod-blazor:
 	make env-dummy  # Generates .env.dummy from .env.example
 	make appsettings-dummy  # Generates appsettings.Dummy.json from .env.dummy and appsettings.Example.json
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.blazor \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.blazor \
 		--build-arg ENV_FILE=".env.dummy" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.Dummy.json \
 		-t dsci-cap-img-blazor-prod:latest .
