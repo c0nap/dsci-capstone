@@ -592,6 +592,7 @@ from dotenv import load_dotenv
 from typing import Dict, List, Any, Optional
 from collections import defaultdict
 from src.setup import Session
+import threading, time
 
 
 
@@ -783,19 +784,47 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
 
 load_dotenv(".env")
 if __name__ == "__main__":
-    old_main()
-    # session = Session(verbose=False)
-    # load_dotenv(".env")
-    # DB_NAME = os.environ["DB_NAME"]
-    # BOSS_PORT = os.environ["PYTHON_PORT"]
-    # COLLECTION = os.environ["COLLECTION_NAME"]
+    # old_main()
 
-    # # Load configuration
-    # task_types = ["questeval", "bookscore"]
-    # worker_urls = load_worker_config(task_types)
-    # if not worker_urls:
-    #     print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
+    session = Session(verbose=False)
+    load_dotenv(".env")
+    DB_NAME = os.environ["DB_NAME"]
+    BOSS_PORT = os.environ["PYTHON_PORT"]
+    COLLECTION = os.environ["COLLECTION_NAME"]
+
+    # Load configuration
+    task_types = ["questeval", "bookscore"]
+    worker_urls = load_worker_config(task_types)
+    if not worker_urls:
+        print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
     
-    # # Create and run app
-    # app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
-    # app.run(host="0.0.0.0", port=BOSS_PORT)
+    # Create and run app
+    app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
+    
+    # Start the Flask server in the background - disable hot-reaload on files changed
+    run_app = lambda: app.run(host="0.0.0.0", port=BOSS_PORT, use_reloader=False)
+    threading.Thread(target=run_app, daemon=True).start()
+
+    # Wait for boss to be ready
+    time.sleep(1)
+
+    # TODO - PIPELINE HERE
+
+    # example_books = ["story_123", "story_456", "story_789"]
+    # for story_id in example_books:
+    #     # Simulate the request that would come from Blazor
+    #     with app.test_client() as client:
+    #         response = client.post('/process_story', json={
+    #             'story_id': story_id,
+    #             'task_type': 'some_task_type'
+    #         })
+    #         print(f"Processed {story_id}: {response.json}")
+
+    # Hand off to Flask - keep main thread alive so daemon thread continues
+    print("Initial processing complete. Server listening for additional requests from Blazor...")
+    print("Press Ctrl+C to stop.")
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\nShutting down...")

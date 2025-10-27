@@ -9,7 +9,7 @@ import requests
 import os
 from dotenv import load_dotenv
 from typing import Dict, Any, Callable, Optional
-import queue, threading
+import queue, threading, time
 
 
 ######################################################################################
@@ -17,12 +17,12 @@ import queue, threading
 # Allows Flask to immediately respond to the boss service (202: accepted)
 # while processing continues asynchronously in a separate thread.
 ######################################################################################
-task_queue = queue.Queue()
 def task_worker():
     """Continuously process tasks from the global queue in the background.
-    Each task runs sequentially (or with limited concurrency if multiple workers are started).
-    @throws Exception Logs any runtime errors that occur during task execution."""
+    @details  Each task runs sequentially (or with limited concurrency if multiple workers are started).
+    @throws Exception  Logs any runtime errors that occur during task execution."""
     while True:
+        time.sleep(0.5)
         func, args = task_queue.get()
         try:
             func(*args)
@@ -30,10 +30,6 @@ def task_worker():
             print(f"Worker thread error: {e}")
         finally:
             task_queue.task_done()
-
-# Start one background worker thread (can increase to 2–4 for limited concurrency)
-threading.Thread(target=task_worker, daemon=True).start()
-
 
 def process_task(mongo_db, collection_name, story_id, chunk_id, task_name, chunk_doc, boss_url, task_handler):
     """Perform the assigned task in a background thread.
@@ -227,12 +223,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Flask worker microservice")
     parser.add_argument("--task", required=True, help="Task type to execute")
     args = parser.parse_args()
+
+    # Create the task queue - boss will leave assignments here
+    task_queue = queue.Queue()
+
+    # Start one background worker thread (can increase to 2–4 for limited concurrency)
+    for _ in range(1):
+        threading.Thread(target=task_worker, daemon=True).start()
     
-    # Boss URL never changes, but MongoDB connection might
+    # Flask prep: Boss URL never changes, but MongoDB connection might
     load_dotenv(".env")
     boss_url = load_boss_config()
     PORT = os.environ[f"{args.task.upper()}_PORT"]
     
-    # Create and run app
+    # Create and run app - disable hot-reaload on files changed
     app = create_app(args.task, boss_url)
-    app.run(host="0.0.0.0", port=PORT)
+    app.run(host="0.0.0.0", port=PORT, use_reloader=False)
