@@ -626,11 +626,60 @@ Our latest stable images are always available on the repository [packages page](
 
 Docker images are uploaded automatically via GitHub Actions. Our CD workflow runs PyTests, and then re-builds with dummy credentials.
 
+Since they are public on GHCR, other image deployment platforms like AWS / ECS or Azure can simply pull the images directly with no login required. Publishing to Docker Hub would work the same way.
+
+Otherwise, we would need to follow the same procedure for GHCR upload: re-tag local copies, and uplaod to platform-specific image registries.
+
+
 
 ## AWS (Amazon Web Services)
 
-### ECS (Elastic Container Service)
+### Introduction
 
+GHCR only stores container images. To deploy them to the cloud, we need a container orchestration service like Amazon's **Elastic Container Service (ECS)**.
+
+Structure of ECS: Cluster → Service → Task → Containers
+
+- **Task** - A single "run" of the multi-container system.
+
+- **Task Definition** - Similar to `docker-compose.yml`, this is a blueprint describing one or more containers, their images, environment variables, CPU/memory limits, and networking.
+
+- **Cluster** - A managed pool of compute resources where tasks are scheduled and run.
+
+- **Service** - Manages task execution and system load by keeping the desired number of tasks running, restarting failed ones, and optionally routing traffic through a load balancer.
+
+- **IAM Role** - Grants permission for containers, tasks, or services to access other parts of AWS (_e.g._ Secrets Manager).
+
+- **Service Connect** - Provides internal DNS for containers so they can reach each other using service names instead of IP addresses.
+
+- **Virtual Private Cloud (VPC)** - A private network that defines how tasks and services communicate within AWS and with the internet.
+
+- **Fargate** - A serverless compute engine for containers. AWS hides the low-level EC2 instances behind the cluster.
+
+### Initial Setup Guide
+
+1. Create an account (Free Tier) on the [AWS website](https://aws.amazon.com/free/).
+
+2. Pick your container service `ECS` to run your Docker images on EC2 or Fargate. `App Runner` is easier setup, and `EKS` is production-ready Kubernetes.
+
+3. Start from the AWS management console: https://aws.amazon.com/console
+
+4. Navigate to `ECS` page. For first-time users this page is very cluttered; click `Get Started` or just visit the [Clusters Page](https://console.aws.amazon.com/ecs/v2/clusters).
+
+5. Create a new cluster called `dsci-cap-cluster` with blank namespace and `Fargate only`
+
+6. **Create a task** and add your containers in the [Task Definition](https://.console.aws.amazon.com/ecs/v2/task-definitions).
+- Port aliases are arbitrary, and do not correspond to Docker container names or service names.
+- Stick to small resource options → `0.25 vCPU` and `0.5 GB memory`, and divide these values between your containers.
+- Note: In testing, the main Python container required `0.75 vCPU` and `3 GB memory` to get past initial deployment.
+
+7. **Create a service** to enable `Service Connect` - this lets us assign the correct Docker service names (like `blazor_service`).
+- [Create new service](https://console.aws.amazon.com/ecs/v2/clusters/dsci-cap-cluster/create-service) or UI navigation: `ECS` > `Clusters` > `dsci-cap-cluster` > `Services tab` > `Create`.
+- Service name `dsci-cap-service`
+- In the `Service Connect` section, choose `Client and server`, select your namespace, and add port mappings (`Discovery` and `DNS` should both be `blazor_service`)
+- If you haven't already, [create a namespace](https://console.aws.amazon.com/cloudmap/home/namespaces/create): Name `default`, select `API calls and DNS`, create or select `VPC`, and set `TTL = 600`.
+
+8. Optional: Set up a **zero-spend budget** to prevent any bills: `AWS Billing` > `Budgets` > `Create budget`.
 
 
 ### Debug Container Logs
@@ -645,16 +694,13 @@ Docker images are uploaded automatically via GitHub Actions. Our CD workflow run
 
 [Change task settings](https://console.aws.amazon.com/ecs/v2/task-definitions/dsci-capstone-task/create-revision) or UI navigation: `ECS` > `Task Definitions` > `dsci-capstone-task` >  `Create New Revision button`.
 
-The following options were useful for our deployment:
-- d
-
 [Restart the service scheduler with new task settings](https://console.aws.amazon.com/ecs/v2/clusters/dsci-cap-cluster/services/dsci-cap-service/update) or UI navigation: `ECS` > `Clusters` > `dsci-cap-cluster` > `Services tab` > `dsci-cap-service` > `Update Service button`.
 
 `Update Service` will automatically deploy and start the task if `Force new deployment` is enabled.
 
 Make sure you select your new `Task definition revision: LATEST`, or your updates will not apply to the launched service.
 
-### Service (Task Scheduler)
+### Services (Task Scheduler)
 
 An AWS service provides useful overhead to maintain persistent deployments, _i.e._ run your task forever. It doesnt make sense to use a service otherwise - just run the task manually instead.
 - **Desired count** maintenance - Always keep N tasks running, or adjust based on metrics
@@ -701,6 +747,21 @@ The schedule can only `Use existing role`, so we grant permissions by creating `
 
 </details>
 
+### Secrets
+
+1. Store API keys in [AWS Secrets Manager](https://console.aws.amazon.com/secretsmanager/listsecrets).
+
+2. Update your [Task Definition](https://console.aws.amazon.com/ecs/v2/task-definitions/dsci-capstone-task/create-revision) by navigating to `Container 1 (Python)` > `Environment variables`. Use the key name expected by Python, select `ValueFrom`, and paste the ARN from Secrets Manager for the value.
+
+3. Update your [ECS execution role](https://console.aws.amazon.com/iam/home#/roles/details/ecsTaskExecutionRole) with permission policy `SecretsManagerReadWrite`.
+
+Note: Blazor's builder will auto-detect environment variables like `Syncfusion:LicenseKey` when set in environment as `Syncfusion__LicenseKey`.
+
+
 
 
 ## Azure (Microsoft)
+
+1. Create an [Azure Free or Pay-As-You-Go](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account) account.
+
+2. Pick your container service
