@@ -216,7 +216,10 @@ def run_questeval(chunk_doc: Dict[str, Any]) -> Dict[str, Any]:
     
     questeval = QuestEval(
         task=chunk_doc.get('task', 'summarization'),
-        no_cuda=chunk_doc.get('no_cuda', False)
+        no_cuda=True,
+        qa_model="ThomasNLG/t5-qa_squad2neg-en",
+        qg_model="ThomasNLG/t5-qg_squad1-en",
+        do_weighter=True  # optional, but removes the warning
     )
     
     source = chunk_doc['text']
