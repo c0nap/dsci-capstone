@@ -841,4 +841,22 @@ You can view all created resources on your Dashboard. After clicking an individu
 9. Update **Environment Variables** in `Application` > `Containers` to reference your Container App Secrets.
 
 
+## Comparison of AWS and Azure
+
+After implementing both for this project, here are my takeaways:
+
+- **Friendly Interface** - **Azure** keeps everything condensed on appropriate webpages, and all the UI usually fits onto 1 screen. Whereas AWS tends to have very long pages with nested expandable sections. The UI for AWS feels scattered, as if it was designed to be used via CLI.
+
+- **Permissions Issues** - **Azure** wraps IAM in more UI than AWS, and it was mostly just a brief annoyance to discover another layer before things worked. I also had to read or edit raw JSON configs several times with AWS.
+
+- **Website Clutter** - Both platforms are unintuitive, but **AWS** feels more clean and professional overall. Azure has tons of different pages, so finding the right section was the hardest part.
+
+- **Login Process** - **AWS** permits account creation via email but has mandatory CAPTCHAs, while Azure requires a Microsoft account, does not handle multiple tabs well, and bakes your account name into URLs (non-sharable).
+
+- **Secret Handling** - **Azure** secrets felt more secure and versatile: 1) Hidden via dots in the GUI, and 2) Protected via firewall and intermediate container-level secrets.
+
+- **Ease of Setup** - Both options required a complete reimplementation of container deployment. Make and Docker Compose migration were not fully supported at the level I needed. With **AWS**, the challenge was learning the purpose of various components, whereas **Azure** tends to hide the more important pages underneath bloat.
+
+Azure wins here because of the UI and easier setup. For large-scale deployments, AWS might take the lead with faster access to features I didn't need for this project.
+
 
