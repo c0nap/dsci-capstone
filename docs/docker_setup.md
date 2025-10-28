@@ -614,4 +614,93 @@ Image size may not matter much for local development, but our CI/CD pipeline per
 
 - Artifacts can be used to make compressed files available for all runners. For images, this is much faster than downloading from and uploading to GCHR.
 
-- We still use GHCR as a checkpoint for Docker images. Successful PRs upload their tagged images automatically to speed up future runs.
+- We still use GHCR as a checkpoint for Docker images. Successful PRs upload their tagged images to our private namespace to speed up future runs.
+
+
+
+# Deployments
+
+## GHCR (GitHub Container Repository)
+
+Our latest stable images are always available on the repository [packages page](https://github.com/c0nap?tab=packages&repo_name=dsci-capstone).
+
+Docker images are uploaded automatically via GitHub Actions. Our CD workflow runs PyTests, and then re-builds with dummy credentials.
+
+
+## AWS (Amazon Web Services)
+
+### ECS (Elastic Container Service)
+
+
+
+### Debug Container Logs
+
+[Run task manually](https://console.aws.amazon.com/ecs/v2/clusters/dsci-cap-cluster/run-task) or UI navigation: `ECS` > `Clusters` > `dsci-cap-cluster` > `Tasks tab` > `Run New Task button`.
+
+[View log streams](https://console.aws.amazon.com/cloudwatch/home#logsV2:log-groups) or UI navigation: `CloudWatch` > `Log groups` > `/ecs/dsci-capstone-task`. Do not use `/ecs/dsci-cap-service`, this contains only generic sidecar logs.
+
+[View resource use](https://console.aws.amazon.com/ecs/v2/clusters/dsci-cap-cluster/services/dsci-cap-service/health)
+
+### Task Definitions
+
+[Change task settings](https://console.aws.amazon.com/ecs/v2/task-definitions/dsci-capstone-task/create-revision) or UI navigation: `ECS` > `Task Definitions` > `dsci-capstone-task` >  `Create New Revision button`.
+
+The following options were useful for our deployment:
+- d
+
+[Restart the service scheduler with new task settings](https://console.aws.amazon.com/ecs/v2/clusters/dsci-cap-cluster/services/dsci-cap-service/update) or UI navigation: `ECS` > `Clusters` > `dsci-cap-cluster` > `Services tab` > `dsci-cap-service` > `Update Service button`.
+
+`Update Service` will automatically deploy and start the task if `Force new deployment` is enabled.
+
+Make sure you select your new `Task definition revision: LATEST`, or your updates will not apply to the launched service.
+
+### Service (Task Scheduler)
+
+An AWS service provides useful overhead to maintain persistent deployments, _i.e._ run your task forever. It doesnt make sense to use a service otherwise - just run the task manually instead.
+- **Desired count** maintenance - Always keep N tasks running, or adjust based on metrics
+- **Health checks** - Restart on error
+- **Load balancing** - Distribute traffic across tasks
+- **Rolling deployments** - Update without downtime
+
+To stop a service from constantly redeploying your containers, you can:
+- Update service with `Desired tasks = 0`
+- Delete the service
+- Auto-stop using a rule / schedule
+
+[Create an EventBridge schedule](https://console.aws.amazon.com/scheduler/home#create-schedule) or UI navigation: `EventBridge` > `Schedules` > `Create Schedule button`.
+
+<details>
+  <summary><h4>Schedule creation details</h4></summary>
+
+In our case, we named it `stop-dsci-cap-service-nightly`, and chose a `Recurring Cron-based` schedule. Type the values `0 2 * * ? *` to stop the service at 2am (UTC-4) daily. Another option is every `12 hours`.
+
+To target our service, choose `ECS UpdateService` task, and paste the rule:
+```json
+{
+  "Cluster": "dsci-cap-cluster",
+  "Service": "dsci-cap-service",
+  "DesiredCount": 0
+}
+```
+
+The schedule can only `Use existing role`, so we grant permissions by creating `IAM role` > `Custom trust policy` > `Paste JSON` > `Add Permission: AmazonECS_FullAccess` > `Name: EventBridgeScheduler-ECS-Role`
+```json
+{
+  "Version": "2012-10-01",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "scheduler.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+```
+
+</details>
+
+
+
+## Azure (Microsoft)
