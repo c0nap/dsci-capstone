@@ -20,15 +20,47 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY req/questeval.txt .
 RUN pip install --no-cache-dir -r questeval.txt
 
-# Pre-download HF models into /opt/hf_models
-# Bug: malformed download URLs in this HF version
-RUN mkdir -p /opt/hf_models && \
-    cd /opt/hf_models && \
-    git clone https://huggingface.co/ThomasNLG/t5-qa_squad2neg-en && \
-    git clone https://huggingface.co/ThomasNLG/t5-qg_squad1-en
 
-# Point HF_HOME to the local cache so QuestEval never fetches from web
-ENV HF_HOME=/opt/hf_models
+
+# Bug: malformed download URLs in this HF version, so we pre-download models
+# 1. Install build dependencies - we use hf_hub only at build-time to populate the cache)
+RUN pip install --no-cache-dir sentencepiece "huggingface_hub==0.11.1"
+
+# 2. Pre-populate the exact cache layout that transformers expects
+ENV TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers
+RUN python - <<'PY'
+from huggingface_hub import snapshot_download
+cache = "/root/.cache/huggingface/transformers"
+snapshot_download("ThomasNLG/t5-qa_squad2neg-en", cache_dir=cache, revision="main")
+snapshot_download("ThomasNLG/t5-qg_squad1-en",   cache_dir=cache, revision="main")
+print("HF cache ready at:", cache)
+PY
+
+# 3. Make old-style cache alias for transformers==4.8.1
+RUN set -eux; \
+    LEGACY_CACHE=/root/.cache/transformers; \
+    mkdir -p "$LEGACY_CACHE/ThomasNLG"; \
+    cp -a /root/.cache/huggingface/transformers/models--ThomasNLG--t5-qa_squad2neg-en "$LEGACY_CACHE/ThomasNLG/t5-qa_squad2neg-en"; \
+    cp -a /root/.cache/huggingface/transformers/models--ThomasNLG--t5-qg_squad1-en   "$LEGACY_CACHE/ThomasNLG/t5-qg_squad1-en"
+
+# 4. Move snapshot contents to legacy flat layout for transformers==4.8.1
+RUN set -eux; \
+    LEGACY=/root/.cache/transformers/ThomasNLG/t5-qa_squad2neg-en; \
+    mkdir -p "$LEGACY"; \
+    SNAP=$(find /root/.cache/huggingface/transformers -type d -path '*models--ThomasNLG--t5-qa_squad2neg-en/snapshots/*' | head -n 1); \
+    cp -a "$SNAP/." "$LEGACY"/; \
+    \
+    LEGACY_QG=/root/.cache/transformers/ThomasNLG/t5-qg_squad1-en; \
+    mkdir -p "$LEGACY_QG"; \
+    SNAP_QG=$(find /root/.cache/huggingface/transformers -type d -path '*models--ThomasNLG--t5-qg_squad1-en/snapshots/*' | head -n 1); \
+    cp -a "$SNAP_QG/." "$LEGACY_QG"/
+
+# 5. Force offline so it never tries the broken /api/resolve-cache URL
+ENV TRANSFORMERS_OFFLINE=1
+
+
+
+
 
 
 # Copy source code into the container (optional .dockerignore)
