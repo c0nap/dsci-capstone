@@ -12,12 +12,23 @@ ENV PYTHONUNBUFFERED=1
 
 # Copy dependency list first to leverage build cache
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential make git \
+    build-essential make git git-lfs \
+ && git lfs install \
  && pip install --upgrade pip setuptools wheel \
  && rm -rf /var/lib/apt/lists/*
 
 COPY req/questeval.txt .
 RUN pip install --no-cache-dir -r questeval.txt
+
+# Pre-download HF models into /opt/hf_models
+# Bug: malformed download URLs in this HF version
+RUN mkdir -p /opt/hf_models && \
+    cd /opt/hf_models && \
+    git clone https://huggingface.co/ThomasNLG/t5-qa_squad2neg-en && \
+    git clone https://huggingface.co/ThomasNLG/t5-qg_squad1-en
+
+# Point HF_HOME to the local cache so QuestEval never fetches from web
+ENV HF_HOME=/opt/hf_models
 
 
 # Copy source code into the container (optional .dockerignore)

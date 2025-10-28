@@ -692,7 +692,7 @@ def load_worker_config(task_types: List[str]) -> Dict[str, str]:
     @return  Dictionary mapping task names to worker URLs."""
     load_dotenv(".env")
     
-    # Expected environment variables: WORKER_BOOKSCORE_PORT, WORKER_QUESTEVAL_HOST, etc.
+    # Expected environment variables: BOOKSCORE_PORT, QUESTEVAL_HOST, etc.
     workers = {}
     
     for task in task_types:
@@ -714,9 +714,8 @@ def clear_task_data(mongo_db: Any, collection_name: str, chunk_id: str, task_nam
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the task to clear."""
     collection = getattr(mongo_db, collection_name)
-    
     collection.update_one(
-        {"chunk_id": chunk_id},
+        {"_id": chunk_id},
         {"$unset": {task_name: ""}}
     )
 

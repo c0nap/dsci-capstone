@@ -207,7 +207,6 @@ def run_questeval(chunk_doc: Dict[str, Any]) -> Dict[str, Any]:
                       - summary: Generated summary (required)
                       - gold_summary: Reference summary (optional)
                       - task: Task type (optional, default 'summarization')
-                      - no_cuda: Disable GPU (optional, default False)
     @return  Dict with 'questeval_score', 'ex_level_scores', 'corpus_score', 'has_reference'.
     @throws ImportError  If questeval package not installed.
     @throws KeyError  If required fields missing from chunk_doc.
@@ -217,9 +216,7 @@ def run_questeval(chunk_doc: Dict[str, Any]) -> Dict[str, Any]:
     questeval = QuestEval(
         task=chunk_doc.get('task', 'summarization'),
         no_cuda=True,
-        qa_model="ThomasNLG/t5-qa_squad2neg-en",
-        qg_model="ThomasNLG/t5-qg_squad1-en",
-        do_weighter=True  # optional, but removes the warning
+        do_weighter=True
     )
     
     source = chunk_doc['text']
