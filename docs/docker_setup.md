@@ -634,11 +634,9 @@ Otherwise, we would need to follow the same procedure for GHCR upload: re-tag lo
 
 ## AWS (Amazon Web Services)
 
-### Introduction
+### Overview
 
 GHCR only stores container images. To deploy them to the cloud, we need a container orchestration service like Amazon's **Elastic Container Service (ECS)**.
-
-Structure of ECS: Cluster → Service → Task → Containers
 
 - **Task** - A single "run" of the multi-container system.
 
@@ -656,11 +654,13 @@ Structure of ECS: Cluster → Service → Task → Containers
 
 - **Fargate** - A serverless compute engine for containers. AWS hides the low-level EC2 instances behind the cluster.
 
-### Initial Setup Guide
+Structure of ECS: `Cluster → Service → Task → Containers`
+
+### Initial Setup
 
 1. Create an account (Free Tier) on the [AWS website](https://aws.amazon.com/free/).
 
-2. Pick your container service `ECS` to run your Docker images on EC2 or Fargate. `App Runner` is easier setup, and `EKS` is production-ready Kubernetes.
+2. Pick your container service: `ECS` runs your Docker images with fully-featured AWS overhead. `App Runner` is easier setup, and `EKS` is production-ready Kubernetes.
 
 3. Start from the AWS management console: https://aws.amazon.com/console
 
@@ -769,6 +769,76 @@ The most reliable option is to expose databases to AWS, but this is unsafe and w
 
 ## Azure (Microsoft)
 
+### Overview
+
+**Azure Container Apps (ACA)** mirrors an AWS setup.
+
+Structure of ACA: `Managed Environment → Container App`  
+Structure of ECS: `Cluster → Service → Task → Containers`
+
+- **Resource Group** – 
+
+- **Container App** – The deployed unit of your application, similar in purpose to an `ECS Service` but lighter; Azure handles scaling, restarts, and routing automatically.
+
+- **Managed Environment** – A shared network space spanning multiple apps; provides internal DNS so containers can communicate using app names.
+
+- **Ingress** – Controls whether an app is exposed publicly (external) or only within the environment (internal).
+
+
+- **Virtual Network (VNet)** – The private network defining how apps communicate with each other and external resources.
+
+
+### Initial Setup
+
 1. Create an [Azure Free or Pay-As-You-Go](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account) account.
 
-2. Pick your container service
+2. Pick your container service: `Azure Container Apps (ACA)` runs microservices with multi-container scaling. `Azure Container Instances (ACI)` is used for simpler, single-container hosting, and `Azure Kubernetes Service (AKS)` is for large production clusters.
+
+3. Create the Container App for Python.
+- Naming conventions force a different hostname, so we named it `python-app` instead of `python_service`.
+- Create a new Resource Group called `rg-capstone`.
+- Container name: `container-python` and reference the public GHCR image.
+- Traffic accessibility: `Limited to Container App Environment`
+- Add `BLAZOR_HOST = blazor-app` in environment variables.
+- Ingress settings: `HTTP`, `Insecure connections: Enabled`, and `Target Port = 5054`
+
+4. Create the Container App for Blazor.
+- Naming conventions force a different hostname, so we named it `blazor-app` instead of `blazor_service`.
+- Add to existing `rg-capstone` group.
+- Container name: `container-blazor` and reference the public GHCR image.
+- Traffic accessibility: `Accept traffic from anywhere`
+- Add `PYTHON_HOST = python-app` in environment variables.
+- Ingress settings: `HTTP`, `Insecure connections: Disabled`, and `Target Port = 5055`
+
+5. (Optional) In `Cost Managements / Billing` > `Budget`, create a zero-cost budget with the minimum amount of 0.01. The Free plan should be fine either way.
+
+
+### Debug Container Logs
+
+You can view all created resources on your Dashboard. After clicking an individual app:
+- View status: Navigate to `Application` > `Revisions and replicas`
+- Start / Stop app on the `Overview` tab
+- Check logs `Monitoring` > `Log stream` > `Historical`
+
+### Secrets
+
+1. Create a **Key Vault** with `Networking` > `Allow access from: Selected Networks`, `Allow trusted Microsoft services to bypass this firewall`.
+
+2. Create a **Managed Identity** for each app. `Security` > `Identity`, and enable `System-assigned`.
+
+3. Grant permissions to the apps: Navigate to your Key Vault > `Access Control (IAM)` > `Add Role Assignment`, and select the `Key Vault Secrets User` permission. Choose `Managed identity` on the Members screen, and add the two Container App identities.
+
+4. Grant yourself `Key Vault Administrator` permissions by choosing `User, group, or service principal` and adding your own account. Even if you are already owner, you do not have `data plane access` by default.
+
+5. Allow your browser through the Key Vault firewall: `Security` > `Networking`, `Allow public access from all networks`. Avoid this in a production scenario.
+
+6. Add secrets to your Key Vault: `Objects` > `Secrets` > `Generate / Import`.
+
+7. Copy the secret URI from Key Vault: `Objects` > `Secrets` > `your-secret-name` > `version-number`.
+
+8. Navigate to your **Container App Secrets** in `Security` > `Secrets`. You can add secret key / values here directly (unsafe), or add a reference to your Key Vault.
+
+9. Update **Environment Variables** in `Application` > `Containers` to reference your Container App Secrets.
+
+
+

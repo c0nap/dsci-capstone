@@ -14,7 +14,7 @@ load_dotenv(".env")
 
 class RelationExtractor:
     def __init__(self, model_name="Babelscape/rebel-large", max_tokens=1024):
-        os.environ["HF_HUB_TOKEN"] = os.getenv("HF_HUB_TOKEN")
+        os.environ["HF_HUB_TOKEN"] = os.environ["HF_HUB_TOKEN"]
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
         self.max_tokens = max_tokens
@@ -82,7 +82,7 @@ class LLMConnector(Connector):
             Reads:
                 - OPENAI_API_KEY from .env for authentication
                 - LLM_MODEL and LLM_TEMPERATURE to override defaults"""
-        self.model_name = os.getenv("LLM_MODEL")
+        self.model_name = os.environ["LLM_MODEL"]
         self.llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature)
 
     def test_connection(self):
