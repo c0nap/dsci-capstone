@@ -429,16 +429,15 @@ def output_single(session):
 
 
 
-def full_pipeline(session, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
+def full_pipeline(session, collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     chunks = pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title)
-    triples, _ = pipeline_2(chunks)
+    triples = pipeline_2(session, collection_name, chunks)
     triples_string = pipeline_3(session, triples)
     summary = pipeline_4(triples_string)
     pipeline_5a(summary, book_title, book_id)
 
 
-def old_main():
-    session = Session(verbose=False)
+def old_main(session, collection_name):
     # convert_from_csv()
     # chunk_single()
     # process_single()
@@ -447,6 +446,8 @@ def old_main():
     # output_single(session)
 
     full_pipeline(
+        session,
+        collection_name,
         epub_path="./datasets/examples/trilogy-wishes-2.epub",
         book_chapters="""
 CHAPTER 1. THE EGG\n
@@ -518,7 +519,7 @@ def pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id, 
     return chunks
 
 
-def pipeline_2(chunks):
+def pipeline_2(session, collection_name, chunks):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
@@ -539,6 +540,10 @@ def pipeline_2(chunks):
     print("\nChunk details:")
     print(f"  index: {c}\n")
     print(c.text)
+
+    mongo_db = session.docs_db.get_unmanaged_handle()
+    collection = getattr(mongo_db, collection_name)
+    collection.insert_one(c.to_mongo_dict())
 
     extracted = nlp.extract(c.text, parse_tuples=True)
     print(f"\nNLP output:")
@@ -568,7 +573,7 @@ def pipeline_2(chunks):
         print("\nInvalid JSON:", e)
         return
 
-    return triples, unique_number
+    return triples
 
 
 
@@ -702,33 +707,30 @@ def load_worker_config(task_types: List[str]) -> Dict[str, str]:
     return workers
 
 
-def clear_task_data(mongo_db: Any, collection_name: str, story_id: str, chunk_id: str, task_name: str) -> None:
+def clear_task_data(mongo_db: Any, collection_name: str, chunk_id: str, task_name: str) -> None:
     """Clear any existing task data before assigning new task to worker.
     @param mongo_db MongoDB database handle.
     @param collection_name The name of our primary chunk storage collection in Mongo.
-    @param story_id Unique identifier for the story.
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the task to clear."""
     collection = getattr(mongo_db, collection_name)
     
     collection.update_one(
-        {"story_id": story_id, "chunk_id": chunk_id},
+        {"chunk_id": chunk_id},
         {"$unset": {task_name: ""}}
     )
 
 
-def assign_task_to_worker(worker_url: str, database_name: str, collection_name: str, story_id: str, chunk_id: str) -> bool:
+def assign_task_to_worker(worker_url: str, database_name: str, collection_name: str, chunk_id: str) -> bool:
     """Assign a task to a worker microservice.
     @param worker_url Full URL of the worker's /start endpoint.
     @param database_name Name of the MongoDB database to use.
     @param collection_name The name of our primary chunk storage collection in Mongo.
-    @param story_id Unique identifier for the story.
     @param chunk_id Unique identifier for the chunk within the story.
     @return True if task was successfully assigned, False otherwise."""
     payload = {
         "database_name": database_name,
         "collection_name": collection_name,
-        "story_id": story_id,
         "chunk_id": chunk_id
     }
     
@@ -766,22 +768,19 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         story_id = data.get("story_id")
         task_type = data.get("task_type")
         
-        if not story_id or not task_type:
-            return jsonify({"error": "Missing story_id or task_type"}), 400
-        if task_type not in worker_urls:
+        if not story_id:
+            return jsonify({"error": "Missing story_id"}), 400
+        if not task_type or task_type not in worker_urls:
             return jsonify({"error": f"Unknown task type: {task_type}"}), 400
         
         # Get all chunks for this story
         collection = getattr(mongo_db, collection_name)
-        chunks = list(collection.find(
-            {"story_id": story_id},
-            {"chunk_id": 1}
-        ).sort("chunk_id", 1))
+        chunks = list(collection.find({"story_id": story_id}))
         if not chunks:
-            return jsonify({"error": "No chunks found for story"}), 404
+            return jsonify({"error": f"Cannot distribute tasks: No chunks found for story {story_id}"}), 404
         
         # Initialize task tracker
-        chunk_ids = [chunk["chunk_id"] for chunk in chunks]
+        chunk_ids = [chunk["_id"] for chunk in chunks]
         task_tracker[story_id]["expected_order"] = chunk_ids
         task_tracker[story_id]["completed"] = set()
         
@@ -790,13 +789,13 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         assigned = 0
         
         for chunk in chunks:
-            chunk_id = chunk["chunk_id"]
+            chunk_id = chunk["_id"]
             
             # Clear any existing task data
-            clear_task_data(mongo_db, collection_name, story_id, chunk_id, task_type)
+            clear_task_data(mongo_db, collection_name, chunk_id, task_type)
             
             # Assign task to worker
-            if assign_task_to_worker(worker_url, database_name, collection_name, story_id, chunk_id):
+            if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
                 assigned += 1
         
         return jsonify({
@@ -813,26 +812,26 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         @return Simple acknowledgment response."""
         data = request.json
         
-        story_id = data.get("story_id")
         chunk_id = data.get("chunk_id")
         task = data.get("task")
         status = data.get("status")
         
-        print(f"[CALLBACK] story_id={story_id}, chunk_id={chunk_id}, task={task}, status={status}")
+        print(f"[CALLBACK] chunk_id={chunk_id}, task={task}, status={status}")
         
-        # Track completion
+        # Get specific chunk by chunk_id
+        collection = getattr(mongo_db, collection_name)
+        chunk = collection.find_one({"_id": chunk_id})
+        story_id = collection["story_id"]
+        if not chunk:
+            return jsonify({"error": f"Could not find chunk {chunk_id} in MongoDB."}), 404
+
+        # Track story completion
         if story_id and chunk_id:
             task_tracker[story_id]["completed"].add(chunk_id)
             
             # FINALIZE PIPELINE
             # if all workers finished via task_tracker:
             if True:
-                # Get specific chunk by story_id AND chunk_id
-                collection = getattr(mongo_db, collection_name)
-                chunk = collection.find_one({"_id": chunk_id})
-                if not chunk:
-                    return jsonify({"error": f"Could not find chunk {chunk_id} in MongoDB."}), 404
-                
                 # Access fields directly from the MongoDB document
                 book_id = chunk["book_id"]
                 book_title = chunk["book_title"]
@@ -863,7 +862,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         return jsonify({"status": "received"}), 200
     
     @app.route("/status/<story_id>", methods=["GET"])
-    def get_status(story_id: str):
+    def get_status(story_id: int):
         """Get processing status for a story.
         @param story_id Unique identifier for the story.
         @return JSON response with completion status."""
@@ -888,13 +887,12 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
 
 load_dotenv(".env")
 if __name__ == "__main__":
-    # old_main()
-
     session = Session(verbose=False)
     load_dotenv(".env")
     DB_NAME = os.environ["DB_NAME"]
     BOSS_PORT = os.environ["PYTHON_PORT"]
     COLLECTION = os.environ["COLLECTION_NAME"]
+    # old_main(session, COLLECTION)
 
     # Load configuration
     task_types = ["questeval", "bookscore"]
@@ -940,19 +938,19 @@ CHAPTER 12. THE END OF THE END\n
         story_id = story_id,
         book_title = book_title
     )
-    triples, chunk_id = pipeline_2(chunks)
+    triples = pipeline_2(session, COLLECTION, chunks)
     triples_string = pipeline_3(session, triples)
     summary = pipeline_4(triples_string)
     # pipeline_5 is moved to callback() to finalize asynchronously
-    pipeline_5a(summary, book_title, book_id)
+    # pipeline_5a(summary, book_title, book_id)
 
-    # Post story - this will enqueue worker processing
+    # Post chunk - this will enqueue worker processing
     for task_type in ["questeval", "bookscore"]:
         response = requests.post(
             f'http://localhost:{BOSS_PORT}/process_story',
             json={'story_id': story_id, 'task_type': task_type}
         )
-    print(f"Triggered {task_type}: {response.json()}")
+        print(f"Triggered {task_type}: {response.json()}")
 
 
     

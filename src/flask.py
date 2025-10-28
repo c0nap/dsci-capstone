@@ -31,13 +31,12 @@ def task_worker():
         finally:
             task_queue.task_done()
 
-def process_task(mongo_db, collection_name, story_id, chunk_id, task_name, chunk_doc, boss_url, task_handler):
+def process_task(mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler):
     """Perform the assigned task in a background thread.
     This includes updating task status, running the handler, saving results,
     and notifying the boss service when complete.
     @param mongo_db MongoDB database instance.
     @param collection_name The name of the target MongoDB collection.
-    @param story_id Unique identifier for the story being processed.
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the task being executed.
     @param chunk_doc Document data for the current chunk.
@@ -45,12 +44,12 @@ def process_task(mongo_db, collection_name, story_id, chunk_id, task_name, chunk
     @param task_handler Function that performs the actual task computation.
     @throws Exception Logs and reports failures to the boss service."""
     try:
-        mark_task_in_progress(mongo_db, collection_name, story_id, chunk_id, task_name)
+        mark_task_in_progress(mongo_db, collection_name, chunk_id, task_name)
         result = task_handler(chunk_doc)
-        save_task_result(mongo_db, collection_name, story_id, chunk_id, task_name, result)
-        notify_boss(boss_url, story_id, chunk_id, task_name, "completed")
+        save_task_result(mongo_db, collection_name, chunk_id, task_name, result)
+        notify_boss(boss_url, chunk_id, task_name, "completed")
     except Exception as e:
-        notify_boss(boss_url, story_id, chunk_id, task_name, "failed")
+        notify_boss(boss_url, chunk_id, task_name, "failed")
         print(f"Error in background task: {e}")
 ######################################################################################
 
@@ -103,11 +102,10 @@ def get_task_handler(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any
         raise ValueError(f"Unknown task type: {task_name}")
 
 
-def mark_task_in_progress(mongo_db: Any, collection_name: str, story_id: str, chunk_id: str, task_name: str) -> None:
+def mark_task_in_progress(mongo_db: Any, collection_name: str, chunk_id: str, task_name: str) -> None:
     """Mark a task as in-progress in MongoDB before processing begins.
     @param mongo_db MongoDB database instance.
     @param collection_name The name of our primary chunk storage collection in Mongo.
-    @param story_id Unique identifier for the story.
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the task being executed.
     @throws RuntimeError If task data already exists (preventing overwrites)."""
@@ -115,29 +113,28 @@ def mark_task_in_progress(mongo_db: Any, collection_name: str, story_id: str, ch
     
     # Check if task result already exists
     existing = collection.find_one(
-        {"story_id": story_id, "chunk_id": chunk_id},
+        {"_id": chunk_id},
         {task_name: 1}
     )
     
     if existing and task_name in existing:
         raise RuntimeError(
-            f"Task {task_name} already has data for story_id={story_id}, chunk_id={chunk_id}. "
+            f"Task {task_name} already has data for chunk_id={chunk_id}. "
             "Boss should have cleared this before assignment."
         )
     
     # Mark as in-progress
     collection.update_one(
-        {"story_id": story_id, "chunk_id": chunk_id},
+        {"_id": chunk_id},
         {"$set": {f"{task_name}.status": "in_progress"}},
         upsert=True
     )
 
 
-def save_task_result(mongo_db: Any, collection_name: str, story_id: str, chunk_id: str, task_name: str, result: Dict[str, Any]) -> None:
+def save_task_result(mongo_db: Any, collection_name: str, chunk_id: str, task_name: str, result: Dict[str, Any]) -> None:
     """Save completed task results to MongoDB.
     @param mongo_db MongoDB database instance.
     @param collection_name The name of our primary chunk storage collection in Mongo.
-    @param story_id Unique identifier for the story.
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the task that was executed.
     @param result Dictionary containing task results to be stored."""
@@ -149,21 +146,19 @@ def save_task_result(mongo_db: Any, collection_name: str, story_id: str, chunk_i
     }
     
     collection.update_one(
-        {"story_id": story_id, "chunk_id": chunk_id},
+        {"_id": chunk_id},
         {"$set": update_data}
     )
 
 
-def notify_boss(boss_url: str, story_id: str, chunk_id: str, task_name: str, status: str) -> None:
+def notify_boss(boss_url: str, chunk_id: str, task_name: str, status: str) -> None:
     """Send completion notification to boss service.
     @param boss_url Callback URL for the boss service.
-    @param story_id Unique identifier for the story.
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the completed task.
     @param status Task completion status ('completed' or 'failed')."""
     payload = {
-        "story_id": story_id,
-        "chunk_id": chunk_id,
+        "_id": chunk_id,
         "task": task_name,
         "status": status
     }
@@ -189,14 +184,13 @@ def create_app(task_name: str, boss_url: str) -> Flask:
         """Handle incoming task assignments from boss service.
         @return JSON response with status code."""
         data = request.json
-        story_id = data.get("story_id")
         chunk_id = data.get("chunk_id")
         database_name = data.get("database_name")
         collection_name = data.get("collection_name")
         if not database_name or not collection_name:
             return jsonify({"error": "Missing database_name or collection_name"}), 400
-        if not story_id or not chunk_id:
-            return jsonify({"error": "Missing story_id or chunk_id"}), 400
+        if not chunk_id:
+            return jsonify({"error": "Missing chunk_id"}), 400
         
         # Reconnect to the database since DB_NAME or COLLECTION may have changed
         mongo_uri = load_mongo_config(database_name)
@@ -205,15 +199,12 @@ def create_app(task_name: str, boss_url: str) -> Flask:
 
         # Retrieve chunk data from MongoDB
         collection = getattr(mongo_db, collection_name)
-        chunk_doc = collection.find_one({
-            "story_id": story_id,
-            "chunk_id": chunk_id
-        })
+        chunk_doc = collection.find_one({"_id": chunk_id})
         if not chunk_doc:
             return jsonify({"error": "Chunk not found"}), 404
         
         # Enqueue the background task
-        task_queue.put((process_task, (mongo_db, collection_name, story_id, chunk_id, task_name, chunk_doc, boss_url, task_handler)))
+        task_queue.put((process_task, (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler)))
         return jsonify({"status": "accepted"}), 202
     
     return app

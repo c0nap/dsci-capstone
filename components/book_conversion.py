@@ -7,7 +7,7 @@ import pandas as pd
 import pypandoc
 import re
 import spacy
-from typing import Dict, Iterator, List, Tuple
+from typing import Dict, Iterator, List, Tuple, Any
 
 
 nlp = spacy.blank("en")  # blank English model, no pipeline
@@ -68,6 +68,21 @@ class Chunk:
         if prune_newlines:
             return len(self.text.replace("\n", ""))
         return len(self.text)
+
+    def to_mongo_dict(self) -> Dict[str, Any]:
+        """Convert Chunk to Mongo document format.
+        @return  A dictionary which can be easily loaded into MongoDB."""
+        return {
+            "_id": f"story-{self.story_id}_book-{self.book_id}_chapter-{self.chapter_number}_p.{round(self.chapter_percent, 5)}",
+            "text": self.text,
+            "book_id": self.book_id,
+            "chapter_number": self.chapter_number,
+            "line_start": self.line_start,
+            "line_end": self.line_end,
+            "story_id": self.story_id,
+            "story_percent": self.story_percent,
+            "chapter_percent": self.chapter_percent,
+        }
 
     def __repr__(self) -> str:
         return (
