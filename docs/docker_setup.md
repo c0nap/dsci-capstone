@@ -757,6 +757,13 @@ The schedule can only `Use existing role`, so we grant permissions by creating `
 
 Note: Blazor's builder will auto-detect environment variables like `Syncfusion:LicenseKey` when set in environment as `Syncfusion__LicenseKey`.
 
+### Databases
+
+Since we normally rely on `docker-compose.yml` to orchestrate our 3 database engines with initialization scripts and credentials, an AWS deployment would be tricky and require mirroring the Compose behavior manually.
+
+The most reliable option is to expose databases to AWS, but this is unsafe and would break for simulaneous runs. May revisit later.
+
+
 
 
 
