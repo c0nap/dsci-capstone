@@ -1,13 +1,16 @@
 # Worker-specific
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch
+torch==1.9.1+cpu            # matches 2021 transformer baseline; safe on Python 3.8
 git+https://github.com/ThomasScialom/QuestEval.git
-markupsafe<2.0.0
-jinja2<3.0.0
 transformers==4.8.1
+sentencepiece==0.1.95       # used by T5 tokenizer; keep old ABI-compatible version
+
+# Older Flask/Jinja stack for Python 3.8
+flask<2.0.0
+jinja2<3.0.0
+markupsafe<2.0.0
 
 # Base worker dependencies
-flask<2.0.0
-pymongo
-requests
-python-dotenv
+pymongo>=3.11,<4.0          # QuestEval’s deps expect PyMongo 3.x
+requests>=2.25,<3.0
+python-dotenv>=0.20,<1.0

@@ -211,38 +211,56 @@ def run_questeval(chunk_doc: Dict[str, Any]) -> Dict[str, Any]:
     @throws ImportError  If questeval package not installed.
     @throws KeyError  If required fields missing from chunk_doc.
     """
-    from questeval.questeval_metric import QuestEval
-    
-    questeval = QuestEval(
-        task=chunk_doc.get('task', 'summarization'),
-        no_cuda=True,
-        do_weighter=True
-    )
-    
-    source = chunk_doc['text']
-    summary = chunk_doc['summary']
-    reference = chunk_doc.get('gold_summary')
-    
-    if reference:
-        result = questeval.corpus_questeval(
-            hypothesis=[summary],
-            sources=[source],
-            list_references=[[reference]]
-        )
-    else:
-        result = questeval.corpus_questeval(
-            hypothesis=[summary],
-            sources=[source]
-        )
-    
-    return {
-        'questeval_score': result.get('ex_level_scores', [0])[0],
-        'ex_level_scores': result.get('ex_level_scores', []),
-        'corpus_score': result.get('corpus_score', 0),
-        'has_reference': reference is not None
+    import os
+    os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
+    from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+
+    # Map the remote IDs to your local cache dirs
+    local_models = {
+        "ThomasNLG/t5-qa_squad2neg-en": "/root/.cache/transformers/ThomasNLG/t5-qa_squad2neg-en",
+        "ThomasNLG/t5-qg_squad1-en": "/root/.cache/transformers/ThomasNLG/t5-qg_squad1-en",
     }
 
+    # --- Scoped monkey-patch (affects QuestEval only) ---
+    tok_orig = AutoTokenizer.from_pretrained
+    mod_orig = AutoModelForSeq2SeqLM.from_pretrained
 
+    def _tok_local(name_or_path, *a, **kw):
+        return tok_orig(local_models.get(name_or_path, name_or_path),
+                        *a, local_files_only=True, **kw)
+
+    def _mod_local(name_or_path, *a, **kw):
+        return mod_orig(local_models.get(name_or_path, name_or_path),
+                        *a, local_files_only=True, **kw)
+
+    AutoTokenizer.from_pretrained = _tok_local
+    AutoModelForSeq2SeqLM.from_pretrained = _mod_local
+    # -----------------------------------------------------
+
+    from questeval.questeval_metric import QuestEval
+    questeval = QuestEval(
+        task=chunk_doc.get("task", "summarization"),
+        no_cuda=True,
+        do_weighter=True,
+    )
+
+    src, summ, ref = chunk_doc["text"], chunk_doc["summary"], chunk_doc.get("gold_summary")
+    if ref:
+        result = questeval.corpus_questeval([summ], [src], [[ref]])
+    else:
+        result = questeval.corpus_questeval([summ], [src])
+
+    # restore originals for safety
+    AutoTokenizer.from_pretrained = tok_orig
+    AutoModelForSeq2SeqLM.from_pretrained = mod_orig
+
+    return {
+        "questeval_score": result.get("ex_level_scores", [0])[0],
+        "ex_level_scores": result.get("ex_level_scores", []),
+        "corpus_score": result.get("corpus_score", 0),
+        "has_reference": ref is not None,
+    }
 
 
 
