@@ -632,10 +632,10 @@ def pipeline_4(session, collection_name, triples_string, chunk_id):
     mongo_db = session.docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)
     collection.update_one(
-	    {"_id": chunk_id},
-	    {"$set": {"summary": summary}}
-	)
-	print(f"Wrote summary to Mongo with chunk_id: {chunk_id}")
+        {"_id": chunk_id},
+        {"$set": {"summary": summary}}
+    )
+    print(f"Wrote summary to Mongo with chunk_id: {chunk_id}")
 
     return summary
 

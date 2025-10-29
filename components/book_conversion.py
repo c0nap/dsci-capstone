@@ -72,7 +72,8 @@ class Chunk:
     def get_chunk_id(self) -> str:
         """Use story ID, book ID, chapter, and chapter percentage to generate a chunk ID.
         @return  A string uniquely identifying a chunk."""
-        return f"story-{self.story_id}_book-{self.book_id}_chapter-{self.chapter_number}_p.{round(self.chapter_percent, 5)}"
+        chap_prog_str = f"{self.chapter_percent / 100:.5f}"[1:]  # Convert 9.18 to 0.91800, and remove leading 0
+        return f"story-{self.story_id}_book-{self.book_id}_chapter-{self.chapter_number}_p{chap_prog_str}"
 
     def to_mongo_dict(self) -> Dict[str, Any]:
         """Convert Chunk to Mongo document format.
