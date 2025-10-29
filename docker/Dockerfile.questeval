@@ -22,11 +22,14 @@ RUN pip install --no-cache-dir -r questeval.txt
 
 
 
+
+
+
 # Workaround for QuestEval 0.2.4 + transformers 4.8.1 offline usage
 # Issue: transformers 4.8.1 has malformed HuggingFace API URLs, preventing model downloads
 # Solution: Pre-download models via git-lfs and patch QuestEval to use local paths
 
-# Download models using git-lfs
+# Download all models in one layer to minimize image size
 RUN apt-get update && apt-get install -y --no-install-recommends git git-lfs \
  && git lfs install \
  && mkdir -p /root/.cache/transformers/ThomasNLG \
@@ -38,7 +41,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends git git-lfs \
  && git clone https://huggingface.co/ThomasNLG/t5-weighter_cnndm-en \
  && cd t5-weighter_cnndm-en && git lfs pull && cd .. \
  && rm -rf */.git* \
+ && mkdir -p /root/.cache/huggingface/transformers \
+ && cd /root/.cache/huggingface/transformers \
+ && git clone https://huggingface.co/bert-base-multilingual-cased \
+ && cd bert-base-multilingual-cased && git lfs pull && cd .. \
+ && rm -rf bert-base-multilingual-cased/.git* \
  && apt-get remove -y git git-lfs && apt-get autoremove -y
+
 
 # Patch QuestEval to use local model paths instead of HuggingFace Hub
 RUN python3 << 'EOF'
@@ -59,8 +68,40 @@ with open(filepath, 'w') as f:
     f.write(content)
 EOF
 
-# Use the offline version of transformers
+
+# Patch BERTScore to use absolute local path for BERT model
+RUN python3 << 'EOF'
+import bert_score, os, re
+filepath = os.path.join(os.path.dirname(bert_score.__file__), 'utils.py')
+with open(filepath, 'r') as f:
+    lines = f.readlines()
+
+new_lines = []
+for i, line in enumerate(lines):
+    # Find tokenizer line
+    if 'tokenizer = AutoTokenizer.from_pretrained(model_type' in line:
+        indent = len(line) - len(line.lstrip())
+        new_lines.append(' ' * indent + "if model_type == 'bert-base-multilingual-cased':\n")
+        new_lines.append(' ' * (indent + 4) + "tokenizer = AutoTokenizer.from_pretrained('/root/.cache/huggingface/transformers/bert-base-multilingual-cased', use_fast=False, local_files_only=True)\n")
+        new_lines.append(' ' * indent + "else:\n")
+        new_lines.append(' ' * (indent + 4) + "tokenizer = AutoTokenizer.from_pretrained(model_type, use_fast=False, local_files_only=True)\n")
+    # Find model line
+    elif 'model = AutoModel.from_pretrained(model_type)' in line:
+        indent = len(line) - len(line.lstrip())
+        new_lines.append(' ' * indent + "if model_type == 'bert-base-multilingual-cased':\n")
+        new_lines.append(' ' * (indent + 4) + "model = AutoModel.from_pretrained('/root/.cache/huggingface/transformers/bert-base-multilingual-cased', local_files_only=True)\n")
+        new_lines.append(' ' * indent + "else:\n")
+        new_lines.append(' ' * (indent + 4) + "model = AutoModel.from_pretrained(model_type, local_files_only=True)\n")
+    else:
+        new_lines.append(line)
+
+with open(filepath, 'w') as f:
+    f.writelines(new_lines)
+EOF
+
+ENV TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers
 ENV TRANSFORMERS_OFFLINE=1
+
 
 
 
