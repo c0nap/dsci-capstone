@@ -544,6 +544,7 @@ def pipeline_2(session, collection_name, chunks):
     mongo_db = session.docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)
     collection.insert_one(c.to_mongo_dict())
+    print(f"Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}")
 
     extracted = nlp.extract(c.text, parse_tuples=True)
     print(f"\nNLP output:")
@@ -634,6 +635,7 @@ def pipeline_4(session, collection_name, triples_string, chunk_id):
 	    {"_id": chunk_id},
 	    {"$set": {"summary": summary}}
 	)
+	print(f"Wrote summary to Mongo with chunk_id: {chunk_id}")
 
     return summary
 
@@ -904,6 +906,7 @@ if __name__ == "__main__":
     mongo_db = session.docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, COLLECTION)
     collection.drop()
+    print("Deleted old chunks...")
 
     # old_main(session, COLLECTION)
 

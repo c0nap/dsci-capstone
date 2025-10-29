@@ -160,6 +160,8 @@ def save_task_result(mongo_db: Any, collection_name: str, chunk_id: str, task_na
         {"$set": update_data}
     )
 
+    print(f"FINISHED: chunk ID: {chunk_id}, result:\n{result}")
+
 
 def notify_boss(boss_url: str, chunk_id: str, task_name: str, status: str) -> None:
     """Send completion notification to boss service.
@@ -202,6 +204,8 @@ def create_app(task_name: str, boss_url: str) -> Flask:
         if not chunk_id:
             return jsonify({"error": "Missing chunk_id"}), 400
         
+        print(f"RECEIVED from boss: database {database_name}, collection {collection_name}, chunk ID: {chunk_id}")
+
         # Reconnect to the database since DB_NAME or COLLECTION may have changed
         mongo_uri = load_mongo_config(database_name)
         mongo_client = MongoClient(mongo_uri)
