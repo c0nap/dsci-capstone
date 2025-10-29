@@ -10,10 +10,11 @@ WORKDIR /flask
 # Make Python stdout/stderr unbuffered so logs show immediately
 ENV PYTHONUNBUFFERED=1
 
-# Copy dependency list first to leverage build cache
+# Install system dependencies in one layer
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential make git \
+    build-essential make git git-lfs \
  && pip install --upgrade pip setuptools wheel \
+ && git lfs install \
  && rm -rf /var/lib/apt/lists/*
 
 COPY req/questeval.txt .
@@ -24,83 +25,103 @@ RUN pip install --no-cache-dir -r questeval.txt
 
 
 
-
+# ============================================================================
 # Workaround for QuestEval 0.2.4 + transformers 4.8.1 offline usage
-# Issue: transformers 4.8.1 has malformed HuggingFace API URLs, preventing model downloads
-# Solution: Pre-download models via git-lfs and patch QuestEval to use local paths
+# Issue: transformers 4.8.1 has malformed HuggingFace API URLs
+# Solution: Pre-download models via git-lfs and patch code to use local paths
+# ============================================================================
 
-# Download all models in one layer to minimize image size
-RUN apt-get update && apt-get install -y --no-install-recommends git git-lfs \
- && git lfs install \
- && mkdir -p /root/.cache/transformers/ThomasNLG \
- && cd /root/.cache/transformers/ThomasNLG \
- && git clone https://huggingface.co/ThomasNLG/t5-qa_squad2neg-en \
- && cd t5-qa_squad2neg-en && git lfs pull && cd .. \
- && git clone https://huggingface.co/ThomasNLG/t5-qg_squad1-en \
- && cd t5-qg_squad1-en && git lfs pull && cd .. \
- && git clone https://huggingface.co/ThomasNLG/t5-weighter_cnndm-en \
- && cd t5-weighter_cnndm-en && git lfs pull && cd .. \
- && rm -rf */.git* \
- && mkdir -p /root/.cache/huggingface/transformers \
- && cd /root/.cache/huggingface/transformers \
- && git clone https://huggingface.co/bert-base-multilingual-cased \
- && cd bert-base-multilingual-cased && git lfs pull && cd .. \
- && rm -rf bert-base-multilingual-cased/.git* \
- && apt-get remove -y git git-lfs && apt-get autoremove -y
+# Define model paths as environment variables for consistency
+ENV TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers
+ENV HF_HOME=/root/.cache/huggingface
+ENV TRANSFORMERS_OFFLINE=1
 
+# Download QuestEval models (T5-based)
+RUN mkdir -p ${TRANSFORMERS_CACHE}/ThomasNLG && \
+    cd ${TRANSFORMERS_CACHE}/ThomasNLG && \
+    for model in t5-qa_squad2neg-en t5-qg_squad1-en t5-weighter_cnndm-en; do \
+        git clone https://huggingface.co/ThomasNLG/${model} && \
+        cd ${model} && git lfs pull && rm -rf .git* && cd ..; \
+    done
 
-# Patch QuestEval to use local model paths instead of HuggingFace Hub
+# Download BERTScore model (BERT-based)
+RUN cd ${TRANSFORMERS_CACHE} && \
+    git clone https://huggingface.co/bert-base-multilingual-cased && \
+    cd bert-base-multilingual-cased && git lfs pull && rm -rf .git*
+
+# Clean up git-lfs to reduce image size
+RUN apt-get remove -y git git-lfs && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+
+# Patch QuestEval to use local model paths
 RUN python3 << 'EOF'
-import questeval, os
+import questeval
+import os
+
 filepath = os.path.join(os.path.dirname(questeval.__file__), 'questeval_metric.py')
+
 with open(filepath, 'r') as f:
     content = f.read()
 
-# Replace all HuggingFace Hub references with local paths
-for model in ['t5-qa_squad2neg-en', 't5-qg_squad1-en', 't5-weighter_cnndm-en', 
-              't5-qa_webnlg_synth-en', 't5-qg_webnlg_synth-en']:
+# Replace HuggingFace Hub references with local paths
+models = [
+    't5-qa_squad2neg-en',
+    't5-qg_squad1-en', 
+    't5-weighter_cnndm-en',
+    't5-qa_webnlg_synth-en',
+    't5-qg_webnlg_synth-en'
+]
+
+for model in models:
     content = content.replace(
         f"f'{{HF_ORGANIZATION}}/{model}'",
-        f"'/root/.cache/transformers/ThomasNLG/{model}'"
+        f"'/root/.cache/huggingface/transformers/ThomasNLG/{model}'"
     )
 
 with open(filepath, 'w') as f:
     f.write(content)
+
+print("✓ Patched QuestEval to use local models")
 EOF
 
-
-# Patch BERTScore to use absolute local path for BERT model
+# Patch BERTScore to use local BERT model
 RUN python3 << 'EOF'
-import bert_score, os, re
+import bert_score
+import os
+
 filepath = os.path.join(os.path.dirname(bert_score.__file__), 'utils.py')
+
 with open(filepath, 'r') as f:
     lines = f.readlines()
 
+# Insert local path logic before tokenizer and model loading
 new_lines = []
-for i, line in enumerate(lines):
-    # Find tokenizer line
-    if 'tokenizer = AutoTokenizer.from_pretrained(model_type' in line:
+for line in lines:
+    # Patch tokenizer loading
+    if 'tokenizer = AutoTokenizer.from_pretrained(model_type' in line and 'use_fast' in line:
         indent = len(line) - len(line.lstrip())
-        new_lines.append(' ' * indent + "if model_type == 'bert-base-multilingual-cased':\n")
-        new_lines.append(' ' * (indent + 4) + "tokenizer = AutoTokenizer.from_pretrained('/root/.cache/huggingface/transformers/bert-base-multilingual-cased', use_fast=False, local_files_only=True)\n")
-        new_lines.append(' ' * indent + "else:\n")
-        new_lines.append(' ' * (indent + 4) + "tokenizer = AutoTokenizer.from_pretrained(model_type, use_fast=False, local_files_only=True)\n")
-    # Find model line
+        new_lines.append(f"{' ' * indent}# Patched for offline usage\n")
+        new_lines.append(f"{' ' * indent}if model_type == 'bert-base-multilingual-cased':\n")
+        new_lines.append(f"{' ' * (indent + 4)}local_path = '/root/.cache/huggingface/transformers/bert-base-multilingual-cased'\n")
+        new_lines.append(f"{' ' * (indent + 4)}tokenizer = AutoTokenizer.from_pretrained(local_path, use_fast=False, local_files_only=True)\n")
+        new_lines.append(f"{' ' * indent}else:\n")
+        new_lines.append(f"{' ' * (indent + 4)}{line.lstrip()}")
+    # Patch model loading
     elif 'model = AutoModel.from_pretrained(model_type)' in line:
         indent = len(line) - len(line.lstrip())
-        new_lines.append(' ' * indent + "if model_type == 'bert-base-multilingual-cased':\n")
-        new_lines.append(' ' * (indent + 4) + "model = AutoModel.from_pretrained('/root/.cache/huggingface/transformers/bert-base-multilingual-cased', local_files_only=True)\n")
-        new_lines.append(' ' * indent + "else:\n")
-        new_lines.append(' ' * (indent + 4) + "model = AutoModel.from_pretrained(model_type, local_files_only=True)\n")
+        new_lines.append(f"{' ' * indent}# Patched for offline usage\n")
+        new_lines.append(f"{' ' * indent}if model_type == 'bert-base-multilingual-cased':\n")
+        new_lines.append(f"{' ' * (indent + 4)}local_path = '/root/.cache/huggingface/transformers/bert-base-multilingual-cased'\n")
+        new_lines.append(f"{' ' * (indent + 4)}model = AutoModel.from_pretrained(local_path, local_files_only=True)\n")
+        new_lines.append(f"{' ' * indent}else:\n")
+        new_lines.append(f"{' ' * (indent + 4)}{line.lstrip()}")
     else:
         new_lines.append(line)
 
 with open(filepath, 'w') as f:
     f.writelines(new_lines)
-EOF
 
-ENV TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers
-ENV TRANSFORMERS_OFFLINE=1
+print("✓ Patched BERTScore to use local BERT model")
+EOF
 
 
 
