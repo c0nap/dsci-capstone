@@ -100,7 +100,12 @@ def get_task_info(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     @throws AttributeError If the task function is not found in the module."""
     if task_name == "bookscore":
         from components.metrics import run_bookscore
-        return run_bookscore, {}
+        API_KEY = os.environ["BOOKSCORE_API_KEY"]
+        return run_bookscore, {
+            "api_key": API_KEY,
+            "model": "gpt-4",
+            "api": "openai",
+        }
     elif task_name == "questeval":
         from components.metrics import run_questeval
         return run_questeval, {
@@ -200,6 +205,7 @@ def create_app(task_name: str, boss_url: str) -> Flask:
     # Load task handler on startup
     task_handler, task_args = get_task_info(task_name)
     load_imports(task_handler)
+    print("\n" * 8)
     
     @app.route("/start", methods=["POST"])
     def start():
