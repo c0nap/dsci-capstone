@@ -112,6 +112,15 @@ def get_task_info(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         raise ValueError(f"Unknown task type: {task_name}")
 
 
+def load_imports(func):
+    """Pre-warm the task by importing requirements.
+    @param func  The function to perform a dummy call on."""
+    try:
+        func({})
+    except Exception:
+        pass
+
+
 def mark_task_in_progress(mongo_db: Any, collection_name: str, chunk_id: str, task_name: str) -> None:
     """Mark a task as in-progress in MongoDB before processing begins.
     @param mongo_db MongoDB database instance.
@@ -190,6 +199,7 @@ def create_app(task_name: str, boss_url: str) -> Flask:
     
     # Load task handler on startup
     task_handler, task_args = get_task_info(task_name)
+    load_imports(task_handler)
     
     @app.route("/start", methods=["POST"])
     def start():
