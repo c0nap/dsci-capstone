@@ -198,37 +198,55 @@ class Metrics:
 
 
 
-def run_questeval(chunk_doc: Dict[str, Any]) -> Dict[str, Any]:
+def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", use_cuda = False, use_question_weighter = True) -> Dict[str, Any]:
     """Run QuestEval metric calculation.
-    @details  Question-answering based evaluation. Generates questions from source/reference
-              and checks if answers can be found in the summary. Score range: 0-1.
-    @param chunk_doc  MongoDB document containing:
-                      - text: Source document text (required)
-                      - summary: Generated summary (required)
-                      - gold_summary: Reference summary (optional)
-                      - task: Task type (optional, default 'summarization')
-    @return  Dict with 'questeval_score', 'ex_level_scores', 'corpus_score', 'has_reference'.
+    @details  Question-answering based evaluation.
+        Generates questions from source/reference, and checks if answers can be found in the summary.
+        For more parameters, see: https://github.com/ThomasScialom/QuestEval/blob/main/questeval/questeval_metric.py
+    @param chunk  MongoDB document containing keys:
+        - summary: Generated summary (required)
+        - text: Source document text (required)
+        - gold_summary: Reference summary (optional, filters for better questions)
+    @param qeval_task  Task performed by QuestEval (optional, default is summarization).
+        Must be one of the following: generation / nlg, qa, dialogue, data2text, translation.
+    @return  Dict containing scores (range 0-1) at varying granularity.
+        questeval_score: Overall semantic precision–recall score for one example (a Summary to evaluate, Source text, and Reference summary).
+        has_reference: True if a gold reference summary was provided.
     @throws ImportError  If questeval package not installed.
-    @throws KeyError  If required fields missing from chunk_doc.
+    @throws KeyError  If required fields are missing from chunk.
     """
     from questeval.questeval_metric import QuestEval
-    
-    questeval = QuestEval(
-        task=chunk_doc.get("task", "summarization"),
-        no_cuda=True,
-        do_weighter=True,
-    )
+    if qeval_task is not "summarization":
+        use_question_weighter = False
 
-    src, summ, ref = chunk_doc["text"], chunk_doc["summary"], chunk_doc.get("gold_summary")
+    questeval = QuestEval(
+        task = qeval_task,
+        no_cuda = not use_cuda,
+        do_weighter = use_question_weighter,
+    )
+    # TODO: Other parameters?
+    #   answer_types: Tuple = ('NER', 'NOUN'),
+    #   list_scores: Tuple = ('answerability', 'bertscore', 'f1'),
+    #   do_consistency: bool = False,
+    #   qg_batch_size: int = 36,
+    #   clf_batch_size: int = 48,
+    #   limit_sent: int = 5,
+    #   reduction_multi_refs: Callable = max,
+    #   use_cache: bool = True
+
+    src, summ, ref = chunk["text"], chunk["summary"], chunk.get("gold_summary")
     if ref:
         result = questeval.corpus_questeval([summ], [src], [[ref]])
     else:
         result = questeval.corpus_questeval([summ], [src])
 
+    # Unused outputs:
+    #   ex_level_scores: List of per-example QuestEval scores.
+    #       "ex_level_scores": result.get("ex_level_scores", []),
+    #   corpus_score: Mean score across all examples.
+    #       "corpus_score": result.get("corpus_score", 0),
     return {
         "questeval_score": result.get("ex_level_scores", [0])[0],
-        "ex_level_scores": result.get("ex_level_scores", []),
-        "corpus_score": result.get("corpus_score", 0),
         "has_reference": ref is not None,
     }
 
@@ -243,13 +261,13 @@ def run_questeval(chunk_doc: Dict[str, Any]) -> Dict[str, Any]:
 
 
 
-def run_bookscore(chunk_doc: Dict[str, Any]) -> Dict[str, Any]:
+def run_bookscore(chunk: Dict[str, Any]) -> Dict[str, Any]:
     """Run BooookScore metric for long-form summarization.
     @details  LLM-based coherence evaluation using BooookScore CLI via subprocess.
               Handles full workflow: scoring summary, postprocessing.
               Can be run on a single chunk or entire book (if already chunked).
               Requires booookscore to be installed: pip install booookscore
-    @param chunk_doc  MongoDB document containing:
+    @param chunk  MongoDB document containing:
                       - book_text: Full or partial book text (required)
                       - summary: Generated summary (required)
                       - book_title: Book title for identification (optional, default 'book')
@@ -259,7 +277,7 @@ def run_bookscore(chunk_doc: Dict[str, Any]) -> Dict[str, Any]:
                       - batch_size: Sentences per batch for v2 (optional, default 10)
                       - use_v2: Use batched evaluation (optional, default True)
     @return  Dict with 'bookscore', 'annotations', 'model_used'.
-    @throws KeyError  If required fields missing from chunk_doc.
+    @throws KeyError  If required fields missing from chunk.
     @throws RuntimeError  If subprocess execution fails.
     """
     import json
@@ -268,14 +286,14 @@ def run_bookscore(chunk_doc: Dict[str, Any]) -> Dict[str, Any]:
     import tempfile
     import os
 
-    book_text = chunk_doc['book_text']
-    summary = chunk_doc['summary']
-    book_title = chunk_doc.get('book_title', 'book')
-    api_key = chunk_doc['api_key']
-    model = chunk_doc.get('model', 'gpt-4')
-    api = chunk_doc.get('api', 'openai')
-    batch_size = chunk_doc.get('batch_size', 10)
-    use_v2 = chunk_doc.get('use_v2', True)
+    book_text = chunk['book_text']
+    summary = chunk['summary']
+    book_title = chunk.get('book_title', 'book')
+    api_key = chunk['api_key']
+    model = chunk.get('model', 'gpt-4')
+    api = chunk.get('api', 'openai')
+    batch_size = chunk.get('batch_size', 10)
+    use_v2 = chunk.get('use_v2', True)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Step 1: Write book text as pickle

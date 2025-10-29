@@ -31,7 +31,8 @@ def task_worker():
         finally:
             task_queue.task_done()
 
-def process_task(mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler):
+def process_task(mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url,
+    task_handler, task_kwargs=None):
     """Perform the assigned task in a background thread.
     This includes updating task status, running the handler, saving results,
     and notifying the boss service when complete.
@@ -42,15 +43,19 @@ def process_task(mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss
     @param chunk_doc Document data for the current chunk.
     @param boss_url Callback URL for the boss service.
     @param task_handler Function that performs the actual task computation.
+    @param task_kwargs Dict of configuration settings for each task.
     @throws Exception Logs and reports failures to the boss service."""
+    task_kwargs = task_kwargs or {}
     try:
         mark_task_in_progress(mongo_db, collection_name, chunk_id, task_name)
-        result = task_handler(chunk_doc)
+        result = task_handler(chunk_doc, **task_kwargs)
         save_task_result(mongo_db, collection_name, chunk_id, task_name, result)
         notify_boss(boss_url, chunk_id, task_name, "completed")
     except Exception as e:
         notify_boss(boss_url, chunk_id, task_name, "failed")
-        print(f"Error in background task: {e}")
+        print(f"Error while running {task_handler.__name__} with args {task_kwargs}")
+        raise e
+        #print(f"Ignored error from background task: {e}")
 ######################################################################################
 
 
@@ -86,7 +91,7 @@ def load_boss_config() -> str:
     return f"http://{BOSS_HOST}:{BOSS_PORT}/callback"
 
 
-def get_task_handler(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+def get_task_info(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     """Dynamically import and return the appropriate task handler function.
     @param task_name Name of the task type to execute.
     @return Callable that processes the task data and returns results.
@@ -94,10 +99,14 @@ def get_task_handler(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any
     @throws AttributeError If the task function is not found in the module."""
     if task_name == "bookscore":
         from components.metrics import run_bookscore
-        return run_bookscore
+        return run_bookscore, {}
     elif task_name == "questeval":
         from components.metrics import run_questeval
-        return run_questeval
+        return run_questeval, {
+            "qeval_task": "summarization",
+            "use_cuda": False,
+            "use_question_weighter": True,
+        }
     else:
         raise ValueError(f"Unknown task type: {task_name}")
 
@@ -177,7 +186,7 @@ def create_app(task_name: str, boss_url: str) -> Flask:
     app = Flask(__name__)
     
     # Load task handler on startup
-    task_handler = get_task_handler(task_name)
+    task_handler, task_args = get_task_info(task_name)
     
     @app.route("/start", methods=["POST"])
     def start():
@@ -202,9 +211,11 @@ def create_app(task_name: str, boss_url: str) -> Flask:
         chunk_doc = collection.find_one({"_id": chunk_id})
         if not chunk_doc:
             return jsonify({"error": "Chunk not found"}), 404
-        
+
         # Enqueue the background task
-        task_queue.put((process_task, (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler)))
+        task_queue.put((process_task,
+            (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url,
+                task_handler, task_args)))
         return jsonify({"status": "accepted"}), 202
     
     return app
