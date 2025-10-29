@@ -21,13 +21,65 @@ RUN pip install --no-cache-dir -r questeval.txt
 
 
 
-# Bug: malformed download URLs in this HF version, so we pre-download models
-# After installing questeval.txt, patch the installed package
-RUN pip install --no-cache-dir -r questeval.txt \
- && QUESTEVAL_PATH=$(python -c "import questeval; import os; print(os.path.dirname(questeval.__file__))") \
- && sed -i 's|"ThomasNLG/t5-qa_squad2neg-en"|"/root/.cache/transformers/ThomasNLG/t5-qa_squad2neg-en"|g' "$QUESTEVAL_PATH/questeval_metric.py" \
- && sed -i 's|"ThomasNLG/t5-qg_squad1-en"|"/root/.cache/transformers/ThomasNLG/t5-qg_squad1-en"|g' "$QUESTEVAL_PATH/questeval_metric.py"
 
+
+
+
+# Bug: malformed download URLs in this HF version, so we pre-download models
+
+# Download models using git-lfs (transformers 4.8.1 download is broken)
+RUN apt-get update && apt-get install -y --no-install-recommends git git-lfs \
+ && git lfs install \
+ && mkdir -p /root/.cache/transformers/ThomasNLG \
+ # Clone directly to final destination
+ && cd /root/.cache/transformers/ThomasNLG \
+ && git clone https://huggingface.co/ThomasNLG/t5-qa_squad2neg-en \
+ && cd t5-qa_squad2neg-en && git lfs pull && cd .. \
+ && git clone https://huggingface.co/ThomasNLG/t5-qg_squad1-en \
+ && cd t5-qg_squad1-en && git lfs pull && cd .. \
+ && git clone https://huggingface.co/ThomasNLG/t5-weighter_cnndm-en \
+ && cd t5-weighter_cnndm-en && git lfs pull && cd .. \
+ # Clean up .git directories to save space
+ && rm -rf t5-qa_squad2neg-en/.git* t5-qg_squad1-en/.git* t5-weighter_cnndm-en/.git* \
+ && apt-get remove -y git git-lfs && apt-get autoremove -y
+
+# Patch QuestEval to use local paths
+RUN python3 << 'EOF'
+import questeval
+import os
+
+filepath = os.path.join(os.path.dirname(questeval.__file__), 'questeval_metric.py')
+with open(filepath, 'r') as f:
+    content = f.read()
+
+# Replace ALL f-string model references with local paths
+content = content.replace(
+    "f'{HF_ORGANIZATION}/t5-qa_squad2neg-en'",
+    "'/root/.cache/transformers/ThomasNLG/t5-qa_squad2neg-en'"
+)
+content = content.replace(
+    "f'{HF_ORGANIZATION}/t5-qg_squad1-en'",
+    "'/root/.cache/transformers/ThomasNLG/t5-qg_squad1-en'"
+)
+content = content.replace(
+    "f'{HF_ORGANIZATION}/t5-weighter_cnndm-en'",
+    "'/root/.cache/transformers/ThomasNLG/t5-weighter_cnndm-en'"
+)
+content = content.replace(
+    "f'{HF_ORGANIZATION}/t5-qa_webnlg_synth-en'",
+    "'/root/.cache/transformers/ThomasNLG/t5-qa_webnlg_synth-en'"
+)
+content = content.replace(
+    "f'{HF_ORGANIZATION}/t5-qg_webnlg_synth-en'",
+    "'/root/.cache/transformers/ThomasNLG/t5-qg_webnlg_synth-en'"
+)
+
+with open(filepath, 'w') as f:
+    f.write(content)
+EOF
+
+# Keep transformers offline
+ENV TRANSFORMERS_OFFLINE=1
 
 
 

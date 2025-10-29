@@ -891,6 +891,12 @@ if __name__ == "__main__":
     DB_NAME = os.environ["DB_NAME"]
     BOSS_PORT = os.environ["PYTHON_PORT"]
     COLLECTION = os.environ["COLLECTION_NAME"]
+
+    # Drop old chunks
+    mongo_db = session.docs_db.get_unmanaged_handle()
+    collection = getattr(mongo_db, COLLECTION)
+    collection.drop()
+
     # old_main(session, COLLECTION)
 
     # Load configuration
