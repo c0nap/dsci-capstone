@@ -268,6 +268,7 @@ make docker-full-reset
 ```bash
 sudo apt install ncdu
 sudo ncdu /var/lib
+# Press Q to exit
 ```
 
 Delete any unused containers or images from Docker:
@@ -679,8 +680,6 @@ Structure of ECS: `Cluster → Service → Task → Containers`
 - In the `Service Connect` section, choose `Client and server`, select your namespace, and add port mappings (`Discovery` and `DNS` should both be `blazor_service`)
 - If you haven't already, [create a namespace](https://console.aws.amazon.com/cloudmap/home/namespaces/create): Name `default`, select `API calls and DNS`, create or select `VPC`, and set `TTL = 600`.
 
-8. Optional: Set up a **zero-spend budget** to prevent any bills: `AWS Billing` > `Budgets` > `Create budget`.
-
 
 ### Debug Container Logs
 
@@ -708,7 +707,27 @@ An AWS service provides useful overhead to maintain persistent deployments, _i.e
 - **Load balancing** - Distribute traffic across tasks
 - **Rolling deployments** - Update without downtime
 
-To stop a service from constantly redeploying your containers, you can:
+### Secrets
+
+1. Store API keys in [AWS Secrets Manager](https://console.aws.amazon.com/secretsmanager/listsecrets).
+
+2. Update your [Task Definition](https://console.aws.amazon.com/ecs/v2/task-definitions/dsci-capstone-task/create-revision) by navigating to `Container 1 (Python)` > `Environment variables`. Use the key name expected by Python, select `ValueFrom`, and paste the ARN from Secrets Manager for the value.
+
+3. Update your [ECS execution role](https://console.aws.amazon.com/iam/home#/roles/details/ecsTaskExecutionRole) with permission policy `SecretsManagerReadWrite`.
+
+Note: Blazor's builder will auto-detect environment variables like `Syncfusion:LicenseKey` when set in environment as `Syncfusion__LicenseKey`.
+
+### Databases
+
+Since we normally rely on `docker-compose.yml` to orchestrate our 3 database engines with initialization scripts and credentials, an AWS deployment would be tricky and require mirroring the Compose behavior manually.
+
+The most reliable option is to expose databases to AWS, but this is unsafe and would break for simulaneous runs. May revisit later.
+
+### Budget
+
+1. Set up a **zero-spend budget** to prevent any bills: `AWS Billing` > `Budgets` > `Create budget`.
+
+2. To stop a service from constantly redeploying your containers, you can:
 - Update service with `Desired tasks = 0`
 - Delete the service
 - Auto-stop using a rule / schedule
@@ -746,22 +765,6 @@ The schedule can only `Use existing role`, so we grant permissions by creating `
 ```
 
 </details>
-
-### Secrets
-
-1. Store API keys in [AWS Secrets Manager](https://console.aws.amazon.com/secretsmanager/listsecrets).
-
-2. Update your [Task Definition](https://console.aws.amazon.com/ecs/v2/task-definitions/dsci-capstone-task/create-revision) by navigating to `Container 1 (Python)` > `Environment variables`. Use the key name expected by Python, select `ValueFrom`, and paste the ARN from Secrets Manager for the value.
-
-3. Update your [ECS execution role](https://console.aws.amazon.com/iam/home#/roles/details/ecsTaskExecutionRole) with permission policy `SecretsManagerReadWrite`.
-
-Note: Blazor's builder will auto-detect environment variables like `Syncfusion:LicenseKey` when set in environment as `Syncfusion__LicenseKey`.
-
-### Databases
-
-Since we normally rely on `docker-compose.yml` to orchestrate our 3 database engines with initialization scripts and credentials, an AWS deployment would be tricky and require mirroring the Compose behavior manually.
-
-The most reliable option is to expose databases to AWS, but this is unsafe and would break for simulaneous runs. May revisit later.
 
 
 
@@ -810,8 +813,6 @@ Structure of ECS: `Cluster → Service → Task → Containers`
 - Add `PYTHON_HOST = python-app` in environment variables.
 - Ingress settings: `HTTP`, `Insecure connections: Disabled`, and `Target Port = 5055`
 
-5. (Optional) In `Cost Managements / Billing` > `Budget`, create a zero-cost budget with the minimum amount of 0.01. The Free plan should be fine either way.
-
 
 ### Debug Container Logs
 
@@ -839,6 +840,12 @@ You can view all created resources on your Dashboard. After clicking an individu
 8. Navigate to your **Container App Secrets** in `Security` > `Secrets`. You can add secret key / values here directly (unsafe), or add a reference to your Key Vault.
 
 9. Update **Environment Variables** in `Application` > `Containers` to reference your Container App Secrets.
+
+### Budget
+
+1. In `Cost Managements / Billing` > `Budget`, create a zero-cost budget with the minimum amount of $0.01. The Free plan should be fine either way; we increased this to $0.10 to avoid frequent notifications.
+
+2. Always press the `Stop` botton for each Container App before a pause in development.
 
 
 ## Comparison of AWS and Azure
