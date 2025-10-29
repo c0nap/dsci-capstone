@@ -431,9 +431,9 @@ def output_single(session):
 
 def full_pipeline(session, collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     chunks = pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title)
-    triples = pipeline_2(session, collection_name, chunks)
+    triples, chunk = pipeline_2(session, collection_name, chunks)
     triples_string = pipeline_3(session, triples)
-    summary = pipeline_4(triples_string)
+    summary = pipeline_4(session, collection_name, triples_string, chunk.get_chunk_id())
     pipeline_5a(summary, book_title, book_id)
 
 
@@ -573,7 +573,7 @@ def pipeline_2(session, collection_name, chunks):
         print("\nInvalid JSON:", e)
         return
 
-    return triples
+    return triples, c
 
 
 
@@ -611,7 +611,7 @@ def pipeline_3(session, triples):
 
 
 
-def pipeline_4(triples_string):
+def pipeline_4(session, collection_name, triples_string, chunk_id):
     """Generate chunk summary"""
     from components.text_processing import LLMConnector
 
@@ -627,6 +627,13 @@ def pipeline_4(triples_string):
 
     print("\nGenerated summary:")
     print(summary)
+
+    mongo_db = session.docs_db.get_unmanaged_handle()
+    collection = getattr(mongo_db, collection_name)
+    collection.update_one(
+	    {"_id": chunk_id},
+	    {"$set": {"summary": summary}}
+	)
 
     return summary
 
@@ -796,6 +803,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             # Assign task to worker
             if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
                 assigned += 1
+                print(f"SENT to worker: database {database_name}, collection {collection_name}, chunk ID: {chunk_id}")
         
         return jsonify({
             "status": "tasks_assigned",
@@ -943,9 +951,9 @@ CHAPTER 12. THE END OF THE END\n
         story_id = story_id,
         book_title = book_title
     )
-    triples = pipeline_2(session, COLLECTION, chunks)
+    triples, chunk = pipeline_2(session, COLLECTION, chunks)
     triples_string = pipeline_3(session, triples)
-    summary = pipeline_4(triples_string)
+    summary = pipeline_4(session, COLLECTION, triples_string, chunk.get_chunk_id())
     # pipeline_5 is moved to callback() to finalize asynchronously
     # pipeline_5a(summary, book_title, book_id)
 

@@ -209,14 +209,14 @@ def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", u
         - gold_summary: Reference summary (optional, filters for better questions)
     @param qeval_task  Task performed by QuestEval (optional, default is summarization).
         Must be one of the following: generation / nlg, qa, dialogue, data2text, translation.
-    @return  Dict containing scores (range 0-1) at varying granularity.
+    @return  Dict containing a score (range 0-1) and metadata for the provided summary.
         questeval_score: Overall semantic precision–recall score for one example (a Summary to evaluate, Source text, and Reference summary).
         has_reference: True if a gold reference summary was provided.
     @throws ImportError  If questeval package not installed.
     @throws KeyError  If required fields are missing from chunk.
     """
     from questeval.questeval_metric import QuestEval
-    if qeval_task is not "summarization":
+    if qeval_task != "summarization":
         use_question_weighter = False
 
     questeval = QuestEval(
@@ -276,7 +276,7 @@ def run_bookscore(chunk: Dict[str, Any], *,
     @param api  API provider (optional, default 'openai')
     @param batch_size  Sentences per batch for v2 (optional, default 10)
     @param use_v2  Use batched evaluation (optional, default True)
-    @return  Dict containing a score (range 0-1) for the provided summary.
+    @return  Dict containing a score (range 0-1) and metadata for the provided summary.
         bookscore: Coherence score for one summary.
         annotations: True if a gold reference summary was provided.
         model_used: String describing the LLM model and API used.

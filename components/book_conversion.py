@@ -69,11 +69,16 @@ class Chunk:
             return len(self.text.replace("\n", ""))
         return len(self.text)
 
+    def get_chunk_id(self) -> str:
+        """Use story ID, book ID, chapter, and chapter percentage to generate a chunk ID.
+        @return  A string uniquely identifying a chunk."""
+        return f"story-{self.story_id}_book-{self.book_id}_chapter-{self.chapter_number}_p.{round(self.chapter_percent, 5)}"
+
     def to_mongo_dict(self) -> Dict[str, Any]:
         """Convert Chunk to Mongo document format.
         @return  A dictionary which can be easily loaded into MongoDB."""
         return {
-            "_id": f"story-{self.story_id}_book-{self.book_id}_chapter-{self.chapter_number}_p.{round(self.chapter_percent, 5)}",
+            "_id": self.get_chunk_id(),
             "text": self.text,
             "book_id": self.book_id,
             "chapter_number": self.chapter_number,

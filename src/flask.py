@@ -27,7 +27,8 @@ def task_worker():
         try:
             func(*args)
         except Exception as e:
-            print(f"Worker thread error: {e}")
+            raise e
+            #print(f"Worker thread error: {e}")
         finally:
             task_queue.task_done()
 
