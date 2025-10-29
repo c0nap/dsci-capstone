@@ -260,24 +260,27 @@ def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", u
 
 
 
-
-def run_bookscore(chunk: Dict[str, Any]) -> Dict[str, Any]:
+def run_bookscore(chunk: Dict[str, Any], *,
+    api_key: str = None, model: str = "gpt-4", api: str = "openai",
+    batch_size: int = 10, use_v2: bool = True) -> Dict[str, Any]:
     """Run BooookScore metric for long-form summarization.
-    @details  LLM-based coherence evaluation using BooookScore CLI via subprocess.
-              Handles full workflow: scoring summary, postprocessing.
-              Can be run on a single chunk or entire book (if already chunked).
-              Requires booookscore to be installed: pip install booookscore
+    @details  LLM-based coherence evaluation using BooookScore. Runs in CLI via subprocess.
+        Handles full workflow: scoring summary, postprocessing.
+        Can be run on a single chunk or entire book (if already chunked).
     @param chunk  MongoDB document containing:
-                      - book_text: Full or partial book text (required)
-                      - summary: Generated summary (required)
-                      - book_title: Book title for identification (optional, default 'book')
-                      - api_key: API key for LLM provider (required)
-                      - model: Model name (optional, default 'gpt-4')
-                      - api: API provider (optional, default 'openai')
-                      - batch_size: Sentences per batch for v2 (optional, default 10)
-                      - use_v2: Use batched evaluation (optional, default True)
-    @return  Dict with 'bookscore', 'annotations', 'model_used'.
-    @throws KeyError  If required fields missing from chunk.
+        - summary: Generated summary (required)
+        - text: Full or partial book text (required)
+        - book_title: Book title for identification (optional, for pickling)
+    @param api_key  API key for LLM provider (required)
+    @param model  Model name (optional, default 'gpt-4')
+    @param api  API provider (optional, default 'openai')
+    @param batch_size  Sentences per batch for v2 (optional, default 10)
+    @param use_v2  Use batched evaluation (optional, default True)
+    @return  Dict containing a score (range 0-1) for the provided summary.
+        bookscore: Coherence score for one summary.
+        annotations: True if a gold reference summary was provided.
+        model_used: String describing the LLM model and API used.
+    @throws KeyError  If required fields are missing from chunk.
     @throws RuntimeError  If subprocess execution fails.
     """
     import json
@@ -286,14 +289,11 @@ def run_bookscore(chunk: Dict[str, Any]) -> Dict[str, Any]:
     import tempfile
     import os
 
-    book_text = chunk['book_text']
+    book_text = chunk['text']
     summary = chunk['summary']
-    book_title = chunk.get('book_title', 'book')
-    api_key = chunk['api_key']
-    model = chunk.get('model', 'gpt-4')
-    api = chunk.get('api', 'openai')
-    batch_size = chunk.get('batch_size', 10)
-    use_v2 = chunk.get('use_v2', True)
+    book_title = chunk.get('book_title', 'Unkown Book')  # TODO: convert to arg
+    if api_key is None:
+        raise RuntimeError("You must provide an API key to use BookScore!")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Step 1: Write book text as pickle
@@ -354,7 +354,7 @@ def run_bookscore(chunk: Dict[str, Any]) -> Dict[str, Any]:
         return {
             'bookscore': overall_score,
             'annotations': book_annot,
-            'model_used': model
+            'model_used': f"{api}-model_{model}"
         }
 
 
