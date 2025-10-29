@@ -22,16 +22,14 @@ RUN pip install --no-cache-dir -r questeval.txt
 
 
 
+# Workaround for QuestEval 0.2.4 + transformers 4.8.1 offline usage
+# Issue: transformers 4.8.1 has malformed HuggingFace API URLs, preventing model downloads
+# Solution: Pre-download models via git-lfs and patch QuestEval to use local paths
 
-
-
-# Bug: malformed download URLs in this HF version, so we pre-download models
-
-# Download models using git-lfs (transformers 4.8.1 download is broken)
+# Download models using git-lfs
 RUN apt-get update && apt-get install -y --no-install-recommends git git-lfs \
  && git lfs install \
  && mkdir -p /root/.cache/transformers/ThomasNLG \
- # Clone directly to final destination
  && cd /root/.cache/transformers/ThomasNLG \
  && git clone https://huggingface.co/ThomasNLG/t5-qa_squad2neg-en \
  && cd t5-qa_squad2neg-en && git lfs pull && cd .. \
@@ -39,49 +37,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends git git-lfs \
  && cd t5-qg_squad1-en && git lfs pull && cd .. \
  && git clone https://huggingface.co/ThomasNLG/t5-weighter_cnndm-en \
  && cd t5-weighter_cnndm-en && git lfs pull && cd .. \
- # Clean up .git directories to save space
- && rm -rf t5-qa_squad2neg-en/.git* t5-qg_squad1-en/.git* t5-weighter_cnndm-en/.git* \
+ && rm -rf */.git* \
  && apt-get remove -y git git-lfs && apt-get autoremove -y
 
-# Patch QuestEval to use local paths
+# Patch QuestEval to use local model paths instead of HuggingFace Hub
 RUN python3 << 'EOF'
-import questeval
-import os
-
+import questeval, os
 filepath = os.path.join(os.path.dirname(questeval.__file__), 'questeval_metric.py')
 with open(filepath, 'r') as f:
     content = f.read()
 
-# Replace ALL f-string model references with local paths
-content = content.replace(
-    "f'{HF_ORGANIZATION}/t5-qa_squad2neg-en'",
-    "'/root/.cache/transformers/ThomasNLG/t5-qa_squad2neg-en'"
-)
-content = content.replace(
-    "f'{HF_ORGANIZATION}/t5-qg_squad1-en'",
-    "'/root/.cache/transformers/ThomasNLG/t5-qg_squad1-en'"
-)
-content = content.replace(
-    "f'{HF_ORGANIZATION}/t5-weighter_cnndm-en'",
-    "'/root/.cache/transformers/ThomasNLG/t5-weighter_cnndm-en'"
-)
-content = content.replace(
-    "f'{HF_ORGANIZATION}/t5-qa_webnlg_synth-en'",
-    "'/root/.cache/transformers/ThomasNLG/t5-qa_webnlg_synth-en'"
-)
-content = content.replace(
-    "f'{HF_ORGANIZATION}/t5-qg_webnlg_synth-en'",
-    "'/root/.cache/transformers/ThomasNLG/t5-qg_webnlg_synth-en'"
-)
+# Replace all HuggingFace Hub references with local paths
+for model in ['t5-qa_squad2neg-en', 't5-qg_squad1-en', 't5-weighter_cnndm-en', 
+              't5-qa_webnlg_synth-en', 't5-qg_webnlg_synth-en']:
+    content = content.replace(
+        f"f'{{HF_ORGANIZATION}}/{model}'",
+        f"'/root/.cache/transformers/ThomasNLG/{model}'"
+    )
 
 with open(filepath, 'w') as f:
     f.write(content)
 EOF
 
-# Keep transformers offline
+# Use the offline version of transformers
 ENV TRANSFORMERS_OFFLINE=1
-
-
 
 
 
