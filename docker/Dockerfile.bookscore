@@ -21,10 +21,15 @@ RUN pip install --no-cache-dir -r bookscore.txt
 
 
 
+
+# Download NLTK model
+RUN python -m nltk.downloader punkt punkt_tab
+
 # BooookScore fix: download required file from repository
 RUN mkdir -p /usr/local/lib/python3.10/site-packages/booookscore/prompts && \
     curl -sSL https://raw.githubusercontent.com/lilakk/BooookScore/main/prompts/get_annotations_v2.txt \
          -o /usr/local/lib/python3.10/site-packages/booookscore/prompts/get_annotations_v2.txt
+
 
 
 # Copy source code into the container (optional .dockerignore)
