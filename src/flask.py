@@ -102,9 +102,7 @@ def get_task_info(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     @throws AttributeError If the task function is not found in the module."""
     if task_name == "bookscore":
         from components.metrics import run_bookscore
-        API_KEY = os.environ["BOOKSCORE_API_KEY"]
         return run_bookscore, {
-            "api_key": API_KEY,
             "model": "gpt-5-nano",
             "use_v2": False,   # single-pass mode
         }

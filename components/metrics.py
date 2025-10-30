@@ -261,7 +261,7 @@ def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", u
 
 
 def run_bookscore(chunk: Dict[str, Any], *,
-    api_key: str = None, model: str = "gpt-4",
+    model: str = "gpt-4",
     batch_size: int = 10, use_v2: bool = True) -> Dict[str, Any]:
     """Run BooookScore metric for long-form summarization.
     @details  LLM-based coherence evaluation using BooookScore. Runs in CLI via subprocess.
@@ -271,7 +271,6 @@ def run_bookscore(chunk: Dict[str, Any], *,
         - summary: Generated summary (required)
         - text: Full or partial book text (required)
         - book_title: Book title for identification (optional, for pickling)
-    @param api_key  API key for LLM provider (required)
     @param model  Model name (optional, default 'gpt-4')
     @param batch_size  Sentences per batch for v2 (optional, default 10)
     @param use_v2  Use batched evaluation (optional, default True)
@@ -296,8 +295,7 @@ def run_bookscore(chunk: Dict[str, Any], *,
     book_text = chunk['text']
     summary = chunk['summary']
     book_title = chunk.get('book_title', 'Unkown Book')  # TODO: convert to arg
-    if api_key is None:
-        raise RuntimeError("You must provide an API key to use BookScore!")
+    api_key = os.environ["BOOKSCORE_API_KEY"]
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Step 1: Write book text as pickle

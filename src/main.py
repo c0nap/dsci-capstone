@@ -548,7 +548,7 @@ def pipeline_2(session, collection_name, chunks, book_title):
         {"_id": c.get_chunk_id()},
         {"$set": {"book_title": book_title}}
     )
-    print(f"Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}")
+    print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
 
     extracted = nlp.extract(c.text, parse_tuples=True)
     print(f"\nNLP output:")
@@ -639,7 +639,7 @@ def pipeline_4(session, collection_name, triples_string, chunk_id):
         {"_id": chunk_id},
         {"$set": {"summary": summary}}
     )
-    print(f"Wrote summary to Mongo with chunk_id: {chunk_id}")
+    print(f"    [Wrote summary to Mongo with chunk_id: {chunk_id}]")
 
     return summary
 
