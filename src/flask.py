@@ -105,7 +105,7 @@ def get_task_info(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         API_KEY = os.environ["BOOKSCORE_API_KEY"]
         return run_bookscore, {
             "api_key": API_KEY,
-            "model": "gpt-4",
+            "model": "gpt-5-nano",
         }
     elif task_name == "questeval":
         from components.metrics import run_questeval
