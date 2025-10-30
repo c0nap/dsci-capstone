@@ -38,7 +38,7 @@ class Metrics:
 
 
     def post_basic_metrics(self, book_id, book_title, summary, gold_summary="", chunk="", **kwargs):
-        results = Metrics.compute_basic_metrics(book_id, book_title, summary, gold_summary, chunk, **kwargs)
+        results = Metrics.compute_basic_metrics(summary, gold_summary, chunk)
         metrics = Metrics.generate_default_metrics(
             rouge_precision = results["rouge"]["precision"][0],
             rouge_recall = results["rouge"]["recall"][0],
