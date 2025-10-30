@@ -8,7 +8,7 @@ import argparse
 import requests
 import os
 from dotenv import load_dotenv
-from typing import Dict, Any, Callable, Optional
+from typing import Dict, Any, Callable, Optional, Tuple
 import queue, threading, time
 
 
@@ -32,8 +32,8 @@ def task_worker():
         finally:
             task_queue.task_done()
 
-def process_task(mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url,
-    task_handler, task_kwargs=None):
+def process_task(mongo_db, collection_name, chunk_id, task_name, chunk_doc,
+    boss_url, task_handler, task_kwargs=None):
     """Perform the assigned task in a background thread.
     This includes updating task status, running the handler, saving results,
     and notifying the boss service when complete.
@@ -48,6 +48,7 @@ def process_task(mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss
     @throws Exception Logs and reports failures to the boss service."""
     task_kwargs = task_kwargs or {}
     try:
+        notify_boss(boss_url, chunk_id, task_name, "started")
         mark_task_in_progress(mongo_db, collection_name, chunk_id, task_name)
         result = task_handler(chunk_doc, **task_kwargs)
         save_task_result(mongo_db, collection_name, chunk_id, task_name, result)
@@ -82,14 +83,15 @@ def load_mongo_config(database: str) -> str:
     return mongo_uri
 
 
-def load_boss_config() -> str:
+def load_boss_config() -> Tuple[str, str]:
     """Load boss service callback URL from environment variables.
     @return Full callback URL for the boss service.
     @throws KeyError If PYTHON_HOST environment variable is missing."""
     load_dotenv(".env")
     BOSS_HOST = os.environ["PYTHON_HOST"]
     BOSS_PORT = os.environ["PYTHON_PORT"]
-    return f"http://{BOSS_HOST}:{BOSS_PORT}/callback"
+    BOSS_URL = f"http://{BOSS_HOST}:{BOSS_PORT}"
+    return f"{BOSS_URL}/callback"
 
 
 def get_task_info(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
@@ -204,10 +206,11 @@ def create_app(task_name: str, boss_url: str) -> Flask:
     # Load task handler on startup
     task_handler, task_args = get_task_info(task_name)
     load_imports(task_handler)
-    print("\n" * 8)
+    if task_name == "questeval":
+        print("\n" * 6)
     
-    @app.route("/start", methods=["POST"])
-    def start():
+    @app.route("/tasks/queue", methods=["POST"])
+    def enqueue_task():
         """Handle incoming task assignments from boss service.
         @return JSON response with status code."""
         data = request.json
@@ -234,8 +237,8 @@ def create_app(task_name: str, boss_url: str) -> Flask:
 
         # Enqueue the background task
         task_queue.put((process_task,
-            (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url,
-                task_handler, task_args)))
+            (mongo_db, collection_name, chunk_id, task_name, chunk_doc,
+                boss_url, task_handler, task_args)))
         return jsonify({"status": "accepted"}), 202
     
     return app

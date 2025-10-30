@@ -711,7 +711,7 @@ def load_worker_config(task_types: List[str]) -> Dict[str, str]:
         HOST = os.environ[host_key]
         PORT = os.environ[port_key]
         if HOST and PORT:
-            workers[task] = f"http://{HOST}:{PORT}/start"
+            workers[task] = f"http://{HOST}:{PORT}/tasks/queue"
     
     return workers
 
@@ -804,6 +804,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             
             # Update specific task status
             story_tracker.loc[story_tracker['story_id'] == story_id, task] = status
+        print(f"Stories Status:\n{story_tracker}\n")
     
     def update_chunk_status(chunk_id: str, story_id: int, task: str, status: str):
         """Update chunk-level task status.
@@ -833,6 +834,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             
             # Update specific task status
             chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, task] = status
+        print(f"Chunks Status:\n{chunk_tracker}\n")
     
     def check_story_completion(story_id: int, task_type: str) -> bool:
         """Check if all chunks for a story have completed a specific task.
@@ -904,50 +906,20 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             "assigned": assigned
         }), 200
     
-    @app.route("/callback/started", methods=["POST"])
-    def callback_started():
-        """Receive start notifications from worker services when task begins processing.
-        @return Simple acknowledgment response."""
-        data = request.json
-        
-        chunk_id = data.get("chunk_id")
-        task = data.get("task")
-        
-        print(f"[CALLBACK STARTED] chunk_id={chunk_id}, task={task}")
-        
-        # Get specific chunk by chunk_id
-        collection = getattr(mongo_db, collection_name)
-        chunk = collection.find_one({"_id": chunk_id})
-        
-        if not chunk:
-            return jsonify({"error": f"Could not find chunk {chunk_id} in MongoDB."}), 404
-        
-        story_id = chunk["story_id"]
-        
-        # Map task to chunk-level task name
-        task_mapping = {
-            'questeval': 'metric_questeval',
-            'bookscore': 'metric_bookscore'
-        }
-        chunk_task = task_mapping.get(task, task)
-        
-        # Update chunk status to in-progress
-        update_chunk_status(chunk_id, story_id, chunk_task, 'in-progress')
-        
-        # Update story status to in-progress if not already
-        update_story_status(story_id, 'metrics', 'in-progress')
-        
-        return jsonify({"status": "received"}), 200
     
     @app.route("/callback", methods=["POST"])
     def callback():
-        """Receive completion notifications from worker services.
+        """Receive status notifications from worker services.
+        Handles started, completed, and failed statuses.
         @return Simple acknowledgment response."""
         data = request.json
         
         chunk_id = data.get("chunk_id")
         task = data.get("task")
-        status = data.get("status")
+        status = data.get("status")  # Expected: "started", "completed", or "failed"
+        
+        if not chunk_id or not task or not status:
+            return jsonify({"error": "Missing required fields: chunk_id, task, status"}), 400
         
         print(f"[CALLBACK] chunk_id={chunk_id}, task={task}, status={status}")
         
@@ -967,35 +939,52 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         }
         chunk_task = task_mapping.get(task, task)
         
-        # Update chunk status to completed
-        update_chunk_status(chunk_id, story_id, chunk_task, 'completed')
-        
-        # Check if all chunks for this story completed this task
-        if check_story_completion(story_id, chunk_task):
-            print(f"[STORY COMPLETE] All chunks completed {chunk_task} for story {story_id}")
+        # Handle different status types
+        if status == "started":
+            # Update chunk status to in-progress
+            update_chunk_status(chunk_id, story_id, chunk_task, 'in-progress')
             
-            # Check if all metric tasks are complete for the story
-            all_metrics_complete = all([
-                check_story_completion(story_id, 'metric_questeval'),
-                check_story_completion(story_id, 'metric_bookscore')
-            ])
+            # Update story status to in-progress if not already
+            update_story_status(story_id, 'metrics', 'in-progress')
             
-            if all_metrics_complete:
-                # Update story-level metrics to completed
-                update_story_status(story_id, 'metrics', 'completed')
+        elif status == "completed":
+            # Update chunk status to completed
+            update_chunk_status(chunk_id, story_id, chunk_task, 'completed')
+            
+            # Check if all chunks for this story completed this task
+            if check_story_completion(story_id, chunk_task):
+                print(f"[STORY COMPLETE] All chunks completed {chunk_task} for story {story_id}")
                 
-                # FINALIZE PIPELINE - all workers finished for this story
-                # Access fields directly from the MongoDB document
-                book_id = chunk["book_id"]
-                book_title = chunk["book_title"]
-                text = chunk["text"]
-                summary = chunk["summary"]
-                gold_summary = chunk.get("gold_summary", "")
-                bookscore = chunk["bookscore"]
-                questeval = chunk["questeval"]
-                pipeline_5b(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
+                # Check if all metric tasks are complete for the story
+                all_metrics_complete = all([
+                    check_story_completion(story_id, 'metric_questeval'),
+                    check_story_completion(story_id, 'metric_bookscore')
+                ])
                 
-                print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")
+                if all_metrics_complete:
+                    # Update story-level metrics to completed
+                    update_story_status(story_id, 'metrics', 'completed')
+                    
+                    # FINALIZE PIPELINE - all workers finished for this story
+                    # Access fields directly from the MongoDB document
+                    book_id = chunk["book_id"]
+                    book_title = chunk["book_title"]
+                    text = chunk["text"]
+                    summary = chunk["summary"]
+                    gold_summary = chunk.get("gold_summary", "")
+                    bookscore = chunk["bookscore"]
+                    questeval = chunk["questeval"]
+                    pipeline_5b(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
+                    
+                    print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")
+                    
+        elif status == "failed":
+            # Update chunk status to failed (keep as assigned for potential retry)
+            print(f"[WARNING] Task {task} failed for chunk {chunk_id}")
+            update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
+            
+        else:
+            return jsonify({"error": f"Unknown status: {status}"}), 400
         
         return jsonify({"status": "received"}), 200
     
