@@ -808,7 +808,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             
             # Update specific task status
             story_tracker.loc[story_tracker['story_id'] == story_id, task] = status
-        print(f"{" " * 16}Stories Status:\n{story_tracker}\n")
+        #print(f"{" " * 16}Stories Status:\n{story_tracker}\n")
 
     def update_chunk_status(chunk_id: str, story_id: int, task: str, status: str):
         """Update chunk-level task status. Auto-initializes with pending if not exists.
@@ -838,7 +838,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             
             # Update specific task status
             chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, task] = status
-        print(f"{" " * 16}Chunks Status:\n{chunk_tracker}\n")
+        #print(f"{" " * 16}Chunks Status:\n{chunk_tracker}\n")
     
     def check_story_completion(story_id: int, task_type: str) -> bool:
         """Check if all chunks for a story have completed a specific task.
@@ -908,7 +908,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
                 update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
                 assigned += 1
-                print(f"SENT to worker: database {database_name}, collection {collection_name}, chunk ID: {chunk_id}")
+                print(f"[ASSIGNED] chunk '{chunk_id}' to worker {task_type}: using database '{database_name}' and collection '{collection_name}'")
             else:
                 # If assignment failed, set status to failed
                 print(f"WARNING: Failed to assign chunk {chunk_id} to worker")

@@ -222,7 +222,7 @@ def create_app(task_name: str, boss_url: str) -> Flask:
         if not chunk_id:
             return jsonify({"error": "Missing chunk_id"}), 400
         
-        print(f"RECEIVED from boss: database {database_name}, collection {collection_name}, chunk ID: {chunk_id}")
+        print(f"[QUEUED] chunk '{chunk_id}' from Boss: using database '{database_name}' and collection '{collection_name}'")
 
         # Reconnect to the database since DB_NAME or COLLECTION may have changed
         mongo_uri = load_mongo_config(database_name)
