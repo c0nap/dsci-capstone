@@ -12,12 +12,19 @@ ENV PYTHONUNBUFFERED=1
 
 # Copy dependency list first to leverage build cache
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential make \
+    build-essential make git \
  && pip install --upgrade pip setuptools wheel \
  && rm -rf /var/lib/apt/lists/*
 
 COPY req/bookscore.txt .
 RUN pip install --no-cache-dir -r bookscore.txt
+
+
+
+# BooookScore fix: download required folders from repository
+RUN git clone --depth 1 https://github.com/lilakk/BooookScore.git /tmp/booookscore \
+ && cp -r /tmp/booookscore/booookscore /usr/local/lib/python3.10/site-packages/booookscore \
+ && rm -rf /tmp/booookscore
 
 
 # Copy source code into the container (optional .dockerignore)

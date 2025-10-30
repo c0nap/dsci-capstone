@@ -287,6 +287,10 @@ def run_bookscore(chunk: Dict[str, Any], *,
     import subprocess
     import tempfile
     import os
+    import importlib.util
+
+    # Find the installed package path
+    pkg_path = importlib.util.find_spec("booookscore").submodule_search_locations[0]
 
     book_text = chunk['text']
     summary = chunk['summary']
@@ -319,13 +323,12 @@ def run_bookscore(chunk: Dict[str, Any], *,
             '--model', model,
             '--openai_key', key_path
         ]
-
-
         if use_v2:
             score_cmd.extend(['--v2', '--batch_size', str(batch_size)])
 
         try:
-            subprocess.run(score_cmd, capture_output=True, text=True, timeout=600, check=True)
+            # Run from inside the package so relative paths resolve
+            subprocess.run(score_cmd, cwd=pkg_path, capture_output=True, text=True, timeout=600, check=True)
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore scoring failed: {e.stderr}") from e
         except subprocess.TimeoutExpired as e:
