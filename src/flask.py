@@ -104,7 +104,6 @@ def get_task_info(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
         return run_bookscore, {
             "api_key": API_KEY,
             "model": "gpt-4",
-            "api": "openai",
         }
     elif task_name == "questeval":
         from components.metrics import run_questeval

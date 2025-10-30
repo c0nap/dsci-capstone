@@ -261,7 +261,7 @@ def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", u
 
 
 def run_bookscore(chunk: Dict[str, Any], *,
-    api_key: str = None, model: str = "gpt-4", api: str = "openai",
+    api_key: str = None, model: str = "gpt-4",
     batch_size: int = 10, use_v2: bool = True) -> Dict[str, Any]:
     """Run BooookScore metric for long-form summarization.
     @details  LLM-based coherence evaluation using BooookScore. Runs in CLI via subprocess.
@@ -273,7 +273,6 @@ def run_bookscore(chunk: Dict[str, Any], *,
         - book_title: Book title for identification (optional, for pickling)
     @param api_key  API key for LLM provider (required)
     @param model  Model name (optional, default 'gpt-4')
-    @param api  API provider (optional, default 'openai')
     @param batch_size  Sentences per batch for v2 (optional, default 10)
     @param use_v2  Use batched evaluation (optional, default True)
     @return  Dict containing a score (range 0-1) and metadata for the provided summary.
@@ -318,9 +317,9 @@ def run_bookscore(chunk: Dict[str, Any], *,
             '--summ_path', summ_path,
             '--annot_path', annot_path,
             '--model', model,
-            '--api', api,
-            '--api_key', key_path
+            '--openai_key', key_path
         ]
+
 
         if use_v2:
             score_cmd.extend(['--v2', '--batch_size', str(batch_size)])
@@ -354,7 +353,7 @@ def run_bookscore(chunk: Dict[str, Any], *,
         return {
             'bookscore': overall_score,
             'annotations': book_annot,
-            'model_used': f"{api}-model_{model}"
+            'model_used': f"openai-model_{model}"
         }
 
 
