@@ -1,13 +1,75 @@
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-workers-dev
+[+] Building 0.9s (18/18) FINISHED                                                                       docker:default
+ => [internal] load build definition from Dockerfile.bookscore                                                     0.0s
+ => => transferring dockerfile: 1.68kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.10-slim                                                0.4s
+ => [internal] load .dockerignore                                                                                  0.1s
+ => => transferring context: 79B                                                                                   0.0s
+ => [internal] load build context                                                                                  0.2s
+ => => transferring context: 1.94kB                                                                                0.1s
+ => [ 1/13] FROM docker.io/library/python:3.10-slim@sha256:e0c4fae70d550834a40f6c3e0326e02cfe239c2351d922e1fb1577  0.0s
+ => CACHED [ 2/13] WORKDIR /flask                                                                                  0.0s
+ => CACHED [ 3/13] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make git   0.0s
+ => CACHED [ 4/13] COPY req/bookscore.txt .                                                                        0.0s
+ => CACHED [ 5/13] RUN pip install --no-cache-dir -r bookscore.txt                                                 0.0s
+ => CACHED [ 6/13] RUN python -m nltk.downloader punkt punkt_tab                                                   0.0s
+ => CACHED [ 7/13] RUN mkdir -p /usr/local/lib/python3.10/site-packages/booookscore/prompts &&     curl -sSL http  0.0s
+ => CACHED [ 8/13] COPY src/ src/                                                                                  0.0s
+ => CACHED [ 9/13] COPY components/ components/                                                                    0.0s
+ => CACHED [10/13] COPY Makefile pyproject.toml ./                                                                 0.0s
+ => CACHED [11/13] COPY .env .env                                                                                  0.0s
+ => CACHED [12/13] RUN make env-docker                                                                             0.0s
+ => CACHED [13/13] RUN mv .env.docker .env                                                                         0.0s
+ => exporting to image                                                                                             0.0s
+ => => exporting layers                                                                                            0.0s
+ => => writing image sha256:f77aadd9e90da5a67216c6f78a0c6fa6d7a9eabb7b396630cedd801133440940                       0.0s
+ => => naming to docker.io/library/dsci-cap-img-bscore-dev:latest                                                  0.0s
+[+] Building 0.4s (21/21) FINISHED                                                                       docker:default
+ => [internal] load build definition from Dockerfile.questeval                                                     0.0s
+ => => transferring dockerfile: 5.25kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.8-slim                                                 0.1s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 79B                                                                                   0.0s
+ => [ 1/16] FROM docker.io/library/python:3.8-slim@sha256:1d52838af602b4b5a831beb13a0e4d073280665ea7be7f69ce2382f  0.0s
+ => [internal] load build context                                                                                  0.2s
+ => => transferring context: 2.24kB                                                                                0.1s
+ => CACHED [ 2/16] WORKDIR /flask                                                                                  0.0s
+ => CACHED [ 3/16] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make git   0.0s
+ => CACHED [ 4/16] COPY req/questeval.txt .                                                                        0.0s
+ => CACHED [ 5/16] RUN pip install --no-cache-dir -r questeval.txt                                                 0.0s
+ => CACHED [ 6/16] RUN mkdir -p /root/.cache/huggingface/transformers/ThomasNLG &&     cd /root/.cache/huggingfac  0.0s
+ => CACHED [ 7/16] RUN cd /root/.cache/huggingface/transformers &&     git clone https://huggingface.co/bert-base  0.0s
+ => CACHED [ 8/16] RUN apt-get remove -y git git-lfs && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*       0.0s
+ => CACHED [ 9/16] RUN python3 << 'EOF'                                                                            0.0s
+ => CACHED [10/16] RUN python3 << 'EOF'                                                                            0.0s
+ => CACHED [11/16] COPY src/ src/                                                                                  0.0s
+ => CACHED [12/16] COPY components/ components/                                                                    0.0s
+ => CACHED [13/16] COPY Makefile pyproject.toml ./                                                                 0.0s
+ => CACHED [14/16] COPY .env .env                                                                                  0.0s
+ => CACHED [15/16] RUN make env-docker                                                                             0.0s
+ => CACHED [16/16] RUN mv .env.docker .env                                                                         0.0s
+ => exporting to image                                                                                             0.0s
+ => => exporting layers                                                                                            0.0s
+ => => writing image sha256:d5ac15aa05de50d1595fd3db4297f817b342b7f02517c3f570f7e0d3d31e2aa1                       0.0s
+ => => naming to docker.io/library/dsci-cap-img-qeval-dev:latest                                                   0.0s
+container-qeval
+185649e29a6ed980aada8759473c31ff6ce50b57048e5e7351db68ca9f527e48
+Network 'capstone_default' already exists; continue...
+container-qeval
+container-bscore
+0a3f5ab327f42ceabad552bf655b1559db7876f1151e0998777828bc158b421c
+Network 'capstone_default' already exists; continue...
+container-bscore
 (env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python-dev
 [+] Building 0.7s (20/20) FINISHED                                                                       docker:default
  => [internal] load build definition from Dockerfile.python                                                        0.0s
  => => transferring dockerfile: 1.29kB                                                                             0.0s
- => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.2s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.1s
  => [internal] load .dockerignore                                                                                  0.1s
  => => transferring context: 79B                                                                                   0.0s
  => [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:e97cf9a2e84d604941d9902f00616db7466ff302af4b1c3c67fb7c  0.0s
- => [internal] load build context                                                                                  0.3s
- => => transferring context: 4.05kB                                                                                0.3s
+ => [internal] load build context                                                                                  0.4s
+ => => transferring context: 9.67MB                                                                                0.4s
  => CACHED [ 2/15] WORKDIR /pipeline                                                                               0.0s
  => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make pand  0.0s
  => CACHED [ 4/15] COPY req/requirements.txt requirements.txt                                                      0.0s
@@ -24,17 +86,18 @@
  => CACHED [15/15] COPY pyproject.toml .                                                                           0.0s
  => exporting to image                                                                                             0.0s
  => => exporting layers                                                                                            0.0s
- => => writing image sha256:07927b48b17e3403c872a5a96e1e53dcb5754135149ad83083f86c0c791e0ad0                       0.0s
+ => => writing image sha256:3000a9070daeba12c85dd11f301e728db85908f21304ef23baa2dcb01e04b8f1                       0.0s
  => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                                  0.0s
 container-python
-9d27dc95c3938bce7f4ec3f048db67ceed16c7fb87c531e10275aff1278302c6
+9df26b8bf68ff0c9ef3e6758b7a2c042be0a69c23850ad513060e6ffe586b100
 Network 'capstone_default' already exists; continue...
+Deleted old chunks...
  * Serving Flask app 'main'
  * Debug mode: off
 WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
  * Running on all addresses (0.0.0.0)
  * Running on http://127.0.0.1:5054
- * Running on http://172.17.0.4:5054
+ * Running on http://172.17.0.5:5054
 Press CTRL+C to quit
 
 ==================================================
@@ -44,132 +107,336 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 Total chunks: 254
 
 Chunk details:
-  index: Chunk(len=1079, book=2, chapter=9, story=1, lines=[1951,1969], story%=30.095, chapter%=14.065)
+  index: Chunk(len=1443, book=2, chapter=9, story=1, lines=[2244,2268], story%=34.994, chapter%=66.655)
 
-So that when Wednesday afternoon brought an unexpected holiday, and every one decided to go somewhere on the carpet, the journey had to be undertaken without the Phoenix. They were debarred from any carpet excursions in the evening by a sudden promise to mother, exacted in the agitation of parting, that they would not be out after six at night, except on Saturday, when they were to go to the bazaar, and were pledged to put on their best clothes, to wash themselves to the uttermost, and to clean their nails—not with scissors, which are scratchy and bad, but with flat-sharpened ends of wooden matches, which do no harm to any one’s nails.
-‘Let’s go and see the Lamb,’ said Jane.
-But every one was agreed that if they appeared suddenly in Bournemouth it would frighten mother out of her wits, if not into a fit. So they sat on the carpet, and thought and thought and thought till they almost began to squint.
-‘Look here,’ said Cyril, ‘I know. Please carpet, take us somewhere where we can see the Lamb and mother and no one can see us.’
-‘Except the Lamb,’ said Jane, quickly.
+It took some time to arrange the things on the stall. The carpet was spread over it, and the dark colours showed up the brass and silver and ivory things. It was a happy and busy afternoon, and when Miss Peasmarsh and the girls had sold every single one of the little pretty things from the Indian bazaar, far, far away, Anthea and Jane went off with the boys to fish in the fishpond, and dive into the bran-pie, and hear the cardboard band, and the phonograph, and the chorus of singing birds that was done behind a screen with glass tubes and glasses of water.
+They had a beautiful tea, suddenly presented to them by the nice curate, and Miss Peasmarsh joined them before they had had more than three cakes each. It was a merry party, and the curate was extremely pleasant to every one, ‘even to Miss Peasmarsh,’ as Jane said afterwards.
+‘We ought to get back to the stall,’ said Anthea, when no one could possibly eat any more, and the curate was talking in a low voice to Miss Peas marsh about ‘after Easter’.
+‘There’s nothing to go back for,’ said Miss Peasmarsh gaily; ‘thanks to you dear children we’ve sold everything.’
+‘There—there’s the carpet,’ said Cyril.
+‘Oh,’ said Miss Peasmarsh, radiantly, ‘don’t bother about the carpet. I’ve sold even that. Mrs Biddle gave me ten shillings for it. She said it would do for her servant’s bedroom.’
+‘Why,’ said Jane, ‘her servants don’t HAVE carpets. We had cook from her, and she told us so.’
+Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-9_p.66655
 
 NLP output:
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Cymbeline', 'author')
+('brass', 'instance of', 'colours')
+('silver', 'instance of', 'colours')
+('ivory', 'instance of', 'colours')
+('Anthea', 'sibling', 'Jane')
+('Jane', 'sibling', 'Anthea')
+('Miss Peasmarsh', 'occupation', 'nice curate')
+('Miss Peasmarsh', 'occupation', 'curate')
+('Anthea', 'child', 'Miss Peas marsh')
+('Miss Peas marsh', 'mother', 'Anthea')
+('Miss Peasmarsh', 'spouse', 'Henry Peasmarsh')
+('Henry Peasmarsh', 'spouse', 'Miss Peasmarsh')
+('the carpet', 'owned by', 'Cyril')
+('Cyril', 'owner of', 'the carpet')
+('Don’t bother about the carpet', 'author', 'Miss Peasmarsh')
+('I’ve sold even that', 'has part', 'I’ve sold even that')
+('I’ve sold even that', 'part of', 'I’ve sold even that')
+('I’ve sold even that', 'part of', 'I’ve sold even that')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+("Her Master's Voice", 'creator', 'John Dryden')
+('John Dryden', 'notable work', "Her Master's Voice")
+('Jane', 'spouse', 'Sir Henry')
+('Sir Henry', 'spouse', 'Jane')
 ('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('matches', 'subclass of', 'cutlery')
-('the Lamb', 'spouse', 'Jane')
-('Jane', 'spouse', 'the Lamb')
-('Bournemouth', 'located in the administrative territorial entity', 'Bournemouth')
-('thought and thought and thought', 'has part', 'thought')
-('thought', 'thought', 'has part')
-('thought and thought and thought', 'thought', 'part of')
-('Cyril', 'present in work', 'I know')
-('I know', 'characters', 'Cyril')
-('Lamb', 'mother', 'mother')
-('Except the Lamb', 'spouse', 'Jane')
-('Jane', 'spouse', 'Except the Lamb')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Cymbeline', 'author')
+('brass', 'instance of', 'colours')
+('silver', 'instance of', 'colours')
+('ivory', 'instance of', 'colours')
+('Anthea', 'sibling', 'Jane')
+('Jane', 'sibling', 'Anthea')
+('Miss Peasmarsh', 'occupation', 'nice curate')
+('Miss Peasmarsh', 'occupation', 'curate')
+('Anthea', 'child', 'Miss Peas marsh')
+('Miss Peas marsh', 'mother', 'Anthea')
+('Miss Peasmarsh', 'spouse', 'Henry Peasmarsh')
+('Henry Peasmarsh', 'spouse', 'Miss Peasmarsh')
+('the carpet', 'owned by', 'Cyril')
+('Cyril', 'owner of', 'the carpet')
+('Don’t bother about the carpet', 'author', 'Miss Peasmarsh')
+('I’ve sold even that', 'has part', 'I’ve sold even that')
+('I’ve sold even that', 'part of', 'I’ve sold even that')
+('I’ve sold even that', 'part of', 'I’ve sold even that')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+("Her Master's Voice", 'creator', 'John Dryden')
+('John Dryden', 'notable work', "Her Master's Voice")
+('Jane', 'spouse', 'Sir Henry')
+('Sir Henry', 'spouse', 'Jane')
 ('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('matches', 'subclass of', 'cutlery')
-('the Lamb', 'spouse', 'Jane')
-('Jane', 'spouse', 'the Lamb')
-('Bournemouth', 'located in the administrative territorial entity', 'Bournemouth')
-('thought and thought and thought', 'has part', 'thought')
-('thought', 'thought', 'has part')
-('thought and thought and thought', 'thought', 'part of')
-('Cyril', 'present in work', 'I know')
-('I know', 'characters', 'Cyril')
-('Lamb', 'mother', 'mother')
-('Except the Lamb', 'spouse', 'Jane')
-('Jane', 'spouse', 'Except the Lamb')
 
 And here is the original text:
-So that when Wednesday afternoon brought an unexpected holiday, and every one decided to go somewhere on the carpet, the journey had to be undertaken without the Phoenix. They were debarred from any carpet excursions in the evening by a sudden promise to mother, exacted in the agitation of parting, that they would not be out after six at night, except on Saturday, when they were to go to the bazaar, and were pledged to put on their best clothes, to wash themselves to the uttermost, and to clean their nails—not with scissors, which are scratchy and bad, but with flat-sharpened ends of wooden matches, which do no harm to any one’s nails.
-‘Let’s go and see the Lamb,’ said Jane.
-But every one was agreed that if they appeared suddenly in Bournemouth it would frighten mother out of her wits, if not into a fit. So they sat on the carpet, and thought and thought and thought till they almost began to squint.
-‘Look here,’ said Cyril, ‘I know. Please carpet, take us somewhere where we can see the Lamb and mother and no one can see us.’
-‘Except the Lamb,’ said Jane, quickly.
+It took some time to arrange the things on the stall. The carpet was spread over it, and the dark colours showed up the brass and silver and ivory things. It was a happy and busy afternoon, and when Miss Peasmarsh and the girls had sold every single one of the little pretty things from the Indian bazaar, far, far away, Anthea and Jane went off with the boys to fish in the fishpond, and dive into the bran-pie, and hear the cardboard band, and the phonograph, and the chorus of singing birds that was done behind a screen with glass tubes and glasses of water.
+They had a beautiful tea, suddenly presented to them by the nice curate, and Miss Peasmarsh joined them before they had had more than three cakes each. It was a merry party, and the curate was extremely pleasant to every one, ‘even to Miss Peasmarsh,’ as Jane said afterwards.
+‘We ought to get back to the stall,’ said Anthea, when no one could possibly eat any more, and the curate was talking in a low voice to Miss Peas marsh about ‘after Easter’.
+‘There’s nothing to go back for,’ said Miss Peasmarsh gaily; ‘thanks to you dear children we’ve sold everything.’
+‘There—there’s the carpet,’ said Cyril.
+‘Oh,’ said Miss Peasmarsh, radiantly, ‘don’t bother about the carpet. I’ve sold even that. Mrs Biddle gave me ten shillings for it. She said it would do for her servant’s bedroom.’
+‘Why,’ said Jane, ‘her servants don’t HAVE carpets. We had cook from her, and she told us so.’
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s": "Wednesday afternoon", "r": "brought", "o": "an unexpected holiday"},
-  {"s": "they", "r": "decided", "o": "to go somewhere on the carpet"},
-  {"s": "the journey", "r": "had to be undertaken", "o": "without the Phoenix"},
-  {"s": "they", "r": "were_debarred_from", "o": "carpet excursions in the evening"},
-  {"s": "promise", "r": "made_to", "o": "mother"},
-  {"s": "promise", "r": "restricts", "o": "they would not be out after six at night"},
-  {"s": "Saturday", "r": "exception_for", "o": "going to the bazaar"},
-  {"s": "they", "r": "pledged_to", "o": "put on their best clothes"},
-  {"s": "they", "r": "pledged_to", "o": "wash themselves to the uttermost"},
-  {"s": "they", "r": "pledged_to", "o": "clean their nails with flat-sharpened ends of wooden matches"},
-  {"s": "Jane", "r": "said", "o": "Let's go and see the Lamb"},
-  {"s": "they", "r": "sat_on", "o": "the carpet"},
-  {"s": "they", "r": "thought_about", "o": "how to see the Lamb and mother without being seen"},
-  {"s": "Cyril", "r": "said", "o": "Look here"},
-  {"s": "Cyril", "r": "said", "o": "I know"},
-  {"s": "Cyril", "r": "said", "o": "Please carpet, take us somewhere where we can see the Lamb and mother and no one can see us."},
-  {"s": "Jane", "r": "said", "o": "Except the Lamb"}
+  {"s": "William Shakespeare", "r": "notable work", "o": "Cymbeline"},
+  {"s": "William Shakespeare", "r": "author of", "o": "Cymbeline"},
+  {"s": "brass", "r": "instance of", "o": "colours"},
+  {"s": "silver", "r": "instance of", "o": "colours"},
+  {"s": "ivory", "r": "instance of", "o": "colours"},
+  {"s": "Anthea", "r": "sibling", "o": "Jane"},
+  {"s": "Jane", "r": "sibling", "o": "Anthea"},
+  {"s": "Miss Peasmarsh", "r": "occupation", "o": "curate"},
+  {"s": "Miss Peasmarsh", "r": "occupation", "o": "nice curate"},
+  {"s": "Anthea", "r": "child", "o": "Miss Peasmarsh"},
+  {"s": "Miss Peasmarsh", "r": "mother of", "o": "Anthea"},
+  {"s": "Miss Peasmarsh", "r": "spouse", "o": "Henry Peasmarsh"},
+  {"s": "Henry Peasmarsh", "r": "spouse", "o": "Miss Peasmarsh"},
+  {"s": "the carpet", "r": "owned by", "o": "Cyril"},
+  {"s": "Cyril", "r": "owner of", "o": "the carpet"},
+  {"s": "Miss Peasmarsh", "r": "said", "o": "Don't bother about the carpet."},
+  {"s": "Miss Peasmarsh", "r": "stated", "o": "I've sold even that."},
+  {"s": "Miss Peasmarsh", "r": "sold to", "o": "Mrs Biddle"},
+  {"s": "Mrs Biddle", "r": "paid", "o": "ten shillings for the carpet"},
+  {"s": "Miss Peasmarsh", "r": "stated", "o": "There’s nothing to go back for."},
+  {"s": "Anthea", "r": "said", "o": "We ought to get back to the stall."},
+  {"s": "John Dryden", "r": "notable work", "o": "Her Master's Voice"},
+  {"s": "Jane", "r": "spouse", "o": "Sir Henry"},
+  {"s": "Sir Henry", "r": "spouse", "o": "Jane"},
+  {"s": "John F. Kennedy School of Government", "r": "part of", "o": "Harvard University"}
 ]
 
 ==================================================
 
 
 Valid JSON
-Wednesday afternoon brought an unexpected holiday
-they decided to go somewhere on the carpet
-the journey had to be undertaken without the Phoenix
-they were_debarred_from carpet excursions in the evening
-promise made_to mother
-promise restricts they would not be out after six at night
-Saturday exception_for going to the bazaar
-they pledged_to put on their best clothes
-they pledged_to wash themselves to the uttermost
-they pledged_to clean their nails with flat-sharpened ends of wooden matches
-Jane said Let's go and see the Lamb
-they sat_on the carpet
-they thought_about how to see the Lamb and mother without being seen
-Cyril said Look here
-Cyril said I know
-Cyril said Please carpet, take us somewhere where we can see the Lamb and mother and no one can see us.
-Jane said Except the Lamb
+William Shakespeare notable work Cymbeline
+William Shakespeare author of Cymbeline
+brass instance of colours
+silver instance of colours
+ivory instance of colours
+Anthea sibling Jane
+Jane sibling Anthea
+Miss Peasmarsh occupation curate
+Miss Peasmarsh occupation nice curate
+Anthea child Miss Peasmarsh
+Miss Peasmarsh mother of Anthea
+Miss Peasmarsh spouse Henry Peasmarsh
+Henry Peasmarsh spouse Miss Peasmarsh
+the carpet owned by Cyril
+Cyril owner of the carpet
+Miss Peasmarsh said Don't bother about the carpet.
+Miss Peasmarsh stated I've sold even that.
+Miss Peasmarsh sold to Mrs Biddle
+Mrs Biddle paid ten shillings for the carpet
+Miss Peasmarsh stated There’s nothing to go back for.
+Anthea said We ought to get back to the stall.
+John Dryden notable work Her Master's Voice
+Jane spouse Sir Henry
+Sir Henry spouse Jane
+John F. Kennedy School of Government part of Harvard University
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 18, offset: 74} for query: "\n        MATCH (n {db: 'conan_capstone', kg: 'default'})\n        WHERE (n._init IS NULL OR n._init = false)\n        OPTIONAL MATCH (n)-[r]-()\n        WITH n.name as node_name, count(r) as edge_count\n        ORDER BY edge_count DESC, rand()\n        LIMIT 3\n        RETURN node_name, edge_count"
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 37, offset: 93} for query: "\n        MATCH (n {db: 'conan_capstone', kg: 'default'})\n        WHERE (n._init IS NULL OR n._init = false)\n        OPTIONAL MATCH (n)-[r]-()\n        WITH n.name as node_name, count(r) as edge_count\n        ORDER BY edge_count DESC, rand()\n        LIMIT 3\n        RETURN node_name, edge_count"
 
 Most relevant nodes:
   node_name  edge_count
-0      they           7
-1     Cyril           3
-2   promise           2
+0    Anthea          32
+1    carpet          21
+2     Cyril          20
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 18, offset: 121} for query: "\n        MATCH (s {db: 'conan_capstone', kg: 'default'})-[r]->(o {db: 'conan_capstone', kg: 'default'})\n        WHERE (s._init IS NULL OR s._init = false) AND (o._init IS NULL OR o._init = false)\n        RETURN s.name AS subject, type(r) AS relation, o.name AS object\n        "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 37, offset: 140} for query: "\n        MATCH (s {db: 'conan_capstone', kg: 'default'})-[r]->(o {db: 'conan_capstone', kg: 'default'})\n        WHERE (s._init IS NULL OR s._init = false) AND (o._init IS NULL OR o._init = false)\n        RETURN s.name AS subject, type(r) AS relation, o.name AS object\n        "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 59, offset: 162} for query: "\n        MATCH (s {db: 'conan_capstone', kg: 'default'})-[r]->(o {db: 'conan_capstone', kg: 'default'})\n        WHERE (s._init IS NULL OR s._init = false) AND (o._init IS NULL OR o._init = false)\n        RETURN s.name AS subject, type(r) AS relation, o.name AS object\n        "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 78, offset: 181} for query: "\n        MATCH (s {db: 'conan_capstone', kg: 'default'})-[r]->(o {db: 'conan_capstone', kg: 'default'})\n        WHERE (s._init IS NULL OR s._init = false) AND (o._init IS NULL OR o._init = false)\n        RETURN s.name AS subject, type(r) AS relation, o.name AS object\n        "
 
 Triples which best represent the graph:
-they thought_about how_to_see_the_Lamb_and_mother_without_being_seen
-they sat_on the_carpet
-they pledged_to clean_their_nails_with_flat_sharpened_ends_of_wooden_matches
-they pledged_to wash_themselves_to_the_uttermost
-they pledged_to put_on_their_best_clothes
-they were_debarred_from carpet_excursions_in_the_evening
-they decided to_go_somewhere_on_the_carpet
-Cyril said Please_carpet__take_us_somewhere_where_we_can_see_the_Lamb_and_mother_and_no_one_can_see_us_
-Cyril said I_know
-Cyril said Look_here
-promise restricts they_would_not_be_out_after_six_at_night
-promise made_to mother
+Anthea said We_ought_to_get_back_to_the_stall_
+Anthea child Miss_Peasmarsh
+Anthea sibling Jane
+Anthea held poker
+Anthea spouse Daphni
+Anthea said We_can_argue_as_we_go
+Anthea said Let_s_get_out__then
+Anthea said That_wouldn_t_make_it_right_to_steal
+Anthea said That_wouldn_t_be_a_kind_act__except_to_ourselves__and_it_wouldn_t_be_good__whatever_way_you_look_at_it
+Anthea heard the_fizz_crack_crack_fizz_of_the_wood_as_it_began_to_burn
+Anthea lighted the_edges_of_the_paper_balls
+Anthea applied coal_on_her_hands_and_face
+Anthea put more_cinders_and_some_coal
+Anthea cut her_finger_slightly_with_the_string
+Anthea stuck the_sticks_in_so_that_their_front_ends_rested_on_the_bars_and_back_ends_on_the_back_of_the_paper_balls
+Anthea broke the_string
+Anthea got a_bundle_of_wood
+Anthea put the_paper_balls_on_the_cinders
+Anthea screwed each_quarter_into_a_loose_ball
+Anthea tore the_newspaper_into_four_quarters
+Anthea took a_sheet_of_old_newspaper
+Anthea laid the_largest_and_handsomest_cinders_in_the_bottom_of_the_grate
+Anthea knocked her_knuckle
+Anthea raked_out the_ashes_of_the_fire_that_had_burned_there_a_week_ago
+Anthea lit a_fire
+Anthea spoke_line I_wish___No__I_don_t_mean_that_
+Anthea felt it_was_only_play
+Anthea quoted mother_said__Get_Indian_things_for_my_bazaar
+carpet contains egg
+carpet transported them_to_bed_just_at_the_right_moment
+carpet transported the_children_to_bed
+carpet has_part darn
+carpet has_hole darn
+carpet passed_over New_Cross
+carpet swept_near chimney_pots
+carpet desire_to_visit Palace
+carpet crossed Thames
+carpet heading_towards Greenwich
+carpet sailing_over Clerkenwell
+carpet sailing_over Kings_Cross_stations
+carpet sailing_over St_Pancras
+carpet sailing_over_roofs_of Kentish_Town
+carpet grazed chimney_pot
+Cyril owner_of the_carpet
+Cyril tied handkerchief_to_bolt
+Cyril oiled bolt
+Cyril placed carpet_at_foot_of_the_stairs
+Cyril has oil_can
+Cyril tapped Anthea
+Cyril owner_of iron_handle
+Cyril sibling Robert
+Cyril stated_definition Stealing_is_taking_things_that_belong_to_someone_else__and_there_s_no_one_else
+Cyril said I_don_t_know
+Cyril said We_might_take_it_and_spend_it_all_on_benefits_to_the_poor_and_aged
+Cyril said You_ll_get_something_else_if_father_comes_in_and_catches_you_
+Cyril said Shut_up__I_tell_you_
+Cyril sibling The_Phoenix
+Cyril said I_don_t_care_about_being_invisible_myself
 
 
 Generated summary:
-Several individuals plan to travel secretly on the carpet to glimpse the Lamb and their mother unseen by others. They prepare by sitting on the carpet, pledging to clean their nails with the flat ends of wooden matches, washing themselves thoroughly, and putting on their best clothes. Although barred from evening carpet excursions, they decide to go somewhere on the carpet. Cyril asks the carpet to take them to a place where they can see the Lamb and mother without being seen, claiming he knows. A promise to their mother restricts them from being out after six at night.
-Sending payload to Blazor at http://blazor_service:5055/api/metrics
-Request failed: HTTPConnectionPool(host='blazor_service', port=5055): Max retries exceeded with url: /api/metrics (Caused by NameResolutionError("<urllib3.connection.HTTPConnection object at 0x7d4755b97f50>: Failed to resolve 'blazor_service' ([Errno -3] Temporary failure in name resolution)"))
-
-Output sent to web app.
-127.0.0.1 - - [27/Oct/2025 21:00:54] "POST /process_story HTTP/1.1" 404 -
-127.0.0.1 - - [27/Oct/2025 21:00:54] "POST /process_story HTTP/1.1" 404 -
-Triggered bookscore: {'error': 'No chunks found for story'}
+In this excerpt from The Phoenix and the Carpet, Anthea and her siblings, including Cyril (the carpet’s owner) and the Phoenix, debate using a magical flying carpet to steal something to benefit the poor, with Cyril proposing the theft and Anthea opposing it as wrong and unkind. While the tension about theft rises, Anthea and Cyril perform domestic tasks—lighting a fire with paper and coal, tearing newspaper, and preparing the carpet (oiling the bolt, tying a handkerchief to the bolt)—before the carpet carries them on a London-wide flight. They travel over landmarks such as New Cross, the Thames, Greenwich, Clerkenwell, King’s Cross, St Pancras, and Kentish Town, even brushing a chimney pot, and eventually are returned to bed at just the right moment. Their mother had earlier asked for Indian goods for her bazaar, which partly motivates the discussion of theft.
+Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-9_p.66655
+SENT to worker: database conan_capstone, collection story_chunks, chunk ID: story-1_book-2_chapter-9_p.66655
+127.0.0.1 - - [30/Oct/2025 06:21:52] "POST /process_story HTTP/1.1" 200 -
+Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
+SENT to worker: database conan_capstone, collection story_chunks, chunk ID: story-1_book-2_chapter-9_p.66655
+127.0.0.1 - - [30/Oct/2025 06:21:52] "POST /process_story HTTP/1.1" 200 -
+Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}
 Initial processing complete. Server listening for additional requests from Blazor...
 Press Ctrl+C to stop.
-# exit
+[CALLBACK] chunk_id=None, task=bookscore, status=completed
+172.18.0.5 - - [30/Oct/2025 06:22:09] "POST /callback HTTP/1.1" 404 -
+[CALLBACK] chunk_id=None, task=questeval, status=completed
+172.18.0.3 - - [30/Oct/2025 06:32:07] "POST /callback HTTP/1.1" 404 -
+^Cmake[2]: *** [Makefile:77: docker-start] Interrupt
+make[1]: *** [Makefile:89: docker-python] Interrupt
+make: *** [Makefile:124: docker-python-dev] Interrupt
+
+
+
+
+
+
+
+
+
+
+
+
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-bscore
+
+ * Serving Flask app 'flask'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5002
+ * Running on http://172.17.0.3:5002
+Press CTRL+C to quit
+RECEIVED from boss: database conan_capstone, collection story_chunks, chunk ID: story-1_book-2_chapter-9_p.66655
+172.18.0.8 - - [30/Oct/2025 06:21:52] "POST /start HTTP/1.1" 202 -
+FINISHED: chunk ID: story-1_book-2_chapter-9_p.66655, result:
+{'bookscore': 0.0, 'annotations': {'In this excerpt from The Phoenix and the Carpet, Anthea and her siblings, including Cyril (the carpet’s owner) and the Phoenix, debate using a magical flying carpet to steal something to benefit the poor, with Cyril proposing the theft and Anthea opposing it as wrong and unkind.': {'sentence_num': 1, 'questions': None, 'types': None}, 'While the tension about theft rises, Anthea and Cyril perform domestic tasks—lighting a fire with paper and coal, tearing newspaper, and preparing the carpet (oiling the bolt, tying a handkerchief to the bolt)—before the carpet carries them on a London-wide flight.': {'sentence_num': 2, 'questions': None, 'types': None}, 'They travel over landmarks such as New Cross, the Thames, Greenwich, Clerkenwell, King’s Cross, St Pancras, and Kentish Town, even brushing a chimney pot, and eventually are returned to bed at just the right moment.': {'sentence_num': 3, 'questions': None, 'types': None}, 'Their mother had earlier asked for Indian goods for her bazaar, which partly motivates the discussion of theft.': {'sentence_num': 4, 'questions': None, 'types': None}}, 'model_used': 'openai-model_gpt-4'}
+
+
+
+
+
+
+
+
+
+
+
+
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-qeval
+
+Downloading: 6.81kB [00:00, 8.16MB/s]
+WARNING:root:Downloading language model for the spaCy model.
+DEPRECATION: https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl#egg=en_core_web_sm==3.0.0 contains an egg fragment with a non-PEP 508 name. pip 25.1 will enforce this behaviour change. A possible replacement is to use the req @ url syntax, and remove the egg fragment. Discussion can be found at https://github.com/pypa/pip/issues/13157
+Collecting en-core-web-sm==3.0.0
+  Downloading https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl (13.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 24.2 MB/s eta 0:00:00
+Requirement already satisfied: spacy<3.1.0,>=3.0.0 in /usr/local/lib/python3.8/site-packages (from en-core-web-sm==3.0.0) (3.0.6)
+Requirement already satisfied: spacy-legacy<3.1.0,>=3.0.4 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.0.12)
+Requirement already satisfied: murmurhash<1.1.0,>=0.28.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.0.13)
+Requirement already satisfied: cymem<2.1.0,>=2.0.2 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.0.11)
+Requirement already satisfied: preshed<3.1.0,>=3.0.2 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.0.10)
+Requirement already satisfied: thinc<8.1.0,>=8.0.3 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (8.0.17)
+Requirement already satisfied: blis<0.8.0,>=0.4.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.7.11)
+Requirement already satisfied: wasabi<1.1.0,>=0.8.1 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.10.1)
+Requirement already satisfied: srsly<3.0.0,>=2.4.1 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.4.8)
+Requirement already satisfied: catalogue<2.1.0,>=2.0.3 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.0.10)
+Requirement already satisfied: typer<0.4.0,>=0.3.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.3.2)
+Requirement already satisfied: pathy>=0.3.5 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.11.0)
+Requirement already satisfied: tqdm<5.0.0,>=4.38.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (4.49.0)
+Requirement already satisfied: numpy>=1.15.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.24.4)
+Requirement already satisfied: requests<3.0.0,>=2.13.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.32.4)
+Requirement already satisfied: pydantic<1.8.0,>=1.7.1 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.7.4)
+Requirement already satisfied: jinja2 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.11.3)
+Requirement already satisfied: setuptools in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (75.3.2)
+Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (25.0)
+Requirement already satisfied: smart-open<7.0.0,>=5.2.1 in /usr/local/lib/python3.8/site-packages (from pathy>=0.3.5->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (6.4.0)
+Requirement already satisfied: pathlib-abc==0.1.1 in /usr/local/lib/python3.8/site-packages (from pathy>=0.3.5->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.1.1)
+Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.4.4)
+Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.11)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.2.3)
+Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2025.10.5)
+Requirement already satisfied: click<7.2.0,>=7.1.1 in /usr/local/lib/python3.8/site-packages (from typer<0.4.0,>=0.3.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (7.1.2)
+Requirement already satisfied: MarkupSafe>=0.23 in /usr/local/lib/python3.8/site-packages (from jinja2->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.1.1)
+Installing collected packages: en-core-web-sm
+Successfully installed en-core-web-sm-3.0.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+✔ Download and installation successful
+You can now load the package via spacy.load('en_core_web_sm')
+
+
+
+
+
+
+
+
+
+ * Serving Flask app "flask" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+INFO:werkzeug: * Running on http://0.0.0.0:5001/ (Press CTRL+C to quit)
+RECEIVED from boss: database conan_capstone, collection story_chunks, chunk ID: story-1_book-2_chapter-9_p.66655
+INFO:werkzeug:172.18.0.8 - - [30/Oct/2025 06:21:52] "POST /start HTTP/1.1" 202 -
+Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.predictions.transform.dense.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.bias', 'cls.seq_relationship.bias', 'cls.predictions.decoder.weight', 'cls.seq_relationship.weight', 'cls.predictions.transform.dense.weight', 'cls.predictions.transform.LayerNorm.bias']
+- This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+FINISHED: chunk ID: story-1_book-2_chapter-9_p.66655, result:
+{'questeval_score': 0.20054921986996982, 'has_reference': False}

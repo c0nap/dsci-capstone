@@ -864,6 +864,6 @@ After implementing both for this project, here are my takeaways:
 
 - **Ease of Setup** - Both options required a complete reimplementation of container deployment. Make and Docker Compose migration were not fully supported at the level I needed. With **AWS**, the challenge was learning the purpose of various components, whereas **Azure** tends to hide the more important pages underneath bloat.
 
-Azure wins here because of the UI and easier setup. For large-scale deployments, AWS might take the lead with faster access to features I didn't need for this project.
+Azure wins here because of the UI and easier setup. We also use Blazor and C# which are part of the .NET ecosystem like Azure. For large-scale deployments, AWS might take the lead with faster access to features we didn't need for this project.
 
 
