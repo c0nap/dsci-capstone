@@ -285,6 +285,7 @@ def run_bookscore(chunk: Dict[str, Any], *,
     import json
     import pickle
     import subprocess
+    import signal
     import tempfile
     import os
     import importlib.util
@@ -328,11 +329,19 @@ def run_bookscore(chunk: Dict[str, Any], *,
 
         try:
             # Run from inside the package so relative paths resolve
-            subprocess.run(score_cmd, cwd=pkg_path, capture_output=True, text=True, timeout=600, check=True)
+            subprocess.run(
+                score_cmd,
+                cwd=pkg_path,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=True,
+                preexec_fn=lambda: signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+            )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore scoring failed: {e.stderr}") from e
         except subprocess.TimeoutExpired as e:
-            raise RuntimeError("BooookScore scoring timed out after 600s") from e
+            raise RuntimeError("BookScore scoring timed out after 60s") from e
 
         # Step 5: Read annotations output
         if not os.path.exists(annot_path):
@@ -372,8 +381,9 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
     @throws RuntimeError  If BooookScore chunking fails.
     """
     import pickle
-    import subprocess
     import tempfile
+    import subprocess
+    import signal
     import os
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -392,9 +402,18 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
         ]
 
         try:
-            subprocess.run(chunk_cmd, capture_output=True, text=True, timeout=60, check=True)
+            subprocess.run(
+                chunk_cmd,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=True,
+                preexec_fn=lambda: signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+            )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore chunking failed: {e.stderr}") from e
+        except subprocess.TimeoutExpired as e:
+            raise RuntimeError("BookScore chunking timed out after 60s") from e
 
         return chunked_pkl
 
