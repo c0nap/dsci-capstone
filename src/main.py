@@ -430,8 +430,8 @@ def output_single(session):
 
 
 def full_pipeline(session, collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
-    chunks = pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title)
-    triples, chunk = pipeline_2(session, collection_name, chunks)
+    chunks = pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id)
+    triples, chunk = pipeline_2(session, collection_name, chunks, book_title)
     triples_string = pipeline_3(session, triples)
     summary = pipeline_4(session, collection_name, triples_string, chunk.get_chunk_id())
     pipeline_5a(summary, book_title, book_id)
@@ -485,7 +485,7 @@ CHAPTER 12. THE END OF THE END\n
 
 
 
-def pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
+def pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     """Connects all components to convert an EPUB file to a book summary.
     @details  Data conversions:
         - EPUB file
@@ -519,7 +519,7 @@ def pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id, 
     return chunks
 
 
-def pipeline_2(session, collection_name, chunks):
+def pipeline_2(session, collection_name, chunks, book_title):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
@@ -544,6 +544,10 @@ def pipeline_2(session, collection_name, chunks):
     mongo_db = session.docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)
     collection.insert_one(c.to_mongo_dict())
+    collection.update_one(
+        {"_id": c.get_chunk_id()},
+        {"$set": {"book_title": book_title}}
+    )
     print(f"Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}")
 
     extracted = nlp.extract(c.text, parse_tuples=True)
@@ -804,6 +808,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             
             # Update specific task status
             story_tracker.loc[story_tracker['story_id'] == story_id, task] = status
+        print(f"{" " * 16}Stories Status:\n{story_tracker}\n")
 
     def update_chunk_status(chunk_id: str, story_id: int, task: str, status: str):
         """Update chunk-level task status. Auto-initializes with pending if not exists.
@@ -833,6 +838,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             
             # Update specific task status
             chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, task] = status
+        print(f"{" " * 16}Chunks Status:\n{chunk_tracker}\n")
     
     def check_story_completion(story_id: int, task_type: str) -> bool:
         """Check if all chunks for a story have completed a specific task.
@@ -1214,15 +1220,14 @@ CHAPTER 12. THE END OF THE END\n
         start_str="",
         end_str="end of the Phoenix and the Carpet.",
         book_id = book_id,
-        story_id = story_id,
-        book_title = book_title
+        story_id = story_id
     )
     post_story_status(boss_port, story_id, 'preprocessing', 'completed')
     post_story_status(boss_port, story_id, 'chunking', 'completed')
     
     post_chunk_status(boss_port, chunk_id, story_id, 'relation_extraction', 'in-progress')
     post_chunk_status(boss_port, chunk_id, story_id, 'llm_inference', 'in-progress')
-    triples, chunk = pipeline_2(session, COLLECTION, chunks)
+    triples, chunk = pipeline_2(session, COLLECTION, chunks, book_title)
     post_chunk_status(boss_port, chunk_id, story_id, 'relation_extraction', 'completed')
     post_chunk_status(boss_port, chunk_id, story_id, 'llm_inference', 'completed')
 
