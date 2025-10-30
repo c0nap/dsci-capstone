@@ -284,7 +284,6 @@ def run_bookscore(chunk: Dict[str, Any], *,
     import json
     import pickle
     import subprocess
-    import signal
     import tempfile
     import os
     import importlib.util
@@ -334,7 +333,7 @@ def run_bookscore(chunk: Dict[str, Any], *,
                 text=True,
                 timeout=60,
                 check=True,
-                preexec_fn=lambda: signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+                start_new_session=True
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore scoring failed: {e.stderr}") from e
@@ -381,7 +380,6 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
     import pickle
     import tempfile
     import subprocess
-    import signal
     import os
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -406,7 +404,7 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
                 text=True,
                 timeout=60,
                 check=True,
-                preexec_fn=lambda: signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+                start_new_session=True
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore chunking failed: {e.stderr}") from e
