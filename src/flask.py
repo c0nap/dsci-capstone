@@ -183,7 +183,7 @@ def notify_boss(boss_url: str, chunk_id: str, task_name: str, status: str) -> No
     @param task_name Name of the completed task.
     @param status Task completion status ('completed' or 'failed')."""
     payload = {
-        "_id": chunk_id,
+        "chunk_id": chunk_id,
         "task": task_name,
         "status": status
     }
