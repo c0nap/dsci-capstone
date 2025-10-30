@@ -692,7 +692,7 @@ from typing import Dict, List, Any, Optional
 from collections import defaultdict
 from src.setup import Session
 import threading, time
-
+import pandas as pd
 
 
 def load_worker_config(task_types: List[str]) -> Dict[str, str]:
@@ -750,6 +750,10 @@ def assign_task_to_worker(worker_url: str, database_name: str, collection_name: 
         return False
 
 
+
+
+
+
 def create_app(docs_db: str, database_name: str, collection_name: str, worker_urls: Dict[str, str]) -> Flask:
     """Create and configure Flask application for boss service.
     @param docs_db MongoDB connector class.
@@ -761,12 +765,85 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
     docs_db.change_database(database_name)
     mongo_db = docs_db.get_unmanaged_handle()
     
-    # Track task completion order
-    # Key: story_id, Value: dict with 'expected_order' and 'completed' sets
-    task_tracker: Dict[str, Dict[str, Any]] = defaultdict(lambda: {
-        "expected_order": [],
-        "completed": set()
-    })
+    # Track task completion with two DataFrames
+    # Story-level tracking
+    story_tracker = pd.DataFrame(columns=[
+        'story_id', 
+        'preprocessing', 'chunking', 'summarization', 'metrics'
+    ])
+    
+    # Chunk-level tracking
+    chunk_tracker = pd.DataFrame(columns=[
+        'chunk_id', 'story_id',
+        'extraction', 'load_to_mongo', 'relation_extraction', 
+        'llm_inference', 'load_triples_to_neo4j', 'graph_verbalization',
+        'summarization', 'metric_questeval', 'metric_bookscore', 'metrics_basic'
+    ])
+    
+    # Lock for thread-safe DataFrame operations
+    import threading
+    tracker_lock = threading.Lock()
+    
+    def update_story_status(story_id: int, task: str, status: str):
+        """Update story-level task status.
+        @param story_id Unique identifier for the story.
+        @param task Task name (preprocessing, chunking, summarization, metrics).
+        @param status Status (pending, assigned, in-progress, completed)."""
+        nonlocal story_tracker
+        with tracker_lock:
+            if story_id not in story_tracker['story_id'].values:
+                # Initialize new story row with all tasks as pending
+                new_row = pd.DataFrame([{
+                    'story_id': story_id,
+                    'preprocessing': 'pending',
+                    'chunking': 'pending',
+                    'summarization': 'pending',
+                    'metrics': 'pending'
+                }])
+                story_tracker = pd.concat([story_tracker, new_row], ignore_index=True)
+            
+            # Update specific task status
+            story_tracker.loc[story_tracker['story_id'] == story_id, task] = status
+    
+    def update_chunk_status(chunk_id: str, story_id: int, task: str, status: str):
+        """Update chunk-level task status.
+        @param chunk_id Unique identifier for the chunk.
+        @param story_id Unique identifier for the story.
+        @param task Task name (extraction, load_to_mongo, etc.).
+        @param status Status (assigned, in-progress, completed)."""
+        nonlocal chunk_tracker
+        with tracker_lock:
+            if chunk_id not in chunk_tracker['chunk_id'].values:
+                # Initialize new chunk row with all tasks as assigned
+                new_row = pd.DataFrame([{
+                    'chunk_id': chunk_id,
+                    'story_id': story_id,
+                    'extraction': 'assigned',
+                    'load_to_mongo': 'assigned',
+                    'relation_extraction': 'assigned',
+                    'llm_inference': 'assigned',
+                    'load_triples_to_neo4j': 'assigned',
+                    'graph_verbalization': 'assigned',
+                    'summarization': 'assigned',
+                    'metric_questeval': 'assigned',
+                    'metric_bookscore': 'assigned',
+                    'metrics_basic': 'assigned'
+                }])
+                chunk_tracker = pd.concat([chunk_tracker, new_row], ignore_index=True)
+            
+            # Update specific task status
+            chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, task] = status
+    
+    def check_story_completion(story_id: int, task_type: str) -> bool:
+        """Check if all chunks for a story have completed a specific task.
+        @param story_id Unique identifier for the story.
+        @param task_type Task to check (e.g., 'metric_questeval', 'metric_bookscore').
+        @return True if all chunks completed, False otherwise."""
+        with tracker_lock:
+            story_chunks = chunk_tracker[chunk_tracker['story_id'] == story_id]
+            if story_chunks.empty:
+                return False
+            return all(story_chunks[task_type] == 'completed')
     
     @app.route("/process_story", methods=["POST"])
     def process_story():
@@ -787,10 +864,15 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         if not chunks:
             return jsonify({"error": f"Cannot distribute tasks: No chunks found for story {story_id}"}), 404
         
-        # Initialize task tracker
-        chunk_ids = [chunk["_id"] for chunk in chunks]
-        task_tracker[story_id]["expected_order"] = chunk_ids
-        task_tracker[story_id]["completed"] = set()
+        # Map task_type to chunk-level task name
+        task_mapping = {
+            'questeval': 'metric_questeval',
+            'bookscore': 'metric_bookscore'
+        }
+        chunk_task = task_mapping.get(task_type, task_type)
+        
+        # Update story-level status to assigned
+        update_story_status(story_id, 'metrics', 'assigned')
         
         # Distribute tasks to workers (async)
         worker_url = worker_urls[task_type]
@@ -799,13 +881,20 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         for chunk in chunks:
             chunk_id = chunk["_id"]
             
+            # Initialize chunk tracker entry
+            update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
+            
             # Clear any existing task data
             clear_task_data(mongo_db, collection_name, chunk_id, task_type)
             
-            # Assign task to worker
+            # Assign task to worker - verify 202 accepted
             if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
                 assigned += 1
                 print(f"SENT to worker: database {database_name}, collection {collection_name}, chunk ID: {chunk_id}")
+            else:
+                # If assignment failed, revert to pending
+                print(f"WARNING: Failed to assign chunk {chunk_id} to worker")
+                update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
         
         return jsonify({
             "status": "tasks_assigned",
@@ -814,6 +903,41 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             "total_chunks": len(chunks),
             "assigned": assigned
         }), 200
+    
+    @app.route("/callback/started", methods=["POST"])
+    def callback_started():
+        """Receive start notifications from worker services when task begins processing.
+        @return Simple acknowledgment response."""
+        data = request.json
+        
+        chunk_id = data.get("chunk_id")
+        task = data.get("task")
+        
+        print(f"[CALLBACK STARTED] chunk_id={chunk_id}, task={task}")
+        
+        # Get specific chunk by chunk_id
+        collection = getattr(mongo_db, collection_name)
+        chunk = collection.find_one({"_id": chunk_id})
+        
+        if not chunk:
+            return jsonify({"error": f"Could not find chunk {chunk_id} in MongoDB."}), 404
+        
+        story_id = chunk["story_id"]
+        
+        # Map task to chunk-level task name
+        task_mapping = {
+            'questeval': 'metric_questeval',
+            'bookscore': 'metric_bookscore'
+        }
+        chunk_task = task_mapping.get(task, task)
+        
+        # Update chunk status to in-progress
+        update_chunk_status(chunk_id, story_id, chunk_task, 'in-progress')
+        
+        # Update story status to in-progress if not already
+        update_story_status(story_id, 'metrics', 'in-progress')
+        
+        return jsonify({"status": "received"}), 200
     
     @app.route("/callback", methods=["POST"])
     def callback():
@@ -830,17 +954,37 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         # Get specific chunk by chunk_id
         collection = getattr(mongo_db, collection_name)
         chunk = collection.find_one({"_id": chunk_id})
-        story_id = collection["story_id"]
+        
         if not chunk:
             return jsonify({"error": f"Could not find chunk {chunk_id} in MongoDB."}), 404
-
-        # Track story completion
-        if story_id and chunk_id:
-            task_tracker[story_id]["completed"].add(chunk_id)
+        
+        story_id = chunk["story_id"]
+        
+        # Map task to chunk-level task name
+        task_mapping = {
+            'questeval': 'metric_questeval',
+            'bookscore': 'metric_bookscore'
+        }
+        chunk_task = task_mapping.get(task, task)
+        
+        # Update chunk status to completed
+        update_chunk_status(chunk_id, story_id, chunk_task, 'completed')
+        
+        # Check if all chunks for this story completed this task
+        if check_story_completion(story_id, chunk_task):
+            print(f"[STORY COMPLETE] All chunks completed {chunk_task} for story {story_id}")
             
-            # FINALIZE PIPELINE
-            # if all workers finished via task_tracker:
-            if True:
+            # Check if all metric tasks are complete for the story
+            all_metrics_complete = all([
+                check_story_completion(story_id, 'metric_questeval'),
+                check_story_completion(story_id, 'metric_bookscore')
+            ])
+            
+            if all_metrics_complete:
+                # Update story-level metrics to completed
+                update_story_status(story_id, 'metrics', 'completed')
+                
+                # FINALIZE PIPELINE - all workers finished for this story
                 # Access fields directly from the MongoDB document
                 book_id = chunk["book_id"]
                 book_title = chunk["book_title"]
@@ -850,45 +994,59 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
                 bookscore = chunk["bookscore"]
                 questeval = chunk["questeval"]
                 pipeline_5b(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
-
-            # Check completion order
-            expected = task_tracker[story_id]["expected_order"]
-            completed = task_tracker[story_id]["completed"]
-            
-            # Find the next expected chunk that hasn't been completed
-            next_incomplete_idx = None
-            for idx, expected_chunk_id in enumerate(expected):
-                if expected_chunk_id not in completed:
-                    next_incomplete_idx = idx
-                    break
-            
-            if next_incomplete_idx is not None:
-                print(f"[ORDER] Next expected chunk: {expected[next_incomplete_idx]} "
-                      f"(index {next_incomplete_idx})")
-            else:
-                print(f"[ORDER] All {len(expected)} chunks completed for story {story_id}!")
+                
+                print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")
         
         return jsonify({"status": "received"}), 200
     
-    @app.route("/status/<story_id>", methods=["GET"])
+    @app.route("/status/<int:story_id>", methods=["GET"])
     def get_status(story_id: int):
         """Get processing status for a story.
         @param story_id Unique identifier for the story.
         @return JSON response with completion status."""
-        if story_id not in task_tracker:
-            return jsonify({"error": "Story not found"}), 404
-        
-        tracker = task_tracker[story_id]
-        expected = tracker["expected_order"]
-        completed = tracker["completed"]
-        
-        return jsonify({
-            "story_id": story_id,
-            "total_chunks": len(expected),
-            "completed_chunks": len(completed),
-            "completion_percentage": (len(completed) / len(expected) * 100) if expected else 0,
-            "all_complete": len(completed) == len(expected)
-        }), 200
+        with tracker_lock:
+            # Get story-level status
+            story_status = story_tracker[story_tracker['story_id'] == story_id]
+            if story_status.empty:
+                return jsonify({"error": "Story not found"}), 404
+            
+            # Get chunk-level status
+            story_chunks = chunk_tracker[chunk_tracker['story_id'] == story_id]
+            
+            # Calculate completion metrics
+            total_chunks = len(story_chunks)
+            completed_tasks_per_chunk = []
+            
+            for _, chunk_row in story_chunks.iterrows():
+                task_columns = [col for col in chunk_row.index if col not in ['chunk_id', 'story_id']]
+                completed = sum(chunk_row[col] == 'completed' for col in task_columns)
+                completed_tasks_per_chunk.append(completed)
+            
+            avg_completion = sum(completed_tasks_per_chunk) / total_chunks if total_chunks > 0 else 0
+            total_tasks_per_chunk = len(task_columns) if total_chunks > 0 else 0
+            
+            return jsonify({
+                "story_id": story_id,
+                "story_status": story_status.to_dict('records')[0],
+                "total_chunks": total_chunks,
+                "avg_tasks_completed_per_chunk": avg_completion,
+                "total_tasks_per_chunk": total_tasks_per_chunk,
+                "completion_percentage": (avg_completion / total_tasks_per_chunk * 100) if total_tasks_per_chunk > 0 else 0
+            }), 200
+    
+    @app.route("/tracker/story", methods=["GET"])
+    def get_story_tracker():
+        """Get complete story tracker DataFrame.
+        @return JSON response with story tracker data."""
+        with tracker_lock:
+            return jsonify(story_tracker.to_dict('records')), 200
+    
+    @app.route("/tracker/chunk", methods=["GET"])
+    def get_chunk_tracker():
+        """Get complete chunk tracker DataFrame.
+        @return JSON response with chunk tracker data."""
+        with tracker_lock:
+            return jsonify(chunk_tracker.to_dict('records')), 200
     
     return app
 
