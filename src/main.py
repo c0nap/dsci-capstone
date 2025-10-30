@@ -1026,7 +1026,22 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
                 return jsonify({"error": "Invalid story_id"}), 400
             
             with tracker_lock:
-                # ... existing story status logic (from current get_status)
+                story_status = story_tracker[story_tracker['story_id'] == story_id]
+                if story_status.empty:
+                    return jsonify({"error": "Story not found"}), 404
+                
+                story_data = story_status.to_dict('records')[0]
+
+                task_columns = [col for col in story_data.keys() if col not in ['story_id']]
+                completed_tasks = sum(story_data[col] == 'completed' for col in task_columns)
+                
+                return jsonify({
+                    "story_id": story_id,
+                    "tasks": story_data,
+                    "completed_tasks": completed_tasks,
+                    "total_tasks": len(task_columns),
+                    "completion_percentage": (completed_tasks / len(task_columns) * 100) if task_columns else 0
+                }), 200
         
         elif status_type == "chunk":
             chunk_id = identifier
@@ -1199,8 +1214,8 @@ if __name__ == "__main__":
     story_id = 1
     book_id = 2
     book_title = "The Phoenix and the Carpet"
-    post_story_status(boss_port, story_id, 'preprocessing', 'in-progress')
-    post_story_status(boss_port, story_id, 'chunking', 'in-progress')
+    post_story_status(BOSS_PORT, story_id, 'preprocessing', 'in-progress')
+    post_story_status(BOSS_PORT, story_id, 'chunking', 'in-progress')
     chunks = pipeline_1(
         epub_path="./datasets/examples/trilogy-wishes-2.epub",
         book_chapters="""
@@ -1222,30 +1237,31 @@ CHAPTER 12. THE END OF THE END\n
         book_id = book_id,
         story_id = story_id
     )
-    post_story_status(boss_port, story_id, 'preprocessing', 'completed')
-    post_story_status(boss_port, story_id, 'chunking', 'completed')
+    post_story_status(BOSS_PORT, story_id, 'preprocessing', 'completed')
+    post_story_status(BOSS_PORT, story_id, 'chunking', 'completed')
     
-    post_chunk_status(boss_port, chunk_id, story_id, 'relation_extraction', 'in-progress')
-    post_chunk_status(boss_port, chunk_id, story_id, 'llm_inference', 'in-progress')
     triples, chunk = pipeline_2(session, COLLECTION, chunks, book_title)
-    post_chunk_status(boss_port, chunk_id, story_id, 'relation_extraction', 'completed')
-    post_chunk_status(boss_port, chunk_id, story_id, 'llm_inference', 'completed')
+    chunk_id = chunk.get_chunk_id()
+    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'relation_extraction', 'in-progress')
+    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'llm_inference', 'in-progress')
+    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'relation_extraction', 'completed')
+    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'llm_inference', 'completed')
 
-    post_chunk_status(boss_port, chunk_id, story_id, 'graph_verbalization', 'in-progress')
+    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'graph_verbalization', 'in-progress')
     triples_string = pipeline_3(session, triples)
-    post_chunk_status(boss_port, chunk_id, story_id, 'graph_verbalization', 'completed')
+    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'graph_verbalization', 'completed')
 
-    post_story_status(boss_port, story_id, 'summarization', 'in-progress')
-    post_chunk_status(boss_port, chunk_id, story_id, 'summarization', 'in-progress')
+    post_story_status(BOSS_PORT, story_id, 'summarization', 'in-progress')
+    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'in-progress')
     summary = pipeline_4(session, COLLECTION, triples_string, chunk.get_chunk_id())
-    post_story_status(boss_port, story_id, 'summarization', 'completed')
-    post_chunk_status(boss_port, chunk_id, story_id, 'summarization', 'completed')
+    post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
+    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
     # pipeline_5 is moved to callback() to finalize asynchronously
     # pipeline_5a(summary, book_title, book_id)
 
     # Post chunk - this will enqueue worker processing
     for task_type in ["questeval", "bookscore"]:
-        response = post_process_story(BOSS_PORT, story_id, task_type)
+        response = post_process_full_story(BOSS_PORT, story_id, task_type)
         print(f"Triggered {task_type}: {response.json()}")
 
 
