@@ -331,14 +331,14 @@ def run_bookscore(chunk: Dict[str, Any], *,
                 cwd=pkg_path,
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=300,
                 check=True,
                 #start_new_session=True
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore scoring failed: {e.stderr}") from e
         except subprocess.TimeoutExpired as e:
-            raise RuntimeError("BookScore scoring timed out after 60s") from e
+            raise RuntimeError("BookScore scoring timed out after 300s") from e
 
         # Step 5: Read annotations output
         if not os.path.exists(annot_path):
@@ -402,14 +402,14 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
                 chunk_cmd,
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=300,
                 check=True,
                 #start_new_session=True
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore chunking failed: {e.stderr}") from e
         except subprocess.TimeoutExpired as e:
-            raise RuntimeError("BookScore chunking timed out after 60s") from e
+            raise RuntimeError("BookScore chunking timed out after 300s") from e
 
         return chunked_pkl
 
