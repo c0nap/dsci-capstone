@@ -333,7 +333,7 @@ def run_bookscore(chunk: Dict[str, Any], *,
                 text=True,
                 timeout=60,
                 check=True,
-                start_new_session=True
+                #start_new_session=True
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore scoring failed: {e.stderr}") from e
@@ -404,7 +404,7 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
                 text=True,
                 timeout=60,
                 check=True,
-                start_new_session=True
+                #start_new_session=True
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore chunking failed: {e.stderr}") from e
