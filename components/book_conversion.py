@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime, date
+from datetime import date, datetime
 from io import BytesIO
 from lxml import etree
 import os
@@ -7,7 +7,7 @@ import pandas as pd
 import pypandoc
 import re
 import spacy
-from typing import Dict, Iterator, List, Tuple, Any, Optional
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 
 nlp = spacy.blank("en")  # blank English model, no pipeline

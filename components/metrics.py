@@ -1,5 +1,8 @@
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
+
 # Keep most imports inside a class method, dont pull them along during Worker imports
+
 
 class Metrics:
     """Utility class for computing and posting evaluation metrics."""
@@ -24,56 +27,42 @@ class Metrics:
         @return  Dict containing 'rouge' and 'bertscore' keys.
             Scores are nested in inconsistent schema."""
         import evaluate
+
         rouge = evaluate.load("rouge")
         bertscore = evaluate.load("bertscore")
 
-        rouge_result = rouge.compute(predictions=[summary],
-                                     references=[gold_summary],
-                                     use_aggregator=False)
-        bertscore_result = bertscore.compute(predictions=[summary],
-                                             references=[gold_summary],
-                                             model_type="roberta-large")
-        return {
-            "rouge": rouge_result,
-            "bertscore": bertscore_result
-        }
-
-
+        rouge_result = rouge.compute(predictions=[summary], references=[gold_summary], use_aggregator=False)
+        bertscore_result = bertscore.compute(predictions=[summary], references=[gold_summary], model_type="roberta-large")
+        return {"rouge": rouge_result, "bertscore": bertscore_result}
 
     def post_basic_metrics(self, book_id: str, book_title: str, summary: str, gold_summary: str = "", chunk: str = "", **kwargs: Any) -> None:
         results = Metrics.compute_basic_metrics(summary, gold_summary, chunk)
         metrics = Metrics.generate_default_metrics(
-            rouge1_precision = results["rouge"]["rouge1"]["precision"],
-            rouge1_recall = results["rouge"]["rouge1"]["recall"],
-            rouge1_f1 = results["rouge"]["rouge1"]["fmeasure"],
-
-            rouge2_precision = results["rouge"]["rouge2"]["precision"],
-            rouge2_recall = results["rouge"]["rouge2"]["recall"],
-            rouge2_f1 = results["rouge"]["rouge2"]["fmeasure"],
-
-            rougeL_precision = results["rouge"]["rougeL"]["precision"],
-            rougeL_recall = results["rouge"]["rougeL"]["recall"],
-            rougeL_f1 = results["rouge"]["rougeL"]["fmeasure"],
-
-            rougeLsum_precision = results["rouge"]["rougeLsum"]["precision"],
-            rougeLsum_recall = results["rouge"]["rougeLsum"]["recall"],
-            rougeLsum_f1 = results["rouge"]["rougeLsum"]["fmeasure"],
-
-            bert_precision = results["bertscore"]["precision"][0],
-            bert_recall = results["bertscore"]["recall"][0],
-            bert_f1 = results["bertscore"]["f1"][0],
-
-            **kwargs)
+            rouge1_precision=results["rouge"]["rouge1"]["precision"],
+            rouge1_recall=results["rouge"]["rouge1"]["recall"],
+            rouge1_f1=results["rouge"]["rouge1"]["fmeasure"],
+            rouge2_precision=results["rouge"]["rouge2"]["precision"],
+            rouge2_recall=results["rouge"]["rouge2"]["recall"],
+            rouge2_f1=results["rouge"]["rouge2"]["fmeasure"],
+            rougeL_precision=results["rouge"]["rougeL"]["precision"],
+            rougeL_recall=results["rouge"]["rougeL"]["recall"],
+            rougeL_f1=results["rouge"]["rougeL"]["fmeasure"],
+            rougeLsum_precision=results["rouge"]["rougeLsum"]["precision"],
+            rougeLsum_recall=results["rouge"]["rougeLsum"]["recall"],
+            rougeLsum_f1=results["rouge"]["rougeLsum"]["fmeasure"],
+            bert_precision=results["bertscore"]["precision"][0],
+            bert_recall=results["bertscore"]["recall"][0],
+            bert_f1=results["bertscore"]["f1"][0],
+            **kwargs,
+        )
         payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
         self.post_payload(payload)
-
 
     def post_basic_output(self, book_id: str, book_title: str, summary: str) -> None:
         metrics = Metrics.generate_default_metrics()
         payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
         self.post_payload(payload)
-    
-    
+
     @staticmethod
     def generate_default_metrics(
         rouge1_precision: float = 0.0,
@@ -161,14 +150,13 @@ class Metrics:
                 ]
             },
         }
-    
-    
+
     @staticmethod
     def create_summary_payload(book_id: str, book_title: str, summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
         """Create the full summary payload for the API"""
         if metrics is None:
             metrics = Metrics.generate_default_metrics()
-    
+
         return {
             "BookID": str(book_id),
             "BookTitle": book_title,
@@ -176,15 +164,15 @@ class Metrics:
             "Metrics": metrics,
             "QAResults": [],
         }
-    
-    
+
     def post_payload(self, payload: Dict[str, Any]) -> bool:
         """Verify and post any given payload using the requests API."""
         import requests
+
         try:
             print(f"Sending payload to Blazor at {self.url}")
             response = requests.post(self.url, json=payload)
-    
+
             if response.ok:  # handles 200–299
                 print("POST succeeded")
                 print(response.json())
@@ -193,12 +181,11 @@ class Metrics:
                 print(f"POST failed: {response.status_code}")
                 print(response.text)
                 return False
-    
+
         except requests.exceptions.RequestException as e:
             print(f"Request failed: {e}")
             return False
-    
-    
+
     @staticmethod
     def generate_example_metrics() -> Dict[str, Any]:
         """Send placeholder values to the web app."""
@@ -235,7 +222,7 @@ class Metrics:
                 qa_generated2="Forest",
                 qa_correct2=False,
                 qa_accuracy2=0.0,
-            )
+            ),
         )
     
     
@@ -252,8 +239,9 @@ class Metrics:
 
 
 
-
-def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", use_cuda: bool = False, use_question_weighter: bool = True) -> Dict[str, Any]:
+def run_questeval(
+    chunk: Dict[str, Any], *, qeval_task: str = "summarization", use_cuda: bool = False, use_question_weighter: bool = True
+) -> Dict[str, Any]:
     """Run QuestEval metric calculation.
     @details  Question-answering based evaluation.
         Generates questions from source/reference, and checks if answers can be found in the summary.
@@ -273,13 +261,14 @@ def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", u
     @throws KeyError  If required fields are missing from chunk.
     """
     from questeval.questeval_metric import QuestEval
+
     if qeval_task != "summarization":
         use_question_weighter = False
 
     questeval = QuestEval(
-        task = qeval_task,
-        no_cuda = not use_cuda,
-        do_weighter = use_question_weighter,
+        task=qeval_task,
+        no_cuda=not use_cuda,
+        do_weighter=use_question_weighter,
     )
     # TODO: Other parameters?
     #   answer_types: Tuple = ('NER', 'NOUN'),
@@ -316,10 +305,7 @@ def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", u
 
 
 
-
-def run_bookscore(chunk: Dict[str, Any], *,
-    model: str = "gpt-3.5-turbo",
-    batch_size: int = 10, use_v2: bool = True) -> Dict[str, Any]:
+def run_bookscore(chunk: Dict[str, Any], *, model: str = "gpt-3.5-turbo", batch_size: int = 10, use_v2: bool = True) -> Dict[str, Any]:
     """Run BooookScore metric for long-form summarization.
     @details  LLM-based coherence evaluation using BooookScore. Runs in CLI via subprocess.
         Handles full workflow: scoring summary, postprocessing.
@@ -338,12 +324,12 @@ def run_bookscore(chunk: Dict[str, Any], *,
     @throws KeyError  If required fields are missing from chunk.
     @throws RuntimeError  If subprocess execution fails.
     """
+    import importlib.util
     import json
+    import os
     import pickle
     import subprocess
     import tempfile
-    import os
-    import importlib.util
 
     # Find the installed package path
     pkg_path = importlib.util.find_spec("booookscore").submodule_search_locations[0]
@@ -372,11 +358,17 @@ def run_bookscore(chunk: Dict[str, Any], *,
         # 4: Run BookScore as subprocess
         annot_path = os.path.join(tmpdir, 'annotations.json')
         score_cmd = [
-            'python', '-m', 'booookscore.score',
-            '--summ_path', summ_path,
-            '--annot_path', annot_path,
-            '--model', model,
-            '--openai_key', key_path
+            'python',
+            '-m',
+            'booookscore.score',
+            '--summ_path',
+            summ_path,
+            '--annot_path',
+            annot_path,
+            '--model',
+            model,
+            '--openai_key',
+            key_path,
         ]
         if use_v2:
             score_cmd.extend(['--v2', '--batch_size', str(batch_size)])
@@ -390,7 +382,7 @@ def run_bookscore(chunk: Dict[str, Any], *,
                 text=True,
                 timeout=300,
                 check=True,
-                #start_new_session=True
+                # start_new_session=True
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore scoring failed: {e.stderr}") from e
@@ -418,11 +410,7 @@ def run_bookscore(chunk: Dict[str, Any], *,
                 confusing += 1
         overall_score = 1 - (confusing / total) if total else 0.0
 
-        return {
-            'bookscore': overall_score,
-            'annotations': book_annot,
-            'model_used': f"openai-model_{model}"
-        }
+        return {'bookscore': overall_score, 'annotations': book_annot, 'model_used': f"openai-model_{model}"}
 
 
 def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 2048) -> str:
@@ -436,10 +424,10 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
     @return  Path to chunked pickle file containing BooookScore-ready segments.
     @throws RuntimeError  If BooookScore chunking fails.
     """
-    import pickle
-    import tempfile
-    import subprocess
     import os
+    import pickle
+    import subprocess
+    import tempfile
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # Step 1: Create pickle file with book text
@@ -449,12 +437,7 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
 
         # Step 2: Chunk the book
         chunked_pkl = os.path.join(tmpdir, 'books_chunked.pkl')
-        chunk_cmd = [
-            'python', '-m', 'booookscore.chunk',
-            '--chunk_size', str(chunk_size),
-            '--input_path', books_pkl,
-            '--output_path', chunked_pkl
-        ]
+        chunk_cmd = ['python', '-m', 'booookscore.chunk', '--chunk_size', str(chunk_size), '--input_path', books_pkl, '--output_path', chunked_pkl]
 
         try:
             subprocess.run(
@@ -463,7 +446,7 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
                 text=True,
                 timeout=300,
                 check=True,
-                #start_new_session=True
+                # start_new_session=True
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore chunking failed: {e.stderr}") from e
@@ -471,5 +454,4 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
             raise RuntimeError("BookScore chunking timed out after 300s") from e
 
         return chunked_pkl
-
 

@@ -1,17 +1,19 @@
 """Generic Flask worker microservice for distributed task processing.
 Supports multiple task types via command-line arguments and dynamic imports."""
 
-from flask import Flask, request, jsonify
-from pymongo import MongoClient
-from pymongo.errors import DuplicateKeyError
-from pymongo.database import Database
 import argparse
-import requests
-import os
 from dotenv import load_dotenv
-from typing import Dict, Any, Callable, Optional, Tuple, Generator
-import threading, time
+from flask import Flask, jsonify, request
+import os
+from pymongo import MongoClient
+from pymongo.database import Database
+from pymongo.errors import DuplicateKeyError
 from queue import Queue
+import requests
+import threading
+import time
+from typing import Any, Callable, Dict, Generator, Optional, Tuple
+
 
 MongoHandle = Generator["Database[Any]", None, None]
 
@@ -32,12 +34,12 @@ def task_worker():
             func(*args)
         except Exception as e:
             raise e
-            #print(f"Worker thread error: {e}")
+            # print(f"Worker thread error: {e}")
         finally:
             task_queue.task_done()
 
-def process_task(mongo_db, collection_name, chunk_id, task_name, chunk_doc,
-    boss_url, task_handler, task_kwargs=None):
+
+def process_task(mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler, task_kwargs=None):
     """Perform the assigned task in a background thread.
     This includes updating task status, running the handler, saving results,
     and notifying the boss service when complete.
@@ -61,10 +63,10 @@ def process_task(mongo_db, collection_name, chunk_id, task_name, chunk_doc,
         notify_boss(boss_url, chunk_id, task_name, "failed")
         print(f"Error while running {task_handler.__name__} with args {task_kwargs}")
         raise e
-        #print(f"Ignored error from background task: {e}")
+        # print(f"Ignored error from background task: {e}")
+
+
 ######################################################################################
-
-
 
 
 def load_mongo_config(database: str) -> str:
@@ -73,17 +75,17 @@ def load_mongo_config(database: str) -> str:
     @return MongoDB connection string.
     @throws KeyError If required environment variables are missing."""
     load_dotenv(".env")
-    
+
     db_prefix = "MONGO"
     engine = os.environ[f"{db_prefix}_ENGINE"]
     username = os.environ[f"{db_prefix}_USERNAME"]
     password = os.environ[f"{db_prefix}_PASSWORD"]
     host = os.environ[f"{db_prefix}_HOST"]
     port = os.environ[f"{db_prefix}_PORT"]
-    
+
     auth_suffix = "?authSource=admin&uuidRepresentation=standard"
     mongo_uri = f"{engine}://{username}:{password}@{host}:{port}/{database}{auth_suffix}"
-    
+
     return mongo_uri
 
 
@@ -106,12 +108,14 @@ def get_task_info(task_name: str) -> Tuple[Callable[[Dict[str, Any]], Dict[str, 
     @throws AttributeError If the task function is not found in the module."""
     if task_name == "bookscore":
         from components.metrics import run_bookscore
+
         return run_bookscore, {
             "model": "gpt-4o-mini",
-            "use_v2": False,   # single-pass mode
+            "use_v2": False,  # single-pass mode
         }
     elif task_name == "questeval":
         from components.metrics import run_questeval
+
         return run_questeval, {
             "qeval_task": "summarization",
             "use_cuda": False,
@@ -138,25 +142,15 @@ def mark_task_in_progress(mongo_db: MongoHandle, collection_name: str, chunk_id:
     @param task_name Name of the task being executed.
     @throws RuntimeError If task data already exists (preventing overwrites)."""
     collection = getattr(mongo_db, collection_name)
-    
+
     # Check if task result already exists
-    existing = collection.find_one(
-        {"_id": chunk_id},
-        {task_name: 1}
-    )
-    
+    existing = collection.find_one({"_id": chunk_id}, {task_name: 1})
+
     if existing and task_name in existing:
-        raise RuntimeError(
-            f"Task {task_name} already has data for chunk_id={chunk_id}. "
-            "Boss should have cleared this before assignment."
-        )
-    
+        raise RuntimeError(f"Task {task_name} already has data for chunk_id={chunk_id}. " "Boss should have cleared this before assignment.")
+
     # Mark as in-progress
-    collection.update_one(
-        {"_id": chunk_id},
-        {"$set": {f"{task_name}.status": "in_progress"}},
-        upsert=True
-    )
+    collection.update_one({"_id": chunk_id}, {"$set": {f"{task_name}.status": "in_progress"}}, upsert=True)
 
 
 def save_task_result(mongo_db: MongoHandle, collection_name: str, chunk_id: str, task_name: str, result: Dict[str, Any]) -> None:
@@ -167,16 +161,10 @@ def save_task_result(mongo_db: MongoHandle, collection_name: str, chunk_id: str,
     @param task_name Name of the task that was executed.
     @param result Dictionary containing task results to be stored."""
     collection = getattr(mongo_db, collection_name)
-    
-    update_data = {
-        f"{task_name}.status": "completed",
-        f"{task_name}.result": result
-    }
-    
-    collection.update_one(
-        {"_id": chunk_id},
-        {"$set": update_data}
-    )
+
+    update_data = {f"{task_name}.status": "completed", f"{task_name}.result": result}
+
+    collection.update_one({"_id": chunk_id}, {"$set": update_data})
 
     print(f"FINISHED: chunk ID: {chunk_id}, result:\n{result}")
 
@@ -187,12 +175,8 @@ def notify_boss(boss_url: str, chunk_id: str, task_name: str, status: str) -> No
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the completed task.
     @param status Task completion status ('completed' or 'failed')."""
-    payload = {
-        "chunk_id": chunk_id,
-        "task": task_name,
-        "status": status
-    }
-    
+    payload = {"chunk_id": chunk_id, "task": task_name, "status": status}
+
     try:
         requests.post(boss_url, json=payload, timeout=5)
     except requests.RequestException as e:
@@ -205,13 +189,13 @@ def create_app(task_name: str, boss_url: str) -> Flask:
     @param boss_url Callback URL for the boss service.
     @return Configured Flask application instance."""
     app = Flask(__name__)
-    
+
     # Load task handler on startup
     task_handler, task_args = get_task_info(task_name)
     load_imports(task_handler)
     if task_name == "questeval":
         print("\n" * 6)
-    
+
     @app.route("/tasks/queue", methods=["POST"])
     def enqueue_task():
         """Handle incoming task assignments from boss service.
@@ -224,7 +208,7 @@ def create_app(task_name: str, boss_url: str) -> Flask:
             return jsonify({"error": "Missing database_name or collection_name"}), 400
         if not chunk_id:
             return jsonify({"error": "Missing chunk_id"}), 400
-        
+
         print(f"[QUEUED] chunk '{chunk_id}' from Boss: using database '{database_name}' and collection '{collection_name}'")
 
         # Reconnect to the database since DB_NAME or COLLECTION may have changed
@@ -239,11 +223,9 @@ def create_app(task_name: str, boss_url: str) -> Flask:
             return jsonify({"error": "Chunk not found"}), 404
 
         # Enqueue the background task
-        task_queue.put((process_task,
-            (mongo_db, collection_name, chunk_id, task_name, chunk_doc,
-                boss_url, task_handler, task_args)))
+        task_queue.put((process_task, (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler, task_args)))
         return jsonify({"status": "accepted"}), 202
-    
+
     return app
 
 
@@ -258,12 +240,12 @@ if __name__ == "__main__":
     # Start one background worker thread (can increase to 2–4 for limited concurrency)
     for _ in range(1):
         threading.Thread(target=task_worker, daemon=True).start()
-    
+
     # Flask prep: Boss URL never changes, but MongoDB connection might
     load_dotenv(".env")
     boss_url = load_boss_config()
     PORT = int(os.environ[f"{args.task.upper()}_PORT"])
-    
+
     # Create and run app - disable hot-reaload on files changed
     app = create_app(args.task, boss_url)
     app.run(host="0.0.0.0", port=PORT, use_reloader=False)
