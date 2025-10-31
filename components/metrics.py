@@ -16,17 +16,20 @@ class Metrics:
 
 
     @staticmethod
-    def compute_basic_metrics(summary, gold_summary, chunk):
+    def compute_basic_metrics(summary, gold_summary, chunk) -> Dict[str, Any]:
         """Compute ROUGE and BERTScore.
         @param summary  A text string containing a book summary
         @param gold_summary  A summary to compare against
-        @param chunk  The original text of the chunk."""
+        @param chunk  The original text of the chunk.
+        @return  Dict containing 'rouge' and 'bertscore' keys.
+            Scores are nested in inconsistent schema."""
         import evaluate
         rouge = evaluate.load("rouge")
         bertscore = evaluate.load("bertscore")
 
         rouge_result = rouge.compute(predictions=[summary],
-                                     references=[gold_summary])["rougeL"]
+                                     references=[gold_summary],
+                                     use_aggregator=False)
         bertscore_result = bertscore.compute(predictions=[summary],
                                              references=[gold_summary],
                                              model_type="roberta-large")
@@ -40,12 +43,26 @@ class Metrics:
     def post_basic_metrics(self, book_id, book_title, summary, gold_summary="", chunk="", **kwargs):
         results = Metrics.compute_basic_metrics(summary, gold_summary, chunk)
         metrics = Metrics.generate_default_metrics(
-            rouge_precision = results["rouge"]["precision"][0],
-            rouge_recall = results["rouge"]["recall"][0],
-            rouge_f1 = results["rouge"]["f1"][0],
+            rouge1_precision = results["rouge"]["rouge1"][0]["precision"],
+            rouge1_recall = results["rouge"]["rouge1"][0]["recall"],
+            rouge1_f1 = results["rouge"]["rouge1"][0]["fmeasure"],
+
+            rouge2_precision = results["rouge"]["rouge2"][0]["precision"],
+            rouge2_recall = results["rouge"]["rouge2"][0]["recall"],
+            rouge2_f1 = results["rouge"]["rouge2"][0]["fmeasure"],
+
+            rougeL_precision = results["rouge"]["rougeL"][0]["precision"],
+            rougeL_recall = results["rouge"]["rougeL"][0]["recall"],
+            rougeL_f1 = results["rouge"]["rougeL"][0]["fmeasure"],
+
+            rougeLsum_precision = results["rouge"]["rougeLsum"][0]["precision"],
+            rougeLsum_recall = results["rouge"]["rougeLsum"][0]["recall"],
+            rougeLsum_f1 = results["rouge"]["rougeLsum"][0]["fmeasure"],
+
             bert_precision = results["bertscore"]["precision"][0],
             bert_recall = results["bertscore"]["recall"][0],
             bert_f1 = results["bertscore"]["f1"][0],
+
             **kwargs)
         payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
         self.post_payload(payload)
