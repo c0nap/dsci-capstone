@@ -36,6 +36,27 @@ RUN mkdir -p /usr/local/lib/python3.10/site-packages/booookscore/prompts && \
 RUN pip install --upgrade "openai>=1.35.0"
 
 
+# Patch BooookScore: fix undefined max_len in score.py
+RUN python - <<'PY'
+import importlib.util, pathlib, re
+
+spec = importlib.util.find_spec("booookscore.score")
+p = pathlib.Path(spec.origin)
+s = p.read_text()
+
+# Replace the bad line using regex substitution
+patched = re.sub(
+    r"max_tokens=max_len",
+    "max_tokens=100",
+    s
+)
+p.write_text(patched)
+print(f"Patched undefined max_len in: {p}")
+PY
+
+
+
+
 
 
 
