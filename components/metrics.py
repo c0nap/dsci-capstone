@@ -209,6 +209,8 @@ def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", u
         - gold_summary: Reference summary (optional, filters for better questions)
     @param qeval_task  Task performed by QuestEval (optional, default is summarization).
         Must be one of the following: generation / nlg, qa, dialogue, data2text, translation.
+    @param use_cuda  Run transformers with GPU enabled.
+    @param use_question_weighter  Make some questions more important based on relevancy.
     @return  Dict containing a score (range 0-1) and metadata for the provided summary.
         questeval_score: Overall semantic precision–recall score for one example (a Summary to evaluate, Source text, and Reference summary).
         has_reference: True if a gold reference summary was provided.
