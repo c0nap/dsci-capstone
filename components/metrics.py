@@ -43,21 +43,21 @@ class Metrics:
     def post_basic_metrics(self, book_id, book_title, summary, gold_summary="", chunk="", **kwargs):
         results = Metrics.compute_basic_metrics(summary, gold_summary, chunk)
         metrics = Metrics.generate_default_metrics(
-            rouge1_precision = results["rouge"]["rouge1"][0]["precision"],
-            rouge1_recall = results["rouge"]["rouge1"][0]["recall"],
-            rouge1_f1 = results["rouge"]["rouge1"][0]["fmeasure"],
+            rouge1_precision = results["rouge"]["rouge1"]["precision"],
+            rouge1_recall = results["rouge"]["rouge1"]["recall"],
+            rouge1_f1 = results["rouge"]["rouge1"]["fmeasure"],
 
-            rouge2_precision = results["rouge"]["rouge2"][0]["precision"],
-            rouge2_recall = results["rouge"]["rouge2"][0]["recall"],
-            rouge2_f1 = results["rouge"]["rouge2"][0]["fmeasure"],
+            rouge2_precision = results["rouge"]["rouge2"]["precision"],
+            rouge2_recall = results["rouge"]["rouge2"]["recall"],
+            rouge2_f1 = results["rouge"]["rouge2"]["fmeasure"],
 
-            rougeL_precision = results["rouge"]["rougeL"][0]["precision"],
-            rougeL_recall = results["rouge"]["rougeL"][0]["recall"],
-            rougeL_f1 = results["rouge"]["rougeL"][0]["fmeasure"],
+            rougeL_precision = results["rouge"]["rougeL"]["precision"],
+            rougeL_recall = results["rouge"]["rougeL"]["recall"],
+            rougeL_f1 = results["rouge"]["rougeL"]["fmeasure"],
 
-            rougeLsum_precision = results["rouge"]["rougeLsum"][0]["precision"],
-            rougeLsum_recall = results["rouge"]["rougeLsum"][0]["recall"],
-            rougeLsum_f1 = results["rouge"]["rougeLsum"][0]["fmeasure"],
+            rougeLsum_precision = results["rouge"]["rougeLsum"]["precision"],
+            rougeLsum_recall = results["rouge"]["rougeLsum"]["recall"],
+            rougeLsum_f1 = results["rouge"]["rougeLsum"]["fmeasure"],
 
             bert_precision = results["bertscore"]["precision"][0],
             bert_recall = results["bertscore"]["recall"][0],
