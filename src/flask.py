@@ -103,7 +103,7 @@ def get_task_info(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     if task_name == "bookscore":
         from components.metrics import run_bookscore
         return run_bookscore, {
-            "model": "gpt-3.5-turbo",
+            "model": "gpt-5-nano",
             "use_v2": False,   # single-pass mode
         }
     elif task_name == "questeval":
