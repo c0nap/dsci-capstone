@@ -10,7 +10,8 @@ import requests
 import os
 from dotenv import load_dotenv
 from typing import Dict, Any, Callable, Optional, Tuple, Generator
-import queue, threading, time
+import threading, time
+from queue import Queue
 
 MongoHandle = Generator["Database[Any]", None, None]
 
@@ -86,7 +87,7 @@ def load_mongo_config(database: str) -> str:
     return mongo_uri
 
 
-def load_boss_config() -> Tuple[str, str]:
+def load_boss_config() -> str:
     """Load boss service callback URL from environment variables.
     @return Full callback URL for the boss service.
     @throws KeyError If PYTHON_HOST environment variable is missing."""
@@ -97,7 +98,7 @@ def load_boss_config() -> Tuple[str, str]:
     return f"{BOSS_URL}/callback"
 
 
-def get_task_info(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+def get_task_info(task_name: str) -> Tuple[Callable[[Dict[str, Any]], Dict[str, Any]], Dict[str, Any]]:
     """Dynamically import and return the appropriate task handler function.
     @param task_name Name of the task type to execute.
     @return Callable that processes the task data and returns results.
@@ -228,7 +229,7 @@ def create_app(task_name: str, boss_url: str) -> Flask:
 
         # Reconnect to the database since DB_NAME or COLLECTION may have changed
         mongo_uri = load_mongo_config(database_name)
-        mongo_client = MongoClient(mongo_uri)
+        mongo_client: MongoClient[Any] = MongoClient(mongo_uri)
         mongo_db = mongo_client[database_name]
 
         # Retrieve chunk data from MongoDB
@@ -252,7 +253,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Create the task queue - boss will leave assignments here
-    task_queue = queue.Queue()
+    task_queue: "Queue[Tuple[Any, Any]]" = Queue()
 
     # Start one background worker thread (can increase to 2–4 for limited concurrency)
     for _ in range(1):
@@ -261,7 +262,7 @@ if __name__ == "__main__":
     # Flask prep: Boss URL never changes, but MongoDB connection might
     load_dotenv(".env")
     boss_url = load_boss_config()
-    PORT = os.environ[f"{args.task.upper()}_PORT"]
+    PORT = int(os.environ[f"{args.task.upper()}_PORT"])
     
     # Create and run app - disable hot-reaload on files changed
     app = create_app(args.task, boss_url)

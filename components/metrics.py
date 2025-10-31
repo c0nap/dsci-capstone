@@ -1,10 +1,10 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 # Keep most imports inside a class method, dont pull them along during Worker imports
 
 class Metrics:
     """Utility class for computing and posting evaluation metrics."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         from dotenv import load_dotenv
         import os
 
@@ -16,7 +16,7 @@ class Metrics:
 
 
     @staticmethod
-    def compute_basic_metrics(summary, gold_summary, chunk) -> Dict[str, Any]:
+    def compute_basic_metrics(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]:
         """Compute ROUGE and BERTScore.
         @param summary  A text string containing a book summary
         @param gold_summary  A summary to compare against
@@ -40,7 +40,7 @@ class Metrics:
 
 
 
-    def post_basic_metrics(self, book_id, book_title, summary, gold_summary="", chunk="", **kwargs):
+    def post_basic_metrics(self, book_id: str, book_title: str, summary: str, gold_summary: str = "", chunk: str = "", **kwargs: Any) -> None:
         results = Metrics.compute_basic_metrics(summary, gold_summary, chunk)
         metrics = Metrics.generate_default_metrics(
             rouge1_precision = results["rouge"]["rouge1"]["precision"],
@@ -68,7 +68,7 @@ class Metrics:
         self.post_payload(payload)
 
 
-    def post_basic_output(self, book_id, book_title, summary):
+    def post_basic_output(self, book_id: str, book_title: str, summary: str) -> None:
         metrics = Metrics.generate_default_metrics()
         payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
         self.post_payload(payload)
@@ -76,34 +76,34 @@ class Metrics:
     
     @staticmethod
     def generate_default_metrics(
-        rouge1_precision=0.0,
-        rouge1_recall=0.0,
-        rouge1_f1=0.0,
-        rouge2_precision=0.0,
-        rouge2_recall=0.0,
-        rouge2_f1=0.0,
-        rougeL_precision=0.0,
-        rougeL_recall=0.0,
-        rougeL_f1=0.0,
-        rougeLsum_precision=0.0,
-        rougeLsum_recall=0.0,
-        rougeLsum_f1=0.0,
-        bert_precision=0.0,
-        bert_recall=0.0,
-        bert_f1=0.0,
-        booook_score=0.0,
-        questeval_score=0.0,
-        qa_question1="UNKNOWN",
-        qa_gold1="UNKNOWN",
-        qa_generated1="UNKNOWN",
-        qa_correct1=False,
-        qa_accuracy1=0.0,
-        qa_question2="UNKNOWN",
-        qa_gold2="UNKNOWN",
-        qa_generated2="UNKNOWN",
-        qa_correct2=False,
-        qa_accuracy2=0.0,
-    ):
+        rouge1_precision: float = 0.0,
+        rouge1_recall: float = 0.0,
+        rouge1_f1: float = 0.0,
+        rouge2_precision: float = 0.0,
+        rouge2_recall: float = 0.0,
+        rouge2_f1: float = 0.0,
+        rougeL_precision: float = 0.0,
+        rougeL_recall: float = 0.0,
+        rougeL_f1: float = 0.0,
+        rougeLsum_precision: float = 0.0,
+        rougeLsum_recall: float = 0.0,
+        rougeLsum_f1: float = 0.0,
+        bert_precision: float = 0.0,
+        bert_recall: float = 0.0,
+        bert_f1: float = 0.0,
+        booook_score: float = 0.0,
+        questeval_score: float = 0.0,
+        qa_question1: str = "UNKNOWN",
+        qa_gold1: str = "UNKNOWN",
+        qa_generated1: str = "UNKNOWN",
+        qa_correct1: bool = False,
+        qa_accuracy1: float = 0.0,
+        qa_question2: str = "UNKNOWN",
+        qa_gold2: str = "UNKNOWN",
+        qa_generated2: str = "UNKNOWN",
+        qa_correct2: bool = False,
+        qa_accuracy2: float = 0.0,
+    ) -> Dict[str, Any]:
         """Generate metrics payload with customizable default values"""
         return {
             "PRF1Metrics": [
@@ -164,7 +164,7 @@ class Metrics:
     
     
     @staticmethod
-    def create_summary_payload(book_id, book_title, summary, metrics=None):
+    def create_summary_payload(book_id: str, book_title: str, summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
         """Create the full summary payload for the API"""
         if metrics is None:
             metrics = Metrics.generate_default_metrics()
@@ -178,7 +178,7 @@ class Metrics:
         }
     
     
-    def post_payload(self, payload):
+    def post_payload(self, payload: Dict[str, Any]) -> bool:
         """Verify and post any given payload using the requests API."""
         import requests
         try:
@@ -200,40 +200,42 @@ class Metrics:
     
     
     @staticmethod
-    def generate_example_metrics():
+    def generate_example_metrics() -> Dict[str, Any]:
         """Send placeholder values to the web app."""
-        return Metrics.generate_default_metrics(
+        return Metrics.create_summary_payload(
             "book-42",
             "Example Book",
             "This is an AI-generated summary of the entire book. It captures the key plot points and themes.",
             # Override some defaults with example values
-            rouge1_precision=0.81,
-            rouge1_recall=0.82,
-            rouge1_f1=0.83,
-            rouge2_precision=0.84,
-            rouge2_recall=0.85,
-            rouge2_f1=0.86,
-            rougeL_precision=0.87,
-            rougeL_recall=0.88,
-            rougeL_f1=0.89,
-            rougeLsum_precision=0.80,
-            rougeLsum_recall=0.80,
-            rougeLsum_f1=0.80,
-            bert_precision=0.89,
-            bert_recall=0.90,
-            bert_f1=0.89,
-            booook_score=0.76,
-            questeval_score=0.81,
-            qa_question1="Who is the protagonist?",
-            qa_gold1="Alice",
-            qa_generated1="Alice",
-            qa_correct1=True,
-            qa_accuracy1=1.0,
-            qa_question2="Where does the story start?",
-            qa_gold2="Wonderland",
-            qa_generated2="Forest",
-            qa_correct2=False,
-            qa_accuracy2=0.0,
+            Metrics.generate_default_metrics(
+                rouge1_precision=0.81,
+                rouge1_recall=0.82,
+                rouge1_f1=0.83,
+                rouge2_precision=0.84,
+                rouge2_recall=0.85,
+                rouge2_f1=0.86,
+                rougeL_precision=0.87,
+                rougeL_recall=0.88,
+                rougeL_f1=0.89,
+                rougeLsum_precision=0.80,
+                rougeLsum_recall=0.80,
+                rougeLsum_f1=0.80,
+                bert_precision=0.89,
+                bert_recall=0.90,
+                bert_f1=0.89,
+                booook_score=0.76,
+                questeval_score=0.81,
+                qa_question1="Who is the protagonist?",
+                qa_gold1="Alice",
+                qa_generated1="Alice",
+                qa_correct1=True,
+                qa_accuracy1=1.0,
+                qa_question2="Where does the story start?",
+                qa_gold2="Wonderland",
+                qa_generated2="Forest",
+                qa_correct2=False,
+                qa_accuracy2=0.0,
+            )
         )
     
     
@@ -251,7 +253,7 @@ class Metrics:
 
 
 
-def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", use_cuda = False, use_question_weighter = True) -> Dict[str, Any]:
+def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", use_cuda: bool = False, use_question_weighter: bool = True) -> Dict[str, Any]:
     """Run QuestEval metric calculation.
     @details  Question-answering based evaluation.
         Generates questions from source/reference, and checks if answers can be found in the summary.

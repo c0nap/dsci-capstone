@@ -1,4 +1,4 @@
-from datasets import load_dataset
+from datasets import load_dataset  # type: ignore
 import re
 import pandas as pd
 from rapidfuzz import process, fuzz
@@ -32,7 +32,7 @@ def load_booksum():
 def to_df_booksum(ds):
     import re
     import pandas as pd
-    from datasets import DatasetDict
+    from datasets import DatasetDict  # type: ignore
 
     # If user passed the full DatasetDict, use its "train" split
     if isinstance(ds, DatasetDict):
@@ -73,7 +73,7 @@ def load_narrativeqa():
 
 def to_df_nqa(ds):
     import pandas as pd
-    from datasets import DatasetDict
+    from datasets import DatasetDict  # type: ignore
 
     # Handle DatasetDict (e.g., from load_dataset without ["train"])
     if isinstance(ds, DatasetDict):
@@ -158,7 +158,7 @@ def fuzzy_merge_titles(df1, df2, suffix1, suffix2, key="title", threshold=90, sc
 
 
 
-from components.metrics import post_basic_output
+from components.metrics import Metrics
 
 if __name__ == "__main__":
 	df_booksum = load_booksum()
@@ -174,5 +174,6 @@ if __name__ == "__main__":
 	print(f"NarrativeQA rows: {len(df_nqa)}")
 	print(f"Fuzzy matches: {len(df)}")
 
-	post_basic_output(1, df.loc[0, 'title_nqa'], df.loc[0, 'summary_booksum'], df.loc[0, 'summary_booksum'])
+	m = Metrics()
+	m.post_basic_metrics("1", df.loc[0, 'title_nqa'], df.loc[0, 'summary_booksum'], df.loc[0, 'summary_booksum'])
 
