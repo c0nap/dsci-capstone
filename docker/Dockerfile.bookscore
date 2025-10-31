@@ -32,6 +32,32 @@ RUN mkdir -p /usr/local/lib/python3.10/site-packages/booookscore/prompts && \
     curl -sSL https://raw.githubusercontent.com/lilakk/BooookScore/main/prompts/get_annotations.txt \
          -o /usr/local/lib/python3.10/site-packages/booookscore/prompts/get_annotations.txt
 
+# Force update to OpenAI for the newer models
+RUN pip install --upgrade "openai>=1.35.0"
+
+# Patch BooookScore code: prevent infinite LLM retry loop
+RUN python - <<'PY'
+import importlib.util, os, re, pathlib
+
+spec = importlib.util.find_spec("booookscore.utils")
+path = pathlib.Path(spec.origin)
+code = path.read_text()
+
+code = re.sub(
+    r"while response is None:",
+    "for attempt in range(5):",
+    code
+)
+code = re.sub(
+    r"time\.sleep\(5\)",
+    'time.sleep(5)\n            if attempt == 4:\n                raise RuntimeError("Failed after 5 attempts")',
+    code
+)
+
+path.write_text(code)
+print(f"Patched retry loop in: {path}")
+PY
+
 
 
 
