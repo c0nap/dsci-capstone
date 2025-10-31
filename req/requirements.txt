@@ -8,6 +8,10 @@ pypandoc
 lxml
 rapidfuzz
 evaluate
+rouge_score
+nltk
+absl-py
+bert-score
 flask
 
 # Database drivers
