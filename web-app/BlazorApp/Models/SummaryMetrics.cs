@@ -10,7 +10,13 @@ public class SummaryMetrics
         return new SummaryMetrics
         { PRF1Metrics = new List<PRF1Metric>
           { new PRF1Metric
-            { Name = "ROUGE", Precision = 0.0, Recall = 0.0, F1Score = 0.0 },
+            { Name = "ROUGE-1", Precision = 0.0, Recall = 0.0, F1Score = 0.0 },
+            new PRF1Metric
+            { Name = "ROUGE-2", Precision = 0.0, Recall = 0.0, F1Score = 0.0 },
+            new PRF1Metric
+            { Name = "ROUGE-L", Precision = 0.0, Recall = 0.0, F1Score = 0.0 },
+            new PRF1Metric
+            { Name = "ROUGE-Lsum", Precision = 0.0, Recall = 0.0, F1Score = 0.0 },
             new PRF1Metric
             { Name = "BERTScore", Precision = 0.0, Recall = 0.0, F1Score = 0.0 } },
           ScalarMetrics = new List<ScalarMetric>
