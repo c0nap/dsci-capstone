@@ -261,7 +261,7 @@ def run_questeval(chunk: Dict[str, Any], *, qeval_task: str = "summarization", u
 
 
 def run_bookscore(chunk: Dict[str, Any], *,
-    model: str = "gpt-4",
+    model: str = "gpt-3.5-turbo",
     batch_size: int = 10, use_v2: bool = True) -> Dict[str, Any]:
     """Run BooookScore metric for long-form summarization.
     @details  LLM-based coherence evaluation using BooookScore. Runs in CLI via subprocess.
