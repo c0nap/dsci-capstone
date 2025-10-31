@@ -1,0 +1,5 @@
+doxygen
+graphviz
+types-requests
+mypy
+isort
