@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, date
 from io import BytesIO
 from lxml import etree
 import os
@@ -7,7 +7,7 @@ import pandas as pd
 import pypandoc
 import re
 import spacy
-from typing import Dict, Iterator, List, Tuple, Any
+from typing import Dict, Iterator, List, Tuple, Any, Optional
 
 
 nlp = spacy.blank("en")  # blank English model, no pipeline
@@ -34,7 +34,7 @@ class Chunk:
         story_percent: float,
         chapter_percent: float,
         max_chunk_length: int = -1,
-    ):
+    ) -> None:
         """Construct a Chunk.
         @param text  The text content for this span.
         @param book_id  Corresponds to a single book file in the dataset.
@@ -100,7 +100,7 @@ class Chunk:
 
 class StoryStreamAdapter(ABC):
     @abstractmethod
-    def stream_segments(self) -> Chunk:
+    def stream_segments(self) -> Iterator[Chunk]:
         """Yields sanitized parts of a book.
         @details
             - Story segments usually correspond to chapters.
@@ -110,33 +110,33 @@ class StoryStreamAdapter(ABC):
             line with all other newlines removed."""
         pass
 
-    def stream_paragraphs(self) -> Chunk:
+    def stream_paragraphs(self) -> Iterator[Chunk]:
         """Concrete helper method to split segments into paragraphs.
         @details  The Chunk class is repurposed here so we pass location info. Depending on the Story.pre_split_chunks implementation, this might be unnecessary.
         """
         pass
 
-    def stream_sentences(self) -> str:
+    def stream_sentences(self) -> Iterator[str]:
         """Concrete helper method to split paragraphs into sentences. Mostly for debugging."""
         pass
 
 
 class Story:
-    def __init__(self, reader: StoryStreamAdapter):
+    def __init__(self, reader: StoryStreamAdapter) -> None:
         self.reader = reader
         self.chunks: list[Chunk] = []
 
-    def stream_chunks(self) -> Chunk:
+    def stream_chunks(self) -> Iterator[Chunk]:
         for chunk in self.chunks:
             yield chunk
 
-    def pre_split_chunks(self, max_chunk_length: int):
+    def pre_split_chunks(self, max_chunk_length: int) -> None:
         """Splits paragraphs into chunks.
         @details
             - Populates self.chunks with Chunk objects that obey max_chunk_length.
             - Combines adjacent paragraphs when possible.
             - Falls back to splitting by sentences if one paragraph is too long."""
-        buffer = []  # stores candidates to consolidate into chunks
+        buffer: List[Chunk] = []  # stores candidates to consolidate into chunks
 
         for seg in self.reader.stream_segments():
             # Case 1: paragraph itself is too long
@@ -184,12 +184,12 @@ class Story:
         if buffer:
             self._merge_chunks(buffer, max_chunk_length)
 
-    def _merge_chunks(self, segs, max_len):
+    def _merge_chunks(self, segs: List[Chunk], max_len: int) -> None:
         start, end = segs[0], segs[-1]
         text = "\n".join(s.text for s in segs)
         self.chunks.append(self._make_single(end, text, max_len, start))
 
-    def _make_single(self, seg, text, max_len, start=None):
+    def _make_single(self, seg: Chunk, text: str, max_len: int, start: Optional[Chunk] = None) -> Chunk:
         return Chunk(
             text=text,
             book_id=seg.book_id,
@@ -217,7 +217,7 @@ class ParagraphStreamTEI(StoryStreamAdapter):
         allowed_chapters: list[str] = None,
         start_inclusive: str = "",
         end_inclusive: str = "",
-    ):
+    ) -> None:
         """Create a ParagraphStreamTEI object.
         @param tei_path  Path to an existing TEI XML file.
         @param book_id  ID for this book.
@@ -356,24 +356,28 @@ class Book:
         author_key: str = "Author:",
         language_key: str = "Language:",
         date_key: str = "Release date:",
-    ):
-        self.title_key = title_key
-        self.author_key = author_key
-        self.language_key = language_key
-        self.date_key = date_key
+    ) -> None:
+        self.title_key: str = title_key
+        self.author_key: str = author_key
+        self.language_key: str = language_key
+        self.date_key: str = date_key
         self.title: str = None
         self.author: str = None
         self.language: str = None
-        self.release_date: datetime.date = None
+        self.release_date: date = None
+
+    def stream_chapters(self) -> Iterator[Tuple[str, Dict[str, Any]]]:
+        pass
 
 
 class BookStream(StoryStreamAdapter):
-    def __init__(self, book: Book):
+    def __init__(self, book: Book) -> None:
         self.book = book
 
-    def stream_segments(self) -> Chunk:
-        for text, metadata in book.stream_chapters():
-            yield (text, metadata)
+    def stream_segments(self) -> Iterator[Chunk]:
+        pass
+        # for text, metadata in self.book.stream_chapters():
+        #     yield (text, metadata)
 
 
 class BookFactory(ABC):
@@ -390,20 +394,20 @@ class EPUBToTEI:
     xml_namespace = {"tei": "http://www.tei-c.org/ns/1.0"}
     encoding = "utf-8"
 
-    def __init__(self, epub_path, save_pandoc=False, save_tei=True):
+    def __init__(self, epub_path: str, save_pandoc: bool = False, save_tei: bool = True) -> None:
         """Initialize the converter.
         @param epub_path  String containing the relative path to an EPUB file.
         @param save_pandoc  Flag to save the intermediate Pandoc output to .tei.xml
         @param save_tei  Flag to save the final TEI file as .tei"""
-        self.epub_path = epub_path
-        self.save_pandoc = save_pandoc
-        self.pandoc_xml_path = epub_path.replace(".epub", "_pandoc.tei.xml")
-        self.save_tei = save_tei
-        self.tei_path = epub_path.replace(".epub", ".tei")
-        self.raw_tei_content = None
-        self.clean_tei_content = None
+        self.epub_path: str = epub_path
+        self.save_pandoc: bool = save_pandoc
+        self.pandoc_xml_path: str = epub_path.replace(".epub", "_pandoc.tei.xml")
+        self.save_tei: bool = save_tei
+        self.tei_path: str = epub_path.replace(".epub", ".tei")
+        self.raw_tei_content: str = None
+        self.clean_tei_content: str = None
 
-    def convert_to_tei(self):
+    def convert_to_tei(self) -> None:
         """Uses Pandoc to draft a TEI string from EPUB."""
         if self.save_pandoc:
             pypandoc.convert_file(self.epub_path, "tei", outputfile=self.pandoc_xml_path)
@@ -412,7 +416,7 @@ class EPUBToTEI:
         else:
             self.raw_tei_content = pypandoc.convert_file(self.epub_path, "tei")
 
-    def clean_tei(self):
+    def clean_tei(self) -> None:
         """Wrap root if missing, sanitize ids, and save cleaned TEI."""
         content = self.raw_tei_content or open(self.pandoc_xml_path, encoding=self.encoding).read()
 

@@ -14,6 +14,7 @@ from src.util import check_values, df_natural_sorted, Log
 from time import time
 from typing import Any, Dict, Generator, List, Optional, Set, Type
 
+MongoHandle = Generator["Database[Any]", None, None]
 
 # Read environment variables at compile time
 load_dotenv(".env")
@@ -341,7 +342,7 @@ class DocumentConnector(DatabaseConnector):
 
 
 @contextmanager
-def mongo_handle(host: str, alias: str) -> Generator[Database[Any], None, None]:
+def mongo_handle(host: str, alias: str) -> MongoHandle:
     """Establish a temporary connection to MongoDB.
     @param host  A valid MongoDB connection string.
     @param alias  A unique name for the usage of this connection.

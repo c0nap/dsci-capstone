@@ -13,14 +13,14 @@ def convert_single():
     converter = EPUBToTEI(epub_file_1, save_pandoc=True, save_tei=True)
     converter.convert_to_tei()
     converter.clean_tei()
-    converter.print_chapters(200)
+    #converter.print_chapters(200)
 
     print("\n\nCHAPTERS for book 2: MYTHS")
     epub_file_2 = "./datasets/examples/nested-myths.epub"
     converter = EPUBToTEI(epub_file_2, save_pandoc=True, save_tei=True)
     converter.convert_to_tei()
     converter.clean_tei()
-    converter.print_chapters(200)
+    #converter.print_chapters(200)
 
 
 def convert_from_csv():
@@ -688,15 +688,19 @@ def pipeline_5b(summary, book_title, book_id, chunk, gold_summary="", bookscore=
 """Boss microservice for orchestrating distributed task processing.
 Manages task distribution to workers and tracks completion order."""
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import requests
 import os
 from dotenv import load_dotenv
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Generator, Tuple
 from collections import defaultdict
 from src.setup import Session
+from components.document_storage import DocumentConnector
 import threading, time
 import pandas as pd
+from pymongo.database import Database
+
+MongoHandle = Generator["Database[Any]", None, None]
 
 
 def load_worker_config(task_types: List[str]) -> Dict[str, str]:
@@ -720,7 +724,7 @@ def load_worker_config(task_types: List[str]) -> Dict[str, str]:
     return workers
 
 
-def clear_task_data(mongo_db: Any, collection_name: str, chunk_id: str, task_name: str) -> None:
+def clear_task_data(mongo_db: MongoHandle, collection_name: str, chunk_id: str, task_name: str) -> None:
     """Clear any existing task data before assigning new task to worker.
     @param mongo_db MongoDB database handle.
     @param collection_name The name of our primary chunk storage collection in Mongo.
@@ -758,7 +762,7 @@ def assign_task_to_worker(worker_url: str, database_name: str, collection_name: 
 
 
 
-def create_app(docs_db: str, database_name: str, collection_name: str, worker_urls: Dict[str, str]) -> Flask:
+def create_app(docs_db: DocumentConnector, database_name: str, collection_name: str, worker_urls: Dict[str, str]) -> Flask:
     """Create and configure Flask application for boss service.
     @param docs_db MongoDB connector class.
     @param database_name Name of the MongoDB database to use.
@@ -788,7 +792,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
     import threading
     tracker_lock = threading.Lock()
     
-    def update_story_status(story_id: int, task: str, status: str):
+    def update_story_status(story_id: int, task: str, status: str) -> None:
         """Update story-level task status. Auto-initializes with pending if not exists.
         @param story_id Unique identifier for the story.
         @param task Task name (preprocessing, chunking, summarization, metrics).
@@ -810,7 +814,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             story_tracker.loc[story_tracker['story_id'] == story_id, task] = status
         #print(f"{" " * 16}Stories Status:\n{story_tracker}\n")
 
-    def update_chunk_status(chunk_id: str, story_id: int, task: str, status: str):
+    def update_chunk_status(chunk_id: str, story_id: int, task: str, status: str) -> None:
         """Update chunk-level task status. Auto-initializes with pending if not exists.
         @param chunk_id Unique identifier for the chunk.
         @param story_id Unique identifier for the story.
@@ -863,7 +867,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
             return any(story_chunks[task_type] == 'failed')
     
     @app.route("/process_story", methods=["POST"])
-    def process_story():
+    def process_story() -> Tuple[Response, int]:
         """Initiate processing for a story by distributing tasks to workers.
         @return JSON response indicating success or failure."""
         data = request.json
@@ -924,7 +928,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
     
     
     @app.route("/callback", methods=["POST"])
-    def callback():
+    def callback() -> Tuple[Response, int]:
         """Receive status notifications from worker services.
         Handles started, completed, and failed statuses.
         @return Simple acknowledgment response."""
@@ -1013,7 +1017,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         return jsonify({"status": "received"}), 200
     
     @app.route("/status/<status_type>/<identifier>", methods=["GET"])
-    def get_status(status_type: str, identifier: str):
+    def get_status(status_type: str, identifier: str) -> Tuple[Response, int]:
         """Get processing status for a story or chunk.
         @param status_type Either 'story' or 'chunk'.
         @param identifier Story ID or chunk ID.
@@ -1072,7 +1076,7 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         return jsonify({"error": "Unknown error"}), 500
 
     @app.route("/status/<status_type>", methods=["POST"])
-    def update_status(status_type: str):
+    def update_status(status_type: str) -> Tuple[Response, int]:
         """Update story or chunk task status. Auto-initializes if not exists.
         @param status_type Either 'story' or 'chunk'.
         Payload: {
@@ -1113,14 +1117,14 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
         return jsonify({"status": "updated"}), 200
         
     @app.route("/tracker/story", methods=["GET"])
-    def get_story_tracker():
+    def get_story_tracker() -> Tuple[Response, int]:
         """Get complete story tracker DataFrame.
         @return JSON response with story tracker data."""
         with tracker_lock:
             return jsonify(story_tracker.to_dict('records')), 200
     
     @app.route("/tracker/chunk", methods=["GET"])
-    def get_chunk_tracker():
+    def get_chunk_tracker() -> Tuple[Response, int]:
         """Get complete chunk tracker DataFrame.
         @return JSON response with chunk tracker data."""
         with tracker_lock:
@@ -1136,30 +1140,32 @@ def create_app(docs_db: str, database_name: str, collection_name: str, worker_ur
 # Helpers to interact with the Flask boss thread.
 # Used to process our set of example books on pipeline start.
 ##############################################################################################
-def post_story_status(boss_port: str, story_id: int, task: str, status: str):
+def post_story_status(boss_port: int, story_id: int, task: str, status: str) -> requests.models.Response:
     """Send a story-level update to the boss Flask app.
     @param boss_port Port the boss microservice is running on.
     @param story_id Unique identifier for the story.
     @param task Task name (extraction, load_to_mongo, etc.).
-    @param status Status (pending, assigned, in-progress, completed, failed)."""
-    requests.post(
+    @param status Status (pending, assigned, in-progress, completed, failed).
+    @return JSON response indicating success or failure."""
+    return requests.post(
         f'http://localhost:{boss_port}/status/story',
         json={'story_id': story_id, 'task': task, 'status': status}
     )
 
-def post_chunk_status(boss_port: str, chunk_id: str, story_id: int, task: str, status: str):
+def post_chunk_status(boss_port: int, chunk_id: str, story_id: int, task: str, status: str) -> requests.models.Response:
     """Send a chunk-level update to the boss Flask app.
     @param boss_port Port the boss microservice is running on.
     @param chunk_id Unique identifier for the chunk.
     @param story_id Unique identifier for the story.
     @param task Task name (extraction, load_to_mongo, etc.).
-    @param status Status (pending, assigned, in-progress, completed, failed)."""
-    requests.post(
+    @param status Status (pending, assigned, in-progress, completed, failed).
+    @return JSON response indicating success or failure."""
+    return requests.post(
         f'http://localhost:{boss_port}/status/chunk',
         json={'story_id': story_id, "chunk_id": chunk_id, 'task': task, 'status': status}
     )
 
-def post_process_full_story(boss_port: str, story_id: int, task_type: str):
+def post_process_full_story(boss_port: int, story_id: int, task_type: str) -> requests.models.Response:
     """Process all chunks in MongoDB matching the provided story ID.
     @param boss_port Port the boss microservice is running on.
     @param story_id Unique identifier for the story.
@@ -1181,7 +1187,7 @@ if __name__ == "__main__":
     session = Session(verbose=False)
     load_dotenv(".env")
     DB_NAME = os.environ["DB_NAME"]
-    BOSS_PORT = os.environ["PYTHON_PORT"]
+    BOSS_PORT = int(os.environ["PYTHON_PORT"])
     COLLECTION = os.environ["COLLECTION_NAME"]
 
     # Drop old chunks

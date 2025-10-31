@@ -4,12 +4,15 @@ Supports multiple task types via command-line arguments and dynamic imports."""
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
+from pymongo.database import Database
 import argparse
 import requests
 import os
 from dotenv import load_dotenv
-from typing import Dict, Any, Callable, Optional, Tuple
+from typing import Dict, Any, Callable, Optional, Tuple, Generator
 import queue, threading, time
+
+MongoHandle = Generator["Database[Any]", None, None]
 
 
 ######################################################################################
@@ -103,7 +106,7 @@ def get_task_info(task_name: str) -> Callable[[Dict[str, Any]], Dict[str, Any]]:
     if task_name == "bookscore":
         from components.metrics import run_bookscore
         return run_bookscore, {
-            "model": "gpt-5-nano",
+            "model": "gpt-4o-mini",
             "use_v2": False,   # single-pass mode
         }
     elif task_name == "questeval":
@@ -126,7 +129,7 @@ def load_imports(func):
         pass
 
 
-def mark_task_in_progress(mongo_db: Any, collection_name: str, chunk_id: str, task_name: str) -> None:
+def mark_task_in_progress(mongo_db: MongoHandle, collection_name: str, chunk_id: str, task_name: str) -> None:
     """Mark a task as in-progress in MongoDB before processing begins.
     @param mongo_db MongoDB database instance.
     @param collection_name The name of our primary chunk storage collection in Mongo.
@@ -155,7 +158,7 @@ def mark_task_in_progress(mongo_db: Any, collection_name: str, chunk_id: str, ta
     )
 
 
-def save_task_result(mongo_db: Any, collection_name: str, chunk_id: str, task_name: str, result: Dict[str, Any]) -> None:
+def save_task_result(mongo_db: MongoHandle, collection_name: str, chunk_id: str, task_name: str, result: Dict[str, Any]) -> None:
     """Save completed task results to MongoDB.
     @param mongo_db MongoDB database instance.
     @param collection_name The name of our primary chunk storage collection in Mongo.
