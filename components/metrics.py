@@ -297,22 +297,22 @@ def run_bookscore(chunk: Dict[str, Any], *,
     api_key = os.environ["BOOKSCORE_API_KEY"]
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        # Step 1: Write book text as pickle
+        # 1: Write book text as pickle
         books_pkl = os.path.join(tmpdir, 'books.pkl')
         with open(books_pkl, 'wb') as f:
             pickle.dump({book_title: book_text}, f)
 
-        # Step 2: Write summary to JSON file
+        # 2: Write summary to JSON file
         summ_path = os.path.join(tmpdir, 'summary.json')
         with open(summ_path, 'w') as f:
             json.dump({book_title: summary}, f)
 
-        # Step 3: Write API key to file
+        # 3: Write API key to file
         key_path = os.path.join(tmpdir, 'api_key.txt')
         with open(key_path, 'w') as f:
             f.write(api_key)
 
-        # Step 4: Score the summary
+        # 4: Run BookScore as subprocess
         annot_path = os.path.join(tmpdir, 'annotations.json')
         score_cmd = [
             'python', '-m', 'booookscore.score',
@@ -340,24 +340,26 @@ def run_bookscore(chunk: Dict[str, Any], *,
         except subprocess.TimeoutExpired as e:
             raise RuntimeError("BookScore scoring timed out after 300s") from e
 
-        # Step 5: Read annotations output
+        # 5: Read annotations output (we dont care about their scores)
         if not os.path.exists(annot_path):
             raise RuntimeError("BooookScore did not produce annotations file")
 
         with open(annot_path, 'r') as f:
             annotations = json.load(f)
 
-        # Extract scores from annotations
+        # 6. Compute score from annotations
         book_annot = annotations.get(book_title, {})
-        sentence_scores = []
+        if not isinstance(book_annot, dict):
+            raise RuntimeError(f"Invalid annotations: {book_annot}")
 
-        if isinstance(book_annot, dict):
-            if 'sentence_scores' in book_annot:
-                sentence_scores = book_annot['sentence_scores']
-            elif 'scores' in book_annot:
-                sentence_scores = book_annot['scores']
-
-        overall_score = sum(sentence_scores) / len(sentence_scores) if sentence_scores else 0.0
+        # Based on code from official repo:
+        # https://github.com/lilakk/BooookScore/blob/094bf69bc55317b728b4b2bb679c287e0176ae6c/booookscore/score.py#L167
+        confusing = 0
+        total = len(book_annot)
+        for sent, annot in book_annot.items():
+            if annot.get("questions") or annot.get("types"):
+                confusing += 1
+        overall_score = 1 - (confusing / total) if total else 0.0
 
         return {
             'bookscore': overall_score,
