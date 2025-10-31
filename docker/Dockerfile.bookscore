@@ -59,6 +59,41 @@ print(f"Patched retry loop in: {path}")
 PY
 
 
+# Patch BooookScore: Relax validate_response strictness
+RUN python - <<'PY'
+import pathlib, importlib.util
+
+spec = importlib.util.find_spec("booookscore.utils")
+path = pathlib.Path(spec.origin)
+code = path.read_text()
+
+start = 'questions_pos = lines[0].find("Questions: ")'
+end = 'types_pos = lines[1].find("Types: ")'
+
+if start in code and end in code:
+    new_block = '''match_q = None
+match_t = None
+import re
+for line in lines:
+    if re.search(r"questions?", line, re.I):
+        match_q = re.search(r"questions?:\\s*(.*)", line, re.I)
+    if re.search(r"types?", line, re.I):
+        match_t = re.search(r"types?:\\s*(.*)", line, re.I)
+if not match_q or not match_t:
+    print("Questions or types not found (lenient mode)")
+    return False, [], []
+questions = match_q.group(1).strip()
+types = match_t.group(1).strip().lower()'''
+    code = code.replace(f"{start}\n        types_pos = -1\n        {end}", new_block)
+
+path.write_text(code)
+print(f"Patched lenient validate_response in: {path}")
+PY
+
+
+
+
+
 
 
 # Copy source code into the container (optional .dockerignore)
