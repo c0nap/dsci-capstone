@@ -35,25 +35,21 @@ class Metrics:
         bertscore_result = bertscore.compute(predictions=[summary], references=[gold_summary], model_type="roberta-large")
         return {"rouge": rouge_result, "bertscore": bertscore_result}
 
-    def post_basic_metrics(self, book_id: str, book_title: str, summary: str, gold_summary: str = "", chunk: str = "", **kwargs: Any) -> None:
-        results = Metrics.compute_basic_metrics(summary, gold_summary, chunk)
-        metrics = Metrics.generate_default_metrics(
-            rouge1_f1=results["rouge"]["rouge1"],
-            rouge2_f1=results["rouge"]["rouge2"],
-            rougeL_f1=results["rouge"]["rougeL"],
-            rougeLsum_f1=results["rouge"]["rougeLsum"],
-            bert_precision=results["bertscore"]["precision"][0],
-            bert_recall=results["bertscore"]["recall"][0],
-            bert_f1=results["bertscore"]["f1"][0],
-            **kwargs,
-        )
-        payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
-        self.post_payload(payload)
 
-    def post_basic_output(self, book_id: str, book_title: str, summary: str) -> None:
-        metrics = Metrics.generate_default_metrics()
-        payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
-        self.post_payload(payload)
+    @staticmethod
+    def create_summary_payload(book_id: str, book_title: str, summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Create the full summary payload for the API"""
+        if metrics is None:
+            metrics = Metrics.generate_default_metrics()
+
+        return {
+            "BookID": str(book_id),
+            "BookTitle": book_title,
+            "SummaryText": summary,
+            "Metrics": metrics,
+            "QAResults": [],
+        }
+
 
     @staticmethod
     def generate_default_metrics(
@@ -115,40 +111,6 @@ class Metrics:
             },
         }
 
-    @staticmethod
-    def create_summary_payload(book_id: str, book_title: str, summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Create the full summary payload for the API"""
-        if metrics is None:
-            metrics = Metrics.generate_default_metrics()
-
-        return {
-            "BookID": str(book_id),
-            "BookTitle": book_title,
-            "SummaryText": summary,
-            "Metrics": metrics,
-            "QAResults": [],
-        }
-
-    def post_payload(self, payload: Dict[str, Any]) -> bool:
-        """Verify and post any given payload using the requests API."""
-        import requests
-
-        try:
-            print(f"Sending payload to Blazor at {self.url}")
-            response = requests.post(self.url, json=payload)
-
-            if response.ok:  # handles 200–299
-                print("POST succeeded")
-                print(response.json())
-                return True
-            else:
-                print(f"POST failed: {response.status_code}")
-                print(response.text)
-                return False
-
-        except requests.exceptions.RequestException as e:
-            print(f"Request failed: {e}")
-            return False
 
     @staticmethod
     def generate_example_metrics() -> Dict[str, Any]:
@@ -180,6 +142,55 @@ class Metrics:
                 qa_accuracy2=0.0,
             ),
         )
+
+
+
+    ###################################################################################
+    # POST directly to Blazor (soon to be deprecated)
+    ###################################################################################
+    def post_payload(self, payload: Dict[str, Any]) -> bool:
+        """Verify and post any given payload using the requests API."""
+        import requests
+
+        try:
+            print(f"Sending payload to Blazor at {self.url}")
+            response = requests.post(self.url, json=payload)
+
+            if response.ok:  # handles 200–299
+                print("POST succeeded")
+                print(response.json())
+                return True
+            else:
+                print(f"POST failed: {response.status_code}")
+                print(response.text)
+                return False
+
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return False
+
+    def post_basic_metrics(self, book_id: str, book_title: str, summary: str, gold_summary: str = "", chunk: str = "", **kwargs: Any) -> None:
+        results = Metrics.compute_basic_metrics(summary, gold_summary, chunk)
+        metrics = Metrics.generate_default_metrics(
+            rouge1_f1=results["rouge"]["rouge1"],
+            rouge2_f1=results["rouge"]["rouge2"],
+            rougeL_f1=results["rouge"]["rougeL"],
+            rougeLsum_f1=results["rouge"]["rougeLsum"],
+            bert_precision=results["bertscore"]["precision"][0],
+            bert_recall=results["bertscore"]["recall"][0],
+            bert_f1=results["bertscore"]["f1"][0],
+            **kwargs,
+        )
+        payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
+        self.post_payload(payload)
+
+    def post_basic_output(self, book_id: str, book_title: str, summary: str) -> None:
+        metrics = Metrics.generate_default_metrics()
+        payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
+        self.post_payload(payload)
+
+    
+
     
     
     
