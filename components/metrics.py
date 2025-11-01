@@ -25,7 +25,7 @@ class Metrics:
         @param gold_summary  A summary to compare against
         @param chunk  The original text of the chunk.
         @return  Dict containing 'rouge' and 'bertscore' keys.
-            Scores are nested in inconsistent schema."""
+            Scores are nested with inconsistent schema."""
         import evaluate
 
         rouge = evaluate.load("rouge")
@@ -38,7 +38,12 @@ class Metrics:
 
     @staticmethod
     def create_summary_payload(book_id: str, book_title: str, summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Create the full summary payload for the API"""
+        """Create the full Blazor payload for a single book.
+        @param book_id  Unique identifier for one book.
+        @param book_title  String containing the title of a book.
+        @param summary  String containing a book summary.
+        @param metrics  Dictionary containing various nested evaluation metrics.
+        @return  A dictionary with C#-style key names."""
         if metrics is None:
             metrics = Metrics.generate_default_metrics()
 
@@ -73,7 +78,27 @@ class Metrics:
         qa_correct2: bool = False,
         qa_accuracy2: float = 0.0,
     ) -> Dict[str, Any]:
-        """Generate metrics payload with customizable default values"""
+        """Generate the metrics sub-payload with customizable default values.
+        @param rouge1_f1 The ROUGE-1 evaluation metric.
+        @param rouge2_f1 The ROUGE-2 evaluation metric.
+        @param rougeL_f1 The ROUGE-L evaluation metric.
+        @param rougeLsum_f1 The ROUGE-Lsum evaluation metric.
+        @param bert_precision The BERTScore precision score.
+        @param bert_recall The BERTScore recall score.
+        @param bert_f1 The BERTScore F1 score.
+        @param booook_score The BooookScore evaluation metric.
+        @param questeval_score The QuestEval evaluation metric.
+        @param qa_question1 A question about the book.
+        @param qa_gold1 The correct answer to the question.
+        @param qa_generated1 A generated answer to judge.
+        @param qa_correct1 Whether our answer is correct.
+        @param qa_accuracy1 The accuracy score for this QA sample.
+        @param qa_question2 A question about the book.
+        @param qa_gold2 The correct answer to the question.
+        @param qa_generated2 A generated answer to judge.
+        @param qa_correct2 Whether our answer is correct.
+        @param qa_accuracy2 The accuracy score for this QA sample.
+        @return  Dictionary containing various nested evaluation metrics."""
         return {
             "PRF1Metrics": [
                 {
@@ -114,7 +139,8 @@ class Metrics:
 
     @staticmethod
     def generate_example_metrics() -> Dict[str, Any]:
-        """Send placeholder values to the web app."""
+        """Create a placeholder payload with dummy values.
+        @return Full payload with nested metrics."""
         return Metrics.create_summary_payload(
             "book-42",
             "Example Book",
@@ -149,7 +175,9 @@ class Metrics:
     # POST directly to Blazor (soon to be deprecated)
     ###################################################################################
     def post_payload(self, payload: Dict[str, Any]) -> bool:
-        """Verify and post any given payload using the requests API."""
+        """Verify and POST a given payload using the requests API.
+        @param payload JSON dictionary containing data for a single book.
+        @return Whether the POST operation was successful."""
         import requests
 
         try:
@@ -169,8 +197,14 @@ class Metrics:
             print(f"Request failed: {e}")
             return False
 
-    def post_basic_metrics(self, book_id: str, book_title: str, summary: str, gold_summary: str = "", chunk: str = "", **kwargs: Any) -> None:
-        results = Metrics.compute_basic_metrics(summary, gold_summary, chunk)
+    def post_basic_metrics(self, book_id: str, book_title: str, summary: str, gold_summary: str = "", text: str = "", **kwargs: Any) -> None:
+        """POST basic evaluation scores to Blazor (ROUGE, BERTScore).
+        @param book_id  Unique identifier for one book.
+        @param book_title  String containing the title of a book.
+        @param summary  String containing a book summary.
+        @param gold_summary  Optional summary to compare against.
+        @param text  A string containing text from the book."""
+        results = Metrics.compute_basic_metrics(summary, gold_summary, text)
         metrics = Metrics.generate_default_metrics(
             rouge1_f1=results["rouge"]["rouge1"],
             rouge2_f1=results["rouge"]["rouge2"],
@@ -185,6 +219,10 @@ class Metrics:
         self.post_payload(payload)
 
     def post_basic_output(self, book_id: str, book_title: str, summary: str) -> None:
+        """POST dummy date to Blazor.
+        @param book_id  Unique identifier for one book.
+        @param book_title  String containing the title of a book.
+        @param summary  String containing a book summary."""
         metrics = Metrics.generate_default_metrics()
         payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
         self.post_payload(payload)
