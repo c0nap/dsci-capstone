@@ -37,11 +37,12 @@ class Metrics:
 
 
     @staticmethod
-    def create_summary_payload(book_id: str, book_title: str, summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
+    def create_summary_payload(book_id: str, book_title: str, summary: str, gold_summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
         """Create the full Blazor payload for a single book.
         @param book_id  Unique identifier for one book.
         @param book_title  String containing the title of a book.
         @param summary  String containing a book summary.
+        @param gold_summary  Optional summary to compare against.
         @param metrics  Dictionary containing various nested evaluation metrics.
         @return  A dictionary with C#-style key names."""
         if metrics is None:
@@ -51,6 +52,7 @@ class Metrics:
             "BookID": str(book_id),
             "BookTitle": book_title,
             "SummaryText": summary,
+            "GoldSummaryText": gold_summary,
             "Metrics": metrics,
             "QAResults": [],
         }
@@ -145,6 +147,7 @@ class Metrics:
             "book-42",
             "Example Book",
             "This is an AI-generated summary of the entire book. It captures the key plot points and themes.",
+            "No gold-standard summary available.",
             # Override some defaults with example values
             Metrics.generate_default_metrics(
                 rouge1_f1=0.83,
@@ -216,7 +219,7 @@ class Metrics:
             bert_f1=results["bertscore"]["f1"][0],
             **kwargs,
         )
-        payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
+        payload = Metrics.create_summary_payload(book_id, book_title, summary, gold_summary, metrics)
         self.post_payload(payload)
 
     def post_basic_output(self, book_id: str, book_title: str, summary: str) -> None:
@@ -225,7 +228,7 @@ class Metrics:
         @param book_title  String containing the title of a book.
         @param summary  String containing a book summary."""
         metrics = Metrics.generate_default_metrics()
-        payload = Metrics.create_summary_payload(book_id, book_title, summary, metrics)
+        payload = Metrics.create_summary_payload(book_id, book_title, summary, "No gold-standard summary available.", metrics)
         self.post_payload(payload)
 
     

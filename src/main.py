@@ -976,7 +976,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     book_title = chunk["book_title"]
                     text = chunk["text"]
                     summary = chunk["summary"]
-                    gold_summary = chunk.get("gold_summary", "")
+                    gold_summary = chunk.get("gold_summary", text[:len(text)//2])
                     bookscore = chunk["bookscore"]
                     questeval = chunk["questeval"]
                     pipeline_5b(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
