@@ -31,25 +31,17 @@ class Metrics:
         rouge = evaluate.load("rouge")
         bertscore = evaluate.load("bertscore")
 
-        rouge_result = rouge.compute(predictions=[summary], references=[gold_summary], use_aggregator=False)
+        rouge_result = rouge.compute(predictions=[summary], references=[gold_summary])
         bertscore_result = bertscore.compute(predictions=[summary], references=[gold_summary], model_type="roberta-large")
         return {"rouge": rouge_result, "bertscore": bertscore_result}
 
     def post_basic_metrics(self, book_id: str, book_title: str, summary: str, gold_summary: str = "", chunk: str = "", **kwargs: Any) -> None:
         results = Metrics.compute_basic_metrics(summary, gold_summary, chunk)
         metrics = Metrics.generate_default_metrics(
-            rouge1_precision=results["rouge"]["rouge1"]["precision"],
-            rouge1_recall=results["rouge"]["rouge1"]["recall"],
-            rouge1_f1=results["rouge"]["rouge1"]["fmeasure"],
-            rouge2_precision=results["rouge"]["rouge2"]["precision"],
-            rouge2_recall=results["rouge"]["rouge2"]["recall"],
-            rouge2_f1=results["rouge"]["rouge2"]["fmeasure"],
-            rougeL_precision=results["rouge"]["rougeL"]["precision"],
-            rougeL_recall=results["rouge"]["rougeL"]["recall"],
-            rougeL_f1=results["rouge"]["rougeL"]["fmeasure"],
-            rougeLsum_precision=results["rouge"]["rougeLsum"]["precision"],
-            rougeLsum_recall=results["rouge"]["rougeLsum"]["recall"],
-            rougeLsum_f1=results["rouge"]["rougeLsum"]["fmeasure"],
+            rouge1_f1=results["rouge"]["rouge1"],
+            rouge2_f1=results["rouge"]["rouge2"],
+            rougeL_f1=results["rouge"]["rougeL"],
+            rougeLsum_f1=results["rouge"]["rougeLsum"],
             bert_precision=results["bertscore"]["precision"][0],
             bert_recall=results["bertscore"]["recall"][0],
             bert_f1=results["bertscore"]["f1"][0],
@@ -65,17 +57,9 @@ class Metrics:
 
     @staticmethod
     def generate_default_metrics(
-        rouge1_precision: float = 0.0,
-        rouge1_recall: float = 0.0,
         rouge1_f1: float = 0.0,
-        rouge2_precision: float = 0.0,
-        rouge2_recall: float = 0.0,
         rouge2_f1: float = 0.0,
-        rougeL_precision: float = 0.0,
-        rougeL_recall: float = 0.0,
         rougeL_f1: float = 0.0,
-        rougeLsum_precision: float = 0.0,
-        rougeLsum_recall: float = 0.0,
         rougeLsum_f1: float = 0.0,
         bert_precision: float = 0.0,
         bert_recall: float = 0.0,
@@ -97,30 +81,6 @@ class Metrics:
         return {
             "PRF1Metrics": [
                 {
-                    "Name": "ROUGE-1",
-                    "Precision": rouge1_precision,
-                    "Recall": rouge1_recall,
-                    "F1Score": rouge1_f1,
-                },
-                {
-                    "Name": "ROUGE-2",
-                    "Precision": rouge2_precision,
-                    "Recall": rouge2_recall,
-                    "F1Score": rouge2_f1,
-                },
-                {
-                    "Name": "ROUGE-L",
-                    "Precision": rougeL_precision,
-                    "Recall": rougeL_recall,
-                    "F1Score": rougeL_f1,
-                },
-                {
-                    "Name": "ROUGE-Lsum",
-                    "Precision": rougeLsum_precision,
-                    "Recall": rougeLsum_recall,
-                    "F1Score": rougeLsum_f1,
-                },
-                {
                     "Name": "BERTScore",
                     "Precision": bert_precision,
                     "Recall": bert_recall,
@@ -130,6 +90,10 @@ class Metrics:
             "ScalarMetrics": [
                 {"Name": "BooookScore (Chang 2024)", "Value": booook_score},
                 {"Name": "QuestEval (Scialom 2021)", "Value": questeval_score},
+                {"Name": "ROUGE-1", "Value": questeval_score},
+                {"Name": "ROUGE-2", "Value": questeval_score},
+                {"Name": "ROUGE-L", "Value": questeval_score},
+                {"Name": "ROUGE-Lsum", "Value": questeval_score},
             ],
             "QA": {
                 "QAItems": [
