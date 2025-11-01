@@ -203,7 +203,8 @@ class Metrics:
         @param book_title  String containing the title of a book.
         @param summary  String containing a book summary.
         @param gold_summary  Optional summary to compare against.
-        @param text  A string containing text from the book."""
+        @param text  A string containing text from the book.
+        @param kwargs  Any additional named arguments will be added to the payload."""
         results = Metrics.compute_basic_metrics(summary, gold_summary, text)
         metrics = Metrics.generate_default_metrics(
             rouge1_f1=results["rouge"]["rouge1"],
