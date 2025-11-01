@@ -159,17 +159,9 @@ class Metrics:
             "This is an AI-generated summary of the entire book. It captures the key plot points and themes.",
             # Override some defaults with example values
             Metrics.generate_default_metrics(
-                rouge1_precision=0.81,
-                rouge1_recall=0.82,
                 rouge1_f1=0.83,
-                rouge2_precision=0.84,
-                rouge2_recall=0.85,
                 rouge2_f1=0.86,
-                rougeL_precision=0.87,
-                rougeL_recall=0.88,
                 rougeL_f1=0.89,
-                rougeLsum_precision=0.80,
-                rougeLsum_recall=0.80,
                 rougeLsum_f1=0.80,
                 bert_precision=0.89,
                 bert_recall=0.90,
