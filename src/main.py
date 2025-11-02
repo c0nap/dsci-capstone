@@ -647,7 +647,7 @@ def pipeline_5a(summary, book_title, book_id):
     print("\nOutput sent to web app.")
 
 
-def pipeline_5b(summary, book_title, book_id, chunk, gold_summary="", bookscore=None, questeval=None):
+def pipeline_5b(summary, book_title, book_id, chunk, gold_summary="", bookscore: float = None, questeval: float = None):
     """Send metrics to Blazor
     - Compute basic metrics (ROUGE, BERTScore)
     - Wait for advanced metrics (QuestEval, BooookScore)
@@ -977,8 +977,8 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     text = chunk["text"]
                     summary = chunk["summary"]
                     gold_summary = chunk.get("gold_summary", text[:len(text)//2])
-                    bookscore = chunk["bookscore"]
-                    questeval = chunk["questeval"]
+                    bookscore = float(chunk["bookscore"]["value"])
+                    questeval = float(chunk["questeval"]["value"])
                     pipeline_5b(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
 
                     print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")

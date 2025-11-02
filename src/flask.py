@@ -161,11 +161,8 @@ def save_task_result(mongo_db: MongoHandle, collection_name: str, chunk_id: str,
     @param task_name Name of the task that was executed.
     @param result Dictionary containing task results to be stored."""
     collection = getattr(mongo_db, collection_name)
-
     update_data = {f"{task_name}.status": "completed", f"{task_name}.result": result}
-
     collection.update_one({"_id": chunk_id}, {"$set": update_data})
-
     print(f"FINISHED: chunk ID: {chunk_id}, result:\n{result}")
 
 

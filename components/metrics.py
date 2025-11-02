@@ -194,6 +194,7 @@ class Metrics:
             else:
                 print(f"POST failed: {response.status_code}")
                 print(response.text)
+                print(payload)
                 return False
 
         except requests.exceptions.RequestException as e:
@@ -301,7 +302,7 @@ def run_questeval(
     #   corpus_score: Mean score across all examples.
     #       "corpus_score": result.get("corpus_score", 0),
     return {
-        "questeval_score": result.get("ex_level_scores", [0])[0],
+        "value": result.get("ex_level_scores", [0])[0],
         "has_reference": ref is not None,
     }
 
@@ -419,7 +420,7 @@ def run_bookscore(chunk: Dict[str, Any], *, model: str = "gpt-3.5-turbo", batch_
                 confusing += 1
         overall_score = 1 - (confusing / total) if total else 0.0
 
-        return {'bookscore': overall_score, 'annotations': book_annot, 'model_used': f"openai-model_{model}"}
+        return {'value': overall_score, 'annotations': book_annot, 'model_used': f"openai-model_{model}"}
 
 
 def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 2048) -> str:
