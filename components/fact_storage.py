@@ -299,8 +299,6 @@ class GraphConnector(DatabaseConnector):
         query = f"MATCH (n) WHERE {self.IS_DUMMY_()} DETACH DELETE n"
         self.execute_query(query)
 
-
-
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
     # ------------------------------------------------------------------------
@@ -399,9 +397,6 @@ class GraphConnector(DatabaseConnector):
         with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
             print(f"Graph triples ({len(triples_df)} total):")
             print(triples_df)
-
-
-
 
     def IS_DUMMY_(self, alias: str = 'n') -> str:
         """Generates Cypher code to select dummy nodes inside a WHERE clause.

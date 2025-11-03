@@ -976,7 +976,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     book_title = chunk["book_title"]
                     text = chunk["text"]
                     summary = chunk["summary"]
-                    gold_summary = chunk.get("gold_summary", text[:len(text)//2])
+                    gold_summary = chunk.get("gold_summary", text[: len(text) // 2])
                     bookscore = float(chunk["bookscore"]["result"]["value"])
                     questeval = float(chunk["questeval"]["result"]["value"])
                     pipeline_5b(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
@@ -1195,8 +1195,6 @@ if __name__ == "__main__":
 
     # Wait for boss to be ready
     time.sleep(1)
-
-
 
     # TODO - PIPELINE HERE
     story_id = 1

@@ -139,9 +139,6 @@ def fuzzy_merge_titles(df1, df2, suffix1, suffix2, key="title", threshold=90, sc
     return pd.DataFrame(matches)
 
 
-
-
-
 from components.metrics import Metrics
 
 

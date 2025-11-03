@@ -19,7 +19,6 @@ class Metrics:
         self.PORT = os.getenv("BLAZOR_PORT")
         self.url = f"http://{self.HOST}:{self.PORT}/api/metrics"
 
-
     @staticmethod
     def compute_basic_metrics(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]:
         """Compute ROUGE and BERTScore.
@@ -36,7 +35,6 @@ class Metrics:
         rouge_result = rouge.compute(predictions=[summary], references=[gold_summary])
         bertscore_result = bertscore.compute(predictions=[summary], references=[gold_summary], model_type="roberta-large")
         return {"rouge": rouge_result, "bertscore": bertscore_result}
-
 
     @staticmethod
     def create_summary_payload(book_id: str, book_title: str, summary: str, gold_summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -58,7 +56,6 @@ class Metrics:
             "Metrics": metrics,
             "QAResults": [],
         }
-
 
     @staticmethod
     def generate_default_metrics(
@@ -140,7 +137,6 @@ class Metrics:
             },
         }
 
-
     @staticmethod
     def generate_example_metrics() -> Dict[str, Any]:
         """Create a placeholder payload with dummy values.
@@ -173,8 +169,6 @@ class Metrics:
                 qa_accuracy2=0.0,
             ),
         )
-
-
 
     ###################################################################################
     # POST directly to Blazor (soon to be deprecated)
@@ -466,4 +460,3 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
             raise RuntimeError(f"BookScore chunking timed out after {Metrics.timeout_seconds}s") from e
 
         return chunked_pkl
-
