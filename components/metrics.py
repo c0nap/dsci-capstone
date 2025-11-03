@@ -7,6 +7,8 @@ from typing import Any, Dict, List
 class Metrics:
     """Utility class for computing and posting evaluation metrics."""
 
+    timeout_seconds = 900
+
     def __init__(self) -> None:
         from dotenv import load_dotenv
         import os
@@ -390,14 +392,14 @@ def run_bookscore(chunk: Dict[str, Any], *, model: str = "gpt-3.5-turbo", batch_
                 cwd=pkg_path,
                 capture_output=True,
                 text=True,
-                timeout=300,
+                timeout=Metrics.timeout_seconds,
                 check=True,
                 # start_new_session=True
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore scoring failed: {e.stderr}") from e
         except subprocess.TimeoutExpired as e:
-            raise RuntimeError("BookScore scoring timed out after 300s") from e
+            raise RuntimeError(f"BookScore scoring timed out after {Metrics.timeout_seconds}s") from e
 
         # 5: Read annotations output (we dont care about their scores)
         if not os.path.exists(annot_path):
@@ -454,14 +456,14 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
                 chunk_cmd,
                 capture_output=True,
                 text=True,
-                timeout=300,
+                timeout=Metrics.timeout_seconds,
                 check=True,
                 # start_new_session=True
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"BooookScore chunking failed: {e.stderr}") from e
         except subprocess.TimeoutExpired as e:
-            raise RuntimeError("BookScore chunking timed out after 300s") from e
+            raise RuntimeError(f"BookScore chunking timed out after {Metrics.timeout_seconds}s") from e
 
         return chunked_pkl
 
