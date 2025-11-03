@@ -977,8 +977,8 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     text = chunk["text"]
                     summary = chunk["summary"]
                     gold_summary = chunk.get("gold_summary", text[:len(text)//2])
-                    bookscore = float(chunk["bookscore"]["value"])
-                    questeval = float(chunk["questeval"]["value"])
+                    bookscore = float(chunk["bookscore"]["result"]["value"])
+                    questeval = float(chunk["questeval"]["result"]["value"])
                     pipeline_5b(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
 
                     print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")

@@ -113,10 +113,10 @@ class Metrics:
             "ScalarMetrics": [
                 {"Name": "BooookScore (Chang 2024)", "Value": booook_score},
                 {"Name": "QuestEval (Scialom 2021)", "Value": questeval_score},
-                {"Name": "ROUGE-1", "Value": questeval_score},
-                {"Name": "ROUGE-2", "Value": questeval_score},
-                {"Name": "ROUGE-L", "Value": questeval_score},
-                {"Name": "ROUGE-Lsum", "Value": questeval_score},
+                {"Name": "ROUGE-1", "Value": rouge1_f1},
+                {"Name": "ROUGE-2", "Value": rouge2_f1},
+                {"Name": "ROUGE-L", "Value": rougeL_f1},
+                {"Name": "ROUGE-Lsum", "Value": rougeLsum_f1},
             ],
             "QA": {
                 "QAItems": [
