@@ -74,13 +74,19 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
-<a href="#func-members">Functions</a> &#124;
-<a href="#var-members">Variables</a>  </div>
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">metrics.py File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1metrics_1_1Metrics.html">Metrics</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility class for computing and posting evaluation metrics.  <a href="classcomponents_1_1metrics_1_1Metrics.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
 Namespaces</h2></td></tr>
 <tr class="memitem:namespacecomponents" id="r_namespacecomponents"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents.html">components</a></td></tr>
@@ -90,28 +96,15 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aa94f32efb32b4cc37045d8a89b95acfd" id="r_aa94f32efb32b4cc37045d8a89b95acfd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#aa94f32efb32b4cc37045d8a89b95acfd">generate_default_metrics</a> (rouge_precision=0.0, rouge_recall=0.0, rouge_f1=0.0, bert_precision=0.0, bert_recall=0.0, bert_f1=0.0, booook_score=0.0, questeval_score=0.0, qa_question1=&quot;UNKNOWN&quot;, qa_gold1=&quot;UNKNOWN&quot;, qa_generated1=&quot;UNKNOWN&quot;, qa_correct1=False, qa_accuracy1=0.0, qa_question2=&quot;UNKNOWN&quot;, qa_gold2=&quot;UNKNOWN&quot;, qa_generated2=&quot;UNKNOWN&quot;, qa_correct2=False, qa_accuracy2=0.0)</td></tr>
-<tr class="memdesc:aa94f32efb32b4cc37045d8a89b95acfd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate metrics payload with customizable default values.  <br /></td></tr>
-<tr class="separator:aa94f32efb32b4cc37045d8a89b95acfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40fc76dd28b7d511412ed8f73c4def32" id="r_a40fc76dd28b7d511412ed8f73c4def32"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a40fc76dd28b7d511412ed8f73c4def32">create_summary_payload</a> (book_id, book_title, summary, metrics=None)</td></tr>
-<tr class="memdesc:a40fc76dd28b7d511412ed8f73c4def32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create the full summary payload for the API.  <br /></td></tr>
-<tr class="separator:a40fc76dd28b7d511412ed8f73c4def32"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20f18c33e640aa8788f708836498b2f6" id="r_a20f18c33e640aa8788f708836498b2f6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a20f18c33e640aa8788f708836498b2f6">post_payload</a> (payload)</td></tr>
-<tr class="memdesc:a20f18c33e640aa8788f708836498b2f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify and post any given payload using the requests API.  <br /></td></tr>
-<tr class="separator:a20f18c33e640aa8788f708836498b2f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8407ad33e02fdab0b4aa460a5d443bfd" id="r_a8407ad33e02fdab0b4aa460a5d443bfd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a8407ad33e02fdab0b4aa460a5d443bfd">post_example_results</a> ()</td></tr>
-<tr class="memdesc:a8407ad33e02fdab0b4aa460a5d443bfd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send placeholder values to the web app.  <br /></td></tr>
-<tr class="separator:a8407ad33e02fdab0b4aa460a5d443bfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22b7c0b6fdd268c18638ec923cca370f" id="r_a22b7c0b6fdd268c18638ec923cca370f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a22b7c0b6fdd268c18638ec923cca370f">post_basic_output</a> (book_id, book_title, summary, **kwargs)</td></tr>
-<tr class="memdesc:a22b7c0b6fdd268c18638ec923cca370f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send book information and a summary to the web app.  <br /></td></tr>
-<tr class="separator:a22b7c0b6fdd268c18638ec923cca370f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:a59664d862066a97cfb4d0333453c53f9" id="r_a59664d862066a97cfb4d0333453c53f9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a59664d862066a97cfb4d0333453c53f9">HOST</a> = os.getenv(f&quot;BLAZOR_HOST&quot;)</td></tr>
-<tr class="separator:a59664d862066a97cfb4d0333453c53f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20a9104258763c0bc647977724fb8883" id="r_a20a9104258763c0bc647977724fb8883"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a20a9104258763c0bc647977724fb8883">url</a> = f&quot;http://{<a class="el" href="namespacecomponents_1_1metrics.html#a59664d862066a97cfb4d0333453c53f9">HOST</a>}:5055/api/metrics&quot;</td></tr>
-<tr class="separator:a20a9104258763c0bc647977724fb8883"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ce5bfca04e60c127162d875ba4b8068" id="r_a3ce5bfca04e60c127162d875ba4b8068"><td class="memItemLeft" align="right" valign="top">Dict[str, Any]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a3ce5bfca04e60c127162d875ba4b8068">run_questeval</a> (Dict[str, Any] chunk, *str qeval_task=&quot;summarization&quot;, bool use_cuda=False, bool use_question_weighter=True)</td></tr>
+<tr class="memdesc:a3ce5bfca04e60c127162d875ba4b8068"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run QuestEval metric calculation.  <br /></td></tr>
+<tr class="separator:a3ce5bfca04e60c127162d875ba4b8068"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f749dab162b53d3fab2d5045b38888b" id="r_a1f749dab162b53d3fab2d5045b38888b"><td class="memItemLeft" align="right" valign="top">Dict[str, Any]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a1f749dab162b53d3fab2d5045b38888b">run_bookscore</a> (Dict[str, Any] chunk, *str model=&quot;gpt-3.5-turbo&quot;, int batch_size=10, bool use_v2=True)</td></tr>
+<tr class="memdesc:a1f749dab162b53d3fab2d5045b38888b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run BooookScore metric for long-form summarization.  <br /></td></tr>
+<tr class="separator:a1f749dab162b53d3fab2d5045b38888b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e98f73be63fe51d5e81377db6466f41" id="r_a7e98f73be63fe51d5e81377db6466f41"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a7e98f73be63fe51d5e81377db6466f41">chunk_bookscore</a> (str book_text, str book_title='book', int chunk_size=2048)</td></tr>
+<tr class="memdesc:a7e98f73be63fe51d5e81377db6466f41"><td class="mdescLeft">&#160;</td><td class="mdescRight">Chunk a book into BooookScore segments.  <br /></td></tr>
+<tr class="separator:a7e98f73be63fe51d5e81377db6466f41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- start footer part -->

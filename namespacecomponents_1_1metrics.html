@@ -74,67 +74,54 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#func-members">Functions</a> &#124;
-<a href="#var-members">Variables</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">components.metrics Namespace Reference</div></div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1metrics_1_1Metrics.html">Metrics</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility class for computing and posting evaluation metrics.  <a href="classcomponents_1_1metrics_1_1Metrics.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:aa94f32efb32b4cc37045d8a89b95acfd" id="r_aa94f32efb32b4cc37045d8a89b95acfd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#aa94f32efb32b4cc37045d8a89b95acfd">generate_default_metrics</a> (rouge_precision=0.0, rouge_recall=0.0, rouge_f1=0.0, bert_precision=0.0, bert_recall=0.0, bert_f1=0.0, booook_score=0.0, questeval_score=0.0, qa_question1=&quot;UNKNOWN&quot;, qa_gold1=&quot;UNKNOWN&quot;, qa_generated1=&quot;UNKNOWN&quot;, qa_correct1=False, qa_accuracy1=0.0, qa_question2=&quot;UNKNOWN&quot;, qa_gold2=&quot;UNKNOWN&quot;, qa_generated2=&quot;UNKNOWN&quot;, qa_correct2=False, qa_accuracy2=0.0)</td></tr>
-<tr class="memdesc:aa94f32efb32b4cc37045d8a89b95acfd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate metrics payload with customizable default values.  <br /></td></tr>
-<tr class="separator:aa94f32efb32b4cc37045d8a89b95acfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40fc76dd28b7d511412ed8f73c4def32" id="r_a40fc76dd28b7d511412ed8f73c4def32"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a40fc76dd28b7d511412ed8f73c4def32">create_summary_payload</a> (book_id, book_title, summary, metrics=None)</td></tr>
-<tr class="memdesc:a40fc76dd28b7d511412ed8f73c4def32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create the full summary payload for the API.  <br /></td></tr>
-<tr class="separator:a40fc76dd28b7d511412ed8f73c4def32"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20f18c33e640aa8788f708836498b2f6" id="r_a20f18c33e640aa8788f708836498b2f6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a20f18c33e640aa8788f708836498b2f6">post_payload</a> (payload)</td></tr>
-<tr class="memdesc:a20f18c33e640aa8788f708836498b2f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify and post any given payload using the requests API.  <br /></td></tr>
-<tr class="separator:a20f18c33e640aa8788f708836498b2f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8407ad33e02fdab0b4aa460a5d443bfd" id="r_a8407ad33e02fdab0b4aa460a5d443bfd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a8407ad33e02fdab0b4aa460a5d443bfd">post_example_results</a> ()</td></tr>
-<tr class="memdesc:a8407ad33e02fdab0b4aa460a5d443bfd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send placeholder values to the web app.  <br /></td></tr>
-<tr class="separator:a8407ad33e02fdab0b4aa460a5d443bfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22b7c0b6fdd268c18638ec923cca370f" id="r_a22b7c0b6fdd268c18638ec923cca370f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a22b7c0b6fdd268c18638ec923cca370f">post_basic_output</a> (book_id, book_title, summary, **kwargs)</td></tr>
-<tr class="memdesc:a22b7c0b6fdd268c18638ec923cca370f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send book information and a summary to the web app.  <br /></td></tr>
-<tr class="separator:a22b7c0b6fdd268c18638ec923cca370f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:a59664d862066a97cfb4d0333453c53f9" id="r_a59664d862066a97cfb4d0333453c53f9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a59664d862066a97cfb4d0333453c53f9">HOST</a> = os.getenv(f&quot;BLAZOR_HOST&quot;)</td></tr>
-<tr class="separator:a59664d862066a97cfb4d0333453c53f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20a9104258763c0bc647977724fb8883" id="r_a20a9104258763c0bc647977724fb8883"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a20a9104258763c0bc647977724fb8883">url</a> = f&quot;http://{<a class="el" href="namespacecomponents_1_1metrics.html#a59664d862066a97cfb4d0333453c53f9">HOST</a>}:5055/api/metrics&quot;</td></tr>
-<tr class="separator:a20a9104258763c0bc647977724fb8883"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ce5bfca04e60c127162d875ba4b8068" id="r_a3ce5bfca04e60c127162d875ba4b8068"><td class="memItemLeft" align="right" valign="top">Dict[str, Any]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a3ce5bfca04e60c127162d875ba4b8068">run_questeval</a> (Dict[str, Any] chunk, *str qeval_task=&quot;summarization&quot;, bool use_cuda=False, bool use_question_weighter=True)</td></tr>
+<tr class="memdesc:a3ce5bfca04e60c127162d875ba4b8068"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run QuestEval metric calculation.  <br /></td></tr>
+<tr class="separator:a3ce5bfca04e60c127162d875ba4b8068"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f749dab162b53d3fab2d5045b38888b" id="r_a1f749dab162b53d3fab2d5045b38888b"><td class="memItemLeft" align="right" valign="top">Dict[str, Any]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a1f749dab162b53d3fab2d5045b38888b">run_bookscore</a> (Dict[str, Any] chunk, *str model=&quot;gpt-3.5-turbo&quot;, int batch_size=10, bool use_v2=True)</td></tr>
+<tr class="memdesc:a1f749dab162b53d3fab2d5045b38888b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run BooookScore metric for long-form summarization.  <br /></td></tr>
+<tr class="separator:a1f749dab162b53d3fab2d5045b38888b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e98f73be63fe51d5e81377db6466f41" id="r_a7e98f73be63fe51d5e81377db6466f41"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1metrics.html#a7e98f73be63fe51d5e81377db6466f41">chunk_bookscore</a> (str book_text, str book_title='book', int chunk_size=2048)</td></tr>
+<tr class="memdesc:a7e98f73be63fe51d5e81377db6466f41"><td class="mdescLeft">&#160;</td><td class="mdescRight">Chunk a book into BooookScore segments.  <br /></td></tr>
+<tr class="separator:a7e98f73be63fe51d5e81377db6466f41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="a40fc76dd28b7d511412ed8f73c4def32" name="a40fc76dd28b7d511412ed8f73c4def32"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a40fc76dd28b7d511412ed8f73c4def32">&#9670;&#160;</a></span>create_summary_payload()</h2>
+<a id="a7e98f73be63fe51d5e81377db6466f41" name="a7e98f73be63fe51d5e81377db6466f41"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e98f73be63fe51d5e81377db6466f41">&#9670;&#160;</a></span>chunk_bookscore()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">create_summary_payload </td>
+          <td class="memname"> str chunk_bookscore </td>
           <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>book_id</em>, </td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>book_text</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>book_title</em>, </td>
+          <td class="paramtype">str &#160;</td>
+          <td class="paramname"><em>book_title</em> = <code>'book'</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>summary</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>metrics</em> = <code>None</code>&#160;</td>
+          <td class="paramtype">int &#160;</td>
+          <td class="paramname"><em>chunk_size</em> = <code>2048</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -144,252 +131,150 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Create the full summary payload for the API. </p>
-
-</div>
-</div>
-<a id="aa94f32efb32b4cc37045d8a89b95acfd" name="aa94f32efb32b4cc37045d8a89b95acfd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa94f32efb32b4cc37045d8a89b95acfd">&#9670;&#160;</a></span>generate_default_metrics()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">generate_default_metrics </td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>rouge_precision</em> = <code>0.0</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>rouge_recall</em> = <code>0.0</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>rouge_f1</em> = <code>0.0</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>bert_precision</em> = <code>0.0</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>bert_recall</em> = <code>0.0</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>bert_f1</em> = <code>0.0</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>booook_score</em> = <code>0.0</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>questeval_score</em> = <code>0.0</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>qa_question1</em> = <code>&quot;UNKNOWN&quot;</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>qa_gold1</em> = <code>&quot;UNKNOWN&quot;</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>qa_generated1</em> = <code>&quot;UNKNOWN&quot;</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>qa_correct1</em> = <code>False</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>qa_accuracy1</em> = <code>0.0</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>qa_question2</em> = <code>&quot;UNKNOWN&quot;</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>qa_gold2</em> = <code>&quot;UNKNOWN&quot;</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>qa_generated2</em> = <code>&quot;UNKNOWN&quot;</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>qa_correct2</em> = <code>False</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>qa_accuracy2</em> = <code>0.0</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Generate metrics payload with customizable default values. </p>
-
-</div>
-</div>
-<a id="a22b7c0b6fdd268c18638ec923cca370f" name="a22b7c0b6fdd268c18638ec923cca370f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a22b7c0b6fdd268c18638ec923cca370f">&#9670;&#160;</a></span>post_basic_output()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">post_basic_output </td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>book_id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>book_title</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>summary</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">**&#160;</td>
-          <td class="paramname"><em>kwargs</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Send book information and a summary to the web app. </p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p>Chunk a book into BooookScore segments. </p>
+<p>Standardizes long-form input into chunks BooookScore can process. Creates a temporary directory and writes chunked pickle for later scoring. This step can be reused independently for multiple summaries. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">book_id</td><td>Integer book identifier </td></tr>
-    <tr><td class="paramname">book_title</td><td>Book title </td></tr>
-    <tr><td class="paramname">summary</td><td>Summary text string </td></tr>
-    <tr><td class="paramname">**kwargs</td><td>Any other metric parameters to override defaults (e.g., rouge_f1=0.75) </td></tr>
+    <tr><td class="paramname">book_text</td><td>Full book text to be chunked. </td></tr>
+    <tr><td class="paramname">book_title</td><td>Name or identifier for the book (default 'book'). </td></tr>
+    <tr><td class="paramname">chunk_size</td><td>Maximum chunk size for book text (default 2048). </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Path to chunked pickle file containing BooookScore-ready segments. </dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">RuntimeError</td><td>If BooookScore chunking fails. </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="a8407ad33e02fdab0b4aa460a5d443bfd" name="a8407ad33e02fdab0b4aa460a5d443bfd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8407ad33e02fdab0b4aa460a5d443bfd">&#9670;&#160;</a></span>post_example_results()</h2>
+<a id="a1f749dab162b53d3fab2d5045b38888b" name="a1f749dab162b53d3fab2d5045b38888b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f749dab162b53d3fab2d5045b38888b">&#9670;&#160;</a></span>run_bookscore()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">post_example_results </td>
+          <td class="memname"> Dict[str, Any] run_bookscore </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">Dict[str, Any]&#160;</td>
+          <td class="paramname"><em>chunk</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">*str &#160;</td>
+          <td class="paramname"><em>model</em> = <code>&quot;gpt-3.5-turbo&quot;</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int &#160;</td>
+          <td class="paramname"><em>batch_size</em> = <code>10</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool &#160;</td>
+          <td class="paramname"><em>use_v2</em> = <code>True</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Send placeholder values to the web app. </p>
+<p>Run BooookScore metric for long-form summarization. </p>
+<p>LLM-based coherence evaluation using BooookScore. Runs in CLI via subprocess. Handles full workflow: scoring summary, postprocessing. Can be run on a single chunk or entire book (if already chunked). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">chunk</td><td>MongoDB document containing:<ul>
+<li>summary: Generated summary (required)</li>
+<li>text: Full or partial book text (required)</li>
+<li>book_title: Book title for identification (optional, for pickling) </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">model</td><td>Model name (optional, default 'gpt-4') </td></tr>
+    <tr><td class="paramname">batch_size</td><td>Sentences per batch for v2 (optional, default 10) </td></tr>
+    <tr><td class="paramname">use_v2</td><td>Use batched evaluation (optional, default True) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Dict containing a score (range 0-1) and metadata for the provided summary. bookscore: Coherence score for one summary. annotations: True if a gold reference summary was provided. model_used: String describing the LLM model and API used. </dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">KeyError</td><td>If required fields are missing from chunk. </td></tr>
+    <tr><td class="paramname">RuntimeError</td><td>If subprocess execution fails. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
-<a id="a20f18c33e640aa8788f708836498b2f6" name="a20f18c33e640aa8788f708836498b2f6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a20f18c33e640aa8788f708836498b2f6">&#9670;&#160;</a></span>post_payload()</h2>
+<a id="a3ce5bfca04e60c127162d875ba4b8068" name="a3ce5bfca04e60c127162d875ba4b8068"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3ce5bfca04e60c127162d875ba4b8068">&#9670;&#160;</a></span>run_questeval()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">post_payload </td>
+          <td class="memname"> Dict[str, Any] run_questeval </td>
           <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>payload</em></td><td>)</td>
+          <td class="paramtype">Dict[str, Any]&#160;</td>
+          <td class="paramname"><em>chunk</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">*str &#160;</td>
+          <td class="paramname"><em>qeval_task</em> = <code>&quot;summarization&quot;</code>, </td>
         </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Verify and post any given payload using the requests API. </p>
-
-</div>
-</div>
-<h2 class="groupheader">Variable Documentation</h2>
-<a id="a59664d862066a97cfb4d0333453c53f9" name="a59664d862066a97cfb4d0333453c53f9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a59664d862066a97cfb4d0333453c53f9">&#9670;&#160;</a></span>HOST</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
         <tr>
-          <td class="memname">HOST = os.getenv(f&quot;BLAZOR_HOST&quot;)</td>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool &#160;</td>
+          <td class="paramname"><em>use_cuda</em> = <code>False</code>, </td>
         </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a20a9104258763c0bc647977724fb8883" name="a20a9104258763c0bc647977724fb8883"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a20a9104258763c0bc647977724fb8883">&#9670;&#160;</a></span>url</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
         <tr>
-          <td class="memname">str url = f&quot;http://{<a class="el" href="namespacecomponents_1_1metrics.html#a59664d862066a97cfb4d0333453c53f9">HOST</a>}:5055/api/metrics&quot;</td>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool &#160;</td>
+          <td class="paramname"><em>use_question_weighter</em> = <code>True</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Run QuestEval metric calculation. </p>
+<p>Question-answering based evaluation. Generates questions from source/reference, and checks if answers can be found in the summary. For more parameters, see: <a href="https://github.com/ThomasScialom/QuestEval/blob/main/questeval/questeval_metric.py">https://github.com/ThomasScialom/QuestEval/blob/main/questeval/questeval_metric.py</a> </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">chunk</td><td>MongoDB document containing keys:<ul>
+<li>summary: Generated summary (required)</li>
+<li>text: Source document text (required)</li>
+<li>gold_summary: Reference summary (optional, filters for better questions) </li>
+</ul>
+</td></tr>
+    <tr><td class="paramname">qeval_task</td><td>Task performed by QuestEval (optional, default is summarization). Must be one of the following: generation / nlg, qa, dialogue, data2text, translation. </td></tr>
+    <tr><td class="paramname">use_cuda</td><td>Run transformers with GPU enabled. </td></tr>
+    <tr><td class="paramname">use_question_weighter</td><td>Make some questions more important based on relevancy. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Dict containing a score (range 0-1) and metadata for the provided summary. questeval_score: Overall semantic precision–recall score for one example (a Summary to evaluate, Source text, and Reference summary). has_reference: True if a gold reference summary was provided. </dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">ImportError</td><td>If questeval package not installed. </td></tr>
+    <tr><td class="paramname">KeyError</td><td>If required fields are missing from chunk. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

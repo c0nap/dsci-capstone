@@ -13,5 +13,8 @@ var searchData=
   ['test_5fmongo_5fexample_5f3_10',['test_mongo_example_3',['../namespacetests_1_1test__components.html#a7a8ccc1882e10f2ab8a752e3f3eab0e0',1,'tests::test_components']]],
   ['test_5frelation_5fextraction_11',['test_relation_extraction',['../namespacesrc_1_1main.html#ac6ef843a5bac2a548f94d1465578c7e8',1,'src::main']]],
   ['test_5fsql_5fexample_5f1_12',['test_sql_example_1',['../namespacetests_1_1test__components.html#a050af8b208b5c53519bd2df2793b5570',1,'tests::test_components']]],
-  ['test_5fsql_5fexample_5f2_13',['test_sql_example_2',['../namespacetests_1_1test__components.html#a8c20c7e043c834a7a6661d6d5fb94a98',1,'tests::test_components']]]
+  ['test_5fsql_5fexample_5f2_13',['test_sql_example_2',['../namespacetests_1_1test__components.html#a8c20c7e043c834a7a6661d6d5fb94a98',1,'tests::test_components']]],
+  ['to_5fdf_5fbooksum_14',['to_df_booksum',['../namespacecomponents_1_1corpus.html#a2006b08362939dfcd9ee622eb787c38a',1,'components::corpus']]],
+  ['to_5fdf_5fnqa_15',['to_df_nqa',['../namespacecomponents_1_1corpus.html#a3ce814e768846c511125f2d133e392fa',1,'components::corpus']]],
+  ['to_5fmongo_5fdict_16',['to_mongo_dict',['../classcomponents_1_1book__conversion_1_1Chunk.html#ac3dfa9f2826783f24e5ec787698e3f50',1,'components::book_conversion::Chunk']]]
 ];

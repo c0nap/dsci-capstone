@@ -128,6 +128,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a8415e98b6c232b4c4202da6d14dd44ff" id="r_a8415e98b6c232b4c4202da6d14dd44ff"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#a8415e98b6c232b4c4202da6d14dd44ff">check_connection</a> (self, str log_source, bool raise_error)</td></tr>
 <tr class="memdesc:a8415e98b6c232b4c4202da6d14dd44ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minimal connection test to determine if our connection string is valid.  <br /></td></tr>
 <tr class="separator:a8415e98b6c232b4c4202da6d14dd44ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34b9616853851a130783f84720358ae5" id="r_a34b9616853851a130783f84720358ae5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#a34b9616853851a130783f84720358ae5">get_unmanaged_handle</a> (self)</td></tr>
+<tr class="memdesc:a34b9616853851a130783f84720358ae5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Expose the low-level PyMongo handle for external use.  <br /></td></tr>
+<tr class="separator:a34b9616853851a130783f84720358ae5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9127708042e94d148b6d71f0b1a5418f" id="r_a9127708042e94d148b6d71f0b1a5418f"><td class="memItemLeft" align="right" valign="top">Optional[DataFrame]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#a9127708042e94d148b6d71f0b1a5418f">execute_query</a> (self, str query)</td></tr>
 <tr class="memdesc:a9127708042e94d148b6d71f0b1a5418f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a single MongoDB command using PyMongo.  <br /></td></tr>
 <tr class="separator:a9127708042e94d148b6d71f0b1a5418f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -616,6 +619,28 @@ Protected Attributes</h2></td></tr>
 </dl>
 
 <p>Reimplemented from <a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#a38925627d8e23d63389e322b97ca956e">DatabaseConnector</a>.</p>
+
+</div>
+</div>
+<a id="a34b9616853851a130783f84720358ae5" name="a34b9616853851a130783f84720358ae5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a34b9616853851a130783f84720358ae5">&#9670;&#160;</a></span>get_unmanaged_handle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">get_unmanaged_handle </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Expose the low-level PyMongo handle for external use. </p>
+<dl class="section warning"><dt>Warning</dt><dd>Connection remains open - use for long-lived services only. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>PyMongo database instance. </dd></dl>
 
 </div>
 </div>

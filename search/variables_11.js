@@ -1,6 +1,23 @@
 var searchData=
 [
-  ['url_0',['url',['../namespacecomponents_1_1metrics.html#a20a9104258763c0bc647977724fb8883',1,'components::metrics']]],
-  ['use_5fcolors_1',['USE_COLORS',['../classsrc_1_1util_1_1Log.html#a3efb2f968d772ba5b535182f90d94c2a',1,'src::util::Log']]],
-  ['username_2',['username',['../classcomponents_1_1connectors_1_1DatabaseConnector.html#a0adcbe0e0e6f64a29b1d205ede9632c1',1,'components::connectors::DatabaseConnector']]]
+  ['target_0',['target',['../namespacesrc_1_1main.html#a5d2c023108742a1ce78ba9823c06ea35',1,'src.main.target'],['../namespacesrc_1_1flask.html#a5d2c023108742a1ce78ba9823c06ea35',1,'src.flask.target']]],
+  ['task_5fqueue_1',['task_queue',['../namespacesrc_1_1flask.html#a131189837bca63259e068813adbc14b7',1,'src::flask']]],
+  ['task_5ftypes_2',['task_types',['../namespacesrc_1_1main.html#a672eb818ad8cf2feab064945bd5ec8f3',1,'src::main']]],
+  ['task_5fworker_3',['task_worker',['../namespacesrc_1_1flask.html#a393e7916542d7ff53f919be28438c747',1,'src::flask']]],
+  ['tei_4',['tei',['../namespacesrc_1_1main.html#a3a19feaaa45cf54df3667e4b6a304065',1,'src::main']]],
+  ['tei_5fpath_5',['tei_path',['../classcomponents_1_1book__conversion_1_1EPUBToTEI.html#a6db5d50a9684ad2d6a221a1ce1ea7b7d',1,'components.book_conversion.EPUBToTEI.tei_path'],['../classcomponents_1_1book__conversion_1_1ParagraphStreamTEI.html#a6db5d50a9684ad2d6a221a1ce1ea7b7d',1,'components.book_conversion.ParagraphStreamTEI.tei_path']]],
+  ['temperature_6',['temperature',['../classcomponents_1_1text__processing_1_1LLMConnector.html#ab67dc6cccbf6aeaeeeef8690bacd403c',1,'components::text_processing::LLMConnector']]],
+  ['test_5fbasic_7',['test_basic',['../classsrc_1_1util_1_1Log.html#a056a01b055b084bc139d03ee0c6c873b',1,'src::util::Log']]],
+  ['test_5fconn_8',['test_conn',['../classsrc_1_1util_1_1Log.html#a19a39ba548dc4143e6d3aeb71ab98393',1,'src::util::Log']]],
+  ['test_5fdf_9',['test_df',['../classsrc_1_1util_1_1Log.html#ad24691f9ace5ce86ebb7d003259dd542',1,'src::util::Log']]],
+  ['test_5finfo_10',['test_info',['../classsrc_1_1util_1_1Log.html#aae27470c4b3278097152f685388a50ac',1,'src::util::Log']]],
+  ['test_5ftmp_5fdb_11',['test_tmp_db',['../classsrc_1_1util_1_1Log.html#a6136a80af534a250b5f814e0c5bbe185',1,'src::util::Log']]],
+  ['text_12',['text',['../classcomponents_1_1book__conversion_1_1Chunk.html#af575f17e6be3f269b86b041a60560dbf',1,'components::book_conversion::Chunk']]],
+  ['timeout_5fseconds_13',['timeout_seconds',['../classcomponents_1_1metrics_1_1Metrics.html#af2881f0b288f394d58093b6224768f5c',1,'components::metrics::Metrics']]],
+  ['tokenizer_14',['tokenizer',['../classcomponents_1_1text__processing_1_1RelationExtractor.html#a7eba82286618be7e8f6b01b2ea4fa813',1,'components::text_processing::RelationExtractor']]],
+  ['triple_5ffiles_15',['triple_files',['../namespacesrc_1_1main.html#a81135ab3cacc1e738a58fae06b5f9dd5',1,'src::main']]],
+  ['triples_16',['triples',['../namespacesrc_1_1main.html#a76b790ac7c6d749d1d3de93cdab19f44',1,'src::main']]],
+  ['triples_5fstring_17',['triples_string',['../namespacesrc_1_1main.html#a7f11c6f1fcd2dc85186a9aa0eb85db1c',1,'src::main']]],
+  ['true_18',['True',['../namespacesrc_1_1flask.html#a643a20c0c59588a0f741a6095e2025fd',1,'src::flask']]],
+  ['tuple_5fdelim_19',['tuple_delim',['../classcomponents_1_1text__processing_1_1RelationExtractor.html#aa3eebd15ac62146ee1af0f0061f62bb5',1,'components::text_processing::RelationExtractor']]]
 ];

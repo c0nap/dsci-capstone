@@ -8,10 +8,15 @@ var searchData=
   ['relational_5fdb_5',['relational_db',['../classsrc_1_1setup_1_1Session.html#a1d35d1ef8dc6359e6b80f3d3f731d4d1',1,'src.setup.Session.relational_db'],['../namespacetests_1_1test__components.html#a5ea5e768d27c7f8a2d975951e3aab74a',1,'tests.test_components.relational_db()']]],
   ['relationalconnector_6',['RelationalConnector',['../classcomponents_1_1connectors_1_1RelationalConnector.html',1,'components::connectors']]],
   ['relationextractor_7',['RelationExtractor',['../classcomponents_1_1text__processing_1_1RelationExtractor.html',1,'components::text_processing']]],
-  ['reset_8',['reset',['../classsrc_1_1setup_1_1Session.html#aecbc052233262275fc20a8ee8dfb8a47',1,'src::setup::Session']]],
-  ['response_5ffiles_9',['response_files',['../namespacesrc_1_1main.html#ac3c2f23fc86f12700a0ff203a48e94d2',1,'src::main']]],
-  ['root_10',['root',['../classcomponents_1_1book__conversion_1_1ParagraphStreamTEI.html#ab4b8daf4b8ea9d39568719e1e320076f',1,'components::book_conversion::ParagraphStreamTEI']]],
-  ['routes_2erazor_11',['Routes.razor',['../Routes_8razor.html',1,'']]],
-  ['run_5ff_12',['run_f',['../classsrc_1_1util_1_1Log.html#a80bfad51d7b2e78b5c989eae09c9f099',1,'src::util::Log']]],
-  ['run_5fq_13',['run_q',['../classsrc_1_1util_1_1Log.html#a9cd955b9e7df47c22787460e2e3f32bb',1,'src::util::Log']]]
+  ['required_8',['required',['../namespacesrc_1_1flask.html#ae81948490ddf54e80a22593640178350',1,'src::flask']]],
+  ['reset_9',['reset',['../classsrc_1_1setup_1_1Session.html#aecbc052233262275fc20a8ee8dfb8a47',1,'src::setup::Session']]],
+  ['response_10',['response',['../namespacesrc_1_1main.html#afe2506e20c3c61ab4f3647f66fdc894b',1,'src::main']]],
+  ['response_5ffiles_11',['response_files',['../namespacesrc_1_1main.html#ac3c2f23fc86f12700a0ff203a48e94d2',1,'src::main']]],
+  ['root_12',['root',['../classcomponents_1_1book__conversion_1_1ParagraphStreamTEI.html#ab4b8daf4b8ea9d39568719e1e320076f',1,'components::book_conversion::ParagraphStreamTEI']]],
+  ['routes_2erazor_13',['Routes.razor',['../Routes_8razor.html',1,'']]],
+  ['run_5fapp_14',['run_app',['../namespacesrc_1_1main.html#acc20263f62a0eb36a63b077258a20380',1,'src::main']]],
+  ['run_5fbookscore_15',['run_bookscore',['../namespacecomponents_1_1metrics.html#a1f749dab162b53d3fab2d5045b38888b',1,'components::metrics']]],
+  ['run_5ff_16',['run_f',['../classsrc_1_1util_1_1Log.html#a80bfad51d7b2e78b5c989eae09c9f099',1,'src::util::Log']]],
+  ['run_5fq_17',['run_q',['../classsrc_1_1util_1_1Log.html#a9cd955b9e7df47c22787460e2e3f32bb',1,'src::util::Log']]],
+  ['run_5fquesteval_18',['run_questeval',['../namespacecomponents_1_1metrics.html#a3ce5bfca04e60c127162d875ba4b8068',1,'components::metrics']]]
 ];
