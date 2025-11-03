@@ -6,23 +6,54 @@ services:
     networks:
       - default
     # Do NOT fall back to building from scratch if image does not exist
-    # ^ might revert, but compose will only use prod for now
+    # ^ might revert, but compose will only use prod for now - avoid mixing with dev
     image: dsci-cap-img-python-prod:latest
     volumes:
       - ./pyproject.toml:/pipeline/pyproject.toml:ro   # change settings locally = applied instantly with no rebuild
+    ports:
+      - "${PYTHON_PORT}:${PYTHON_PORT}"
 
   # Blazor server container, exposes port for HTTP and REST
   blazor_service:
     container_name: container-blazor
     networks:
       - default
+    restart: unless-stopped
     # Do NOT fall back to building from scratch if image does not exist
-    # ^ might revert, but compose will only use prod for now
+    # ^ might revert, but compose will only use prod for now - avoid mixing with dev
     image: dsci-cap-img-blazor-prod:latest
     environment:
       - DOTNET_ENVIRONMENT=Docker
     ports:
-      - "5055:5055"
+      - "${BLAZOR_PORT}:${BLAZOR_PORT}"
+
+
+  qeval_worker:
+    container_name: container-qeval
+    networks:
+      - default
+    restart: unless-stopped
+    # Do NOT fall back to building from scratch if image does not exist
+    # ^ might revert, but compose will only use prod for now - avoid mixing with dev
+    image: dsci-cap-img-questeval-prod:latest
+    command: python -m src.flasks --task questeval
+    ports:
+      - "${QUESTEVAL_PORT}:${QUESTEVAL_PORT}"
+
+  bscore_worker:
+    container_name: container-bscore
+    networks:
+      - default
+    restart: unless-stopped
+    # Do NOT fall back to building from scratch if image does not exist
+    # ^ might revert, but compose will only use prod for now - avoid mixing with dev
+    image: dsci-cap-img-bookscore-prod:latest
+    command: python -m src.flasks --task bookscore
+    ports:
+      - "${BOOKSCORE_PORT}:${BOOKSCORE_PORT}"
+
+
+
 
 
   # Meta-service to orchestrate all DB containers at once
@@ -54,7 +85,7 @@ services:
       - mysql_data:/var/lib/mysql   # named volume for persistent DB data
       - ./db/init_mysql.sh:/docker-entrypoint-initdb.d/init_mysql.sh:ro  # bind mount for init script
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT}:${MYSQL_PORT}"
 
   # Postgres container, volume persists data, port optional
   postgres_service:
@@ -72,7 +103,7 @@ services:
       - postgres_data:/var/lib/postgresql/data   # named volume for persistent DB data
       - ./db/init_postgres.sh:/docker-entrypoint-initdb.d/init_postgres.sh:ro  # bind mount for init script
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
 
   # MongoDB container, volume persists data, port optional
   mongo_service:
@@ -90,7 +121,7 @@ services:
       - mongo_data:/data/db   # named volume for persistent DB data
       - ./db/init_mongo.sh:/docker-entrypoint-initdb.d/init_mongo.sh:ro  # bind mount for init script
     ports:
-      - "27017:27017"
+      - "${MONGO_PORT}:${MONGO_PORT}"
     command: ["--quiet"]   # clean docker logs, but still very messy / unreadable
 
   # Neo4j container, exposes HTTP and Bolt ports for UI and app connections
@@ -104,11 +135,13 @@ services:
     volumes:
       - neo4j_data:/data
       - ./db/init_neo4j.sh:/init_neo4j.sh
+    environment:
+      - NEO4J_dbms_connector_http_listen__address=0.0.0.0:7474
     ports:
-      - "0.0.0.0:7474:7474"   # HTTP web UI
-      - "0.0.0.0:7687:7687"   # Bolt protocol for queries
+      - "0.0.0.0:${NEO4J_HTTP_PORT}:${NEO4J_HTTP_PORT}"   # HTTP web UI  - http://localhost:7474  - graph viewer
+      - "0.0.0.0:${NEO4J_PORT}:${NEO4J_PORT}"   # Bolt protocol for queries
     entrypoint: ["/bin/sh", "/init_neo4j.sh"]    # Change entrypoint to init script (note: env values no longer propagate to neo4j automatically)
-    command: ["${NEO4J_USERNAME}", "${NEO4J_PASSWORD}"]   # Provide .env credentials as args to the init script
+    command: ["${NEO4J_USERNAME}", "${NEO4J_PASSWORD}", "${NEO4J_PORT}", "${NEO4J_HTTP_PORT}"]   # Provide .env credentials as args to the init script
 
 
 volumes:

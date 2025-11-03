@@ -268,6 +268,7 @@ make docker-full-reset
 ```bash
 sudo apt install ncdu
 sudo ncdu /var/lib
+# Press Q to exit
 ```
 
 Delete any unused containers or images from Docker:
@@ -614,4 +615,255 @@ Image size may not matter much for local development, but our CI/CD pipeline per
 
 - Artifacts can be used to make compressed files available for all runners. For images, this is much faster than downloading from and uploading to GCHR.
 
-- We still use GHCR as a checkpoint for Docker images. Successful PRs upload their tagged images automatically to speed up future runs.
+- We still use GHCR as a checkpoint for Docker images. Successful PRs upload their tagged images to our private namespace to speed up future runs.
+
+
+
+# Deployments
+
+## GHCR (GitHub Container Repository)
+
+Our latest stable images are always available on the repository [packages page](https://github.com/c0nap?tab=packages&repo_name=dsci-capstone).
+
+Docker images are uploaded automatically via GitHub Actions. Our CD workflow runs PyTests, and then re-builds with dummy credentials.
+
+Since they are public on GHCR, other image deployment platforms like AWS / ECS or Azure can simply pull the images directly with no login required. Publishing to Docker Hub would work the same way.
+
+Otherwise, we would need to follow the same procedure for GHCR upload: re-tag local copies, and uplaod to platform-specific image registries.
+
+
+
+## AWS (Amazon Web Services)
+
+### Overview
+
+GHCR only stores container images. To deploy them to the cloud, we need a container orchestration service like Amazon's **Elastic Container Service (ECS)**.
+
+- **Task** - A single "run" of the multi-container system.
+
+- **Task Definition** - Similar to `docker-compose.yml`, this is a blueprint describing one or more containers, their images, environment variables, CPU/memory limits, and networking.
+
+- **Cluster** - A managed pool of compute resources where tasks are scheduled and run.
+
+- **Service** - Manages task execution and system load by keeping the desired number of tasks running, restarting failed ones, and optionally routing traffic through a load balancer.
+
+- **IAM Role** - Grants permission for containers, tasks, or services to access other parts of AWS (_e.g._ Secrets Manager).
+
+- **Service Connect** - Provides internal DNS for containers so they can reach each other using service names instead of IP addresses.
+
+- **Virtual Private Cloud (VPC)** - A private network that defines how tasks and services communicate within AWS and with the internet.
+
+- **Fargate** - A serverless compute engine for containers. AWS hides the low-level EC2 instances behind the cluster.
+
+Structure of ECS: `Cluster → Service → Task → Containers`
+
+### Initial Setup
+
+1. Create an account (Free Tier) on the [AWS website](https://aws.amazon.com/free/).
+
+2. Pick your container service: `ECS` runs your Docker images with fully-featured AWS overhead. `App Runner` is easier setup, and `EKS` is production-ready Kubernetes.
+
+3. Start from the AWS management console: https://aws.amazon.com/console
+
+4. Navigate to `ECS` page. For first-time users this page is very cluttered; click `Get Started` or just visit the [Clusters Page](https://console.aws.amazon.com/ecs/v2/clusters).
+
+5. Create a new cluster called `dsci-cap-cluster` with blank namespace and `Fargate only`
+
+6. **Create a task** and add your containers in the [Task Definition](https://.console.aws.amazon.com/ecs/v2/task-definitions).
+- Port aliases are arbitrary, and do not correspond to Docker container names or service names.
+- Stick to small resource options → `0.25 vCPU` and `0.5 GB memory`, and divide these values between your containers.
+- Note: In testing, the main Python container required `0.75 vCPU` and `3 GB memory` to get past initial deployment.
+
+7. **Create a service** to enable `Service Connect` - this lets us assign the correct Docker service names (like `blazor_service`).
+- [Create new service](https://console.aws.amazon.com/ecs/v2/clusters/dsci-cap-cluster/create-service) or UI navigation: `ECS` > `Clusters` > `dsci-cap-cluster` > `Services tab` > `Create`.
+- Service name `dsci-cap-service`
+- In the `Service Connect` section, choose `Client and server`, select your namespace, and add port mappings (`Discovery` and `DNS` should both be `blazor_service`)
+- If you haven't already, [create a namespace](https://console.aws.amazon.com/cloudmap/home/namespaces/create): Name `default`, select `API calls and DNS`, create or select `VPC`, and set `TTL = 600`.
+
+
+### Debug Container Logs
+
+[Run task manually](https://console.aws.amazon.com/ecs/v2/clusters/dsci-cap-cluster/run-task) or UI navigation: `ECS` > `Clusters` > `dsci-cap-cluster` > `Tasks tab` > `Run New Task button`.
+
+[View log streams](https://console.aws.amazon.com/cloudwatch/home#logsV2:log-groups) or UI navigation: `CloudWatch` > `Log groups` > `/ecs/dsci-capstone-task`. Do not use `/ecs/dsci-cap-service`, this contains only generic sidecar logs.
+
+[View resource use](https://console.aws.amazon.com/ecs/v2/clusters/dsci-cap-cluster/services/dsci-cap-service/health)
+
+### Task Definitions
+
+[Change task settings](https://console.aws.amazon.com/ecs/v2/task-definitions/dsci-capstone-task/create-revision) or UI navigation: `ECS` > `Task Definitions` > `dsci-capstone-task` >  `Create New Revision button`.
+
+[Restart the service scheduler with new task settings](https://console.aws.amazon.com/ecs/v2/clusters/dsci-cap-cluster/services/dsci-cap-service/update) or UI navigation: `ECS` > `Clusters` > `dsci-cap-cluster` > `Services tab` > `dsci-cap-service` > `Update Service button`.
+
+`Update Service` will automatically deploy and start the task if `Force new deployment` is enabled.
+
+Make sure you select your new `Task definition revision: LATEST`, or your updates will not apply to the launched service.
+
+### Services (Task Scheduler)
+
+An AWS service provides useful overhead to maintain persistent deployments, _i.e._ run your task forever. It doesnt make sense to use a service otherwise - just run the task manually instead.
+- **Desired count** maintenance - Always keep N tasks running, or adjust based on metrics
+- **Health checks** - Restart on error
+- **Load balancing** - Distribute traffic across tasks
+- **Rolling deployments** - Update without downtime
+
+### Secrets
+
+1. Store API keys in [AWS Secrets Manager](https://console.aws.amazon.com/secretsmanager/listsecrets).
+
+2. Update your [Task Definition](https://console.aws.amazon.com/ecs/v2/task-definitions/dsci-capstone-task/create-revision) by navigating to `Container 1 (Python)` > `Environment variables`. Use the key name expected by Python, select `ValueFrom`, and paste the ARN from Secrets Manager for the value.
+
+3. Update your [ECS execution role](https://console.aws.amazon.com/iam/home#/roles/details/ecsTaskExecutionRole) with permission policy `SecretsManagerReadWrite`.
+
+Note: Blazor's builder will auto-detect environment variables like `Syncfusion:LicenseKey` when set in environment as `Syncfusion__LicenseKey`.
+
+### Databases
+
+Since we normally rely on `docker-compose.yml` to orchestrate our 3 database engines with initialization scripts and credentials, an AWS deployment would be tricky and require mirroring the Compose behavior manually.
+
+The most reliable option is to expose databases to AWS, but this is unsafe and would break for simulaneous runs. May revisit later.
+
+### Budget
+
+1. Set up a **zero-spend budget** to prevent any bills: `AWS Billing` > `Budgets` > `Create budget`.
+
+2. To stop a service from constantly redeploying your containers, you can:
+- Update service with `Desired tasks = 0`
+- Delete the service
+- Auto-stop using a rule / schedule
+
+[Create an EventBridge schedule](https://console.aws.amazon.com/scheduler/home#create-schedule) or UI navigation: `EventBridge` > `Schedules` > `Create Schedule button`.
+
+<details>
+  <summary><h4>Schedule creation details</h4></summary>
+
+In our case, we named it `stop-dsci-cap-service-nightly`, and chose a `Recurring Cron-based` schedule. Type the values `0 2 * * ? *` to stop the service at 2am (UTC-4) daily. Another option is every `12 hours`.
+
+To target our service, choose `ECS UpdateService` task, and paste the rule:
+```json
+{
+  "Cluster": "dsci-cap-cluster",
+  "Service": "dsci-cap-service",
+  "DesiredCount": 0
+}
+```
+
+The schedule can only `Use existing role`, so we grant permissions by creating `IAM role` > `Custom trust policy` > `Paste JSON` > `Add Permission: AmazonECS_FullAccess` > `Name: EventBridgeScheduler-ECS-Role`
+```json
+{
+  "Version": "2012-10-01",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "scheduler.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+```
+
+</details>
+
+
+
+
+
+## Azure (Microsoft)
+
+### Overview
+
+**Azure Container Apps (ACA)** mirrors an AWS setup.
+
+Structure of ACA: `Managed Environment → Container App`  
+Structure of ECS: `Cluster → Service → Task → Containers`
+
+- **Resource Group** – 
+
+- **Container App** – The deployed unit of your application, similar in purpose to an `ECS Service` but lighter; Azure handles scaling, restarts, and routing automatically.
+
+- **Managed Environment** – A shared network space spanning multiple apps; provides internal DNS so containers can communicate using app names.
+
+- **Ingress** – Controls whether an app is exposed publicly (external) or only within the environment (internal).
+
+
+- **Virtual Network (VNet)** – The private network defining how apps communicate with each other and external resources.
+
+
+### Initial Setup
+
+1. Create an [Azure Free or Pay-As-You-Go](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account) account.
+
+2. Pick your container service: `Azure Container Apps (ACA)` runs microservices with multi-container scaling. `Azure Container Instances (ACI)` is used for simpler, single-container hosting, and `Azure Kubernetes Service (AKS)` is for large production clusters.
+
+3. Create the Container App for Python.
+- Naming conventions force a different hostname, so we named it `python-app` instead of `python_service`.
+- Create a new Resource Group called `rg-capstone`.
+- Container name: `container-python` and reference the public GHCR image.
+- Traffic accessibility: `Limited to Container App Environment`
+- Add `BLAZOR_HOST = blazor-app` in environment variables.
+- Ingress settings: `HTTP`, `Insecure connections: Enabled`, and `Target Port = 5054`
+
+4. Create the Container App for Blazor.
+- Naming conventions force a different hostname, so we named it `blazor-app` instead of `blazor_service`.
+- Add to existing `rg-capstone` group.
+- Container name: `container-blazor` and reference the public GHCR image.
+- Traffic accessibility: `Accept traffic from anywhere`
+- Add `PYTHON_HOST = python-app` in environment variables.
+- Ingress settings: `HTTP`, `Insecure connections: Disabled`, and `Target Port = 5055`
+
+
+### Debug Container Logs
+
+You can view all created resources on your Dashboard. After clicking an individual app:
+- View status: Navigate to `Application` > `Revisions and replicas`
+- Start / Stop app on the `Overview` tab
+- Check logs `Monitoring` > `Log stream` > `Historical`
+
+### Secrets
+
+1. Create a **Key Vault** with `Networking` > `Allow access from: Selected Networks`, `Allow trusted Microsoft services to bypass this firewall`.
+
+2. Create a **Managed Identity** for each app. `Security` > `Identity`, and enable `System-assigned`.
+
+3. Grant permissions to the apps: Navigate to your Key Vault > `Access Control (IAM)` > `Add Role Assignment`, and select the `Key Vault Secrets User` permission. Choose `Managed identity` on the Members screen, and add the two Container App identities.
+
+4. Grant yourself `Key Vault Administrator` permissions by choosing `User, group, or service principal` and adding your own account. Even if you are already owner, you do not have `data plane access` by default.
+
+5. Allow your browser through the Key Vault firewall: `Security` > `Networking`, `Allow public access from all networks`. Avoid this in a production scenario.
+
+6. Add secrets to your Key Vault: `Objects` > `Secrets` > `Generate / Import`.
+
+7. Copy the secret URI from Key Vault: `Objects` > `Secrets` > `your-secret-name` > `version-number`.
+
+8. Navigate to your **Container App Secrets** in `Security` > `Secrets`. You can add secret key / values here directly (unsafe), or add a reference to your Key Vault.
+
+9. Update **Environment Variables** in `Application` > `Containers` to reference your Container App Secrets.
+
+### Budget
+
+1. In `Cost Managements / Billing` > `Budget`, create a zero-cost budget with the minimum amount of $0.01. The Free plan should be fine either way; we increased this to $0.10 to avoid frequent notifications.
+
+2. Always press the `Stop` botton for each Container App before a pause in development.
+
+
+## Comparison of AWS and Azure
+
+After implementing both for this project, here are my takeaways:
+
+- **Friendly Interface** - **Azure** keeps everything condensed on appropriate webpages, and all the UI usually fits onto 1 screen. Whereas AWS tends to have very long pages with nested expandable sections. The UI for AWS feels scattered, as if it was designed to be used via CLI.
+
+- **Permissions Issues** - **Azure** wraps IAM in more UI than AWS, and it was mostly just a brief annoyance to discover another layer before things worked. I also had to read or edit raw JSON configs several times with AWS.
+
+- **Website Clutter** - Both platforms are unintuitive, but **AWS** feels more clean and professional overall. Azure has tons of different pages, so finding the right section was the hardest part.
+
+- **Login Process** - **AWS** permits account creation via email but has mandatory CAPTCHAs, while Azure requires a Microsoft account, does not handle multiple tabs well, and bakes your account name into URLs (non-sharable).
+
+- **Secret Handling** - **Azure** secrets felt more secure and versatile: 1) Hidden via dots in the GUI, and 2) Protected via firewall and intermediate container-level secrets.
+
+- **Ease of Setup** - Both options required a complete reimplementation of container deployment. Make and Docker Compose migration were not fully supported at the level I needed. With **AWS**, the challenge was learning the purpose of various components, whereas **Azure** tends to hide the more important pages underneath bloat.
+
+Azure wins here because of the UI and easier setup. We also use Blazor and C# which are part of the .NET ecosystem like Azure. For large-scale deployments, AWS might take the lead with faster access to features we didn't need for this project.
+
+

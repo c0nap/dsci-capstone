@@ -15,6 +15,8 @@ from time import time
 from typing import Any, Dict, Generator, List, Optional, Set, Type
 
 
+MongoHandle = Generator["Database[Any]", None, None]
+
 # Read environment variables at compile time
 load_dotenv(".env")
 
@@ -139,7 +141,13 @@ class DocumentConnector(DatabaseConnector):
         Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
-
+    def get_unmanaged_handle(self):
+        """Expose the low-level PyMongo handle for external use.
+        @warning Connection remains open - use for long-lived services only.
+        @return PyMongo database instance."""
+        alias = f"external-{int(time())}"
+        mongoengine.connect(host=self.connection_string, alias=alias)
+        return mongoengine.get_db(alias=alias)
 
     def execute_query(self, query: str) -> Optional[DataFrame]:
         """Send a single MongoDB command using PyMongo.
@@ -333,7 +341,7 @@ class DocumentConnector(DatabaseConnector):
 
 
 @contextmanager
-def mongo_handle(host: str, alias: str) -> Generator[Database[Any], None, None]:
+def mongo_handle(host: str, alias: str) -> MongoHandle:
     """Establish a temporary connection to MongoDB.
     @param host  A valid MongoDB connection string.
     @param alias  A unique name for the usage of this connection.

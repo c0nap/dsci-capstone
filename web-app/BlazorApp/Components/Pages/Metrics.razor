@@ -18,6 +18,9 @@
 
 <h3>Evaluation Metrics</h3>
 
+<h4>Reference Summary</h4>
+<p>@summary.GoldSummaryText</p>
+
 <h4>P/R/F1 Metrics</h4>
 <table class="table table-striped">
     <thead>
@@ -142,6 +145,7 @@
         return new SummaryData
         { BookTitle = "UNKNOWN",
           SummaryText = "No summary has been posted yet.",
+          GoldSummaryText = "No gold summary has been posted yet.",
           Metrics = SummaryMetrics.GetDefault() };
     }
 

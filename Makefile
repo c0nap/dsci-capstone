@@ -69,40 +69,52 @@ db-stop-local:
 
 
 ###############################################################################
-# Re-builds the Python container and runs it in the current shell.
-# Accepts optional entry-point override.   make python DETACHED=0 CMD="pytest ."
+# Re-builds the container and runs it in the current shell.
+# Accepts optional entry-point override.   make docker-python DETACHED=0 CMD="pytest ."
 ###############################################################################
+.PHONY: docker-start
+docker-start:
+	# remove the container if it exists; silence errors if it doesn’t
+	docker rm -f $(NAME) 2>/dev/null || true
+	# create container with optional args and entrypoint
+	docker create --name $(NAME) -p $(PORT) $(IMG) $(CMD)
+	# add a secondary network to container (docker compose compatible) and apply service_name as alias
+	make docker-network   # if does not exist
+	docker network connect --alias $(HOST) $(NETWORK) $(NAME)
+	# use interactive shell by default; attaches to container logs
+	docker start $(if $(DETACHED),, -a -i) $(NAME)
+
 .PHONY: docker-python docker-blazor
 docker-python:
-	# remove the container if it exists; silence errors if it doesn’t
-	docker rm -f container-python 2>/dev/null || true
-	# create container with optional args and entrypoint
-	docker create --name container-python dsci-cap-img-python-dev:latest $(CMD)
-	# add a secondary network to container (docker compose compatible) and apply service_name as alias
-	make docker-network   # if does not exist
-	docker network connect --alias python_service capstone_default container-python
-	# use interactive shell by default; attaches to container logs
-	docker start $(if $(DETACHED),, -a -i) container-python
-
-# Starts the Blazor Server in a new Docker container
+	make docker-start NAME="container-python" IMG="dsci-cap-img-python-dev:latest" \
+		HOST="python_service" NETWORK="capstone_default" PORT="5054:5054" \
+		DETACHED=$(DETACHED) CMD="$(CMD)"
 docker-blazor:
-	# remove the container if it exists; silence errors if it doesn’t
-	docker rm -f container-blazor 2>/dev/null || true
-	# create container with optional args. no entrypoint allowed because not viable for blazor
-	docker create --name container-blazor -p 5055:5055 dsci-cap-img-blazor-dev:latest
-	# add a secondary network to container (docker compose compatible) and apply service_name as alias
-	make docker-network   # if does not exist
-	docker network connect --alias blazor_service capstone_default container-blazor
-	# use interactive shell by default; attaches to container logs
-	docker start $(if $(DETACHED),, -a -i) container-blazor
+	make docker-start NAME="container-blazor" IMG="dsci-cap-img-blazor-dev:latest" \
+		HOST="blazor_service" NETWORK="capstone_default" PORT="5055:5055" \
+		DETACHED=$(DETACHED) CMD="$(CMD)"
+docker-questeval:
+	make docker-start NAME="container-qeval" IMG="dsci-cap-img-qeval-dev:latest" \
+		HOST="qeval_worker" NETWORK="capstone_default" PORT="5001:5001" \
+		DETACHED=$(DETACHED) CMD="$(CMD)"
+docker-bookscore:
+	make docker-start NAME="container-bscore" IMG="dsci-cap-img-bscore-dev:latest" \
+		HOST="bscore_worker" NETWORK="capstone_default" PORT="5002:5002" \
+		DETACHED=$(DETACHED) CMD="$(CMD)"
 
 
+
+
+###############################################################################
 # Starts container detached (no output) so we can continue using shell
+###############################################################################
 docker-blazor-silent:
-	make docker-blazor DETACHED=1
+	make docker-blazor DETACHED=1 CMD="$(CMD)"
 docker-python-silent:
 	make docker-python DETACHED=1 CMD="$(CMD)"
-
+docker-workers-silent:
+	make docker-questeval DETACHED=1
+	make docker-bookscore DETACHED=1
 
 ###############################################################################
 # Recompile and launch containers so any source code changes will apply
@@ -113,7 +125,10 @@ docker-python-dev:
 	make docker-python CMD="$(CMD)"
 docker-blazor-dev:
 	make docker-build-dev-blazor || exit 1  # Stop if build fails
-	make docker-blazor
+	make docker-blazor-silent
+docker-workers-dev:
+	make docker-build-dev-workers || exit 1  # Stop if build fails
+	make docker-workers-silent
 
 ###############################################################################
 # Bypass the original pipeline and run pytests instead.
@@ -152,16 +167,25 @@ docker-test-fancy:
 docker-all-tests:
 	make docker-all-dbs
 	make docker-blazor-silent
+	sleep 15   # extra time needed for neo4j
 	make docker-test
 
 # Deploy everything to docker and run the full pipeline
 docker-all-main:
 	make docker-all-dbs
 	make docker-blazor-silent
+	sleep 5   # extra time needed for neo4j, but pipeline setup takes time too
 	make docker-python
 
 
 
+###############################################################################
+# Start worker services in their own containers.
+###############################################################################
+.PHONY: docker-all-workers docker-bscore docker-qeval
+docker-all-workers:
+	docker compose up -d bscore_worker
+	docker compose up -d qeval_worker
 
 ###############################################################################
 # Starts a relational DB, a document DB, and a graph DB in their own Docker containers
@@ -249,14 +273,28 @@ docker-build-dev:
 	make docker-build-dev-python
 	make docker-build-dev-blazor
 docker-build-dev-python:
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.python \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.python \
 		--build-arg ENV_FILE=".env" \
 		-t dsci-cap-img-python-dev:latest .
 docker-build-dev-blazor:
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.blazor \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.blazor \
 		--build-arg ENV_FILE=".env" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.json \
 		-t dsci-cap-img-blazor-dev:latest .
+
+docker-build-dev-workers:
+	make docker-build-dev-bscore
+	make docker-build-dev-qeval
+docker-build-dev-bscore:
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.bookscore \
+		--build-arg ENV_FILE=".env" \
+		--build-arg TASK="bookscore" \
+		-t dsci-cap-img-bscore-dev:latest .
+docker-build-dev-qeval:
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.questeval \
+		--build-arg ENV_FILE=".env" \
+		--build-arg TASK="questeval" \
+		-t dsci-cap-img-qeval-dev:latest .
 
 
 ###############################################################################
@@ -270,13 +308,13 @@ docker-build-prod:
 	make docker-build-prod-blazor
 docker-build-prod-python:
 	make env-dummy  # Generates .env.dummy from .env.example
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.python \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.python \
 		--build-arg ENV_FILE=".env.dummy" \
 		-t dsci-cap-img-python-prod:latest .
 docker-build-prod-blazor:
 	make env-dummy  # Generates .env.dummy from .env.example
 	make appsettings-dummy  # Generates appsettings.Dummy.json from .env.dummy and appsettings.Example.json
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f Dockerfile.blazor \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.blazor \
 		--build-arg ENV_FILE=".env.dummy" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.Dummy.json \
 		-t dsci-cap-img-blazor-prod:latest .

@@ -10,14 +10,21 @@ public class SummaryMetrics
         return new SummaryMetrics
         { PRF1Metrics = new List<PRF1Metric>
           { new PRF1Metric
-            { Name = "ROUGE", Precision = 0.0, Recall = 0.0, F1Score = 0.0 },
-            new PRF1Metric
             { Name = "BERTScore", Precision = 0.0, Recall = 0.0, F1Score = 0.0 } },
           ScalarMetrics = new List<ScalarMetric>
           { new ScalarMetric
             { Name = "BooookScore (Chang 2024)", Value = 0.0 },
             new ScalarMetric
-            { Name = "QuestEval (Scialom 2021)", Value = 0.0 } },
+            { Name = "QuestEval (Scialom 2021)", Value = 0.0 },
+            new ScalarMetric
+            { Name = "ROUGE-1", Value = 0.0 },
+            new ScalarMetric
+            { Name = "ROUGE-2", Value = 0.0 },
+            new ScalarMetric
+            { Name = "ROUGE-L", Value = 0.0 },
+            new ScalarMetric
+            { Name = "ROUGE-Lsum", Value = 0.0 },
+          },
           QA = new QAMetric
           { QAItems = new List<QAItem>
             { new QAItem

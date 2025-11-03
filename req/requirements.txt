@@ -1,11 +1,18 @@
 # Core dependencies
 python-dotenv
-pandas
 pytest
 pytest-order
+pandas
 sqlparse
 pypandoc
 lxml
+rapidfuzz
+evaluate
+rouge_score
+nltk
+absl-py
+bert-score
+flask
 
 # Database drivers
 sqlalchemy

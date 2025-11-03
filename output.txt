@@ -1,245 +1,570 @@
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python
-container-python
-63a9ae848cdd7b66ed2299378423b61dfc0bf67639525d631b10fdf5dc598e4f
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-workers-dev
+[+] Building 0.8s (20/20) FINISHED                                                                       docker:default
+ => [internal] load build definition from Dockerfile.bookscore                                                     0.1s
+ => => transferring dockerfile: 2.41kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.10-slim                                                0.4s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 79B                                                                                   0.0s
+ => [internal] load build context                                                                                  0.2s
+ => => transferring context: 1.95kB                                                                                0.2s
+ => [ 1/15] FROM docker.io/library/python:3.10-slim@sha256:e0c4fae70d550834a40f6c3e0326e02cfe239c2351d922e1fb1577  0.0s
+ => CACHED [ 2/15] WORKDIR /flask                                                                                  0.0s
+ => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make git   0.0s
+ => CACHED [ 4/15] COPY req/bookscore.txt .                                                                        0.0s
+ => CACHED [ 5/15] RUN pip install --no-cache-dir -r bookscore.txt                                                 0.0s
+ => CACHED [ 6/15] RUN python -m nltk.downloader punkt punkt_tab                                                   0.0s
+ => CACHED [ 7/15] RUN mkdir -p /usr/local/lib/python3.10/site-packages/booookscore/prompts &&     curl -sSL http  0.0s
+ => CACHED [ 8/15] RUN pip install --upgrade "openai>=1.35.0"                                                      0.0s
+ => CACHED [ 9/15] RUN python - <<'PY'                                                                             0.0s
+ => CACHED [10/15] COPY src/ src/                                                                                  0.0s
+ => CACHED [11/15] COPY components/ components/                                                                    0.0s
+ => CACHED [12/15] COPY Makefile pyproject.toml ./                                                                 0.0s
+ => CACHED [13/15] COPY .env .env                                                                                  0.0s
+ => CACHED [14/15] RUN make env-docker                                                                             0.0s
+ => CACHED [15/15] RUN mv .env.docker .env                                                                         0.0s
+ => exporting to image                                                                                             0.0s
+ => => exporting layers                                                                                            0.0s
+ => => writing image sha256:4440b71835d049bb9ca05bd51b2c43ad0e44c4c9f196f86343f839e5a47673b3                       0.0s
+ => => naming to docker.io/library/dsci-cap-img-bscore-dev:latest                                                  0.0s
+[+] Building 0.4s (21/21) FINISHED                                                                       docker:default
+ => [internal] load build definition from Dockerfile.questeval                                                     0.1s
+ => => transferring dockerfile: 5.25kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.8-slim                                                 0.1s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 79B                                                                                   0.0s
+ => [ 1/16] FROM docker.io/library/python:3.8-slim@sha256:1d52838af602b4b5a831beb13a0e4d073280665ea7be7f69ce2382f  0.0s
+ => [internal] load build context                                                                                  0.2s
+ => => transferring context: 2.24kB                                                                                0.2s
+ => CACHED [ 2/16] WORKDIR /flask                                                                                  0.0s
+ => CACHED [ 3/16] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make git   0.0s
+ => CACHED [ 4/16] COPY req/questeval.txt .                                                                        0.0s
+ => CACHED [ 5/16] RUN pip install --no-cache-dir -r questeval.txt                                                 0.0s
+ => CACHED [ 6/16] RUN mkdir -p /root/.cache/huggingface/transformers/ThomasNLG &&     cd /root/.cache/huggingfac  0.0s
+ => CACHED [ 7/16] RUN cd /root/.cache/huggingface/transformers &&     git clone https://huggingface.co/bert-base  0.0s
+ => CACHED [ 8/16] RUN apt-get remove -y git git-lfs && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*       0.0s
+ => CACHED [ 9/16] RUN python3 << 'EOF'                                                                            0.0s
+ => CACHED [10/16] RUN python3 << 'EOF'                                                                            0.0s
+ => CACHED [11/16] COPY src/ src/                                                                                  0.0s
+ => CACHED [12/16] COPY components/ components/                                                                    0.0s
+ => CACHED [13/16] COPY Makefile pyproject.toml ./                                                                 0.0s
+ => CACHED [14/16] COPY .env .env                                                                                  0.0s
+ => CACHED [15/16] RUN make env-docker                                                                             0.0s
+ => CACHED [16/16] RUN mv .env.docker .env                                                                         0.0s
+ => exporting to image                                                                                             0.0s
+ => => exporting layers                                                                                            0.0s
+ => => writing image sha256:33d993d08111bb352ad90445102bbf832dcecee2e010d1471cf7c5858045af43                       0.0s
+ => => naming to docker.io/library/dsci-cap-img-qeval-dev:latest                                                   0.0s
+container-qeval
+ad5cf5804c6280e82d3b2e0b4e809e5512c1d1ada7677ab560d81f2637d3e0c5
 Network 'capstone_default' already exists; continue...
+container-qeval
+container-bscore
+ee811c67ab4517faf6c4fdcb8d404d3cb1f978f79a3f861325821710f6df0a85
+Network 'capstone_default' already exists; continue...
+container-bscore
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python-dev
+[+] Building 0.7s (20/20) FINISHED                                                                       docker:default
+ => [internal] load build definition from Dockerfile.python                                                        0.0s
+ => => transferring dockerfile: 1.29kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.1s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 79B                                                                                   0.0s
+ => [internal] load build context                                                                                  0.4s
+ => => transferring context: 9.67MB                                                                                0.4s
+ => [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:e97cf9a2e84d604941d9902f00616db7466ff302af4b1c3c67fb7c  0.0s
+ => CACHED [ 2/15] WORKDIR /pipeline                                                                               0.0s
+ => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make pand  0.0s
+ => CACHED [ 4/15] COPY req/requirements.txt requirements.txt                                                      0.0s
+ => CACHED [ 5/15] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
+ => CACHED [ 6/15] COPY src/ src/                                                                                  0.0s
+ => CACHED [ 7/15] COPY tests/ tests/                                                                              0.0s
+ => CACHED [ 8/15] COPY db/ db/                                                                                    0.0s
+ => CACHED [ 9/15] COPY components/ components/                                                                    0.0s
+ => CACHED [10/15] COPY datasets/ datasets/                                                                        0.0s
+ => CACHED [11/15] COPY .env .env                                                                                  0.0s
+ => CACHED [12/15] COPY Makefile .                                                                                 0.0s
+ => CACHED [13/15] RUN make env-docker                                                                             0.0s
+ => CACHED [14/15] RUN mv .env.docker .env                                                                         0.0s
+ => CACHED [15/15] COPY pyproject.toml .                                                                           0.0s
+ => exporting to image                                                                                             0.0s
+ => => exporting layers                                                                                            0.0s
+ => => writing image sha256:ac526a3e743bf0bc7e4dddd2d8e021c9b34a7e47757c03a4fa49ffdcc9735a07                       0.0s
+ => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                                  0.0s
+container-python
+a91a5c2e3bbdb5973eea5d5822b794b0d484076a86af4160b42a6a4344867d03
+Network 'capstone_default' already exists; continue...
+Deleted old chunks...
+ * Serving Flask app 'main'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5054
+ * Running on http://172.17.0.5:5054
+Press CTRL+C to quit
+[STATUS] Story 1: preprocessing -> in-progress
+127.0.0.1 - - [03/Nov/2025 13:56:02] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Story 1: chunking -> in-progress
+127.0.0.1 - - [03/Nov/2025 13:56:02] "POST /status/story HTTP/1.1" 200 -
 
 ==================================================
 Processing: ./datasets/examples/trilogy-wishes-2.epub
 
 === STORY SUMMARY ===
 Total chunks: 254
+[STATUS] Story 1: preprocessing -> completed
+127.0.0.1 - - [03/Nov/2025 13:56:04] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Story 1: chunking -> completed
+127.0.0.1 - - [03/Nov/2025 13:56:04] "POST /status/story HTTP/1.1" 200 -
 
 Chunk details:
-  index: Chunk(len=1441, book=2, chapter=14, story=1, lines=[4744,4772], story%=74.504, chapter%=60.033)
+  index: Chunk(len=1421, book=2, chapter=7, story=1, lines=[991,1019], story%=14.576, chapter%=56.359)
 
-It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—
-‘Well, stow it, will you?’
-And the boots went heavily away, along the passage and up some sounding stone stairs.
-‘Now then,’ whispered Anthea.
-‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.
-‘On the carpet,’ said Jane, truly.
-‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’
-‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’
-‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’
-‘Well, then,’ Cyril went on, ignoring this appeal to his brother, ‘just try to believe what we tell you and act accordingly. It can’t do you any HARM, you know,’ he went on in hoarse whispered earnestness. ‘You can’t be very much worse off than you are now, you know. But if you’ll just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?’
-‘I’d like to go to Boolong,’ was the instant reply of the burglar. ‘I’ve always wanted to go on that there trip, but I’ve never ‘ad the ready at the right time of the year.’
-‘Boolong is a town like London,’ said Cyril, well meaning, but inaccurate, ‘how could you get a living there?’
-The burglar scratched his head in deep doubt.
+‘No,’ said the Phoenix, looking about it at the high dark walls of the tower. ‘No; I quite see that.’
+‘But we wished to be at home,’ said Cyril.
+‘No doubt,’ said the bird, politely.
+‘And the carpet hasn’t moved an inch,’ said Robert.
+‘No,’ said the Phoenix, ‘I see it hasn’t.’
+‘But I thought it was a wishing carpet?’
+‘So it is,’ said the Phoenix.
+‘Then why—?’ asked the children, altogether.
+‘I did tell you, you know,’ said the Phoenix, ‘only you are so fond of listening to the music of your own voices. It is, indeed, the most lovely music to each of us, and therefore—’
+‘You did tell us WHAT?’ interrupted an Exasperated.
+‘Why, that the carpet only gives you three wishes a day and YOU’VE HAD THEM.’
+There was a heartfelt silence.
+‘Then how are we going to get home?’ said Cyril, at last.
+‘I haven’t any idea,’ replied the Phoenix, kindly. ‘Can I fly out and get you any little thing?’
+‘How could you carry the money to pay for it?’
+‘It isn’t necessary. Birds always take what they want. It is not regarded as stealing, except in the case of magpies.’
+The children were glad to find they had been right in supposing this to be the case, on the day when they had wings, and had enjoyed somebody else’s ripe plums.
+‘Yes; let the Phoenix get us something to eat, anyway,’ Robert urged—’ (‘If it will be so kind you mean,’ corrected Anthea, in a whisper); ‘if it will be so kind, and we can be thinking while it’s gone.’
+    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-7_p.56359]
 
 NLP output:
-('2008 Summer Olympics', 'point in time', '2008')
-('boots', 'different from', 'voice')
-('voice', 'different from', 'boots')
-('Yes', 'instance of', 'Yes!')
-('No', 'instance of', 'No!')
+('Phoenix', 'residence', 'tower')
+('tower', 'occupant', 'Phoenix')
 ('William Shakespeare', 'notable work', 'Cymbeline')
 ('Cymbeline', 'author', 'William Shakespeare')
+('Cyril', 'spouse', 'Athena')
+('Athena', 'Athena', 'spouse')
+('Cyril', 'Athena', 'spouse')
+('sibling', 'Cyril', 'Athena')
+('spouse', 'sibling', 'Athena')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'George Orwell')
+('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'derivative work')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('2008', 'point in time', '2008')
+('I thought it was a wishing carpet?', 'instance of', 'wishing carpet')
+('So it is', 'performer', 'Phoenix')
+('Why—?', 'has part', 'Why—?')
+('Why—?', 'part of', 'Why—?')
+('Why—?', 'part of', 'Why—?')
 ('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'Cymbeline', 'notable work')
-('William Shakespeare', 'Cymbeline', 'author')
-('William Shakespeare', 'Cymbeline', 'author')
-('Now then,’ whispered Anthea', 'characters', 'Anthea')
-('Anthea', 'present in work', 'Now then,’ whispered Anthea')
-('How the blue Moses did you get in?', 'characters', 'Moses')
-('Moses', 'present in work', 'How the blue Moses did you get in?')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('On the carpet', 'cast member', 'Jane')
-('Stow that', 'participant', 'burglar')
+('Cymbeline', 'author', 'William Shakespeare')
+('I did tell you, you know,’ said the Phoenix', 'present in work', 'the music of your own voices')
+('the music of your own voices', 'characters', 'I did tell you, you know,’ said the Phoenix')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('Exasperated', 'followed by', 'Exasperated')
+('Exasperated', 'follows', 'Exasperated')
+('John F. Kennedy', 'position held', 'Secretary of State')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('How are we going to get home?', 'followed by', 'How are we going to get home?')
+('How are we going to get home?', 'follows', 'How are we going to get home?')
 ('John Milton', 'notable work', 'Paradise Lost')
 ('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
+('John Milton', 'John Milton', 'author')
+('author', 'Paradise Lost', 'John Milton')
 ('notable work', 'notable work', 'Paradise Lost')
 ('Paradise Lost', 'author', 'John Milton')
-('Milton', 'Milton', 'author')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('Cyril', 'owner of', 'nursery')
-('nursery', 'owned by', 'Cyril')
-('John F. Kennedy', 'significant event', 'assassinated')
-('assassinated', 'facet of', 'John F. Kennedy')
-('Cyril', 'sibling', 'his brother')
-('his brother', 'sibling', 'Cyril')
-('HARM', 'has effect', 'fever')
+('the Phoenix', 'present in work', 'I haven’t any idea')
+('I haven’t any idea', 'characters', 'the Phoenix')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
 ('Nineteen Eighty-Four', 'author', 'Orwell')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
 ('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('Boolong', 'located in the administrative territorial entity', 'Boolong')
-('World Rugby League', 'sport', 'Rugby League')
-('Rugby League', 'organizer', 'World Rugby League')
-('Boolong', 'located in the administrative territorial entity', 'London')
+('Harvard University', 'has part', 'John F. Kennedy School of Government')
+('take what they want', 'facet of', 'Bird')
+('magpie', 'different from', 'stealing')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
 ('Nineteen Eighty-Four', 'author', 'Orwell')
+('Robert', 'spouse', 'Anthea')
+('Anthea', 'spouse', 'Robert')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('2008 Summer Olympics', 'point in time', '2008')
-('boots', 'different from', 'voice')
-('voice', 'different from', 'boots')
-('Yes', 'instance of', 'Yes!')
-('No', 'instance of', 'No!')
+('Phoenix', 'residence', 'tower')
+('tower', 'occupant', 'Phoenix')
 ('William Shakespeare', 'notable work', 'Cymbeline')
 ('Cymbeline', 'author', 'William Shakespeare')
+('Cyril', 'spouse', 'Athena')
+('Athena', 'Athena', 'spouse')
+('Cyril', 'Athena', 'spouse')
+('sibling', 'Cyril', 'Athena')
+('spouse', 'sibling', 'Athena')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'George Orwell')
+('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'derivative work')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('2008', 'point in time', '2008')
+('I thought it was a wishing carpet?', 'instance of', 'wishing carpet')
+('So it is', 'performer', 'Phoenix')
+('Why—?', 'has part', 'Why—?')
+('Why—?', 'part of', 'Why—?')
+('Why—?', 'part of', 'Why—?')
 ('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'Cymbeline', 'notable work')
-('William Shakespeare', 'Cymbeline', 'author')
-('William Shakespeare', 'Cymbeline', 'author')
-('Now then,’ whispered Anthea', 'characters', 'Anthea')
-('Anthea', 'present in work', 'Now then,’ whispered Anthea')
-('How the blue Moses did you get in?', 'characters', 'Moses')
-('Moses', 'present in work', 'How the blue Moses did you get in?')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('On the carpet', 'cast member', 'Jane')
-('Stow that', 'participant', 'burglar')
+('Cymbeline', 'author', 'William Shakespeare')
+('I did tell you, you know,’ said the Phoenix', 'present in work', 'the music of your own voices')
+('the music of your own voices', 'characters', 'I did tell you, you know,’ said the Phoenix')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('Exasperated', 'followed by', 'Exasperated')
+('Exasperated', 'follows', 'Exasperated')
+('John F. Kennedy', 'position held', 'Secretary of State')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('How are we going to get home?', 'followed by', 'How are we going to get home?')
+('How are we going to get home?', 'follows', 'How are we going to get home?')
 ('John Milton', 'notable work', 'Paradise Lost')
 ('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
+('John Milton', 'John Milton', 'author')
+('author', 'Paradise Lost', 'John Milton')
 ('notable work', 'notable work', 'Paradise Lost')
 ('Paradise Lost', 'author', 'John Milton')
-('Milton', 'Milton', 'author')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('Cyril', 'owner of', 'nursery')
-('nursery', 'owned by', 'Cyril')
-('John F. Kennedy', 'significant event', 'assassinated')
-('assassinated', 'facet of', 'John F. Kennedy')
-('Cyril', 'sibling', 'his brother')
-('his brother', 'sibling', 'Cyril')
-('HARM', 'has effect', 'fever')
+('the Phoenix', 'present in work', 'I haven’t any idea')
+('I haven’t any idea', 'characters', 'the Phoenix')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
 ('Nineteen Eighty-Four', 'author', 'Orwell')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
 ('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('Boolong', 'located in the administrative territorial entity', 'Boolong')
-('World Rugby League', 'sport', 'Rugby League')
-('Rugby League', 'organizer', 'World Rugby League')
-('Boolong', 'located in the administrative territorial entity', 'London')
+('Harvard University', 'has part', 'John F. Kennedy School of Government')
+('take what they want', 'facet of', 'Bird')
+('magpie', 'different from', 'stealing')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
 ('Nineteen Eighty-Four', 'author', 'Orwell')
+('Robert', 'spouse', 'Anthea')
+('Anthea', 'spouse', 'Robert')
 
 And here is the original text:
-It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—
-‘Well, stow it, will you?’
-And the boots went heavily away, along the passage and up some sounding stone stairs.
-‘Now then,’ whispered Anthea.
-‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.
-‘On the carpet,’ said Jane, truly.
-‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’
-‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’
-‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’
-‘Well, then,’ Cyril went on, ignoring this appeal to his brother, ‘just try to believe what we tell you and act accordingly. It can’t do you any HARM, you know,’ he went on in hoarse whispered earnestness. ‘You can’t be very much worse off than you are now, you know. But if you’ll just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?’
-‘I’d like to go to Boolong,’ was the instant reply of the burglar. ‘I’ve always wanted to go on that there trip, but I’ve never ‘ad the ready at the right time of the year.’
-‘Boolong is a town like London,’ said Cyril, well meaning, but inaccurate, ‘how could you get a living there?’
-The burglar scratched his head in deep doubt.
+‘No,’ said the Phoenix, looking about it at the high dark walls of the tower. ‘No; I quite see that.’
+‘But we wished to be at home,’ said Cyril.
+‘No doubt,’ said the bird, politely.
+‘And the carpet hasn’t moved an inch,’ said Robert.
+‘No,’ said the Phoenix, ‘I see it hasn’t.’
+‘But I thought it was a wishing carpet?’
+‘So it is,’ said the Phoenix.
+‘Then why—?’ asked the children, altogether.
+‘I did tell you, you know,’ said the Phoenix, ‘only you are so fond of listening to the music of your own voices. It is, indeed, the most lovely music to each of us, and therefore—’
+‘You did tell us WHAT?’ interrupted an Exasperated.
+‘Why, that the carpet only gives you three wishes a day and YOU’VE HAD THEM.’
+There was a heartfelt silence.
+‘Then how are we going to get home?’ said Cyril, at last.
+‘I haven’t any idea,’ replied the Phoenix, kindly. ‘Can I fly out and get you any little thing?’
+‘How could you carry the money to pay for it?’
+‘It isn’t necessary. Birds always take what they want. It is not regarded as stealing, except in the case of magpies.’
+The children were glad to find they had been right in supposing this to be the case, on the day when they had wings, and had enjoyed somebody else’s ripe plums.
+‘Yes; let the Phoenix get us something to eat, anyway,’ Robert urged—’ (‘If it will be so kind you mean,’ corrected Anthea, in a whisper); ‘if it will be so kind, and we can be thinking while it’s gone.’
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s": "2008 Summer Olympics", "r": "point in time", "o": "2008"},
-  {"s": "boots", "r": "different from", "o": "voice"},
-  {"s": "voice", "r": "different from", "o": "boots"},
-  {"s": "Yes", "r": "instance of", "o": "Yes!"},
-  {"s": "No", "r": "instance of", "o": "No!"},
-  {"s": "William Shakespeare", "r": "notable work", "o": "Cymbeline"},
-  {"s": "Cymbeline", "r": "author", "o": "William Shakespeare"},
-  {"s": "Now then,” whispered Anthea", "r": "characters", "o": "Anthea"},
-  {"s": "Anthea", "r": "present in work", "o": "Now then,” whispered Anthea"},
-  {"s": "How the blue Moses did you get in?", "r": "characters", "o": "Moses"},
-  {"s": "Moses", "r": "present in work", "o": "How the blue Moses did you get in?"},
-  {"s": "John Milton", "r": "notable work", "o": "Paradise Lost"},
-  {"s": "Paradise Lost", "r": "author", "o": "John Milton"},
-  {"s": "On the carpet", "r": "cast member", "o": "Jane"},
-  {"s": "Cyril", "r": "owner of", "o": "nursery"},
-  {"s": "nursery", "r": "owned by", "o": "Cyril"},
-  {"s": "John F. Kennedy", "r": "significant event", "o": "assassinated"},
-  {"s": "John F. Kennedy School of Government", "r": "part of", "o": "Harvard University"},
-  {"s": "Harvard University", "r": "subsidiary", "o": "John F. Kennedy School of Government"},
-  {"s": "George Orwell", "r": "notable work", "o": "Nineteen Eighty-Four"},
-  {"s": "Nineteen Eighty-Four", "r": "author", "o": "Orwell"},
-  {"s": "World Rugby League", "r": "sport", "o": "Rugby League"},
-  {"s": "Rugby League", "r": "organizer", "o": "World Rugby League"},
-  {"s": "Boolong", "r": "located in the administrative territorial entity", "o": "London"},
-  {"s": "nursery", "r": "contains", "o": "cow and cats"},
-  {"s": "cow", "r": "found in", "o": "nursery"},
-  {"s": "cats", "r": "found in", "o": "nursery"},
-  {"s": "burglar", "r": "desires", "o": "Boolong"},
-  {"s": "burglar", "r": "asks", "o": "How the blue Moses did you get in?"},
-  {"s": "Jane", "r": "present in", "o": "On the carpet"},
-  {"s": "the voice", "r": "dialogue", "o": "Well, stow it, will you?"},
-  {"s": "burglar", "r": "feels", "o": "doubt"}
+  {"s": "Phoenix", "r": "residence", "o": "tower"},
+  {"s": "tower", "r": "occupant", "o": "Phoenix"},
+  {"s": "carpet", "r": "instance of", "o": "wishing carpet"},
+  {"s": "carpet", "r": "gives", "o": "three wishes per day"},
+  {"s": "Cyril", "r": "said", "o": "But we wished to be at home"},
+  {"s": "Cyril", "r": "asked", "o": "How are we going to get home?"},
+  {"s": "Phoenix", "r": "said", "o": "No"},
+  {"s": "Phoenix", "r": "replied", "o": "I haven’t any idea"},
+  {"s": "Phoenix", "r": "offered", "o": "to fly out and get you any little thing"},
+  {"s": "Phoenix", "r": "stated", "o": "Money isn’t necessary to pay for it"},
+  {"s": "Birds", "r": "take", "o": "what they want"},
+  {"s": "magpies", "r": "exception to", "o": "not stealing"},
+  {"s": "children", "r": "ate", "o": "ripe plums"},
+  {"s": "children", "r": "had", "o": "wings"}
 ]
 
 ==================================================
 
 
 Valid JSON
-2008 Summer Olympics point in time 2008
-boots different from voice
-voice different from boots
-Yes instance of Yes!
-No instance of No!
-William Shakespeare notable work Cymbeline
-Cymbeline author William Shakespeare
-Now then,” whispered Anthea characters Anthea
-Anthea present in work Now then,” whispered Anthea
-How the blue Moses did you get in? characters Moses
-Moses present in work How the blue Moses did you get in?
-John Milton notable work Paradise Lost
-Paradise Lost author John Milton
-On the carpet cast member Jane
-Cyril owner of nursery
-nursery owned by Cyril
-John F. Kennedy significant event assassinated
-John F. Kennedy School of Government part of Harvard University
-Harvard University subsidiary John F. Kennedy School of Government
-George Orwell notable work Nineteen Eighty-Four
-Nineteen Eighty-Four author Orwell
-World Rugby League sport Rugby League
-Rugby League organizer World Rugby League
-Boolong located in the administrative territorial entity London
-nursery contains cow and cats
-cow found in nursery
-cats found in nursery
-burglar desires Boolong
-burglar asks How the blue Moses did you get in?
-Jane present in On the carpet
-the voice dialogue Well, stow it, will you?
-burglar feels doubt
+[STATUS] Chunk story-1_book-2_chapter-7_p.56359: relation_extraction -> in-progress
+127.0.0.1 - - [03/Nov/2025 14:00:24] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.56359: llm_inference -> in-progress
+127.0.0.1 - - [03/Nov/2025 14:00:24] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.56359: relation_extraction -> completed
+127.0.0.1 - - [03/Nov/2025 14:00:24] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.56359: llm_inference -> completed
+127.0.0.1 - - [03/Nov/2025 14:00:24] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.56359: graph_verbalization -> in-progress
+127.0.0.1 - - [03/Nov/2025 14:00:24] "POST /status/chunk HTTP/1.1" 200 -
+Phoenix residence tower
+tower occupant Phoenix
+carpet instance of wishing carpet
+carpet gives three wishes per day
+Cyril said But we wished to be at home
+Cyril asked How are we going to get home?
+Phoenix said No
+Phoenix replied I haven’t any idea
+Phoenix offered to fly out and get you any little thing
+Phoenix stated Money isn’t necessary to pay for it
+Birds take what they want
+magpies exception to not stealing
+children ate ripe plums
+children had wings
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 18, offset: 74} for query: "\n        MATCH (n {db: 'conan_capstone', kg: 'default'})\n        WHERE (n._init IS NULL OR n._init = false)\n        OPTIONAL MATCH (n)-[r]-()\n        WITH n.name as node_name, count(r) as edge_count\n        ORDER BY edge_count DESC, rand()\n        LIMIT 3\n        RETURN node_name, edge_count"
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 37, offset: 93} for query: "\n        MATCH (n {db: 'conan_capstone', kg: 'default'})\n        WHERE (n._init IS NULL OR n._init = false)\n        OPTIONAL MATCH (n)-[r]-()\n        WITH n.name as node_name, count(r) as edge_count\n        ORDER BY edge_count DESC, rand()\n        LIMIT 3\n        RETURN node_name, edge_count"
 
 Most relevant nodes:
-                            node_name  edge_count
-0                             nursery           5
-1                             burglar           3
-2  How_the_blue_Moses_did_you_get_in_           3
+  node_name  edge_count
+0    Anthea          49
+1   Phoenix          35
+2    Robert          33
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 18, offset: 121} for query: "\n        MATCH (s {db: 'conan_capstone', kg: 'default'})-[r]->(o {db: 'conan_capstone', kg: 'default'})\n        WHERE (s._init IS NULL OR s._init = false) AND (o._init IS NULL OR o._init = false)\n        RETURN s.name AS subject, type(r) AS relation, o.name AS object\n        "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 37, offset: 140} for query: "\n        MATCH (s {db: 'conan_capstone', kg: 'default'})-[r]->(o {db: 'conan_capstone', kg: 'default'})\n        WHERE (s._init IS NULL OR s._init = false) AND (o._init IS NULL OR o._init = false)\n        RETURN s.name AS subject, type(r) AS relation, o.name AS object\n        "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 59, offset: 162} for query: "\n        MATCH (s {db: 'conan_capstone', kg: 'default'})-[r]->(o {db: 'conan_capstone', kg: 'default'})\n        WHERE (s._init IS NULL OR s._init = false) AND (o._init IS NULL OR o._init = false)\n        RETURN s.name AS subject, type(r) AS relation, o.name AS object\n        "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 78, offset: 181} for query: "\n        MATCH (s {db: 'conan_capstone', kg: 'default'})-[r]->(o {db: 'conan_capstone', kg: 'default'})\n        WHERE (s._init IS NULL OR s._init = false) AND (o._init IS NULL OR o._init = false)\n        RETURN s.name AS subject, type(r) AS relation, o.name AS object\n        "
 
 Triples which best represent the graph:
-nursery contains cow_and_cats
-nursery owned_by Cyril
-burglar feels doubt
-burglar asks How_the_blue_Moses_did_you_get_in_
-burglar desires Boolong
-How_the_blue_Moses_did_you_get_in_ characters Moses
+Anthea decided_to_ask Phoenix_for_permission_to_tell_her_mother_about_Cook_missing
+Anthea woke several_times_in_the_night
+Anthea feels miserable_as_if_she_had_done_something_wrong
+Anthea went_downstairs_to order_lunch
+Anthea ordered lunch_for_herself
+Anthea said I_haven_t_got_a_futile_brain_like_you_and_father_to_think_of_ways_of_explaining_everything
+Anthea replied I_can_t_explain__but_I_can_t_tell_you
+Anthea said It_s_that_horrible_fire_and_you_being_so_frightened
+Anthea said I_m_so_sorry_you_re_ill
+Anthea bathed mother_s_face_and_hands_with_eau_de_Cologne
+Anthea mixed_into eau_de_Cologne_in_warm_water
+Anthea fetched warm_water
+Anthea cared_for mother_with_headache
+Anthea kissed Mrs_Biddle
+Anthea said You_ARE_a_dear
+Anthea said it_really_IS_our_nursery_carpet__It_got_to_the_bazaar_by_mistake__with_some_other_things_
+Anthea took Roman_candles
+Anthea sibling Cyril
+Anthea requested cabman_to_drive_to_their_address
+Anthea said I_didn_t_know_there_were_such_people__except_in_books
+Anthea pulled Jane_into_an_archway
+Anthea dialogue Come_out__There_s_always_bad_air_in_places_that_have_been_shut_up__It_makes_your_torches_go_out__and_then_you_die__It_s_called_fire_damp__I_believe__Come_out__I_tell_you_
+Anthea commented_on thribble_is_not_grammar
+Anthea spoke_to Squirrel
+Anthea parent_of Squirrel
+Anthea prioritized carpet_over_stockings
+Anthea darned stockings
+Anthea owner_of stockings
+Anthea invites Lamb_to_play_Noah_s_Ark
+Anthea spouse Cyril
+Anthea present_in_work Noah_s_Ark
+Anthea owner_of Lamb
+Anthea helped_with wash_up_the_breakfast_cups
+Anthea helped_with make_beds
+Anthea sibling Jane
+Anthea asks Why_
+Anthea spoke we_only_wanted_to_ask_you_to_let_us_have_the_carpet
+Anthea spoke I_wish_Mrs_Biddle_was_in_an_angelic_good_temper
+Anthea inner_thought It_s_worth_trying
+Anthea spoke Don_t_be_angry
+Anthea walked_past parlourmaid
+Phoenix stated Money_isn_t_necessary_to_pay_for_it
+Phoenix offered to_fly_out_and_get_you_any_little_thing
+Phoenix replied I_haven_t_any_idea
+Phoenix said No
+Phoenix residence tower
+Phoenix slept_in an_out_of_the_way_spot
+Phoenix not_to_be_disturbed_for twenty_four_hours
+Phoenix said Quite_right__too_
+Phoenix grants favour_and_countenance
+Phoenix says Well_done__my_servants_
+Phoenix cried in_a_voice_that_could_be_heard_all_over_the_theatre
+Phoenix interprets songs_in_the_play_as_hymns_in_its_honour
+Phoenix exclaims What_radiant_rites__And_all_to_do_honour_to_me_
+Phoenix exclaims What_radiant_rites_
+Phoenix asks Robert_whether_this_is_my_true_temple
+Phoenix declares this_scene_is_my_temple
+Phoenix murmured How_fair_a_scene_is_this_
+Phoenix instructed Robert_to_say__C_est_vrai__monsieur__and__Venez_donc_voir_
+Phoenix said What_a_pity_you_know_no_French_
+Phoenix commented that_her_troubles_have_turned_her_brain
+Phoenix owned_by Robert
+Phoenix talked_to the_industrious_girls_about_their_carpet
+Phoenix had own_ideas_about_this
+Phoenix intends_to conceal_myself
+Phoenix stated I_used_to_be_called_the_Psammead_of_the_Desert_
+Phoenix stated _Psammeads_were_rare__even_in_my_time_
+Phoenix replied Oh__dear_me__no
+Robert said I_say__you_ARE_good_
+Robert said Yes__thank_you_
+Robert threatened I_ll_little_girl_you_
+Robert cried Little_girls_
+Robert took cracker
+Robert sibling Anthea
+Robert says Hush__the_music_is_beginning_
+Robert replies I_don_t_know_about_outcasts
+Robert reminded Cyril_that_he_had_said_so
+Robert sibling Cyril
+Robert came_last the_procession
+Robert spoke Say_vray__mossoo__venny_dong_vwaw
+Robert earned the_undying_respect_of_everybody
+Robert says it_s_all_about_the_pencil_of_the_gardener_s_son_and_the_penknife_of_the_baker_s_niece
+Robert says I_do_know_a_lot_of_French
+Robert displayed a_printed_paper_with_a_head_image_of_a_bird_in_flames
+Robert said You_are_the_Phoenix
+Robert owner_of Phoenix
+Robert caught Jane
+Robert tried_to_catch Jane
+Robert dropped_through the_trap_door
+Robert hung_by his_hands
+Robert spoke I_ll_drop_first_
+Robert intended_to_spend the_morning_in_conversation_with_the_Phoenix
+Robert says it_was_an_accident_my_putting_you_on_the_fire
+Robert looked uncomfortable
+Robert spoke Horrid_thing__I_hate_her_
+Robert whispered No_go
 
+[STATUS] Chunk story-1_book-2_chapter-7_p.56359: graph_verbalization -> completed
+127.0.0.1 - - [03/Nov/2025 14:00:27] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Story 1: summarization -> in-progress
+127.0.0.1 - - [03/Nov/2025 14:00:27] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.56359: summarization -> in-progress
+127.0.0.1 - - [03/Nov/2025 14:00:27] "POST /status/chunk HTTP/1.1" 200 -
 
 Generated summary:
-Cyril owns a nursery that contains a cow and cats. A burglar, feeling doubt, asks how the blue Moses got in and expresses a desire for Boolong. Moses is a character referenced in the inquiry.
+Anthea and her siblings, Jane and Cyril, along with their friend Robert, spar with a magical Phoenix who possesses a carpet and treats it as a sacred object. They wrestle with domestic concerns—Anthea asks Phoenix for permission to tell their mother about the missing Cook, while she and others care for their ill mother, washing and warming her and managing household duties. The Phoenix performs theatrically, claiming the carpet as its temple, tossing out grand pronouncements, and urging ritualized displays; it also references French and ceremony as part of its self-important persona. Robert alternates between mischief and loyalty, threatening and chasing Jane, slipping through a trapdoor, and ultimately earning the undying respect of everyone after a tense sequence. The episode blends ordinary chores, magical interference, and perilous adventure—embedding Noah’s Ark play, a cab ride to fetch the carpet, and the group’s evolving bond as they navigate the Phoenix’s antics.
+    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-7_p.56359]
+[STATUS] Story 1: summarization -> completed
+127.0.0.1 - - [03/Nov/2025 14:01:14] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.56359: summarization -> completed
+127.0.0.1 - - [03/Nov/2025 14:01:14] "POST /status/chunk HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-7_p.56359' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [03/Nov/2025 14:01:14] "POST /process_story HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.56359, task=questeval, status=started
+Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
+172.18.0.3 - - [03/Nov/2025 14:01:14] "POST /callback HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-7_p.56359' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [03/Nov/2025 14:01:14] "POST /process_story HTTP/1.1" 200 -
+Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}
+Initial processing complete. Server listening for additional requests from Blazor...
+Press Ctrl+C to stop.
+[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.56359, task=bookscore, status=started
+172.18.0.5 - - [03/Nov/2025 14:01:14] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.56359, task=bookscore, status=completed
+[STORY COMPLETE] All chunks completed metric_bookscore for story 1
+172.18.0.5 - - [03/Nov/2025 14:01:33] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.56359, task=questeval, status=completed
+[STORY COMPLETE] All chunks completed metric_questeval for story 1
+Downloading builder script: 6.27kB [00:00, 2.94MB/s]
+Downloading builder script: 7.95kB [00:00, 20.0MB/s]
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-large and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Cyril owns a nursery that contains a cow and cats. A burglar, feeling doubt, asks how the blue Moses got in and expresses a desire for Boolong. Moses is a character referenced in the inquiry.', 'metrics': {'prF1Metrics': [{'name': 'ROUGE', 'precision': 0, 'recall': 0, 'f1Score': 0}, {'name': 'BERTScore', 'precision': 0, 'recall': 0, 'f1Score': 0}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0}]}, 'qaResults': []}
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Anthea and her siblings, Jane and Cyril, along with their friend Robert, spar with a magical Phoenix who possesses a carpet and treats it as a sacred object. They wrestle with domestic concerns—Anthea asks Phoenix for permission to tell their mother about the missing Cook, while she and others care for their ill mother, washing and warming her and managing household duties. The Phoenix performs theatrically, claiming the carpet as its temple, tossing out grand pronouncements, and urging ritualized displays; it also references French and ceremony as part of its self-important persona. Robert alternates between mischief and loyalty, threatening and chasing Jane, slipping through a trapdoor, and ultimately earning the undying respect of everyone after a tense sequence. The episode blends ordinary chores, magical interference, and perilous adventure—embedding Noah’s Ark play, a cab ride to fetch the carpet, and the group’s evolving bond as they navigate the Phoenix’s antics.', 'goldSummaryText': '‘No,’ said the Phoenix, looking about it at the high dark walls of the tower. ‘No; I quite see that.’\n‘But we wished to be at home,’ said Cyril.\n‘No doubt,’ said the bird, politely.\n‘And the carpet hasn’t moved an inch,’ said Robert.\n‘No,’ said the Phoenix, ‘I see it hasn’t.’\n‘But I thought it was a wishing carpet?’\n‘So it is,’ said the Phoenix.\n‘Then why—?’ asked the children, altogether.\n‘I did tell you, you know,’ said the Phoenix, ‘only you are so fond of listening to the music of your own voices. It is, indeed, the most lovely music to each of us, and therefore—’\n‘You did tell us WHAT?’ interrupted an Exasperated.\n‘Why, that the carpet only gives you three wishes a day and YOU’VE HAD THEM.’\nThere', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.812414824962616, 'recall': 0.8031860589981079, 'f1Score': 0.8077740669250488}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.3415106600620531}, {'name': 'ROUGE-1', 'value': 0.20689655172413793}, {'name': 'ROUGE-2', 'value': 0.03472222222222222}, {'name': 'ROUGE-L', 'value': 0.12413793103448276}, {'name': 'ROUGE-Lsum', 'value': 0.19310344827586207}]}, 'qaResults': []}
 
 Output sent to web app.
-# exit
+[PIPELINE FINALIZED] Story 1 fully processed
+172.18.0.3 - - [03/Nov/2025 14:08:31] "POST /callback HTTP/1.1" 200 -
+INFO:werkzeug:172.18.0.3 - - [03/Nov/2025 14:08:31] "POST /callback HTTP/1.1" 200 -
+^Cmake[2]: *** [Makefile:77: docker-start] Interrupt
+make[1]: *** [Makefile:89: docker-python] Interrupt
+make: *** [Makefile:124: docker-python-dev] Interrupt
+
+
+
+
+
+
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-qeval
+Downloading: 6.81kB [00:00, 9.37MB/s]
+WARNING:root:Downloading language model for the spaCy model.
+DEPRECATION: https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl#egg=en_core_web_sm==3.0.0 contains an egg fragment with a non-PEP 508 name. pip 25.1 will enforce this behaviour change. A possible replacement is to use the req @ url syntax, and remove the egg fragment. Discussion can be found at https://github.com/pypa/pip/issues/13157
+Collecting en-core-web-sm==3.0.0
+  Downloading https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl (13.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 18.4 MB/s eta 0:00:00
+Requirement already satisfied: spacy<3.1.0,>=3.0.0 in /usr/local/lib/python3.8/site-packages (from en-core-web-sm==3.0.0) (3.0.6)
+Requirement already satisfied: spacy-legacy<3.1.0,>=3.0.4 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.0.12)
+Requirement already satisfied: murmurhash<1.1.0,>=0.28.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.0.13)
+Requirement already satisfied: cymem<2.1.0,>=2.0.2 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.0.11)
+Requirement already satisfied: preshed<3.1.0,>=3.0.2 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.0.10)
+Requirement already satisfied: thinc<8.1.0,>=8.0.3 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (8.0.17)
+Requirement already satisfied: blis<0.8.0,>=0.4.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.7.11)
+Requirement already satisfied: wasabi<1.1.0,>=0.8.1 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.10.1)
+Requirement already satisfied: srsly<3.0.0,>=2.4.1 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.4.8)
+Requirement already satisfied: catalogue<2.1.0,>=2.0.3 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.0.10)
+Requirement already satisfied: typer<0.4.0,>=0.3.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.3.2)
+Requirement already satisfied: pathy>=0.3.5 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.11.0)
+Requirement already satisfied: tqdm<5.0.0,>=4.38.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (4.49.0)
+Requirement already satisfied: numpy>=1.15.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.24.4)
+Requirement already satisfied: requests<3.0.0,>=2.13.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.32.4)
+Requirement already satisfied: pydantic<1.8.0,>=1.7.1 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.7.4)
+Requirement already satisfied: jinja2 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.11.3)
+Requirement already satisfied: setuptools in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (75.3.2)
+Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (25.0)
+Requirement already satisfied: smart-open<7.0.0,>=5.2.1 in /usr/local/lib/python3.8/site-packages (from pathy>=0.3.5->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (6.4.0)
+Requirement already satisfied: pathlib-abc==0.1.1 in /usr/local/lib/python3.8/site-packages (from pathy>=0.3.5->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.1.1)
+Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.4.4)
+Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.11)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.2.3)
+Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2025.10.5)
+Requirement already satisfied: click<7.2.0,>=7.1.1 in /usr/local/lib/python3.8/site-packages (from typer<0.4.0,>=0.3.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (7.1.2)
+Requirement already satisfied: MarkupSafe>=0.23 in /usr/local/lib/python3.8/site-packages (from jinja2->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.1.1)
+Installing collected packages: en-core-web-sm
+Successfully installed en-core-web-sm-3.0.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+✔ Download and installation successful
+You can now load the package via spacy.load('en_core_web_sm')
+
+
+
+
+
+
+
+ * Serving Flask app "flask" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+INFO:werkzeug: * Running on http://0.0.0.0:5001/ (Press CTRL+C to quit)
+[QUEUED] chunk 'story-1_book-2_chapter-7_p.56359' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+INFO:werkzeug:172.18.0.8 - - [03/Nov/2025 14:01:14] "POST /tasks/queue HTTP/1.1" 202 -
+Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.predictions.bias', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.transform.dense.bias', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.weight', 'cls.seq_relationship.weight', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.bias']
+- This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+FINISHED: chunk ID: story-1_book-2_chapter-7_p.56359, result:
+{'value': 0.3415106600620531, 'has_reference': False}
+Failed to notify boss: HTTPConnectionPool(host='python_service', port=5054): Read timed out. (read timeout=5)
+
+
+
+
+
+
+(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-bscore
+ * Serving Flask app 'flask'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5002
+ * Running on http://172.17.0.3:5002
+Press CTRL+C to quit
+[QUEUED] chunk 'story-1_book-2_chapter-7_p.56359' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+172.18.0.8 - - [03/Nov/2025 14:01:14] "POST /tasks/queue HTTP/1.1" 202 -
+FINISHED: chunk ID: story-1_book-2_chapter-7_p.56359, result:
+{'value': 0.0, 'annotations': {'Anthea and her siblings, Jane and Cyril, along with their friend Robert, spar with a magical Phoenix who possesses a carpet and treats it as a sacred object.': {'questions': 'What is the significance of the carpet? Why is the Phoenix treating it as a sacred object? What does "spar" entail in this context?', 'types': ['entity omission', 'event omission', 'causal omission']}, 'They wrestle with domestic concerns—Anthea asks Phoenix for permission to tell their mother about the missing Cook, while she and others care for their ill mother, washing and warming her and managing household duties.': {'questions': "Who is the missing Cook? What is the significance of the Cook's absence? Why is Anthea asking the Phoenix for permission regarding this matter?", 'types': ['entity omission', 'event omission', 'causal omission']}, 'The Phoenix performs theatrically, claiming the carpet as its temple, tossing out grand pronouncements, and urging ritualized displays; it also references French and ceremony as part of its self-important persona.': {'questions': 'What does the Phoenix mean by "claiming the carpet as its temple"? What specific references to "French" are made, and how do they relate to the Phoenix\'s character? What kind of ritualized displays is the Phoenix urging?', 'types': ['entity omission', 'event omission', 'causal omission']}, 'Robert alternates between mischief and loyalty, threatening and chasing Jane, slipping through a trapdoor, and ultimately earning the undying respect of everyone after a tense sequence.': {'questions': "What is the significance of Robert's actions? What is the context of the tense sequence? Why is he threatening and chasing Jane? What does earning the undying respect entail?", 'types': ['entity omission', 'event omission', 'causal omission']}, 'The episode blends ordinary chores, magical interference, and perilous adventure—embedding Noah’s Ark play, a cab ride to fetch the carpet, and the group’s evolving bond as they navigate the Phoenix’s antics.': {'questions': "What is the significance of the Noah's Ark play? How does the cab ride relate to the overall story? What specific antics of the Phoenix are being referenced?", 'types': ['entity omission', 'event omission', 'causal omission']}}, 'model_used': 'openai-model_gpt-4o-mini'}

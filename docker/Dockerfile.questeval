@@ -1,0 +1,145 @@
+# Use a small python base, include the minor version for reproducibility
+FROM python:3.8-slim
+
+# Connect the generated Docker image to this repository
+LABEL org.opencontainers.image.source="https://github.com/c0nap/dsci-capstone"
+
+# Enable relative paths - helpful name for container's root folder
+WORKDIR /flask
+
+# Make Python stdout/stderr unbuffered so logs show immediately
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies in one layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential make git git-lfs \
+ && pip install --upgrade pip setuptools wheel \
+ && git lfs install \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY req/questeval.txt .
+RUN pip install --no-cache-dir -r questeval.txt
+
+
+
+
+
+
+# ============================================================================
+# Workaround for QuestEval 0.2.4 + transformers 4.8.1 offline usage
+# Issue: transformers 4.8.1 has malformed HuggingFace API URLs
+# Solution: Pre-download models via git-lfs and patch code to use local paths
+# ============================================================================
+
+# Define model paths as environment variables for consistency
+ENV TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers
+ENV HF_HOME=/root/.cache/huggingface
+ENV TRANSFORMERS_OFFLINE=1
+
+# Download QuestEval models (T5-based)
+RUN mkdir -p ${TRANSFORMERS_CACHE}/ThomasNLG && \
+    cd ${TRANSFORMERS_CACHE}/ThomasNLG && \
+    for model in t5-qa_squad2neg-en t5-qg_squad1-en t5-weighter_cnndm-en; do \
+        git clone https://huggingface.co/ThomasNLG/${model} && \
+        cd ${model} && git lfs pull && rm -rf .git* && cd ..; \
+    done
+
+# Download BERTScore model (BERT-based)
+RUN cd ${TRANSFORMERS_CACHE} && \
+    git clone https://huggingface.co/bert-base-multilingual-cased && \
+    cd bert-base-multilingual-cased && git lfs pull && rm -rf .git*
+
+# Clean up git-lfs to reduce image size
+RUN apt-get remove -y git git-lfs && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+
+# Patch QuestEval to use local model paths
+RUN python3 << 'EOF'
+import questeval
+import os
+
+filepath = os.path.join(os.path.dirname(questeval.__file__), 'questeval_metric.py')
+
+with open(filepath, 'r') as f:
+    content = f.read()
+
+# Replace HuggingFace Hub references with local paths
+models = [
+    't5-qa_squad2neg-en',
+    't5-qg_squad1-en', 
+    't5-weighter_cnndm-en',
+    't5-qa_webnlg_synth-en',
+    't5-qg_webnlg_synth-en'
+]
+
+for model in models:
+    content = content.replace(
+        f"f'{{HF_ORGANIZATION}}/{model}'",
+        f"'/root/.cache/huggingface/transformers/ThomasNLG/{model}'"
+    )
+
+with open(filepath, 'w') as f:
+    f.write(content)
+
+print("✓ Patched QuestEval to use local models")
+EOF
+
+# Patch BERTScore to use local BERT model
+RUN python3 << 'EOF'
+import bert_score
+import os
+
+filepath = os.path.join(os.path.dirname(bert_score.__file__), 'utils.py')
+
+with open(filepath, 'r') as f:
+    lines = f.readlines()
+
+# Insert local path logic before tokenizer and model loading
+new_lines = []
+for line in lines:
+    # Patch tokenizer loading
+    if 'tokenizer = AutoTokenizer.from_pretrained(model_type' in line and 'use_fast' in line:
+        indent = len(line) - len(line.lstrip())
+        new_lines.append(f"{' ' * indent}# Patched for offline usage\n")
+        new_lines.append(f"{' ' * indent}if model_type == 'bert-base-multilingual-cased':\n")
+        new_lines.append(f"{' ' * (indent + 4)}local_path = '/root/.cache/huggingface/transformers/bert-base-multilingual-cased'\n")
+        new_lines.append(f"{' ' * (indent + 4)}tokenizer = AutoTokenizer.from_pretrained(local_path, use_fast=False, local_files_only=True)\n")
+        new_lines.append(f"{' ' * indent}else:\n")
+        new_lines.append(f"{' ' * (indent + 4)}{line.lstrip()}")
+    # Patch model loading
+    elif 'model = AutoModel.from_pretrained(model_type)' in line:
+        indent = len(line) - len(line.lstrip())
+        new_lines.append(f"{' ' * indent}# Patched for offline usage\n")
+        new_lines.append(f"{' ' * indent}if model_type == 'bert-base-multilingual-cased':\n")
+        new_lines.append(f"{' ' * (indent + 4)}local_path = '/root/.cache/huggingface/transformers/bert-base-multilingual-cased'\n")
+        new_lines.append(f"{' ' * (indent + 4)}model = AutoModel.from_pretrained(local_path, local_files_only=True)\n")
+        new_lines.append(f"{' ' * indent}else:\n")
+        new_lines.append(f"{' ' * (indent + 4)}{line.lstrip()}")
+    else:
+        new_lines.append(line)
+
+with open(filepath, 'w') as f:
+    f.writelines(new_lines)
+
+print("✓ Patched BERTScore to use local BERT model")
+EOF
+
+
+
+
+
+# Copy source code into the container (optional .dockerignore)
+COPY src/ src/
+COPY components/ components/
+COPY Makefile pyproject.toml ./
+
+# Declare build args - whether to include .env or .env.dummy
+ARG ENV_FILE
+
+# Create .env file
+COPY ${ENV_FILE} .env
+# Generate .env.docker with mapped hostnames
+RUN make env-docker
+RUN mv .env.docker .env
+
+# Supply task as command line flag to set worker behavior
+CMD ["python", "-m", "src.flask", "--task", "questeval"]

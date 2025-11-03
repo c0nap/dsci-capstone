@@ -1,0 +1,78 @@
+# Use a small python base, include the minor version for reproducibility
+FROM python:3.10-slim
+
+# Connect the generated Docker image to this repository
+LABEL org.opencontainers.image.source="https://github.com/c0nap/dsci-capstone"
+
+# Enable relative paths - helpful name for container's root folder
+WORKDIR /flask
+
+# Make Python stdout/stderr unbuffered so logs show immediately
+ENV PYTHONUNBUFFERED=1
+
+# Copy dependency list first to leverage build cache
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential make git curl \
+ && pip install --upgrade pip setuptools wheel \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY req/bookscore.txt .
+RUN pip install --no-cache-dir -r bookscore.txt
+
+
+
+
+# Download NLTK model
+RUN python -m nltk.downloader punkt punkt_tab
+
+# BooookScore fix: download required files from repository
+RUN mkdir -p /usr/local/lib/python3.10/site-packages/booookscore/prompts && \
+    curl -sSL https://raw.githubusercontent.com/lilakk/BooookScore/main/prompts/get_annotations_v2.txt \
+         -o /usr/local/lib/python3.10/site-packages/booookscore/prompts/get_annotations_v2.txt && \
+    curl -sSL https://raw.githubusercontent.com/lilakk/BooookScore/main/prompts/get_annotations.txt \
+         -o /usr/local/lib/python3.10/site-packages/booookscore/prompts/get_annotations.txt
+
+# Force update to OpenAI for the newer models
+RUN pip install --upgrade "openai>=1.35.0"
+
+
+# Patch BooookScore: fix undefined max_len in score.py
+RUN python - <<'PY'
+import importlib.util, pathlib, re
+
+spec = importlib.util.find_spec("booookscore.score")
+p = pathlib.Path(spec.origin)
+s = p.read_text()
+
+# Replace the bad line using regex substitution
+patched = re.sub(
+    r"max_tokens=max_len",
+    "max_tokens=100",
+    s
+)
+p.write_text(patched)
+print(f"Patched undefined max_len in: {p}")
+PY
+
+
+
+
+
+
+
+# Copy source code into the container (optional .dockerignore)
+COPY src/ src/
+COPY components/ components/
+COPY Makefile pyproject.toml ./
+
+# Declare build args - whether to include .env or .env.dummy
+ARG ENV_FILE
+
+# Create .env file
+COPY ${ENV_FILE} .env
+# Generate .env.docker with mapped hostnames
+RUN make env-docker
+RUN mv .env.docker .env
+
+# Supply task as command line flag to set worker behavior
+CMD ["python", "-m", "src.flask", "--task", "bookscore"]

@@ -142,6 +142,9 @@ venv.bak/
 docs/html/**
 docs/latex/**
 
+# Datasets
+datasets/metrics
+
 # Spyder project settings
 .spyderproject
 .spyproject
