@@ -39,7 +39,8 @@ def task_worker():
             task_queue.task_done()
 
 
-def process_task(mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler, task_kwargs=None):
+def process_task(mongo_db: MongoHandle, collection_name: str, chunk_id: str, task_name: str, chunk_doc: Dict[str, Any], boss_url: str,
+	task_handler: Callable[[Dict[str, Any]], Dict[str, Any]], task_kwargs: Any = None):
     """Perform the assigned task in a background thread.
     This includes updating task status, running the handler, saving results,
     and notifying the boss service when complete.
@@ -194,7 +195,7 @@ def create_app(task_name: str, boss_url: str) -> Flask:
         print("\n" * 6)
 
     @app.route("/tasks/queue", methods=["POST"])
-    def enqueue_task():
+    def enqueue_task() -> Tuple[Response, int]:
         """Handle incoming task assignments from boss service.
         @return JSON response with status code."""
         data = request.json
