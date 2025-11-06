@@ -95,6 +95,8 @@ class DocumentConnector(DatabaseConnector):
                     db.drop_collection(tmp_collection)
                 db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
                 df = self.get_dataframe(tmp_collection)
+                if df is None:
+                    return False
                 check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
                 db.drop_collection(tmp_collection)
             except Exception as e:

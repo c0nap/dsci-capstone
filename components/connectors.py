@@ -335,6 +335,8 @@ class RelationalConnector(DatabaseConnector):
                     f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');"
                 )
                 df = self.get_dataframe(f"{tmp_table}")
+                if df is None:
+                    return False
                 check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
                 self.execute_query(f"DROP TABLE {tmp_table};")
             except Exception as e:

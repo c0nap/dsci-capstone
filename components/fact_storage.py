@@ -101,7 +101,7 @@ class GraphConnector(DatabaseConnector):
                             CREATE (n2:TestPerson {{kg: '{self.graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
                 self.execute_query(query, filter_results=False)
                 df = self.get_dataframe(self.graph_name)
-                if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
+                if df is None or check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
                     return False
                 query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                 self.execute_query(query, filter_results=False)
