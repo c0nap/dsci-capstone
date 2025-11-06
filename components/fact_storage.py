@@ -171,10 +171,19 @@ class GraphConnector(DatabaseConnector):
             results, meta = db.cypher_query(query)
             if filter_results:
                 results, meta = filter_valid(results, meta, self.database_name, self.graph_name)
+
+            # Re-tag nodes with the activate database name using a second query.
             elif "create" in query.lower() and "return" in query.lower():
-                query = self.TAG_NODES_(results)
-                if query:
-                    db.cypher_query(query)
+                query_tag = self.TAG_NODES_(results)
+                if query_tag:
+                    db.cypher_query(query_tag)
+
+            # Fallback for CREATE statements without RETURN: full sweep across all untagged nodes.
+            elif "create" in query.lower():
+                query_tag = f"""MATCH (n) WHERE NOT exists(n.db)
+                    SET n.db = '{self.database_name}', n.kg = '{self.graph_name}'
+                """
+                db.cypher_query(query_tag)
             df = DataFrame(results, columns=[m for m in meta])
 
             if df is None or df.empty:
