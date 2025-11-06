@@ -183,6 +183,9 @@ class GraphConnector(DatabaseConnector):
                         SET n.db = '{self.database_name}',
                             n.kg = '{self.graph_name}' """)
 
+            # Re-fetch so returned nodes now include db/kg
+            results, meta = db.cypher_query(query)
+
             # Return nodes from the current database and graph ONLY, despite what the query wants.
             if filter_results:
                 results, meta = filter_valid(results, meta, self.database_name, self.graph_name)
@@ -565,24 +568,22 @@ class GraphConnector(DatabaseConnector):
             - For use after a CREATE ... RETURN query.
             - Collects node IDs from results and builds a SET statement.
         @param results  Result list returned by db.cypher_query().
-        @return  Cypher query string to update db/kg fields, or None if no nodes found.
+        @return  Cypher query string to update 'db' field, or None if no nodes found.
         """
-        print(results)
-        print(results[0])
         node_ids = [
-            obj["id"]
-            for row in results
+            obj.element_id
+            for row in results or []
             for obj in row
-            if isinstance(obj, dict) and "id" in obj
+            if hasattr(obj, "element_id")
         ]
         if not node_ids:
             return None
-        print(node_ids)
-    
+
+        # escape string IDs properly
+        ids = ", ".join(f"'{i}'" for i in node_ids)
         return f"""
-            MATCH (n) WHERE id(n) IN {node_ids}
-            SET n.db = "{self.database_name}"
-        """
+            MATCH (n) WHERE elementId(n) IN {node_ids}
+            SET n.db = '{self.database_name}' """
 
 
 
