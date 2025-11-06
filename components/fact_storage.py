@@ -174,22 +174,26 @@ class GraphConnector(DatabaseConnector):
             query_lower = query.lower()
             if "create" in query_lower:
                 if "return" in query_lower:
-                    query_tag = self.TAG_NODES_(results)
-                    if query_tag:
-                        db.cypher_query(query_tag)
+                    db.cypher_query(self.TAG_NODES_(results))
                 # Fallback for CREATE statements without RETURN: full sweep across all untagged nodes.
                 else:
                     db.cypher_query(f"""MATCH (n) WHERE n.db IS NULL
                         SET n.db = '{self.database_name}',
                             n.kg = '{self.graph_name}' """)
+                # Re-fetch so returned nodes now include db/kg
+                ids_str = "[" + ", ".join(f"'{obj.element_id}'"
+                        for row in results or []
+                        for obj in row if hasattr(obj, "element_id")) + "]"
+                results, meta = db.cypher_query(f"MATCH (n) WHERE elementId(n) IN {ids_str} RETURN n")
 
-            # Re-fetch so returned nodes now include db/kg
-            results, meta = db.cypher_query(query)
+
 
             # Return nodes from the current database and graph ONLY, despite what the query wants.
             if filter_results:
                 results, meta = filter_valid(results, meta, self.database_name, self.graph_name)
             
+            ###
+            print(f"Results: {results}\nMeta: {meta}")
             df = DataFrame(results, columns=[m for m in meta]) if meta else None
             if df is None or df.empty:
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
@@ -579,12 +583,14 @@ class GraphConnector(DatabaseConnector):
         if not node_ids:
             return None
 
-        # escape string IDs properly
-        ids = ", ".join(f"'{i}'" for i in node_ids)
-        return f"""
-            MATCH (n) WHERE elementId(n) IN {node_ids}
-            SET n.db = '{self.database_name}' """
-
+        # Build a valid Cypher list literal:
+        ids_str = "[" + ", ".join(f"'{i}'" for i in node_ids) + "]"
+        query = (
+            f"MATCH (n) WHERE elementId(n) IN {ids_str} "
+            f"SET n.db = '{self.database_name}'"
+        )
+        print("TAG_NODES_ query:", query)
+        return query
 
 
 
