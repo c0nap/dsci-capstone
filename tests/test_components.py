@@ -14,21 +14,24 @@ from typing import List
 def relational_db(session):
     """Fixture to get relational database connection."""
     _relational_db = session.relational_db
-    yield _relational_db
+    with _relational_db.temp_database("pytest"):
+        yield _relational_db
 
 
 @pytest.fixture(scope="module")
 def docs_db(session):
     """Fixture to get document database connection."""
     _docs_db = session.docs_db
-    yield _docs_db
+    with _docs_db.temp_database("pytest"):
+        yield _docs_db
 
 
 @pytest.fixture(scope="module")
 def graph_db(session):
     """Fixture to get document database connection."""
     _graph_db = session.graph_db
-    yield _graph_db
+    with _graph_db.temp_database("pytest"):
+        yield _graph_db
 
 
 # ------------------------------------------------------------------------------

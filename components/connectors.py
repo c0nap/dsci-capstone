@@ -9,6 +9,7 @@ from sqlparse import parse as sql_parse
 from src.util import check_values, df_natural_sorted, Log
 from time import time
 from typing import List, Optional
+from contextlib import contextmanager
 
 
 # Read environment variables at compile time
@@ -120,6 +121,28 @@ class DatabaseConnector(Connector):
         @param new_database  The name of the database to connect to.
         """
         pass
+
+    @contextmanager
+    def temp_database(self, database_name: str) -> None:
+        """Temporarily switch to a pseudo-database, creating and dropping it if needed.
+        @details
+            - If the target database does not exist, it will be created before yielding
+              and dropped automatically afterward.
+            - If it already exists, it will be left intact.
+        @param database_name  The name of the pseudo-database to use temporarily.
+        """
+        old_db = self.database_name
+        should_drop = not self.database_exists(database_name)
+        if should_drop:
+            self.create_database(database_name)
+        self.change_database(database_name)
+
+        try:
+            yield
+        finally:
+            self.change_database(old_db)
+            if should_drop:
+                self.drop_database(database_name)
 
     # Avoid making this abstract, even though derived classes treat it like one.
     # Otherwise MyPy will complain about the partial logic inside.
