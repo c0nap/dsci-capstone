@@ -265,7 +265,7 @@ class GraphConnector(DatabaseConnector):
 
         # Pandas will fill in NaN where necessary
         df = DataFrame(rows)
-        df = df_natural_sorted(df, ignored_columns=['db', 'kg'])
+        df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'node_id', 'labels'])
         if df is not None and not df.empty:
             Log.success(Log.gr_db + Log.get_df, Log.msg_good_graph(name, df), self.verbose)
             return df
