@@ -94,17 +94,17 @@ class GraphConnector(DatabaseConnector):
             raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
 
         try:  # Create nodes, insert dummy data, and use get_dataframe
-            tmp_graph = "test_graph"
-            query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
-            self.execute_query(query, filter_results=False)
-            query = f"""CREATE (n1:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}', name: 'Alice', age: 30}})
-                        CREATE (n2:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}', name: 'Bob', age: 25}}) RETURN n1, n2"""
-            self.execute_query(query, filter_results=False)
-            df = self.get_dataframe(tmp_graph)
-            if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
-                return False
-            query = f"MATCH (n:TestPerson {{db: '{self.database_name}', kg: '{tmp_graph}'}}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
-            self.execute_query(query, filter_results=False)
+            with self.temp_graph("test_graph"):
+                query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
+                self.execute_query(query, filter_results=False)
+                query = f"""CREATE (n1:TestPerson {{kg: '{self.graph_name}', name: 'Alice', age: 30}})
+                            CREATE (n2:TestPerson {{kg: '{self.graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
+                self.execute_query(query, filter_results=False)
+                df = self.get_dataframe(self.graph_name)
+                if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
+                    return False
+                query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
+                self.execute_query(query, filter_results=False)
         except Exception as e:
             if not raise_error:
                 return False
@@ -172,7 +172,7 @@ class GraphConnector(DatabaseConnector):
             if filter_results:
                 results, meta = filter_valid(results, meta, self.database_name, self.graph_name)
 
-            # Re-tag nodes with the activate database name using a second query.
+            # Re-tag nodes with the active database name using a second query.
             elif "create" in query.lower() and "return" in query.lower():
                 query_tag = self.TAG_NODES_(results)
                 if query_tag:
