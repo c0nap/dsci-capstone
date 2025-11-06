@@ -6,6 +6,7 @@ import re
 from src.util import check_values, df_natural_sorted, Log
 from time import time
 from typing import List, Optional, Tuple
+from contextlib import contextmanager
 
 
 class GraphConnector(DatabaseConnector):
@@ -26,8 +27,7 @@ class GraphConnector(DatabaseConnector):
         config.DATABASE_URL = self.connection_string
 
         ## The name of the current graph. Matches node.kg for all nodes in the graph.
-        self.graph_name: Optional[str] = None
-        self.change_graph("default")
+        self.graph_name: Optional[str] = "default"
         self._created_dummy: bool = False
         """Flag used to safely create a dummy node.
         @details  We cannot create it here since a database query is necessary, which could fail.
@@ -45,13 +45,17 @@ class GraphConnector(DatabaseConnector):
         self.graph_name = "default"
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}"
 
-    def change_graph(self, graph_name: str) -> None:
-        """Sets graph_name to create new a Knowledge Graph (collection of triples).
-        @details  Similar to creating tables in SQL and collections in Mongo.
-        @note  This change will apply to any new nodes created.
-        @param graph_name  A string corresponding to the 'kg' node attribute."""
-        Log.success(Log.gr_db + Log.swap_kg, Log.msg_swap_kg(self.graph_name, graph_name), self.verbose)
+    @contextmanager
+    def temp_graph(self, graph_name: str) -> None:
+        """Temporarily inspect the specified graph, then swap back when finished.
+        @param graph_name  The name of a graph in the current database."""
+        old = self.graph_name
         self.graph_name = graph_name
+        try:
+            yield
+        finally:
+            self.graph_name = old
+
 
     def test_connection(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the Neo4j database.
@@ -206,12 +210,10 @@ class GraphConnector(DatabaseConnector):
         if self._created_dummy:
             self.check_connection(Log.get_df, raise_error=True)
 
-        working_graph = self.graph_name
-        self.change_graph(name)
-        # Get all nodes in the specified graph
-        query = f"MATCH (n) RETURN n"
-        results = self.execute_query(query, filter_results=True)
-        self.change_graph(working_graph)
+        with self.temp_graph(name):
+            # Get all nodes in the specified graph
+            query = f"MATCH (n) RETURN n"
+            results = self.execute_query(query, filter_results=True)
         if results is None:
             return None
         
@@ -295,12 +297,10 @@ class GraphConnector(DatabaseConnector):
         if self._created_dummy:
             self.check_connection(Log.drop_gr, raise_error=True)
         try:
-            # Result includes any dummy nodes
-            working_graph = self.graph_name
-            self.change_graph(name)
-            query = f"MATCH (n {self.SAME_DB_KG_()}) DETACH DELETE n"
-            self.execute_query(query)
-            self.change_graph(working_graph)
+            with self.temp_graph(graph_name):
+                # Result includes any dummy nodes
+                query = f"MATCH (n {self.SAME_DB_KG_()}) DETACH DELETE n"
+                self.execute_query(query)
 
             Log.success(Log.gr_db + Log.drop_gr, Log.msg_success_managed_gr("dropped", graph_name), self.verbose)
         except Exception as e:
