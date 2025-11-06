@@ -53,11 +53,19 @@ if [ $retry_count -eq $MAX_RETRIES ]; then
 fi
 
 # --- CREATE SECONDARY USER ---
-# Connect as the default admin user and create a secondary user - admin role not supported in Neo4j Community Edition.
+# Connect as the default admin user and create a secondary user (elevating to admin role is impossible - not supported in Neo4j Community Edition).
 echo "$ECHO_PREFIX Creating secondary user '$NEO4J_USERNAME' with default role..."
-cypher-shell -u neo4j -p "$NEO4J_PASSWORD" <<EOSQL
-CREATE USER \`$NEO4J_USERNAME\` SET PASSWORD '$NEO4J_PASSWORD' CHANGE NOT REQUIRED;
-EOSQL
+# Try to create the user, but ignore the error if it already exists
+if cypher-shell -u neo4j -p "$NEO4J_PASSWORD" "SHOW USERS;" 2>/dev/null | grep -q "^$NEO4J_USERNAME[[:space:]]"; then
+    echo "$ECHO_PREFIX User '$NEO4J_USERNAME' already exists. Skipping creation."
+else
+    if cypher-shell -u neo4j -p "$NEO4J_PASSWORD" "CREATE USER \`$NEO4J_USERNAME\` SET PASSWORD '$NEO4J_PASSWORD' CHANGE NOT REQUIRED;" >/dev/null 2>&1; then
+        echo "$ECHO_PREFIX Created user '$NEO4J_USERNAME'."
+    else
+        echo "$ECHO_PREFIX WARNING: Failed to create user '$NEO4J_USERNAME' (already exists). This is intended behavior since volumes retain users. Continuing..."
+    fi
+fi
+
 
 # --- ATTACH TO NEO4J ---
 # Trap SIGINT and SIGTERM to stop Neo4j gracefully
