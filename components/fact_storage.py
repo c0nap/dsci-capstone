@@ -344,14 +344,14 @@ class GraphConnector(DatabaseConnector):
 
     def delete_dummy(self) -> None:
         """Delete the initial dummy node from the database.
-        @note  Call this method whenever real data is being added to avoid pollution."""
+        @note  Never use this. Enables the existence of an "empty" database."""
         query = f"MATCH (n) WHERE {self.IS_DUMMY_()} DETACH DELETE n"
         self.execute_query(query, filter_results=False)
 
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
     # ------------------------------------------------------------------------
-    def add_triple(self, subject: str, relation: str, object_: str, _delete_init: bool = True) -> None:
+    def add_triple(self, subject: str, relation: str, object_: str) -> None:
         """Add a semantic triple to the graph using raw Cypher.
         @details
             1. Finds nodes by exact match on `name` attribute.
@@ -359,10 +359,7 @@ class GraphConnector(DatabaseConnector):
         @param subject  A string representing the entity performing an action.
         @param relation  A string describing the action.
         @param object_  A string representing the entity being acted upon.
-        @param _delete_init  Whether to delete the dummy node added during database creation.
         @throws Log.Failure  If the triple cannot be added to our graph database."""
-        if _delete_init:
-            self.delete_dummy()
 
         # Keep only letters, numbers, underscores
         relation = re.sub(r"[^A-Za-z0-9_]", "_", relation)
