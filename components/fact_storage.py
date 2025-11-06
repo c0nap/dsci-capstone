@@ -250,13 +250,18 @@ class GraphConnector(DatabaseConnector):
         # Create a row for each node with attributes as columns - might be unbalanced
         rows = []
         for node in results.iloc[:, 0]:
-            # 1) Public properties, 2) internal ID, and 3) labels
-            props = getattr(node, "properties", {})
-            row = dict(props) if isinstance(props, dict) else {}
+            # Extract all user-visible properties
+            if hasattr(node, "properties") and node.properties:
+                row = dict(node.properties)
+            elif hasattr(node, "keys") and hasattr(node, "__getitem__"):
+                # Some neomodel/neo4j Node types expose mapping-like access
+                row = {k: node[k] for k in node.keys()}
+            else:
+                row = {}
+            # Always include ID and labels
             row["node_id"] = getattr(node, "element_id", None)
             row["labels"] = list(getattr(node, "labels", []))
             rows.append(row)
-
 
         # Pandas will fill in NaN where necessary
         df = DataFrame(rows)
