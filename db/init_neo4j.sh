@@ -1,6 +1,6 @@
 #!/bin/sh
-YELLOW="\033[33m"
-WHITE="\033[0m"
+YELLOW='\033[33m'
+WHITE='\033[0m'
 ECHO_PREFIX="*** ${YELLOW}(init_neo4j.sh)${WHITE} ***  "
 echo "$ECHO_PREFIX === INIT SCRIPT STARTING ==="
 
@@ -41,7 +41,7 @@ while [ $retry_count -lt $MAX_RETRIES ]; do
         echo "$ECHO_PREFIX Neo4j is ready!"
         break
     fi
-    retry_count=$((retry_count + 1))
+    retry_count=`expr "$retry_count" + 1`
     if [ $retry_count -lt $MAX_RETRIES ]; then
         echo "$ECHO_PREFIX Neo4j not ready yet, retrying in ${RETRY_DELAY}s... (attempt $retry_count/$MAX_RETRIES)"
         sleep $RETRY_DELAY
@@ -49,13 +49,13 @@ while [ $retry_count -lt $MAX_RETRIES ]; do
 done
 
 if [ $retry_count -eq $MAX_RETRIES ]; then
-    echo "$ECHO_PREFIX ERROR: Neo4j failed to become ready after $((MAX_RETRIES * RETRY_DELAY)) seconds."
+    echo "$ECHO_PREFIX ERROR: Neo4j failed to become ready after `expr "$MAX_RETRIES" \* "$RETRY_DELAY"` seconds."
 fi
 
 # --- CREATE SECONDARY USER ---
 # Connect as the default admin user and create a secondary user - admin role not supported in Neo4j Community Edition.
 echo "$ECHO_PREFIX Creating secondary user '$NEO4J_USERNAME' with default role..."
-cypher-shell -u neo4j -p "$NEO4J_PASSWORD" <<-EOSQL
+cypher-shell -u neo4j -p "$NEO4J_PASSWORD" <<EOSQL
 CREATE USER \`$NEO4J_USERNAME\` SET PASSWORD '$NEO4J_PASSWORD' CHANGE NOT REQUIRED;
 EOSQL
 
@@ -63,7 +63,7 @@ EOSQL
 # Trap SIGINT and SIGTERM to stop Neo4j gracefully
 # This ensures that if Docker sends a stop signal (or user presses CTRL+C),
 # the background Neo4j process receives it and shuts down cleanly.
-trap "echo '$ECHO_PREFIX Received exit signal. Stopping Neo4j...'; kill -2 $NEO4J_PID; wait $NEO4J_PID; exit" 2 15
+trap 'echo "$ECHO_PREFIX Received exit signal. Stopping Neo4j..."; kill -TERM "$NEO4J_PID"; wait "$NEO4J_PID"; exit 0' INT TERM
 
 echo "$ECHO_PREFIX Completed successfully. Attaching to Neo4j..."
 # Wait for Neo4j to exit so the script doesn't terminate early
