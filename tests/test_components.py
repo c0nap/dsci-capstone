@@ -168,6 +168,7 @@ def test_cypher_example_1(graph_db):
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected."""
+    graph_db.drop_graph("pets")
     _test_query_file(
         graph_db,
         "./tests/examples-db/graph_df1.cql",

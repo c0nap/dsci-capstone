@@ -188,16 +188,12 @@ class GraphConnector(DatabaseConnector):
                     ids_str = "[" + ", ".join(f"'{i}'" for i in ids) + "]"
                     results, meta = db.cypher_query(f"MATCH (n) WHERE elementId(n) IN {ids_str} RETURN n")
 
-
-
-            ###
-            print("Before filter:", results, meta)
             # Return nodes from the current database and graph ONLY, despite what the query wants.
+            #print("Before filter:", results, meta)
             if filter_results:
                 results, meta = filter_valid(results, meta, self.database_name)
-            
-            ###
-            print(f"Results: {results}\nMeta: {meta}")
+            #print(f"Results: {results}\nMeta: {meta}")
+
             df = DataFrame(results, columns=[m for m in meta]) if meta else None
             if df is None or df.empty:
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
@@ -594,7 +590,7 @@ class GraphConnector(DatabaseConnector):
             f"MATCH (n) WHERE elementId(n) IN {ids_str} "
             f"SET n.db = '{self.database_name}'"
         )
-        print("TAG_NODES_ query:", query)
+        #print("TAG_NODES_ query:", query)
         return query
 
 

@@ -237,6 +237,7 @@ def check_values(results: List[Any], expected: List[Any], verbose: bool, log_sou
         if results[i] == expected[i]:
             Log.success(log_source + Log.good_val, Log.msg_compare(results[i], expected[i]), verbose)
         elif results[i] != expected[i]:
-            Log.fail(log_source + Log.bad_val, Log.msg_compare(results[i], expected[i]), raise_error)
+            if raise_error:
+                raise Log.Failure(log_source + Log.bad_val, Log.msg_compare(results[i], expected[i])) from None
             return False
     return True
