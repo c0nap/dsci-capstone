@@ -90,7 +90,7 @@ class DocumentConnector(DatabaseConnector):
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
 
             try:  # Create a collection, insert dummy data, and use get_dataframe
-                tmp_collection = f"test_collection_{int(time())}"
+                tmp_collection = f"test_collection"
                 if tmp_collection in db.list_collection_names():
                     db.drop_collection(tmp_collection)
                 db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
@@ -105,7 +105,7 @@ class DocumentConnector(DatabaseConnector):
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
 
             try:  # Test create/drop functionality with tmp database
-                tmp_db = f"test_db_{int(time())}"
+                tmp_db = f"test_conn"  # Do not use context manager: interferes with traceback
                 working_database = self.database_name
                 if self.database_exists(tmp_db):
                     self.drop_database(tmp_db)
