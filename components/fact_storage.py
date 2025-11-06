@@ -184,8 +184,8 @@ class GraphConnector(DatabaseConnector):
                     SET n.db = '{self.database_name}', n.kg = '{self.graph_name}'
                 """
                 db.cypher_query(query_tag)
-            df = DataFrame(results, columns=[m for m in meta])
-
+            
+            df = DataFrame(results, columns=[m for m in meta]) if meta else None
             if df is None or df.empty:
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
                 return None
