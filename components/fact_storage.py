@@ -431,14 +431,14 @@ class GraphConnector(DatabaseConnector):
         @details  Usage: MATCH (n) WHERE {self.IS_DUMMY_('n')};
         @return  A string containing Cypher code.
         """
-        return f"({alias}._init = true)"
+        return f"(exists({alias}._init) AND {alias}._init = true)"
 
     def NOT_DUMMY_(self, alias: str = 'n') -> str:
         """Generates Cypher code to select non-dummy nodes inside a WHERE clause.
         @details  Usage: MATCH (n) WHERE {self.NOT_DUMMY_('n')};
         @return  A string containing Cypher code.
         """
-        return f"({alias}._init IS NULL OR {alias}._init = false)"
+        return f"(NOT exists({alias}._init) OR {alias}._init = false)"
 
     def SAME_DB_KG_(self) -> str:
         """Generates a Cypher pattern dictionary to match nodes by current database and graph name.
@@ -470,8 +470,7 @@ class GraphConnector(DatabaseConnector):
     
         return f"""
             MATCH (n) WHERE id(n) IN {node_ids}
-            SET n.db = "{self.database_name}",
-                n.kg = "{self.graph_name}"
+            SET n.db = "{self.database_name}"
         """
 
 
