@@ -5,7 +5,7 @@ from pandas import DataFrame, option_context
 import re
 from src.util import check_values, df_natural_sorted, Log
 from time import time
-from typing import List, Optional, Tuple, Any
+from typing import List, Optional, Tuple, Any, Dict
 from contextlib import contextmanager
 
 
@@ -585,7 +585,14 @@ class GraphConnector(DatabaseConnector):
 
 
 
-def filter_valid(results: List[Tuple], meta: List[str], db_name: str, kg_name: str) -> Tuple:
+
+
+def filter_valid(
+    results: List[Tuple[Any, ...]],
+    meta: List[str],
+    db_name: str,
+    kg_name: str
+) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
     """Filter Cypher query results (nodes or relationships) by database and graph context.
     @details
         - Keeps entities where 'db' and 'kg' match the given names.
@@ -596,15 +603,32 @@ def filter_valid(results: List[Tuple], meta: List[str], db_name: str, kg_name: s
     @param meta  Column names corresponding to each result element.
     @param db_name  Database name to match.
     @param kg_name  Graph name to match.
-    @return  Tuple (filtered_results, filtered_meta) with only valid entities.
+    @return  (filtered_results, filtered_meta) with only valid entities, or (None, None) if empty.
     """
     if not results:
         return (None, None)
 
-    def get_props(o):
-        return getattr(o, "__properties__", o) if isinstance(o, (dict, object)) else {}
+    def get_props(o: Any) -> Dict[str, Any]:
+        """Extract a properties dict from a Neo4j Node/Relationship or dict-like object.
+        @param o  Object from a query row (Node, Relationship, dict, scalar).
+        @return  Properties dictionary if available; otherwise an empty dict.
+        """
+        if isinstance(o, dict):
+            return o
+        # Convert Node/Relationship property map to dict
+        if hasattr(o, "properties"):  # neo4j driver (v5+)
+            try:
+                return dict(o.properties)  # type: ignore[attr-defined]
+            except Exception:
+                return {}
+        return {}
 
-    def valid(o):
+    def valid(o: Any) -> bool:
+        """Determine if an object belongs to the active db/graph and is not a dummy.
+        @param o  Object from a query row (Node, Relationship, dict, scalar).
+        @return  True if object has matching db/kg and _init is None/False; else False.
+        @throws None
+        """
         d = get_props(o)
         return (
             isinstance(d, dict)
@@ -613,15 +637,56 @@ def filter_valid(results: List[Tuple], meta: List[str], db_name: str, kg_name: s
             and d.get("_init") in (None, False)
         )
 
-    def row_ok(row):
+    def is_rel(o: Any) -> bool:
+        """Check whether an object is a relationship-like value.
+        @param o  Object from a query row.
+        @return  True if object appears to be a Relationship; else False.
+        @throws None
+        """
+        return hasattr(o, "start_node") and hasattr(o, "end_node")
+
+    def row_ok(row: Tuple[Any, ...]) -> bool:
+        """Return True if any element in the row is valid or touches a valid node.
+        @param row  One result tuple from the query.
+        @return  True if row contains a valid node/rel or a rel whose endpoints are valid.
+        @throws None
+        """
         for x in row:
-            if hasattr(x, "start_node"):
+            if is_rel(x):
+                # type: ignore[attr-defined]
                 if valid(x) or valid(x.start_node) or valid(x.end_node):
                     return True
             elif valid(x):
                 return True
         return False
 
-    rows = [r for r in results if row_ok(r)]
-    cols = [i for i in range(len(meta)) if any(valid(r[i]) for r in rows)]
-    return [tuple(r[i] for i in cols) for r in rows], [meta[i] for i in cols]
+    def col_ok(idx: int, rows: List[Tuple[Any, ...]]) -> bool:
+        """Return True if the column at index idx contains any valid entities.
+        @param idx   Column index into each row.
+        @param rows  Filtered set of rows to inspect.
+        @return  True if any cell in the column is valid or a rel touching valid endpoints.
+        @throws None
+        """
+        for r in rows:
+            cell = r[idx]
+            if is_rel(cell):
+                # type: ignore[attr-defined]
+                if valid(cell) or valid(cell.start_node) or valid(cell.end_node):
+                    return True
+            elif valid(cell):
+                return True
+        return False
+
+    # Keep only rows that contain at least one valid entity
+    kept_rows = [r for r in results if row_ok(r)]
+    if not kept_rows:
+        return (None, None)
+
+    # Keep only columns that contain valid entities
+    kept_cols = [i for i in range(len(meta)) if col_ok(i, kept_rows)]
+    if not kept_cols:
+        return (None, None)
+
+    filtered_results = [tuple(r[i] for i in kept_cols) for r in kept_rows]
+    filtered_meta = [meta[i] for i in kept_cols]
+    return filtered_results, filtered_meta
