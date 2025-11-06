@@ -197,15 +197,27 @@ class GraphConnector(DatabaseConnector):
 
     def _split_combined(self, multi_query: str) -> List[str]:
         """Divides a string into non-divisible CQL queries, ignoring comments.
-        @note  Will NOT handle semicolons inside strings.
         @param multi_query  A string containing multiple queries.
         @return  A list of single-query strings."""
         # 1. Remove single-line comments
         multi_query = re.sub(r'//.*', '', multi_query)
         # 2. Remove block comments
         multi_query = re.sub(r'/\*.*?\*/', '', multi_query, flags=re.DOTALL)
-        # 3. Split by ; and strip
-        return [q.strip() for q in multi_query.split(";") if q.strip()]
+        # 3. Split by ; outside of strings and strip
+        parts, buf, in_str = [], '', None
+        for ch in multi_query:
+            if ch in "\"'":  # toggle string mode
+                in_str = None if in_str == ch else ch
+            if ch == ';' and not in_str:
+                if buf.strip():
+                    parts.append(buf.strip())
+                buf = ''
+            else:
+                buf += ch
+        if buf.strip():
+            parts.append(buf.strip())
+        return parts
+
 
     def get_dataframe(self, name: str) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified Knowledge Graph collection.
