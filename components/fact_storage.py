@@ -351,34 +351,65 @@ class GraphConnector(DatabaseConnector):
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
     # ------------------------------------------------------------------------
-    def add_triple(self, subject: str, relation: str, object_: str) -> None:
+    def add_triple(self, triple: Any) -> None:
         """Add a semantic triple to the graph using raw Cypher.
         @details
-            1. Finds nodes by exact match on `name` attribute.
-            2. Creates a relationship between them with the given label.
-        @param subject  A string representing the entity performing an action.
-        @param relation  A string describing the action.
-        @param object_  A string representing the entity being acted upon.
-        @throws Log.Failure  If the triple cannot be added to our graph database."""
-
-        # Keep only letters, numbers, underscores
-        relation = re.sub(r"[^A-Za-z0-9_]", "_", relation)
-        subject = re.sub(r"[^A-Za-z0-9_]", "_", subject)
-        object_ = re.sub(r"[^A-Za-z0-9_]", "_", object_)
-
-        # Finds or creates 2 nodes with correct attributes, and connects with an edge.
-        query = f"""
-        MERGE (s {{name: '{subject}', db: '{self.database_name}', kg: '{self.graph_name}'}})
-        MERGE (o {{name: '{object_}', db: '{self.database_name}', kg: '{self.graph_name}'}})
-        MERGE (s)-[r:{relation}]->(o)
-        RETURN s, r, o"""
-
+            - Parses LLM output with flexible 's', 'r', 'o' key patterns.
+            - Finds or creates nodes and connects them with a labeled edge.
+        @param triple  Either a dict or object with 's', 'r', 'o' fields.
+        @throws Log.Failure  If the triple cannot be added to our graph database.
+        """
         try:
+            # Extract using flexible key matching
+            if isinstance(triple, dict):
+                subject = triple.get("s") or triple.get("subject")
+                relation = triple.get("r") or triple.get("relation")
+                object_ = triple.get("o") or triple.get("object")
+            elif isinstance(triple, (list, tuple)) and len(triple) == 3:
+                subject, relation, object_ = triple
+            else:
+                raise ValueError("Triple format unrecognized")
+
+            # Sanitize each field
+            subject = self._sanitize_value(subject)
+            relation = self._sanitize_value(relation)
+            object_ = self._sanitize_value(object_)
+
+            if not all([subject, relation, object_]):
+                raise ValueError(f"Incomplete triple: {triple}")
+
+            # Build Cypher MERGE query
+            query = f"""
+            MERGE (s {{name: '{subject}', db: '{self.database_name}', kg: '{self.graph_name}'}})
+            MERGE (o {{name: '{object_}', db: '{self.database_name}', kg: '{self.graph_name}'}})
+            MERGE (s)-[r:{relation}]->(o)
+            RETURN s, r, o
+            """
+
             df = self.execute_query(query, filter_results=False)
             if df is not None:
                 Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+
         except Exception as e:
-            raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
+            raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: {triple}") from e
+
+
+    @staticmethod
+    def _sanitize_value(value: Any) -> str:
+        """Normalize an arbitrary LLM-extracted value for safe Cypher usage.
+        @details
+            - Converts lists or nested values into a single space-separated string.
+            - Forces all content to str and replaces non-alphanumeric characters with underscores.
+            - Trims leading/trailing underscores and spaces for cleaner node names.
+        @param value  Raw value from the LLM output ('s', 'r', or 'o' field).
+        @return  A sanitized string safe for use in Cypher node or relation creation.
+        """
+        if isinstance(value, list):
+            value = " ".join(map(str, value))
+        elif not isinstance(value, str):
+            value = str(value)
+        # Keep only alphanumeric, spaces, underscores
+        return re.sub(r"[^A-Za-z0-9_ ]", "_", value).strip("_ ")
 
     def get_edge_counts(self, top_n: int = 10) -> DataFrame:
         """Return node names and their edge counts, ordered by edge count descending.
