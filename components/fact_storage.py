@@ -180,9 +180,9 @@ class GraphConnector(DatabaseConnector):
 
             # Fallback for CREATE statements without RETURN: full sweep across all untagged nodes.
             elif "create" in query.lower():
-                query_tag = f"""MATCH (n) WHERE NOT exists(n.db)
-                    SET n.db = '{self.database_name}', n.kg = '{self.graph_name}'
-                """
+                query_tag = f"""MATCH (n) WHERE n.db IS NULL
+                SET n.db = '{self.database_name}',
+                    n.kg = '{self.graph_name}' """
                 db.cypher_query(query_tag)
             
             df = DataFrame(results, columns=[m for m in meta]) if meta else None
@@ -540,14 +540,14 @@ class GraphConnector(DatabaseConnector):
         @details  Usage: MATCH (n) WHERE {self.IS_DUMMY_('n')};
         @return  A string containing Cypher code.
         """
-        return f"(exists({alias}._init) AND {alias}._init = true)"
+        return f"({alias}._init IS NOT NULL AND {alias}._init = true)"
 
     def NOT_DUMMY_(self, alias: str = 'n') -> str:
         """Generates Cypher code to select non-dummy nodes inside a WHERE clause.
         @details  Usage: MATCH (n) WHERE {self.NOT_DUMMY_('n')};
         @return  A string containing Cypher code.
         """
-        return f"(NOT exists({alias}._init) OR {alias}._init = false)"
+        return f"({alias}._init IS NULL OR {alias}._init = false)"
 
     def SAME_DB_KG_(self) -> str:
         """Generates a Cypher pattern dictionary to match nodes by current database and graph name.
