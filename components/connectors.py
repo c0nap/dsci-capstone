@@ -442,7 +442,7 @@ class RelationalConnector(DatabaseConnector):
                 queries.append(query)
         return queries
 
-    def get_dataframe(self, name: str) -> Optional[DataFrame]:
+    def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.
         @param name  The name of an existing table or collection in the database.
         @return  Sorted DataFrame containing the requested data, or None
@@ -458,7 +458,9 @@ class RelationalConnector(DatabaseConnector):
             table = Table(name, MetaData(), autoload_with=engine)
             result = connection.execute(select(table))
             df = DataFrame(result.fetchall(), columns=result.keys())
-            df = df_natural_sorted(df)
+            df = df_natural_sorted(df, sort_columns=columns)
+            if columns:
+                df = df[columns]
 
             if df is not None and not df.empty:
                 Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(name, df), self.verbose)

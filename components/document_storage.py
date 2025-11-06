@@ -260,7 +260,7 @@ class DocumentConnector(DatabaseConnector):
             queries.append(stripped)
         return queries
 
-    def get_dataframe(self, name: str) -> Optional[DataFrame]:
+    def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None
@@ -270,7 +270,7 @@ class DocumentConnector(DatabaseConnector):
             # Results will be a list of documents
             docs = list(db[name].find({}))
             df = _docs_to_df(docs)
-            df = df_natural_sorted(df, ignored_columns=['_id'])
+            df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
 
             if df is not None and not df.empty:
                 Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)

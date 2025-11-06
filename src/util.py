@@ -208,14 +208,15 @@ def all_none(*args):
     return all(arg is None for arg in args)
 
 
-def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = []) -> DataFrame:
+def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = [], sort_columns: List[str] = []) -> DataFrame:
     """Sort a DataFrame in natural order using only certain columns.
     @details
     - Column order is alphabetic too, for completely predictable behavior.
     - The provided DataFrame will not be modified, since inplace=False by default.
     - Existing row numbers will be deleted and regenerated to match the sorted order.
     @param df  The DataFrame containing unsorted rows.
-    @param  ignored_columns  A list of column names to NOT sort by."""
+    @param  ignored_columns  A list of column names to NOT sort by.
+    @param  sort_columns  A list of column names to sort by FIRST."""
     if df is None or df.empty:
         return df
     # Exclude non-hashable columns e.g. lists and dicts
@@ -223,7 +224,11 @@ def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = []) -> DataFra
     # If we have no columns to sort on, just reset the row indexing.
     if not safe_cols:
         return df.reset_index(drop=True)
-    return df.sort_values(by=safe_cols.sort(), kind="stable").reset_index(drop=True)
+    # Columns sorted alphabetically, with optional priority override
+    safe_cols = sorted(c for c in safe_cols if c not in sort_columns)
+    safe_cols = [c for c in sort_columns if c in df.columns] + safe_cols
+    print(safe_cols)
+    return df.sort_values(by=safe_cols, kind="stable").reset_index(drop=True)
 
 
 def check_values(results: List[Any], expected: List[Any], verbose: bool, log_source: str, raise_error: bool) -> bool:

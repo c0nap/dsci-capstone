@@ -228,7 +228,7 @@ class GraphConnector(DatabaseConnector):
         return parts
 
 
-    def get_dataframe(self, name: str) -> Optional[DataFrame]:
+    def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified Knowledge Graph collection.
         @details
             - Fetches all public node attributes, the internal ID, and all labels (e.g. :Person :Character)
@@ -265,7 +265,7 @@ class GraphConnector(DatabaseConnector):
 
         # Pandas will fill in NaN where necessary
         df = DataFrame(rows)
-        df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'node_id', 'labels'])
+        df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'node_id', 'labels'], sort_columns=columns)
         if df is not None and not df.empty:
             Log.success(Log.gr_db + Log.get_df, Log.msg_good_graph(name, df), self.verbose)
             return df

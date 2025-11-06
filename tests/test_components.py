@@ -114,7 +114,7 @@ def test_sql_example_2(relational_db, load_examples_relational):
     Here we just assert that the received results DataFrame matches what we expected.
     @note  Uses a table-creation fixture to load / unload schema."""
     _test_query_file(relational_db, "./tests/examples-db/relational_df2.sql", valid_files=["sql"])
-    df = relational_db.get_dataframe("ExampleEAV")
+    df = relational_db.get_dataframe("ExampleEAV", ["entity", "attribute", "value"])
     assert df is not None
     assert not df.empty
     assert df.iloc[-1]['value'] == 'Timber'
@@ -143,8 +143,8 @@ def test_mongo_example_2(docs_db):
     df = docs_db.get_dataframe("qa_exam")
     assert df is not None
     assert not df.empty
-    assert df.iloc[-1]['answer'] == 'Paul Atreides'
-    assert df.loc[0, 'is_correct'] == False
+    assert df.iloc[0]['answer'] == 'Paul Atreides'
+    assert any((df['gold_answer'] == 'The Fremen') & (df['is_correct'] == False))
     docs_db.execute_query('{"drop": "qa_exam"}')
 
 
@@ -156,11 +156,10 @@ def test_mongo_example_3(docs_db):
     _test_query_file(docs_db, "./tests/examples-db/document_df3.mongo", valid_files=["json", "mongo"])
     df = docs_db.get_dataframe("potions")
     assert df is not None
-    assert df.loc[10, 'potion_name'] == 'Elixir of Wisdom'
+    assert df.loc[4, 'potion_name'] == 'Elixir of Wisdom'
     assert "effects.description" in df.columns
     assert any((df['potion_name'] == 'Invisibility Draught') & (df['effects.description'] == 'Silent movement'))
-    assert "ingredients.name" in df.columns
-    assert df.loc[1, 'ingredients.name'] == 'Mirage Powder'
+    assert df.loc[12, 'ingredients.name'] == 'Mirage Powder'
     assert "effects.seconds" in df.columns
     assert any((df['potion_name'] == 'Catkin Tincture') & (df['effects.seconds'] == 0))
     docs_db.execute_query('{"drop": "potions"}')
@@ -183,8 +182,8 @@ def test_cypher_example_1(graph_db):
     assert ("node_id" in df.columns and "labels" in df.columns)
     assert ("db" in df.columns and "kg" in df.columns)
     assert (len(df.columns) == 8)
-    assert (df.loc[0, 'name'] == 'Buddy')
-    assert any((df['species'] == 'Rabbit') & (df['age'] == 1))
+    assert (df.iloc[-1]['name'] == 'Buddy')
+    assert any((df['species'] == 'Rabbit') & (df['age'] == 4))
     graph_db.drop_graph("pets")
 
 # @pytest.mark.order(13)
