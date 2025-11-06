@@ -174,23 +174,27 @@ class GraphConnector(DatabaseConnector):
             query_lower = query.lower()
             if "create" in query_lower:
                 if "return" in query_lower:
-                    db.cypher_query(self.TAG_NODES_(results))
+                    tag_query = self.TAG_NODES_(results)
+                    if tag_query:
+                        db.cypher_query(tag_query)
                 # Fallback for CREATE statements without RETURN: full sweep across all untagged nodes.
                 else:
+                    # DO NOT set kg here; only db is safe to auto-tag
                     db.cypher_query(f"""MATCH (n) WHERE n.db IS NULL
-                        SET n.db = '{self.database_name}',
-                            n.kg = '{self.graph_name}' """)
-                # Re-fetch so returned nodes now include db/kg
-                ids_str = "[" + ", ".join(f"'{obj.element_id}'"
-                        for row in results or []
-                        for obj in row if hasattr(obj, "element_id")) + "]"
-                results, meta = db.cypher_query(f"MATCH (n) WHERE elementId(n) IN {ids_str} RETURN n")
+                        SET n.db = '{self.database_name}'""")
+                # Re-fetch to ensure returned nodes include 'db'
+                ids = [obj.element_id for row in (results or []) for obj in row if hasattr(obj, "element_id")]
+                if ids:   # only re-fetch if we actually have ids
+                    ids_str = "[" + ", ".join(f"'{i}'" for i in ids) + "]"
+                    results, meta = db.cypher_query(f"MATCH (n) WHERE elementId(n) IN {ids_str} RETURN n")
 
 
 
+            ###
+            print("Before filter:", results, meta)
             # Return nodes from the current database and graph ONLY, despite what the query wants.
             if filter_results:
-                results, meta = filter_valid(results, meta, self.database_name, self.graph_name)
+                results, meta = filter_valid(results, meta, self.database_name)
             
             ###
             print(f"Results: {results}\nMeta: {meta}")
@@ -242,24 +246,25 @@ class GraphConnector(DatabaseConnector):
 
         with self.temp_graph(name):
             # Get all nodes in the specified graph
-            query = f"MATCH (n) RETURN n"
-            results = self.execute_query(query, filter_results=True)
+            query = f"MATCH (n {self.SAME_DB_KG_()}) RETURN n"
+            results = self.execute_query(query)
         if results is None:
             return None
         
         # Create a row for each node with attributes as columns - might be unbalanced
         rows = []
-        for record in results:
-            node = record[0]
+        for node in results.iloc[:, 0]:
             # 1) Public properties, 2) internal ID, and 3) labels
-            row = dict(node)
-            row["node_id"] = node.element_id
-            row["labels"] = list(node.labels)
+            props = getattr(node, "properties", {})
+            row = dict(props) if isinstance(props, dict) else {}
+            row["node_id"] = getattr(node, "element_id", None)
+            row["labels"] = list(getattr(node, "labels", []))
             rows.append(row)
+
+
         # Pandas will fill in NaN where necessary
         df = DataFrame(rows)
         df = df_natural_sorted(df, ignored_columns=['db', 'kg'])
-
         if df is not None and not df.empty:
             Log.success(Log.gr_db + Log.get_df, Log.msg_good_graph(name, df), self.verbose)
             return df
@@ -595,14 +600,12 @@ class GraphConnector(DatabaseConnector):
 
 
 
-
 def filter_valid(
     results: List[Tuple[Any, ...]],
     meta: List[str],
-    db_name: str,
-    kg_name: str
+    db_name: str
 ) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
-    """Filter Cypher query results (nodes or relationships) by database and graph context.
+    """Filter Cypher query results (nodes or relationships) by database context.
     @details
         - Keeps entities where 'db' and 'kg' match the given names.
         - Excludes dummy nodes (_init = true).
@@ -611,7 +614,6 @@ def filter_valid(
     @param results  List of tuples from db.cypher_query().
     @param meta  Column names corresponding to each result element.
     @param db_name  Database name to match.
-    @param kg_name  Graph name to match.
     @return  (filtered_results, filtered_meta) with only valid entities, or (None, None) if empty.
     """
     if not results:
@@ -629,7 +631,23 @@ def filter_valid(
             try:
                 return dict(o.properties)  # type: ignore[attr-defined]
             except Exception:
-                return {}
+                try:
+                    # some drivers expose mapping-like properties
+                    return {k: o.properties[k] for k in o.properties.keys()}  # type: ignore[attr-defined]
+                except Exception:
+                    pass
+        # neomodel sometimes exposes __properties__
+        if hasattr(o, "__properties__"):
+            try:
+                return dict(o.__properties__)  # type: ignore[attr-defined]
+            except Exception:
+                pass
+        # mapping-like fallback
+        try:
+            if hasattr(o, "keys") and hasattr(o, "__getitem__"):
+                return {k: o[k] for k in o.keys()}  # type: ignore[index]
+        except Exception:
+            pass
         return {}
 
     def valid(o: Any) -> bool:
@@ -642,7 +660,6 @@ def filter_valid(
         return (
             isinstance(d, dict)
             and d.get("db") == db_name
-            and d.get("kg") == kg_name
             and d.get("_init") in (None, False)
         )
 
@@ -652,7 +669,9 @@ def filter_valid(
         @return  True if object appears to be a Relationship; else False.
         @throws None
         """
-        return hasattr(o, "start_node") and hasattr(o, "end_node")
+        return (
+            hasattr(o, "start_node") and hasattr(o, "end_node")
+        ) or hasattr(o, "nodes")
 
     def row_ok(row: Tuple[Any, ...]) -> bool:
         """Return True if any element in the row is valid or touches a valid node.
@@ -663,7 +682,16 @@ def filter_valid(
         for x in row:
             if is_rel(x):
                 # type: ignore[attr-defined]
-                if valid(x) or valid(x.start_node) or valid(x.end_node):
+                s = getattr(x, "start_node", None)
+                e = getattr(x, "end_node", None)
+                if (s is None or e is None) and hasattr(x, "nodes"):
+                    try:
+                        nodes = x.nodes  # type: ignore[attr-defined]
+                        if nodes and len(nodes) == 2:
+                            s, e = nodes[0], nodes[1]
+                    except Exception:
+                        s = e = None
+                if valid(x) or (s and valid(s)) or (e and valid(e)):
                     return True
             elif valid(x):
                 return True
@@ -680,7 +708,16 @@ def filter_valid(
             cell = r[idx]
             if is_rel(cell):
                 # type: ignore[attr-defined]
-                if valid(cell) or valid(cell.start_node) or valid(cell.end_node):
+                s = getattr(cell, "start_node", None)
+                e = getattr(cell, "end_node", None)
+                if (s is None or e is None) and hasattr(cell, "nodes"):
+                    try:
+                        nodes = cell.nodes  # type: ignore[attr-defined]
+                        if nodes and len(nodes) == 2:
+                            s, e = nodes[0], nodes[1]
+                    except Exception:
+                        s = e = None
+                if valid(cell) or (s and valid(s)) or (e and valid(e)):
                     return True
             elif valid(cell):
                 return True
