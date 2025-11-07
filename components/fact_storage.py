@@ -27,12 +27,6 @@ class GraphConnector(DatabaseConnector):
 
         ## The name of the current graph. Matches node.kg for all nodes in the graph.
         self.graph_name: Optional[str] = "default"
-        self._created_dummy: bool = False
-        """Flag used to safely create a dummy node.
-        @details  We cannot create it here since a database query is necessary, which could fail.
-        Failure in __init__ means failure of Session.__init__, which will fail unrelated PyTests.
-        Instead, we create the dummy node on first successful connection. See @ref components.fact_storage.GraphConnector.check_connection
-        """
 
     def change_database(self, new_database: str) -> None:
         """Update the connection URI to reference a different database in the same engine.
@@ -144,12 +138,6 @@ class GraphConnector(DatabaseConnector):
             raise Log.Failure(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
         Log.success(Log.gr_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
 
-        # Add a dummy node to ensure at least 1 valid database exists
-        if not self._created_dummy and not self.database_exists(self.database_name):
-            self.create_database(self.database_name)
-            self._created_dummy = True
-        return True
-
     def execute_query(self, query: str, filter_results: bool = True) -> Optional[DataFrame]:
         """Send a single Cypher query to Neo4j.
         @note  If a result is returned, it will be converted to a DataFrame.
@@ -157,15 +145,12 @@ class GraphConnector(DatabaseConnector):
         @return  DataFrame containing the result of the query, or None
         @throws Log.Failure  If the query fails to execute.
         """
+        self.check_connection(Log.run_q, raise_error=True)
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
         result = super().execute_query(query)
-        if not query:
-            return None
         if not self._is_single_query(query):
             return result
         # Derived classes MUST implement single-query execution.
-        if self._created_dummy:
-            self.check_connection(Log.run_q, raise_error=True)
         try:
             results, meta = db.cypher_query(query)
 
@@ -236,8 +221,7 @@ class GraphConnector(DatabaseConnector):
         @param name  The name of an existing table or collection in the database.
         @return  DataFrame containing the requested data, or None
         @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
-        if self._created_dummy:
-            self.check_connection(Log.get_df, raise_error=True)
+        self.check_connection(Log.get_df, raise_error=True)
 
         with self.temp_graph(name):
             # Get all nodes in the specified graph
@@ -279,8 +263,7 @@ class GraphConnector(DatabaseConnector):
         @param key  The node property name to extract unique values from (e.g. 'db' or 'kg').
         @return  A list of unique values for the specified key, or an empty list if none exist.
         @throws Log.Failure  If the query fails to execute."""
-        if self._created_dummy:
-            self.check_connection(Log.get_unique, raise_error=True)
+        self.check_connection(Log.get_unique, raise_error=True)
 
         query = f"""MATCH (n) WHERE n.{key} IS NOT NULL AND {self.NOT_DUMMY_()}
             RETURN DISTINCT n.{key} AS {key} ORDER BY {key}"""
@@ -297,9 +280,8 @@ class GraphConnector(DatabaseConnector):
         @note  This change will apply to any new nodes created after @ref components.connectors.DatabaseConnector.change_database is called.
         @param database_name  A database ID specifying the pseudo-database.
         @throws Log.Failure  If we fail to create the requested database for any reason."""
+        self.check_connection(Log.create_db, raise_error=True)
         super().create_database(database_name)  # Check if exists
-        if self._created_dummy:
-            self.check_connection(Log.create_db, raise_error=True)
         try:
             # Insert a dummy node to resolve self.database_exists()
             query = f"CREATE ({{db: '{database_name}', _init: true}})"
@@ -313,9 +295,8 @@ class GraphConnector(DatabaseConnector):
         """Delete all nodes stored under a particular database name.
         @param database_name  A database ID specifying the pseudo-database.
         @throws Log.Failure  If we fail to drop the target database for any reason."""
+        self.check_connection(Log.drop_db, raise_error=True)
         super().drop_database(database_name)  # Check if exists
-        if self._created_dummy:
-            self.check_connection(Log.drop_db, raise_error=True)
         try:
             # Result includes multiple collections & any dummy nodes
             query = f"MATCH (n) WHERE n.db = '{database_name}' DETACH DELETE n"
@@ -329,8 +310,7 @@ class GraphConnector(DatabaseConnector):
         """Delete all nodes stored under a particular graph name.
         @param graph_name  The name of a graph in the current database.
         @raises RuntimeError  If we fail to drop the target graph for any reason."""
-        if self._created_dummy:
-            self.check_connection(Log.drop_gr, raise_error=True)
+        self.check_connection(Log.drop_gr, raise_error=True)
         try:
             with self.temp_graph(graph_name):
                 # Result includes any dummy nodes
