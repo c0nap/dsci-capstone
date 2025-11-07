@@ -11,18 +11,18 @@ CREATE (bob:Person {name: "Bob", age: 25, kg: "social"})
 CREATE (charlie:Person {name: "Charlie", age: 35, kg: "social"});
 
 // Single statement with multiple nodes + relationship
-CREATE (alice)-[:KNOWS {since: 2020}]->(bob),
-       (bob)-[:KNOWS {since: 2021}]->(charlie)
+CREATE (alice)-[:KNOWS {since: 2020, kg: "social"}]->(bob),
+       (bob)-[:KNOWS {since: 2021, kg: "social"}]->(charlie)
 RETURN alice, bob, charlie;
 
 // Query without RETURN (tests TAG_NODES_ fallback path)
 CREATE (dave:Person {name: "Dave", age: 28, kg: "social"})
-CREATE (dave)-[:KNOWS]->(alice);
+CREATE (dave)-[:KNOWS {kg: "social"}]->(alice);
 
 // Mixed: MATCH + CREATE in same statement
 MATCH (alice:Person {name: "Alice", kg: "social"})
 MATCH (b:Person {name: "Bob", kg: "social"})
-CREATE (b)-[:FOLLOWS]->(alice)
+CREATE (b)-[:FOLLOWS {kg: "social"}]->(alice)
 RETURN b;
 
 // Edge case: Properties with list values
@@ -34,5 +34,5 @@ CREATE (frank:Person {
 }) RETURN frank;
 
 // Relationship properties
-MERGE (alice)-[r:COLLABORATES {project: "AI", hours: 120}]->(dave)
+MERGE (alice)-[r:COLLABORATES {project: "AI", hours: 120, kg: "social"}]->(dave)
 RETURN r;

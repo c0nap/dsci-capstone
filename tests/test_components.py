@@ -224,7 +224,18 @@ def test_cypher_example_2(graph_db):
     debug_df = graph_db.execute_query(debug_query, _filter_results=False)
     print("\n=== DEBUG: Raw relationships ===")
     print(debug_df)
-    
+
+    # Debug: Check if the query is finding anything
+    debug_query2 = """
+    MATCH (s)-[r]->(o)
+    WHERE s.kg = 'social' AND o.kg = 'social' AND r.kg = 'social'
+      AND s.db = 'pytest' AND o.db = 'pytest' AND r.db = 'pytest'
+    RETURN s.name AS subject, type(r) AS relation, o.name AS object
+    """
+    debug_df2 = graph_db.execute_query(debug_query2, _filter_results=False)
+    print("\n=== DEBUG: Manual triples query ===")
+    print(debug_df2)
+
     # Verify relationships exist
     triples_df = graph_db.get_all_triples()
     assert triples_df is not None

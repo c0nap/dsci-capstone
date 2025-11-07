@@ -159,15 +159,13 @@ class GraphConnector(DatabaseConnector):
             query_lower = query.lower()
             if "create" in query_lower or "merge" in query_lower:
                 # Always sweep for untagged entities, regardless of RETURN
-                self._tag_db()
-                # Re-fetch to ensure returned nodes include 'db'
-                self._fetch_updated(results)
+                self._execute_tag_db()
+                # Re-fetch to ensure our copy is tagged with 'db'
+                results, meta = self._get_updated(results)
 
             # Return nodes from the current database ONLY, despite what the query wants.
-            #print("Before filter:", results, meta)
             if _filter_results:
                 results, meta = filter_valid(results, meta, self.database_name)
-            #print(f"Results: {results}\nMeta: {meta}")
 
             df = DataFrame(results, columns=[m for m in meta]) if meta else None
             if df is None or df.empty:
@@ -335,19 +333,20 @@ class GraphConnector(DatabaseConnector):
         query = f"MATCH (n) WHERE {self.IS_DUMMY_()} DETACH DELETE n"
         self.execute_query(query, _filter_results=False)
 
-    def _tag_db(self) -> None:
+    def _execute_tag_db(self) -> None:
         """Sweeps the database for untagged nodes and relationships, and adds a 'db' attribute."""
         db.cypher_query(f"""MATCH (n) WHERE n.db IS NULL
             SET n.db = '{self.database_name}'""")
         db.cypher_query(f"""MATCH ()-[r]->() WHERE r.db IS NULL
             SET r.db = '{self.database_name}'""")
 
-    def _fetch_updated(self, results: List[Tuple[Any, ...]]) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
+    def _get_updated(self, results: List[Tuple[Any, ...]]) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
         """Re-fetch nodes and edges after changing the remote copy in Neo4j.
         @param results Original list of untagged tuples from db.cypher_query().
         @return Latest version of results fetched from the database."""
-        ids = [obj.element_id for row in (results or []) for obj in row if hasattr(obj, "element_id")]
-        if not ids:   # only re-fetch if we actually have ids
+        if results:
+            ids = [obj.element_id for row in (results or []) for obj in row if hasattr(obj, "element_id")]
+        if not results or not ids:
             return (None, None)
         ids_str = "[" + ", ".join(f"'{i}'" for i in ids) + "]"
         return db.cypher_query(f"MATCH (n) WHERE elementId(n) IN {ids_str} RETURN n")
@@ -500,7 +499,7 @@ class GraphConnector(DatabaseConnector):
         """Return all triples in the current pseudo-database as a pandas DataFrame.
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame."""
         query = f"""
-        MATCH (s {self.SAME_DB_KG_()})-[r]->(o {self.SAME_DB_KG_()})
+        MATCH (s {self.SAME_DB_KG_()})-[r {self.SAME_DB_KG_()}]->(o {self.SAME_DB_KG_()})
         WHERE {self.NOT_DUMMY_('s')} AND {self.NOT_DUMMY_('o')}
         RETURN s.name AS subject, type(r) AS relation, o.name AS object
         """
@@ -593,29 +592,29 @@ def filter_valid(
         # Convert Node/Relationship property map to dict
         if hasattr(o, "properties"):  # neo4j driver (v5+)
             try:
-                return dict(o.properties)  # type: ignore[attr-defined]
+                return dict(o.properties)
             except Exception:
                 try:
                     # some drivers expose mapping-like properties
-                    return {k: o.properties[k] for k in o.properties.keys()}  # type: ignore[attr-defined]
+                    return {k: o.properties[k] for k in o.properties.keys()}
                 except Exception:
                     pass
         # neomodel sometimes exposes __properties__
         if hasattr(o, "__properties__"):
             try:
-                return dict(o.__properties__)  # type: ignore[attr-defined]
+                return dict(o.__properties__)
             except Exception:
                 pass
         # mapping-like fallback
         try:
             if hasattr(o, "keys") and hasattr(o, "__getitem__"):
-                return {k: o[k] for k in o.keys()}  # type: ignore[index]
+                return {k: o[k] for k in o.keys()}
         except Exception:
             pass
         return {}
 
     def valid(o: Any) -> bool:
-        """Determine if an object belongs to the active db/graph and is not a dummy.
+        """Determine if an object belongs to the active db and is not a dummy.
         @param o  Object from a query row (Node, Relationship, dict, scalar).
         @return  True if object has matching db/kg and _init is None/False; else False.
         @throws None
@@ -645,12 +644,11 @@ def filter_valid(
         """
         for x in row:
             if is_rel(x):
-                # type: ignore[attr-defined]
                 s = getattr(x, "start_node", None)
                 e = getattr(x, "end_node", None)
                 if (s is None or e is None) and hasattr(x, "nodes"):
                     try:
-                        nodes = x.nodes  # type: ignore[attr-defined]
+                        nodes = x.nodes
                         if nodes and len(nodes) == 2:
                             s, e = nodes[0], nodes[1]
                     except Exception:
@@ -671,12 +669,11 @@ def filter_valid(
         for r in rows:
             cell = r[idx]
             if is_rel(cell):
-                # type: ignore[attr-defined]
                 s = getattr(cell, "start_node", None)
                 e = getattr(cell, "end_node", None)
                 if (s is None or e is None) and hasattr(cell, "nodes"):
                     try:
-                        nodes = cell.nodes  # type: ignore[attr-defined]
+                        nodes = cell.nodes
                         if nodes and len(nodes) == 2:
                             s, e = nodes[0], nodes[1]
                     except Exception:
