@@ -23,7 +23,7 @@ CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\`;
 GRANT ALL PRIVILEGES ON \`$MYSQL_DATABASE\`.* TO '$MYSQL_USER'@'%';
 
 -- Allow the user to create/drop databases and fully use them for testing
-GRANT CREATE, DROP, SELECT, INSERT, UPDATE, DELETE, ALTER, INDEX, REFERENCES ON *.* TO '$MYSQL_USER'@'%';
+GRANT ALL PRIVILEGES ON *.* TO '$MYSQL_USER'@'%';
 
 -- Apply privilege changes immediately so they take effect without restarting MySQL.
 FLUSH PRIVILEGES;
