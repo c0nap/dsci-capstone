@@ -85,7 +85,7 @@ class DocumentConnector(DatabaseConnector):
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
 
             try:  # Create a collection, insert dummy data, and use get_dataframe
-                tmp_collection = f"test_collection"
+                tmp_collection = "test_collection"
                 if tmp_collection in db.list_collection_names():
                     db.drop_collection(tmp_collection)
                 db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
@@ -100,7 +100,7 @@ class DocumentConnector(DatabaseConnector):
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
 
             try:  # Test create/drop functionality with tmp database
-                tmp_db = f"test_conn"  # Do not use context manager: interferes with traceback
+                tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
                 working_database = self.database_name
                 if self.database_exists(tmp_db):
                     self.drop_database(tmp_db)
@@ -259,16 +259,15 @@ class DocumentConnector(DatabaseConnector):
         @return  DataFrame containing the requested data, or None
         @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
-        with mongo_handle(host=self.connection_string, alias="get_df") as db:
-            # Results will be a list of documents
-            docs = list(db[name].find({}))
-            df = _docs_to_df(docs)
+        # Re-use the logic from execute_query
+        query = { "find": name, "filter": {} }
+        df = self.execute_query(json.dumps(query))
 
-            if df is not None and not df.empty:
-                df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
-                df = df[columns] if columns else df
-                Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
-                return df
+        if df is not None and not df.empty:
+            df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
+            df = df[columns] if columns else df
+            Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
+            return df
         # If not found, warn but do not fail
         Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
         return None

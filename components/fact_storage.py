@@ -103,7 +103,7 @@ class GraphConnector(DatabaseConnector):
             raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
 
         try:  # Test create/drop functionality with tmp database
-            tmp_db = f"test_conn"  # Do not use context manager: interferes with traceback
+            tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
             working_database = self.database_name
             if self.database_exists(tmp_db):
                 self.drop_database(tmp_db)

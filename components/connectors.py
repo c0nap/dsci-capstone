@@ -361,7 +361,7 @@ class RelationalConnector(DatabaseConnector):
                 raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
 
             try:  # Create a table, insert dummy data, and use get_dataframe
-                tmp_table = f"test_table"
+                tmp_table = "test_table"
                 self.execute_query(f"DROP TABLE IF EXISTS {tmp_table} CASCADE;")
                 self.execute_query(
                     f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');"
@@ -462,18 +462,15 @@ class RelationalConnector(DatabaseConnector):
         # Postgres will auto-lowercase all table names.
         if self.db_type == "POSTGRES":
             name = name.lower()
+        # Re-use the logic from execute_query
+        query = f"SELECT * FROM {name};"
+        df = self.execute_query(query)
 
-        engine = create_engine(self.connection_string, poolclass=NullPool)
-        with engine.begin() as connection:
-            table = Table(name, MetaData(), autoload_with=engine)
-            result = connection.execute(select(table))
-            df = DataFrame(result.fetchall(), columns=result.keys())
-
-            if df is not None and not df.empty:
-                df = df_natural_sorted(df, sort_columns=columns)
-                df = df[columns] if columns else df
-                Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(name, df), self.verbose)
-                return df
+        if df is not None and not df.empty:
+            df = df_natural_sorted(df, sort_columns=columns)
+            df = df[columns] if columns else df
+            Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(name, df), self.verbose)
+            return df
         # If not found, warn but do not fail
         Log.warn(Log.rel_db + Log.get_df, Log.msg_bad_table(name), self.verbose)
         return None
