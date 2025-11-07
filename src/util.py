@@ -227,7 +227,7 @@ def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = [], sort_colum
     # Columns sorted alphabetically, with optional priority override
     safe_cols = sorted(c for c in safe_cols if c not in sort_columns)
     safe_cols = [c for c in sort_columns if c in df.columns] + safe_cols
-    print(safe_cols)
+    #print(safe_cols)
     return df.sort_values(by=safe_cols, kind="stable").reset_index(drop=True)
 
 

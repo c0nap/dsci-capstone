@@ -40,7 +40,7 @@ class Connector(ABC):
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
         pass
 
     @abstractmethod
@@ -49,7 +49,7 @@ class Connector(ABC):
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
         pass
 
     @abstractmethod
@@ -212,9 +212,10 @@ class DatabaseConnector(Connector):
             raise Log.Failure(Log.db_conn_abc + Log.run_f, Log.msg_bad_exec_f(filename)) from e
 
     @abstractmethod
-    def get_dataframe(self, name: str) -> Optional[DataFrame]:
+    def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified resource.
         @param name  The name of an existing table or collection in the database.
+        @param columns  A list of column names to keep.
         @return  DataFrame containing the requested data, or None"""
         pass
 
@@ -400,7 +401,7 @@ class RelationalConnector(DatabaseConnector):
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
         try:
             # SQLAlchemy will not create the connection until we send a query
             engine = create_engine(self.connection_string, poolclass=NullPool)
@@ -453,6 +454,7 @@ class RelationalConnector(DatabaseConnector):
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.
         @param name  The name of an existing table or collection in the database.
+        @param columns  A list of column names to keep.
         @return  Sorted DataFrame containing the requested data, or None
         @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
