@@ -6,9 +6,12 @@ Data Science Capstone - Patrick Conan
 
 **MongoDB** and **Neo4j** are strictly required for this project, but you can choose between MySQL or PostgreSQL for your required relational database.
 
-We suggest using **PostgreSQL** for its increased security. MySQL is supported too, but its permissions model makes it unsafe for production environments.
+We recommend **PostgreSQL** for production environments. Both databases are supported, but they differ in security models:
 
-Our code creates and drops arbitrary databases at runtime. For MySQL to work, the Docker initialization script `/db/init_mysql.sh` grants full privileges to our secondary user, which allows dropping existing databases, or even databases created by an elevated user like `root`. Postgres uses an ownership-based permission model to prevent access.
+- **PostgreSQL**: Uses ownership-based permissions. The application user can only drop databases it created, protecting system databases and databases owned by other users.
+- **MySQL**: Requires global `DROP` privilege to enable runtime database operations. This allows dropping *any* database, including those created by root or other users.
+
+Our code creates and drops databases at runtime for testing and isolation. PostgreSQL's permission model makes this safe for production; MySQL's does not.
 
 
 ## Database Setup
