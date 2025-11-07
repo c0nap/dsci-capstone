@@ -271,9 +271,10 @@ class DocumentConnector(DatabaseConnector):
             # Results will be a list of documents
             docs = list(db[name].find({}))
             df = _docs_to_df(docs)
-            df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
-
+            
             if df is not None and not df.empty:
+                df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
+                df = df[columns] if columns else df
                 Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
                 return df
         # If not found, warn but do not fail

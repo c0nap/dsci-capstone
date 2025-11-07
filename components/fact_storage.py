@@ -65,10 +65,10 @@ class GraphConnector(DatabaseConnector):
             result, _ = db.cypher_query("RETURN 1")
             if check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error) == False:
                 return False
-            result = self.execute_query("RETURN 'TWO'", filter_results=False)
+            result = self.execute_query("RETURN 'TWO'", _filter_results=False)
             if check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.gr_db, raise_error) == False:
                 return False
-            result = self.execute_query("RETURN 5, 6", filter_results=False)
+            result = self.execute_query("RETURN 5, 6", _filter_results=False)
             if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
                 return False
         except Exception as e:
@@ -89,15 +89,15 @@ class GraphConnector(DatabaseConnector):
         try:  # Create nodes, insert dummy data, and use get_dataframe
             with self.temp_graph("test_graph"):
                 query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
-                self.execute_query(query, filter_results=False)
+                self.execute_query(query, _filter_results=False)
                 query = f"""CREATE (n1:TestPerson {{kg: '{self.graph_name}', name: 'Alice', age: 30}})
                             CREATE (n2:TestPerson {{kg: '{self.graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
-                self.execute_query(query, filter_results=False)
+                self.execute_query(query, _filter_results=False)
                 df = self.get_dataframe(self.graph_name)
                 if df is None or check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
                     return False
                 query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
-                self.execute_query(query, filter_results=False)
+                self.execute_query(query, _filter_results=False)
         except Exception as e:
             if not raise_error:
                 return False
@@ -138,10 +138,11 @@ class GraphConnector(DatabaseConnector):
             raise Log.Failure(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
         Log.success(Log.gr_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
 
-    def execute_query(self, query: str, filter_results: bool = True) -> Optional[DataFrame]:
+    def execute_query(self, query: str, _filter_results: bool = True) -> Optional[DataFrame]:
         """Send a single Cypher query to Neo4j.
         @note  If a result is returned, it will be converted to a DataFrame.
         @param query  A single query to perform on the database.
+        @param _filter_results  If True, limit results to the current database. Needed for internal helper functions.
         @return  DataFrame containing the result of the query, or None
         @throws Log.Failure  If the query fails to execute.
         """
@@ -174,7 +175,7 @@ class GraphConnector(DatabaseConnector):
 
             # Return nodes from the current database and graph ONLY, despite what the query wants.
             #print("Before filter:", results, meta)
-            if filter_results:
+            if _filter_results:
                 results, meta = filter_valid(results, meta, self.database_name)
             #print(f"Results: {results}\nMeta: {meta}")
 
@@ -249,8 +250,9 @@ class GraphConnector(DatabaseConnector):
 
         # Pandas will fill in NaN where necessary
         df = DataFrame(rows)
-        df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'node_id', 'labels'], sort_columns=columns)
         if df is not None and not df.empty:
+            df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'node_id', 'labels'], sort_columns=columns)
+            df = df[columns] if columns else df
             Log.success(Log.gr_db + Log.get_df, Log.msg_good_graph(name, df), self.verbose)
             return df
 
@@ -268,7 +270,7 @@ class GraphConnector(DatabaseConnector):
 
         query = f"""MATCH (n) WHERE n.{key} IS NOT NULL AND {self.NOT_DUMMY_()}
             RETURN DISTINCT n.{key} AS {key} ORDER BY {key}"""
-        df = self.execute_query(query, filter_results=False)
+        df = self.execute_query(query, _filter_results=False)
         if df is None or df.empty:
             return []
         unique_values = df[key].tolist()
@@ -331,7 +333,7 @@ class GraphConnector(DatabaseConnector):
             WHERE n.db = '{database_name}'
             RETURN count(n) AS count"""
         # Result includes multiple collections & any dummy nodes
-        result = self.execute_query(query, filter_results=False)
+        result = self.execute_query(query, _filter_results=False)
         if result is None:
             return False
         count = result.iloc[0, 0]
@@ -341,7 +343,7 @@ class GraphConnector(DatabaseConnector):
         """Delete the initial dummy node from the database.
         @note  Never use this. Enables the existence of an "empty" database."""
         query = f"MATCH (n) WHERE {self.IS_DUMMY_()} DETACH DELETE n"
-        self.execute_query(query, filter_results=False)
+        self.execute_query(query, _filter_results=False)
 
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
@@ -371,7 +373,7 @@ class GraphConnector(DatabaseConnector):
         """
 
         try:
-            df = self.execute_query(query, filter_results=False)
+            df = self.execute_query(query, _filter_results=False)
             if df is not None:
                 Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
         except Exception as e:
@@ -481,7 +483,7 @@ class GraphConnector(DatabaseConnector):
         LIMIT {top_n}
         RETURN node_name, edge_count"""
         try:
-            df = self.execute_query(query, filter_results=False)
+            df = self.execute_query(query, _filter_results=False)
             Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.", self.verbose)
             return df
         except Exception as e:
@@ -496,7 +498,7 @@ class GraphConnector(DatabaseConnector):
         RETURN s.name AS subject, type(r) AS relation, o.name AS object
         """
         try:
-            df = self.execute_query(query, filter_results=False)
+            df = self.execute_query(query, _filter_results=False)
             # Always return a DataFrame with the 3 desired columns, even if empty or None
             cols = ["subject", "relation", "object"]
             if df is None:

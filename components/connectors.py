@@ -468,11 +468,10 @@ class RelationalConnector(DatabaseConnector):
             table = Table(name, MetaData(), autoload_with=engine)
             result = connection.execute(select(table))
             df = DataFrame(result.fetchall(), columns=result.keys())
-            df = df_natural_sorted(df, sort_columns=columns)
-            if columns:
-                df = df[columns]
 
             if df is not None and not df.empty:
+                df = df_natural_sorted(df, sort_columns=columns)
+                df = df[columns] if columns else df
                 Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(name, df), self.verbose)
                 return df
         # If not found, warn but do not fail
