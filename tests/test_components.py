@@ -186,29 +186,43 @@ def test_cypher_example_1(graph_db):
     assert any((df['species'] == 'Rabbit') & (df['age'] == 4))
     graph_db.drop_graph("pets")
 
-# @pytest.mark.order(13)
-# def test_cypher_example_2(graph_db):
-#     """Run queries contained within test files.
-#     @details  Internal errors are handled by the class itself, and ruled out earlier.
-#     Here we just assert that the received results DataFrame matches what we expected."""
-#     graph_db.create_database("test")
-#     graph_db.create_database("test")
-#     _test_query_file(
-#         graph_db,
-#         "./tests/examples-db/graph_df1.cql",
-#         valid_files=["cql", "cypher"]
-#     )
-#     df = graph_db.get_dataframe("potions")
-#     assert (df is not None)
-#     assert (df.loc[10, 'potion_name'] == 'Elixir of Wisdom')
-#     assert ("effects.description" in df.columns)
-#     assert any((df['potion_name'] == 'Invisibility Draught') & (df['effects.description'] == 'Silent movement'))
-#     assert ("ingredients.name" in df.columns)
-#     assert (df.loc[1, 'ingredients.name'] == 'Mirage Powder')
-#     assert ("effects.seconds" in df.columns)
-#     assert any((df['potion_name'] == 'Catkin Tincture') & (df['effects.seconds'] == 0))
-#     graph_db.change_database("default")
-#     graph_db.drop_database("test")
+
+@pytest.mark.order(13)
+def test_cypher_example_2(graph_db):
+    """Test social network graph with relationships and mixed query patterns.
+    @details  Validates comment parsing, semicolon splitting, CREATE/MERGE/MATCH,
+    relationships with properties, and TAG_NODES_ with/without RETURN."""
+    graph_db.drop_graph("social")
+    _test_query_file(
+        graph_db,
+        "./tests/examples-db/graph_df2.cypher",
+        valid_files=["cql", "cypher"]
+    )
+    
+    # Verify nodes were created correctly
+    df = graph_db.get_dataframe("social")
+    assert df is not None
+    assert len(df) == 5  # Alice, Bob, Charlie, Dave, Frank
+    assert "node_id" in df.columns and "labels" in df.columns
+    assert "db" in df.columns and "kg" in df.columns
+    
+    # Check specific nodes
+    assert any(df['name'] == 'Alice')
+    assert any((df['name'] == 'Frank') & (df['age'].isna() == False))
+    
+    # Verify list properties were stored
+    frank_row = df[df['name'] == 'Frank'].iloc[0]
+    assert 'hobbies' in frank_row or 'scores' in frank_row  # At least one list property
+    
+    # Verify relationships exist
+    triples_df = graph_db.get_all_triples()
+    assert triples_df is not None
+    assert len(triples_df) > 0
+    assert any((triples_df['subject'] == 'Bob') & (triples_df['relation'] == 'KNOWS'))
+    assert any((triples_df['subject'] == 'Bob') & (triples_df['relation'] == 'FOLLOWS'))
+    assert any(triples_df['relation'] == 'COLLABORATES')
+    
+    graph_db.drop_graph("social")
 
 
 # ------------------------------------------------------------------------------
