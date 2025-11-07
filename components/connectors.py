@@ -410,12 +410,12 @@ class RelationalConnector(DatabaseConnector):
         @param query  A single query to perform on the database.
         @return  DataFrame containing the result of the query, or None
         @throws Log.Failure  If the query fails to execute."""
+        self.check_connection(Log.run_q, raise_error=True)
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
         result = super().execute_query(query)
         if not self._is_single_query(query):
             return result
         # Derived classes MUST implement single-query execution.
-        self.check_connection(Log.run_q, raise_error=True)
         try:
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
@@ -472,8 +472,8 @@ class RelationalConnector(DatabaseConnector):
         """Use the current database connection to create a sibling database in this engine.
         @param database_name  The name of the new database to create.
         @throws Log.Failure  If we fail to create the requested database for any reason."""
-        super().create_database(database_name)
         self.check_connection(Log.create_db, raise_error=True)
+        super().create_database(database_name)
         try:
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
@@ -487,8 +487,8 @@ class RelationalConnector(DatabaseConnector):
         """Delete all data stored in a particular database.
         @param database_name  The name of an existing database.
         @throws Log.Failure  If we fail to drop the target database for any reason."""
-        super().drop_database(database_name)
         self.check_connection(Log.drop_db, raise_error=True)
+        super().drop_database(database_name)
         try:
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:

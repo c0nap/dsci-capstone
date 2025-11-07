@@ -159,12 +159,12 @@ class DocumentConnector(DatabaseConnector):
           - If a result is returned, it will be converted to a DataFrame.
         @throws Log.Failure  If the query fails to execute.
         """
+        self.check_connection(Log.run_q, raise_error=True)
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
         result = super().execute_query(query)
         if not self._is_single_query(query):
             return result
         # Derived classes MUST implement single-query execution.
-        self.check_connection(Log.run_q, raise_error=True)
         try:
             with mongo_handle(host=self.connection_string, alias="exec_q") as db:
                 # Queries must be valid JSON
@@ -284,11 +284,11 @@ class DocumentConnector(DatabaseConnector):
         @note  Forces MongoDB to actually create it by inserting a small init document.
         @param database_name  The name of the new database to create.
         @throws Log.Failure  If we fail to create the requested database for any reason."""
-        super().create_database(database_name)  # Check if exists
         self.check_connection(Log.create_db, raise_error=True)
         working_database = self.database_name
         self.change_database(database_name)
         self.check_connection(Log.create_db, raise_error=True)
+        super().create_database(database_name)  # Check if exists
         try:
             with mongo_handle(host=self.connection_string, alias="create_db") as db:
                 # Create the database by adding dummy data
@@ -306,8 +306,8 @@ class DocumentConnector(DatabaseConnector):
         """Delete all data stored in a particular database.
         @param database_name  The name of an existing database.
         @throws Log.Failure  If we fail to drop the target database for any reason."""
-        super().drop_database(database_name)  # Check if exists
         self.check_connection(Log.drop_db, raise_error=True)
+        super().drop_database(database_name)  # Check if exists
         try:
             with mongo_handle(host=self.connection_string, alias="drop_db") as db:
                 # Drop the entire database
