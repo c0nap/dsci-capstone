@@ -1,4 +1,4 @@
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from typing import Any, List, Optional
 
 
@@ -217,17 +217,28 @@ def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = [], sort_colum
     @param df  The DataFrame containing unsorted rows.
     @param  ignored_columns  A list of column names to NOT sort by.
     @param  sort_columns  A list of column names to sort by FIRST."""
+
+    # Exclude any column that contains list/dict values anywhere
+    def is_hashable_col(col: Series) -> bool:
+        return not col.map(lambda x: isinstance(x, (list, dict))).any()
+
     if df is None or df.empty:
         return df
     # Exclude non-hashable columns e.g. lists and dicts
-    safe_cols = [c for c in df.columns if c not in ignored_columns and not isinstance(df[c].iloc[0], (list, dict))]
+    safe_cols = [
+        c for c in df.columns
+        if c not in ignored_columns and is_hashable_col(df[c])
+    ]
+    sort_columns = [
+        c for c in sort_columns
+        if c in df.columns and is_hashable_col(df[c])
+    ]
     # If we have no columns to sort on, just reset the row indexing.
     if not safe_cols:
         return df.reset_index(drop=True)
     # Columns sorted alphabetically, with optional priority override
     safe_cols = sorted(c for c in safe_cols if c not in sort_columns)
     safe_cols = [c for c in sort_columns if c in df.columns] + safe_cols
-    #print(safe_cols)
     return df.sort_values(by=safe_cols, kind="stable").reset_index(drop=True)
 
 
