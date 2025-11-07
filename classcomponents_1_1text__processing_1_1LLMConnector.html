@@ -119,6 +119,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a4278bce7d48c257297600834c89ab633" id="r_a4278bce7d48c257297600834c89ab633"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#a4278bce7d48c257297600834c89ab633">test_connection</a> (self)</td></tr>
 <tr class="memdesc:a4278bce7d48c257297600834c89ab633"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a trivial prompt to verify LLM connectivity.  <br /></td></tr>
 <tr class="separator:a4278bce7d48c257297600834c89ab633"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8415e98b6c232b4c4202da6d14dd44ff" id="r_a8415e98b6c232b4c4202da6d14dd44ff"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#a8415e98b6c232b4c4202da6d14dd44ff">check_connection</a> (self, str log_source, bool raise_error)</td></tr>
+<tr class="memdesc:a8415e98b6c232b4c4202da6d14dd44ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minimal connection test to determine if our connection string is valid.  <br /></td></tr>
+<tr class="separator:a8415e98b6c232b4c4202da6d14dd44ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abbafff005fa747f14dc920184d259e9d" id="r_abbafff005fa747f14dc920184d259e9d"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#abbafff005fa747f14dc920184d259e9d">execute_full_query</a> (self, str <a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#a274109f4c7a67e4a6ff75b589c5941a1">system_prompt</a>, str human_prompt)</td></tr>
 <tr class="memdesc:abbafff005fa747f14dc920184d259e9d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a single prompt to the LLM with separate system and human instructions.  <br /></td></tr>
 <tr class="separator:abbafff005fa747f14dc920184d259e9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -182,6 +185,58 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="a8415e98b6c232b4c4202da6d14dd44ff" name="a8415e98b6c232b4c4202da6d14dd44ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8415e98b6c232b4c4202da6d14dd44ff">&#9670;&#160;</a></span>check_connection()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> bool check_connection </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>log_source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>raise_error</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Minimal connection test to determine if our connection string is valid. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">log_source</td><td>The Log class prefix indicating which method is performing the check. </td></tr>
+    <tr><td class="paramname">raise_error</td><td>Whether to raise an error on connection failure. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Whether the connection test was successful. </dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Log.Failure</td><td>If raise_error is True and the connection test fails to complete. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Reimplemented from <a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a8415e98b6c232b4c4202da6d14dd44ff">Connector</a>.</p>
+
+</div>
+</div>
 <a id="a4b932925866bd1eaa25215c8a58eba2a" name="a4b932925866bd1eaa25215c8a58eba2a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4b932925866bd1eaa25215c8a58eba2a">&#9670;&#160;</a></span>configure()</h2>
 

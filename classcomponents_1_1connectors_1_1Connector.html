@@ -123,8 +123,11 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:ac400b9e087a481db9fd26111590c3462"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read connection settings from the .env file.  <br /></td></tr>
 <tr class="separator:ac400b9e087a481db9fd26111590c3462"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a38bf3225ac41f6eb15aaa7a77f5cc369" id="r_a38bf3225ac41f6eb15aaa7a77f5cc369"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a38bf3225ac41f6eb15aaa7a77f5cc369">test_connection</a> (self, bool raise_error=True)</td></tr>
-<tr class="memdesc:a38bf3225ac41f6eb15aaa7a77f5cc369"><td class="mdescLeft">&#160;</td><td class="mdescRight">Establish a basic connection to the database.  <br /></td></tr>
+<tr class="memdesc:a38bf3225ac41f6eb15aaa7a77f5cc369"><td class="mdescLeft">&#160;</td><td class="mdescRight">Establish a basic connection to the database, and test full functionality.  <br /></td></tr>
 <tr class="separator:a38bf3225ac41f6eb15aaa7a77f5cc369"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8415e98b6c232b4c4202da6d14dd44ff" id="r_a8415e98b6c232b4c4202da6d14dd44ff"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a8415e98b6c232b4c4202da6d14dd44ff">check_connection</a> (self, str log_source, bool raise_error)</td></tr>
+<tr class="memdesc:a8415e98b6c232b4c4202da6d14dd44ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minimal connection test to determine if our connection string is valid.  <br /></td></tr>
+<tr class="separator:a8415e98b6c232b4c4202da6d14dd44ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9127708042e94d148b6d71f0b1a5418f" id="r_a9127708042e94d148b6d71f0b1a5418f"><td class="memItemLeft" align="right" valign="top">Optional[DataFrame]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a9127708042e94d148b6d71f0b1a5418f">execute_query</a> (self, str query)</td></tr>
 <tr class="memdesc:a9127708042e94d148b6d71f0b1a5418f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a single command through the connection.  <br /></td></tr>
 <tr class="separator:a9127708042e94d148b6d71f0b1a5418f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -143,6 +146,58 @@ Public Member Functions</h2></td></tr>
 <li><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a88807ddf666a9030c93c663b271c7ebb">components.connectors.Connector.execute_file</a> </li>
 </ul>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a8415e98b6c232b4c4202da6d14dd44ff" name="a8415e98b6c232b4c4202da6d14dd44ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8415e98b6c232b4c4202da6d14dd44ff">&#9670;&#160;</a></span>check_connection()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> bool check_connection </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>log_source</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>raise_error</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Minimal connection test to determine if our connection string is valid. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">log_source</td><td>The Log class prefix indicating which method is performing the check. </td></tr>
+    <tr><td class="paramname">raise_error</td><td>Whether to raise an error on connection failure. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Whether the connection test was successful. </dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Log.Failure</td><td>If raise_error is True and the connection test fails to complete. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Reimplemented in <a class="el" href="classcomponents_1_1connectors_1_1RelationalConnector.html#a8415e98b6c232b4c4202da6d14dd44ff">RelationalConnector</a>, <a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#a8415e98b6c232b4c4202da6d14dd44ff">DocumentConnector</a>, <a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#a8415e98b6c232b4c4202da6d14dd44ff">GraphConnector</a>, and <a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#a8415e98b6c232b4c4202da6d14dd44ff">LLMConnector</a>.</p>
+
+</div>
+</div>
 <a id="ac400b9e087a481db9fd26111590c3462" name="ac400b9e087a481db9fd26111590c3462"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac400b9e087a481db9fd26111590c3462">&#9670;&#160;</a></span>configure()</h2>
 
@@ -262,7 +317,7 @@ Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The result of the query, or None </dd></dl>
 
-<p>Reimplemented in <a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#a9127708042e94d148b6d71f0b1a5418f">DatabaseConnector</a>, <a class="el" href="classcomponents_1_1connectors_1_1RelationalConnector.html#a9127708042e94d148b6d71f0b1a5418f">RelationalConnector</a>, <a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#a9127708042e94d148b6d71f0b1a5418f">DocumentConnector</a>, <a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#a9127708042e94d148b6d71f0b1a5418f">GraphConnector</a>, and <a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#aeb8c458ce18aefb4edc79be9bdb2adc1">LLMConnector</a>.</p>
+<p>Reimplemented in <a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#a9127708042e94d148b6d71f0b1a5418f">DatabaseConnector</a>, <a class="el" href="classcomponents_1_1connectors_1_1RelationalConnector.html#a9127708042e94d148b6d71f0b1a5418f">RelationalConnector</a>, <a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#a9127708042e94d148b6d71f0b1a5418f">DocumentConnector</a>, <a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#aeb8c458ce18aefb4edc79be9bdb2adc1">LLMConnector</a>, and <a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#ad6f718c839ea5b768868ff669b3c7262">GraphConnector</a>.</p>
 
 </div>
 </div>
@@ -292,7 +347,7 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Establish a basic connection to the database. </p>
+<p>Establish a basic connection to the database, and test full functionality. </p>
 <p>Can be configured to fail silently, which enables retries or external handling. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">raise_error</td><td>Whether to raise an error on connection failure. </td></tr>
@@ -302,7 +357,7 @@ Public Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>Whether the connection test was successful. </dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
-    <tr><td class="paramname">RuntimeError</td><td>If raise_error is True and the connection test fails to complete. </td></tr>
+    <tr><td class="paramname">Log.Failure</td><td>If raise_error is True and the connection test fails to complete. </td></tr>
   </table>
   </dd>
 </dl>

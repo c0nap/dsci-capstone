@@ -12,5 +12,6 @@ var searchData=
   ['df_5fnqa_9',['df_nqa',['../namespacecomponents_1_1corpus.html#a3f522611c1ca83e27b55837d728a732f',1,'components::corpus']]],
   ['doc_5fdb_10',['doc_db',['../classsrc_1_1util_1_1Log.html#a0cf6184798c5dc67e98e9fe0c518d51e',1,'src::util::Log']]],
   ['docs_5fdb_11',['docs_db',['../classsrc_1_1setup_1_1Session.html#ad41254b27e713a531687c19679621d87',1,'src::setup::Session']]],
-  ['drop_5fdb_12',['drop_db',['../classsrc_1_1util_1_1Log.html#a428096c41d150fa1ba24d1fe92025f48',1,'src::util::Log']]]
+  ['drop_5fdb_12',['drop_db',['../classsrc_1_1util_1_1Log.html#a428096c41d150fa1ba24d1fe92025f48',1,'src::util::Log']]],
+  ['drop_5fgr_13',['drop_gr',['../classsrc_1_1util_1_1Log.html#a68ae4871ffa4f88e79fa7d202e62fe9a',1,'src::util::Log']]]
 ];

@@ -74,7 +74,8 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">components.fact_storage Namespace Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -84,7 +85,65 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html">GraphConnector</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connector for Neo4j (graph database).  <a href="classcomponents_1_1fact__storage_1_1GraphConnector.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a7cf3d70df61f834455b786fb928c1ec5" id="r_a7cf3d70df61f834455b786fb928c1ec5"><td class="memItemLeft" align="right" valign="top">Tuple[Optional[List[Tuple[Any,...]]], Optional[List[str]]]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1fact__storage.html#a7cf3d70df61f834455b786fb928c1ec5">filter_valid</a> (List[Tuple[Any,...]] results, List[str] meta, str db_name)</td></tr>
+<tr class="memdesc:a7cf3d70df61f834455b786fb928c1ec5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Filter Cypher query results (nodes or relationships) by database context.  <br /></td></tr>
+<tr class="separator:a7cf3d70df61f834455b786fb928c1ec5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="a7cf3d70df61f834455b786fb928c1ec5" name="a7cf3d70df61f834455b786fb928c1ec5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7cf3d70df61f834455b786fb928c1ec5">&#9670;&#160;</a></span>filter_valid()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]] filter_valid </td>
+          <td>(</td>
+          <td class="paramtype">List[Tuple[Any, ...]]&#160;</td>
+          <td class="paramname"><em>results</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">List[str]&#160;</td>
+          <td class="paramname"><em>meta</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>db_name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Filter Cypher query results (nodes or relationships) by database context. </p>
+<ul>
+<li>Keeps entities where 'db' and 'kg' match the given names.</li>
+<li>Excludes dummy nodes (_init = true).</li>
+<li>Relationships are valid if they or either endpoint match.</li>
+<li>Removes meta columns with no valid entities. <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">results</td><td>List of tuples from db.cypher_query(). </td></tr>
+    <tr><td class="paramname">meta</td><td>Column names corresponding to each result element. </td></tr>
+    <tr><td class="paramname">db_name</td><td>Database name to match. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>(filtered_results, filtered_meta) with only valid entities, or (None, None) if empty. </dd></dl>
+</li>
+</ul>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

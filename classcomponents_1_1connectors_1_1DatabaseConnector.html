@@ -130,6 +130,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae7d0aad355ba541d9e393f985a129704" id="r_ae7d0aad355ba541d9e393f985a129704"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#ae7d0aad355ba541d9e393f985a129704">change_database</a> (self, str new_database)</td></tr>
 <tr class="memdesc:ae7d0aad355ba541d9e393f985a129704"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update the connection URI to reference a different database in the same engine.  <br /></td></tr>
 <tr class="separator:ae7d0aad355ba541d9e393f985a129704"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec13a0a1c3c40905339cde6a13560a67" id="r_aec13a0a1c3c40905339cde6a13560a67"><td class="memItemLeft" align="right" valign="top">Generator[None, None, None]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#aec13a0a1c3c40905339cde6a13560a67">temp_database</a> (self, str database_name)</td></tr>
+<tr class="memdesc:aec13a0a1c3c40905339cde6a13560a67"><td class="mdescLeft">&#160;</td><td class="mdescRight">Temporarily switch to a pseudo-database, creating and dropping it if needed.  <br /></td></tr>
+<tr class="separator:aec13a0a1c3c40905339cde6a13560a67"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9127708042e94d148b6d71f0b1a5418f" id="r_a9127708042e94d148b6d71f0b1a5418f"><td class="memItemLeft" align="right" valign="top">Optional[DataFrame]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#a9127708042e94d148b6d71f0b1a5418f">execute_query</a> (self, str query)</td></tr>
 <tr class="memdesc:a9127708042e94d148b6d71f0b1a5418f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a single command through the connection.  <br /></td></tr>
 <tr class="separator:a9127708042e94d148b6d71f0b1a5418f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -139,9 +142,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a88807ddf666a9030c93c663b271c7ebb" id="r_a88807ddf666a9030c93c663b271c7ebb"><td class="memItemLeft" align="right" valign="top">List[Optional[DataFrame]]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#a88807ddf666a9030c93c663b271c7ebb">execute_file</a> (self, str filename)</td></tr>
 <tr class="memdesc:a88807ddf666a9030c93c663b271c7ebb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run several database commands from a file.  <br /></td></tr>
 <tr class="separator:a88807ddf666a9030c93c663b271c7ebb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38925627d8e23d63389e322b97ca956e" id="r_a38925627d8e23d63389e322b97ca956e"><td class="memItemLeft" align="right" valign="top">Optional[DataFrame]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#a38925627d8e23d63389e322b97ca956e">get_dataframe</a> (self, str name)</td></tr>
-<tr class="memdesc:a38925627d8e23d63389e322b97ca956e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Automatically generate and run a query for the specified resource.  <br /></td></tr>
-<tr class="separator:a38925627d8e23d63389e322b97ca956e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac21e014e1a26d33278e9550485a0ce72" id="r_ac21e014e1a26d33278e9550485a0ce72"><td class="memItemLeft" align="right" valign="top">Optional[DataFrame]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#ac21e014e1a26d33278e9550485a0ce72">get_dataframe</a> (self, str name, List[str] columns=[])</td></tr>
+<tr class="memdesc:ac21e014e1a26d33278e9550485a0ce72"><td class="mdescLeft">&#160;</td><td class="mdescRight">Automatically generate and run a query for the specified resource.  <br /></td></tr>
+<tr class="separator:ac21e014e1a26d33278e9550485a0ce72"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a041a20ab44e098f9eeb4f34fd802b61b" id="r_a041a20ab44e098f9eeb4f34fd802b61b"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#a041a20ab44e098f9eeb4f34fd802b61b">create_database</a> (self, str database_name)</td></tr>
 <tr class="memdesc:a041a20ab44e098f9eeb4f34fd802b61b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use the current database connection to create a sibling database in this engine.  <br /></td></tr>
 <tr class="separator:a041a20ab44e098f9eeb4f34fd802b61b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -153,8 +156,11 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:adbcd1de5a4df0cd0b68d2ab76c102482"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classcomponents_1_1connectors_1_1Connector"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classcomponents_1_1connectors_1_1Connector')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classcomponents_1_1connectors_1_1Connector.html">Connector</a></td></tr>
 <tr class="memitem:a38bf3225ac41f6eb15aaa7a77f5cc369 inherit pub_methods_classcomponents_1_1connectors_1_1Connector" id="r_a38bf3225ac41f6eb15aaa7a77f5cc369"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a38bf3225ac41f6eb15aaa7a77f5cc369">test_connection</a> (self, bool raise_error=True)</td></tr>
-<tr class="memdesc:a38bf3225ac41f6eb15aaa7a77f5cc369 inherit pub_methods_classcomponents_1_1connectors_1_1Connector"><td class="mdescLeft">&#160;</td><td class="mdescRight">Establish a basic connection to the database.  <br /></td></tr>
+<tr class="memdesc:a38bf3225ac41f6eb15aaa7a77f5cc369 inherit pub_methods_classcomponents_1_1connectors_1_1Connector"><td class="mdescLeft">&#160;</td><td class="mdescRight">Establish a basic connection to the database, and test full functionality.  <br /></td></tr>
 <tr class="separator:a38bf3225ac41f6eb15aaa7a77f5cc369 inherit pub_methods_classcomponents_1_1connectors_1_1Connector"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8415e98b6c232b4c4202da6d14dd44ff inherit pub_methods_classcomponents_1_1connectors_1_1Connector" id="r_a8415e98b6c232b4c4202da6d14dd44ff"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a8415e98b6c232b4c4202da6d14dd44ff">check_connection</a> (self, str log_source, bool raise_error)</td></tr>
+<tr class="memdesc:a8415e98b6c232b4c4202da6d14dd44ff inherit pub_methods_classcomponents_1_1connectors_1_1Connector"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minimal connection test to determine if our connection string is valid.  <br /></td></tr>
+<tr class="separator:a8415e98b6c232b4c4202da6d14dd44ff inherit pub_methods_classcomponents_1_1connectors_1_1Connector"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -192,7 +198,7 @@ Protected Member Functions</h2></td></tr>
 <li><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a38bf3225ac41f6eb15aaa7a77f5cc369">components.connectors.DatabaseConnector.test_connection</a></li>
 <li><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#a9127708042e94d148b6d71f0b1a5418f">components.connectors.DatabaseConnector.execute_query</a></li>
 <li><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#ad2130d33be4d41c012f714e9dfb824a3">components.connectors.DatabaseConnector._split_combined</a></li>
-<li><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#a38925627d8e23d63389e322b97ca956e">components.connectors.DatabaseConnector.get_dataframe</a></li>
+<li><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#ac21e014e1a26d33278e9550485a0ce72">components.connectors.DatabaseConnector.get_dataframe</a></li>
 <li><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#a041a20ab44e098f9eeb4f34fd802b61b">components.connectors.DatabaseConnector.create_database</a></li>
 <li><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#ac6f266660384eb5ffe2ad611c15e491d">components.connectors.DatabaseConnector.drop_database</a></li>
 <li><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#ae7d0aad355ba541d9e393f985a129704">components.connectors.DatabaseConnector.change_database</a></li>
@@ -668,12 +674,12 @@ Protected Member Functions</h2></td></tr>
 
 <p>Reimplemented from <a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a9127708042e94d148b6d71f0b1a5418f">Connector</a>.</p>
 
-<p>Reimplemented in <a class="el" href="classcomponents_1_1connectors_1_1RelationalConnector.html#a9127708042e94d148b6d71f0b1a5418f">RelationalConnector</a>, <a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#a9127708042e94d148b6d71f0b1a5418f">DocumentConnector</a>, and <a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#a9127708042e94d148b6d71f0b1a5418f">GraphConnector</a>.</p>
+<p>Reimplemented in <a class="el" href="classcomponents_1_1connectors_1_1RelationalConnector.html#a9127708042e94d148b6d71f0b1a5418f">RelationalConnector</a>, <a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#a9127708042e94d148b6d71f0b1a5418f">DocumentConnector</a>, and <a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#ad6f718c839ea5b768868ff669b3c7262">GraphConnector</a>.</p>
 
 </div>
 </div>
-<a id="a38925627d8e23d63389e322b97ca956e" name="a38925627d8e23d63389e322b97ca956e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a38925627d8e23d63389e322b97ca956e">&#9670;&#160;</a></span>get_dataframe()</h2>
+<a id="ac21e014e1a26d33278e9550485a0ce72" name="ac21e014e1a26d33278e9550485a0ce72"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac21e014e1a26d33278e9550485a0ce72">&#9670;&#160;</a></span>get_dataframe()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -688,7 +694,13 @@ Protected Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">str&#160;</td>
-          <td class="paramname"><em>name</em>&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">List[str] &#160;</td>
+          <td class="paramname"><em>columns</em> = <code>[]</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -702,12 +714,53 @@ Protected Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">name</td><td>The name of an existing table or collection in the database. </td></tr>
+    <tr><td class="paramname">columns</td><td>A list of column names to keep. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>DataFrame containing the requested data, or None </dd></dl>
 
-<p>Reimplemented in <a class="el" href="classcomponents_1_1connectors_1_1RelationalConnector.html#a38925627d8e23d63389e322b97ca956e">RelationalConnector</a>, <a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#a38925627d8e23d63389e322b97ca956e">DocumentConnector</a>, and <a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#a38925627d8e23d63389e322b97ca956e">GraphConnector</a>.</p>
+<p>Reimplemented in <a class="el" href="classcomponents_1_1connectors_1_1RelationalConnector.html#ac21e014e1a26d33278e9550485a0ce72">RelationalConnector</a>, <a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#ac21e014e1a26d33278e9550485a0ce72">DocumentConnector</a>, and <a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#ac21e014e1a26d33278e9550485a0ce72">GraphConnector</a>.</p>
+
+</div>
+</div>
+<a id="aec13a0a1c3c40905339cde6a13560a67" name="aec13a0a1c3c40905339cde6a13560a67"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec13a0a1c3c40905339cde6a13560a67">&#9670;&#160;</a></span>temp_database()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> Generator[None, None, None] temp_database </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>database_name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Temporarily switch to a pseudo-database, creating and dropping it if needed. </p>
+<ul>
+<li>If the target database does not exist, it will be created before yielding and dropped automatically afterward.</li>
+<li>If it already exists, it will be left intact. <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">database_name</td><td>The name of the pseudo-database to use temporarily. </td></tr>
+  </table>
+  </dd>
+</dl>
+</li>
+</ul>
 
 </div>
 </div>

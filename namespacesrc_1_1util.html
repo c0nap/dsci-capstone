@@ -91,9 +91,9 @@ Functions</h2></td></tr>
 <tr class="memitem:aee36639f813555d2597125dd704c61a6" id="r_aee36639f813555d2597125dd704c61a6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1util.html#aee36639f813555d2597125dd704c61a6">all_none</a> (*args)</td></tr>
 <tr class="memdesc:aee36639f813555d2597125dd704c61a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if all provided args are None.  <br /></td></tr>
 <tr class="separator:aee36639f813555d2597125dd704c61a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a8f989bb38797b994eea741e854406a" id="r_a3a8f989bb38797b994eea741e854406a"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1util.html#a3a8f989bb38797b994eea741e854406a">df_natural_sorted</a> (DataFrame df, List[str] ignored_columns=[])</td></tr>
-<tr class="memdesc:a3a8f989bb38797b994eea741e854406a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sort a DataFrame in natural order using only certain columns.  <br /></td></tr>
-<tr class="separator:a3a8f989bb38797b994eea741e854406a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac43b6d6e68becac207626b5b12bae774" id="r_ac43b6d6e68becac207626b5b12bae774"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1util.html#ac43b6d6e68becac207626b5b12bae774">df_natural_sorted</a> (DataFrame df, List[str] ignored_columns=[], List[str] sort_columns=[])</td></tr>
+<tr class="memdesc:ac43b6d6e68becac207626b5b12bae774"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sort a DataFrame in natural order using only certain columns.  <br /></td></tr>
+<tr class="separator:ac43b6d6e68becac207626b5b12bae774"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0446ba7a4683b63c6a768f8fd43831ba" id="r_a0446ba7a4683b63c6a768f8fd43831ba"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1util.html#a0446ba7a4683b63c6a768f8fd43831ba">check_values</a> (List[Any] results, List[Any] expected, bool verbose, str log_source, bool raise_error)</td></tr>
 <tr class="memdesc:a0446ba7a4683b63c6a768f8fd43831ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Safely compare two lists of values.  <br /></td></tr>
 <tr class="separator:a0446ba7a4683b63c6a768f8fd43831ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -183,8 +183,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3a8f989bb38797b994eea741e854406a" name="a3a8f989bb38797b994eea741e854406a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3a8f989bb38797b994eea741e854406a">&#9670;&#160;</a></span>df_natural_sorted()</h2>
+<a id="ac43b6d6e68becac207626b5b12bae774" name="ac43b6d6e68becac207626b5b12bae774"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac43b6d6e68becac207626b5b12bae774">&#9670;&#160;</a></span>df_natural_sorted()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -199,7 +199,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">List[str] &#160;</td>
-          <td class="paramname"><em>ignored_columns</em> = <code>[]</code>&#160;</td>
+          <td class="paramname"><em>ignored_columns</em> = <code>[]</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">List[str] &#160;</td>
+          <td class="paramname"><em>sort_columns</em> = <code>[]</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -211,11 +217,13 @@ Functions</h2></td></tr>
 
 <p>Sort a DataFrame in natural order using only certain columns. </p>
 <ul>
+<li>Column order is alphabetic too, for completely predictable behavior.</li>
 <li>The provided DataFrame will not be modified, since inplace=False by default.</li>
 <li>Existing row numbers will be deleted and regenerated to match the sorted order. <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">df</td><td>The DataFrame containing unsorted rows. </td></tr>
     <tr><td class="paramname">ignored_columns</td><td>A list of column names to NOT sort by. </td></tr>
+    <tr><td class="paramname">sort_columns</td><td>A list of column names to sort by FIRST. </td></tr>
   </table>
   </dd>
 </dl>
