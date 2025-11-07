@@ -256,6 +256,11 @@ def test_cypher_example_3(graph_db):
         # Verify spatial coordinates exist
         assert 'x' in df_scene.columns or 'position' in df_scene.columns
         
+        # Debug: What graph are we querying?
+        print(f"\n=== DEBUG: Current graph context ===")
+        print(f"database_name: {graph_db.database_name}")
+        print(f"graph_name: {graph_db.graph_name}")
+
         # Verify spatial relationships
         triples_scene = graph_db.get_all_triples()
         assert triples_scene is not None
