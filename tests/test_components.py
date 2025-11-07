@@ -236,8 +236,22 @@ def test_cypher_example_2(graph_db):
     print("\n=== DEBUG: Manual triples query ===")
     print(debug_df2)
 
+    # Debug: What graph are we querying?
+    print(f"\n=== DEBUG: Current graph context ===")
+    print(f"database_name: {graph_db.database_name}")
+    print(f"graph_name: {graph_db.graph_name}")
+
+    # Debug: What query is being generated?
+    test_query = f"""
+    MATCH (s {graph_db.SAME_DB_KG_()})-[r {graph_db.SAME_DB_KG_()}]->(o {graph_db.SAME_DB_KG_()})
+    WHERE {graph_db.NOT_DUMMY_('s')} AND {graph_db.NOT_DUMMY_('o')}
+    RETURN s.name AS subject, type(r) AS relation, o.name AS object
+    """
+    print(f"\n=== DEBUG: Generated query ===")
+    print(test_query)
+
     # Verify relationships exist
-    triples_df = graph_db.get_all_triples()
+    triples_df = graph_db.get_all_triples("social")
     assert triples_df is not None
     assert len(triples_df) > 0
     assert any((triples_df['subject'] == 'Bob') & (triples_df['relation'] == 'KNOWS'))

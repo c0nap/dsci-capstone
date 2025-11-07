@@ -495,26 +495,31 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.") from e
 
-    def get_all_triples(self) -> DataFrame:
-        """Return all triples in the current pseudo-database as a pandas DataFrame.
+    def get_all_triples(self, graph_name: Optional[str] = None) -> DataFrame:
+        """Return all triples in the specified graph as a pandas DataFrame.
+        @param graph_name  The graph to query. If None, uses self.graph_name.
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame."""
-        query = f"""
-        MATCH (s {self.SAME_DB_KG_()})-[r {self.SAME_DB_KG_()}]->(o {self.SAME_DB_KG_()})
-        WHERE {self.NOT_DUMMY_('s')} AND {self.NOT_DUMMY_('o')}
-        RETURN s.name AS subject, type(r) AS relation, o.name AS object
-        """
-        try:
-            df = self.execute_query(query, _filter_results=False)
-            # Always return a DataFrame with the 3 desired columns, even if empty or None
-            cols = ["subject", "relation", "object"]
-            if df is None:
-                df = DataFrame()
-            df = df.reindex(columns=cols)
-
-            Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.", self.verbose)
-            return df
-        except Exception as e:
-            raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch all_triples DataFrame.") from e
+        
+        target_graph = graph_name if graph_name is not None else self.graph_name
+        with self.temp_graph(target_graph):
+            # No need to apply the DB-KG pattern to relationships - relaxes query requirements.
+            query = f"""
+            MATCH (s {self.SAME_DB_KG_()})-[r]->(o {self.SAME_DB_KG_()})
+            WHERE {self.NOT_DUMMY_('s')} AND {self.NOT_DUMMY_('o')}
+            RETURN s.name AS subject, type(r) AS relation, o.name AS object
+            """
+            try:
+                df = self.execute_query(query, _filter_results=False)
+                # Always return a DataFrame with the 3 desired columns, even if empty or None
+                cols = ["subject", "relation", "object"]
+                if df is None:
+                    df = DataFrame()
+                df = df.reindex(columns=cols)
+    
+                Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.", self.verbose)
+                return df
+            except Exception as e:
+                raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch all_triples DataFrame.") from e
 
     def print_nodes(self, max_rows: int = 20, max_col_width: int = 50) -> None:
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
