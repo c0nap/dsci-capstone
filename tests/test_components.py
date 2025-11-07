@@ -1,13 +1,13 @@
 import os
 import pytest
+from src.components import DatabaseConnector, RelationalConnector
+from src.document_stroage import DocumentConnector
+from src.fact_storage import GraphConnector
 from src.setup import Session
 from src.util import Log
-from src.components import DatabaseConnector, RelationalConnector
-from src.fact_storage import GraphConnector
-from src.document_stroage import DocumentConnector
 import sys
 import time
-from typing import List, Generator
+from typing import Generator, List
 
 
 # ------------------------------------------------------------------------------

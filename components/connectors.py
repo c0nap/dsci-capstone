@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from dotenv import load_dotenv
 import os
 from pandas import DataFrame
@@ -7,8 +8,7 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.pool import NullPool
 from sqlparse import parse as sql_parse
 from src.util import check_values, df_natural_sorted, Log
-from typing import List, Optional, Generator
-from contextlib import contextmanager
+from typing import Generator, List, Optional
 
 
 # Read environment variables at compile time

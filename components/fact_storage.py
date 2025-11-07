@@ -1,11 +1,11 @@
 from components.connectors import DatabaseConnector
+from contextlib import contextmanager
 from neomodel import config, db
 import os
 from pandas import DataFrame, option_context
 import re
 from src.util import check_values, df_natural_sorted, Log
-from typing import List, Optional, Tuple, Any, Dict, Generator
-from contextlib import contextmanager
+from typing import Any, Dict, Generator, List, Optional, Tuple
 
 
 class GraphConnector(DatabaseConnector):
@@ -48,7 +48,6 @@ class GraphConnector(DatabaseConnector):
             yield
         finally:
             self.graph_name = old
-
 
     def test_connection(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the Neo4j database, and test full functionality.
@@ -208,7 +207,6 @@ class GraphConnector(DatabaseConnector):
             parts.append(buf.strip())
         return parts
 
-
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified Knowledge Graph collection.
         @details
@@ -227,7 +225,7 @@ class GraphConnector(DatabaseConnector):
             results = self.execute_query(query)
         if results is None:
             return None
-        
+
         # Create a row for each node with attributes as columns - might be unbalanced
         rows = []
         for node in results.iloc[:, 0]:
@@ -320,7 +318,6 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.drop_gr, Log.msg_fail_manage_gr("drop", graph_name, self.connection_string)) from e
 
-
     def database_exists(self, database_name: str) -> bool:
         """Search for an existing database using the provided name.
         @param database_name  The name of a database to search for.
@@ -343,10 +340,14 @@ class GraphConnector(DatabaseConnector):
 
     def _execute_tag_db(self) -> None:
         """Sweeps the database for untagged nodes and relationships, and adds a 'db' attribute."""
-        db.cypher_query(f"""MATCH (n) WHERE n.db IS NULL
-            SET n.db = '{self.database_name}'""")
-        db.cypher_query(f"""MATCH ()-[r]->() WHERE r.db IS NULL
-            SET r.db = '{self.database_name}'""")
+        db.cypher_query(
+            f"""MATCH (n) WHERE n.db IS NULL
+            SET n.db = '{self.database_name}'"""
+        )
+        db.cypher_query(
+            f"""MATCH ()-[r]->() WHERE r.db IS NULL
+            SET r.db = '{self.database_name}'"""
+        )
 
     def _get_updated(self, results: List[Tuple[Any, ...]]) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
         """Re-fetch nodes and edges after changing the remote copy in Neo4j.
@@ -393,7 +394,6 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
 
-
     @staticmethod
     def normalize_triples(data: Any) -> List[Tuple[str, str, str]]:
         """Normalize flexible LLM output into a list of clean (subject, relation, object) triples.
@@ -405,6 +405,7 @@ class GraphConnector(DatabaseConnector):
         @return  List of sanitized (s, r, o) triples ready for insertion.
         @throws ValueError  If input format cannot be parsed.
         """
+
         def _sanitize_node(value: Any) -> str:
             """Clean a node name for Cypher safety.
             @param value  Raw subject/object value.
@@ -412,7 +413,7 @@ class GraphConnector(DatabaseConnector):
             """
             if isinstance(value, (list, tuple)):  # Join list/tuple into single string
                 value = " ".join(map(str, value))
-            elif not isinstance(value, str):      # Convert non-str types
+            elif not isinstance(value, str):  # Convert non-str types
                 value = str(value)
             # Replace invalid chars, trim edges
             return re.sub(r"[^A-Za-z0-9_ ]", "_", value).strip("_ ")
@@ -447,10 +448,7 @@ class GraphConnector(DatabaseConnector):
             # List of dicts [{s,r,o}, ...]
             if isinstance(data, list) and data and isinstance(data[0], dict):
                 return [
-                    (d.get("s") or d.get("subject"),
-                     d.get("r") or d.get("relation"),
-                     d.get("o") or d.get("object") or d.get("object_"))
-                    for d in data
+                    (d.get("s") or d.get("subject"), d.get("r") or d.get("relation"), d.get("o") or d.get("object") or d.get("object_")) for d in data
                 ]
             # Single dict (scalars or lists)
             if isinstance(data, dict):
@@ -460,9 +458,12 @@ class GraphConnector(DatabaseConnector):
                 S, R, O = _as_list(s), _as_list(r), _as_list(o)
                 # Expand 1-element lists to match longest list length
                 n = max(len(S), len(R), len(O))
-                if len(S) == 1 and n > 1: S *= n
-                if len(R) == 1 and n > 1: R *= n
-                if len(O) == 1 and n > 1: O *= n
+                if len(S) == 1 and n > 1:
+                    S *= n
+                if len(R) == 1 and n > 1:
+                    R *= n
+                if len(O) == 1 and n > 1:
+                    O *= n
                 m = min(len(S), len(R), len(O))
                 return list(zip(S[:m], R[:m], O[:m]))
             # Single list/tuple triple
@@ -479,8 +480,6 @@ class GraphConnector(DatabaseConnector):
             if all([s_clean, r_clean, o_clean]):
                 clean_triples.append((s_clean, r_clean, o_clean))
         return clean_triples
-
-
 
     def get_edge_counts(self, top_n: int = 10) -> DataFrame:
         """Return node names and their edge counts, ordered by edge count descending.
@@ -507,7 +506,7 @@ class GraphConnector(DatabaseConnector):
         """Return all triples in the specified graph as a pandas DataFrame.
         @param graph_name  The graph to query. If None, uses self.graph_name.
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame."""
-        
+
         target_graph = graph_name if graph_name is not None else self.graph_name
         with self.temp_graph(target_graph):
             # No need to apply the DB-KG pattern to relationships - relaxes query requirements.
@@ -523,7 +522,7 @@ class GraphConnector(DatabaseConnector):
                 if df is None:
                     df = DataFrame()
                 df = df.reindex(columns=cols)
-    
+
                 Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.", self.verbose)
                 return df
             except Exception as e:
@@ -573,14 +572,7 @@ class GraphConnector(DatabaseConnector):
         return f"{{db: '{self.database_name}', kg: '{self.graph_name}'}}"
 
 
-
-
-
-def filter_valid(
-    results: List[Tuple[Any, ...]],
-    meta: List[str],
-    db_name: str
-) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
+def filter_valid(results: List[Tuple[Any, ...]], meta: List[str], db_name: str) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
     """Filter Cypher query results (nodes or relationships) by database context.
     @details
         - Keeps entities where 'db' and 'kg' match the given names.
@@ -633,11 +625,7 @@ def filter_valid(
         @throws None
         """
         d = get_props(o)
-        return (
-            isinstance(d, dict)
-            and d.get("db") == db_name
-            and d.get("_init") in (None, False)
-        )
+        return isinstance(d, dict) and d.get("db") == db_name and d.get("_init") in (None, False)
 
     def is_rel(o: Any) -> bool:
         """Check whether an object is a relationship-like value.
@@ -645,9 +633,7 @@ def filter_valid(
         @return  True if object appears to be a Relationship; else False.
         @throws None
         """
-        return (
-            hasattr(o, "start_node") and hasattr(o, "end_node")
-        ) or hasattr(o, "nodes")
+        return (hasattr(o, "start_node") and hasattr(o, "end_node")) or hasattr(o, "nodes")
 
     def row_ok(row: Tuple[Any, ...]) -> bool:
         """Return True if any element in the row is valid or touches a valid node.

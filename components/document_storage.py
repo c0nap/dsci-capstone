@@ -21,11 +21,6 @@ MongoHandle = Generator["Database[Any]", None, None]
 load_dotenv(".env")
 
 
-
-
-
-
-
 class DocumentConnector(DatabaseConnector):
     """Connector for MongoDB (document database)
     @details
@@ -122,9 +117,6 @@ class DocumentConnector(DatabaseConnector):
         # Finish with no errors = connection test successful
         Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
-    
-    
-    
 
     def check_connection(self, log_source: str, raise_error: bool) -> bool:
         """Minimal connection test to determine if our connection string is valid.
@@ -271,7 +263,7 @@ class DocumentConnector(DatabaseConnector):
             # Results will be a list of documents
             docs = list(db[name].find({}))
             df = _docs_to_df(docs)
-            
+
             if df is not None and not df.empty:
                 df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
                 df = df[columns] if columns else df
