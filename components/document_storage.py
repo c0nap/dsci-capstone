@@ -21,11 +21,6 @@ MongoHandle = Generator["Database[Any]", None, None]
 load_dotenv(".env")
 
 
-
-
-
-
-
 class DocumentConnector(DatabaseConnector):
     """Connector for MongoDB (document database)
     @details
@@ -55,7 +50,7 @@ class DocumentConnector(DatabaseConnector):
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
 
     def test_connection(self, raise_error: bool = True) -> bool:
-        """Establish a basic connection to the MongoDB database.
+        """Establish a basic connection to the MongoDB database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
@@ -90,11 +85,13 @@ class DocumentConnector(DatabaseConnector):
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
 
             try:  # Create a collection, insert dummy data, and use get_dataframe
-                tmp_collection = f"test_collection_{int(time())}"
+                tmp_collection = f"test_collection"
                 if tmp_collection in db.list_collection_names():
                     db.drop_collection(tmp_collection)
                 db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
                 df = self.get_dataframe(tmp_collection)
+                if df is None:
+                    return False
                 check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
                 db.drop_collection(tmp_collection)
             except Exception as e:
@@ -103,7 +100,7 @@ class DocumentConnector(DatabaseConnector):
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
 
             try:  # Test create/drop functionality with tmp database
-                tmp_db = f"test_db_{int(time())}"
+                tmp_db = f"test_conn"  # Do not use context manager: interferes with traceback
                 working_database = self.database_name
                 if self.database_exists(tmp_db):
                     self.drop_database(tmp_db)
@@ -120,9 +117,6 @@ class DocumentConnector(DatabaseConnector):
         # Finish with no errors = connection test successful
         Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
-    
-    
-    
 
     def check_connection(self, log_source: str, raise_error: bool) -> bool:
         """Minimal connection test to determine if our connection string is valid.
@@ -130,7 +124,7 @@ class DocumentConnector(DatabaseConnector):
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
         try:
             with mongo_handle(host=self.connection_string, alias="check_conn") as db:
                 db.command({"ping": 1})
@@ -157,12 +151,12 @@ class DocumentConnector(DatabaseConnector):
           - If a result is returned, it will be converted to a DataFrame.
         @throws Log.Failure  If the query fails to execute.
         """
+        self.check_connection(Log.run_q, raise_error=True)
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
         result = super().execute_query(query)
         if not self._is_single_query(query):
             return result
         # Derived classes MUST implement single-query execution.
-        self.check_connection(Log.run_q, raise_error=True)
         try:
             with mongo_handle(host=self.connection_string, alias="exec_q") as db:
                 # Queries must be valid JSON
@@ -258,9 +252,10 @@ class DocumentConnector(DatabaseConnector):
             queries.append(stripped)
         return queries
 
-    def get_dataframe(self, name: str) -> Optional[DataFrame]:
+    def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.
+        @param columns  A list of column names to keep.
         @return  DataFrame containing the requested data, or None
         @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
@@ -268,9 +263,10 @@ class DocumentConnector(DatabaseConnector):
             # Results will be a list of documents
             docs = list(db[name].find({}))
             df = _docs_to_df(docs)
-            df = df_natural_sorted(df, ignored_columns=['_id'])
 
             if df is not None and not df.empty:
+                df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
+                df = df[columns] if columns else df
                 Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
                 return df
         # If not found, warn but do not fail
@@ -282,11 +278,11 @@ class DocumentConnector(DatabaseConnector):
         @note  Forces MongoDB to actually create it by inserting a small init document.
         @param database_name  The name of the new database to create.
         @throws Log.Failure  If we fail to create the requested database for any reason."""
-        super().create_database(database_name)  # Check if exists
         self.check_connection(Log.create_db, raise_error=True)
         working_database = self.database_name
         self.change_database(database_name)
         self.check_connection(Log.create_db, raise_error=True)
+        super().create_database(database_name)  # Check if exists
         try:
             with mongo_handle(host=self.connection_string, alias="create_db") as db:
                 # Create the database by adding dummy data
@@ -304,8 +300,8 @@ class DocumentConnector(DatabaseConnector):
         """Delete all data stored in a particular database.
         @param database_name  The name of an existing database.
         @throws Log.Failure  If we fail to drop the target database for any reason."""
-        super().drop_database(database_name)  # Check if exists
         self.check_connection(Log.drop_db, raise_error=True)
+        super().drop_database(database_name)  # Check if exists
         try:
             with mongo_handle(host=self.connection_string, alias="drop_db") as db:
                 # Drop the entire database

@@ -1,4 +1,4 @@
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from typing import Any, List, Optional
 
 
@@ -164,6 +164,8 @@ class Log:
     run_q = "QUERY: "
     run_f = "FILE EXEC: "
 
+    drop_gr = "DROP_GRAPH: "
+
     msg_success_managed_db = lambda managed, database_name: f"Successfully {managed} database '{database_name}'"
     """@brief  Handles various successful actions an admin could perform on a database.
     @param managed  Past-tense verb representing the database operation performed, e.g. Created, Dropped."""
@@ -172,6 +174,9 @@ class Log:
     )
     """@brief  Handles various failed actions an admin could perform on a database.
     @param manage  Present-tense verb representing the database operation performed, e.g. create, drop."""
+
+    msg_success_managed_gr = lambda managed, database_name: f"Successfully {managed} graph '{database_name}'"
+    msg_fail_manage_gr = lambda manage, database_name, connection_string: f"Failed to {manage} graph '{database_name}' on connection {connection_string}"
 
     msg_fail_parse = lambda alias, bad_value, expected_type: f"Could not convert {alias} with value {bad_value} to type {expected_type}"
 
@@ -203,20 +208,37 @@ def all_none(*args):
     return all(arg is None for arg in args)
 
 
-def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = []) -> DataFrame:
+def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = [], sort_columns: List[str] = []) -> DataFrame:
     """Sort a DataFrame in natural order using only certain columns.
     @details
+    - Column order is alphabetic too, for completely predictable behavior.
     - The provided DataFrame will not be modified, since inplace=False by default.
     - Existing row numbers will be deleted and regenerated to match the sorted order.
     @param df  The DataFrame containing unsorted rows.
-    @param  ignored_columns  A list of column names to NOT sort by."""
+    @param  ignored_columns  A list of column names to NOT sort by.
+    @param  sort_columns  A list of column names to sort by FIRST."""
+
+    # Exclude any column that contains list/dict values anywhere
+    def is_hashable_col(col: Series) -> bool:
+        return not col.map(lambda x: isinstance(x, (list, dict))).any()
+
     if df is None or df.empty:
         return df
     # Exclude non-hashable columns e.g. lists and dicts
-    safe_cols = [c for c in df.columns if c not in ignored_columns and not isinstance(df[c].iloc[0], (list, dict))]
+    safe_cols = [
+        c for c in df.columns
+        if c not in ignored_columns and is_hashable_col(df[c])
+    ]
+    sort_columns = [
+        c for c in sort_columns
+        if c in df.columns and is_hashable_col(df[c])
+    ]
     # If we have no columns to sort on, just reset the row indexing.
     if not safe_cols:
         return df.reset_index(drop=True)
+    # Columns sorted alphabetically, with optional priority override
+    safe_cols = sorted(c for c in safe_cols if c not in sort_columns)
+    safe_cols = [c for c in sort_columns if c in df.columns] + safe_cols
     return df.sort_values(by=safe_cols, kind="stable").reset_index(drop=True)
 
 
@@ -232,6 +254,7 @@ def check_values(results: List[Any], expected: List[Any], verbose: bool, log_sou
         if results[i] == expected[i]:
             Log.success(log_source + Log.good_val, Log.msg_compare(results[i], expected[i]), verbose)
         elif results[i] != expected[i]:
-            Log.fail(log_source + Log.bad_val, Log.msg_compare(results[i], expected[i]), raise_error)
+            if raise_error:
+                raise Log.Failure(log_source + Log.bad_val, Log.msg_compare(results[i], expected[i])) from None
             return False
     return True

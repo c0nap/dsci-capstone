@@ -22,8 +22,8 @@ CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\`;
 -- within this database only. Using '%' allows the user to connect from any host.
 GRANT ALL PRIVILEGES ON \`$MYSQL_DATABASE\`.* TO '$MYSQL_USER'@'%';
 
--- Allow the user to create/drop databases without touching existing ones
-GRANT CREATE, DROP ON *.* TO '$MYSQL_USER'@'%';
+-- Allow the user to create/drop databases and fully use them for testing
+GRANT ALL PRIVILEGES ON *.* TO '$MYSQL_USER'@'%';
 
 -- Apply privilege changes immediately so they take effect without restarting MySQL.
 FLUSH PRIVILEGES;

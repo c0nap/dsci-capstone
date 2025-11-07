@@ -2,6 +2,18 @@
 Data Science Capstone - Patrick Conan
 ---
 
+## Database Selection
+
+**MongoDB** and **Neo4j** are strictly required for this project, but you can choose between MySQL or PostgreSQL for your required relational database.
+
+We recommend **PostgreSQL** for production environments. Both databases are supported, but they differ in security models:
+
+- **PostgreSQL**: Uses ownership-based permissions. The application user can only drop databases it created, protecting system databases and databases owned by other users.
+- **MySQL**: Requires global `DROP` privilege to enable runtime database operations. This allows dropping *any* database, including those created by root or other users.
+
+Our code creates and drops databases at runtime for testing and isolation. PostgreSQL's permission model makes this safe for production; MySQL's does not.
+
+
 ## Database Setup
 
 If you need help installing your databases, follow these guides (click to expand).
@@ -177,6 +189,15 @@ For this reason, we recommend keeping `DB_NAME` lowercase in your .env file, but
 - For Docker compatibility, all database query files should have UNIX line endings (especially `.sql`).
 - Keep in mind MySQL and PostgreSQL have slightly different syntax - you will need a version-specific query to create tables.
 - Our PyTests use single quotes inside queries to avoid parsing issues.
+
+
+### Neo4j
+
+Neo4j Community Edition does not have native support for multiple databases or graphs, so our GraphConnector class emulates this using node labels.
+
+- `db` - **Database Name** - Queries should NOT specify `db`, it will be set automatically. All CREATE / MERGE queries will automatically assign this label to the results (nodes _and_ relationships).
+- `kg` - **Graph Name** - Queries MUST specify `kg` on the nodes of their query.
+- `name` - **Node Name** - The human-readable name of the node displayed in Blazor (required).
 
 
 ## Makefile Commands

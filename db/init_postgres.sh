@@ -1,6 +1,6 @@
 #!/bin/sh
-YELLOW="\033[33m"
-WHITE="\033[0m"
+YELLOW='\033[33m'
+WHITE='\033[0m'
 ECHO_PREFIX="*** ${YELLOW}(init_postgres.sh)${WHITE} ***  "
 echo "$ECHO_PREFIX === INIT SCRIPT STARTING ==="
 

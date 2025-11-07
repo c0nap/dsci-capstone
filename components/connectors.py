@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from dotenv import load_dotenv
 import os
 from pandas import DataFrame
@@ -7,8 +8,7 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.pool import NullPool
 from sqlparse import parse as sql_parse
 from src.util import check_values, df_natural_sorted, Log
-from time import time
-from typing import List, Optional
+from typing import Generator, List, Optional
 
 
 # Read environment variables at compile time
@@ -36,11 +36,20 @@ class Connector(ABC):
 
     @abstractmethod
     def test_connection(self, raise_error: bool = True) -> bool:
-        """Establish a basic connection to the database.
+        """Establish a basic connection to the database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
+        pass
+
+    @abstractmethod
+    def check_connection(self, log_source: str, raise_error: bool) -> bool:
+        """Minimal connection test to determine if our connection string is valid.
+        @param log_source  The Log class prefix indicating which method is performing the check.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the connection test was successful.
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
         pass
 
     @abstractmethod
@@ -121,6 +130,28 @@ class DatabaseConnector(Connector):
         """
         pass
 
+    @contextmanager
+    def temp_database(self, database_name: str) -> Generator[None, None, None]:
+        """Temporarily switch to a pseudo-database, creating and dropping it if needed.
+        @details
+            - If the target database does not exist, it will be created before yielding
+              and dropped automatically afterward.
+            - If it already exists, it will be left intact.
+        @param database_name  The name of the pseudo-database to use temporarily.
+        """
+        old_db = self.database_name
+        should_drop = not self.database_exists(database_name)
+        if should_drop:
+            self.create_database(database_name)
+        self.change_database(database_name)
+
+        try:
+            yield
+        finally:
+            self.change_database(old_db)
+            if should_drop:
+                self.drop_database(database_name)
+
     # Avoid making this abstract, even though derived classes treat it like one.
     # Otherwise MyPy will complain about the partial logic inside.
     def execute_query(self, query: str) -> Optional[DataFrame]:
@@ -181,9 +212,10 @@ class DatabaseConnector(Connector):
             raise Log.Failure(Log.db_conn_abc + Log.run_f, Log.msg_bad_exec_f(filename)) from e
 
     @abstractmethod
-    def get_dataframe(self, name: str) -> Optional[DataFrame]:
+    def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified resource.
         @param name  The name of an existing table or collection in the database.
+        @param columns  A list of column names to keep.
         @return  DataFrame containing the requested data, or None"""
         pass
 
@@ -288,7 +320,7 @@ class RelationalConnector(DatabaseConnector):
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
 
     def test_connection(self, raise_error: bool = True) -> bool:
-        """Establish a basic connection to the database.
+        """Establish a basic connection to the database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
@@ -329,12 +361,14 @@ class RelationalConnector(DatabaseConnector):
                 raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
 
             try:  # Create a table, insert dummy data, and use get_dataframe
-                tmp_table = f"test_table_{int(time())}"
+                tmp_table = f"test_table"
                 self.execute_query(f"DROP TABLE IF EXISTS {tmp_table} CASCADE;")
                 self.execute_query(
                     f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');"
                 )
                 df = self.get_dataframe(f"{tmp_table}")
+                if df is None:
+                    return False
                 check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
                 self.execute_query(f"DROP TABLE {tmp_table};")
             except Exception as e:
@@ -343,7 +377,7 @@ class RelationalConnector(DatabaseConnector):
                 raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
 
             try:  # Test create/drop functionality with tmp database
-                tmp_db = f"test_db_{int(time())}"
+                tmp_db = f"test_conn"  # Do not use context manager: interferes with traceback
                 working_database = str(self.database_name)
                 if self.database_exists(tmp_db):
                     self.drop_database(tmp_db)
@@ -367,7 +401,7 @@ class RelationalConnector(DatabaseConnector):
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
-        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
         try:
             # SQLAlchemy will not create the connection until we send a query
             engine = create_engine(self.connection_string, poolclass=NullPool)
@@ -386,12 +420,12 @@ class RelationalConnector(DatabaseConnector):
         @param query  A single query to perform on the database.
         @return  DataFrame containing the result of the query, or None
         @throws Log.Failure  If the query fails to execute."""
+        self.check_connection(Log.run_q, raise_error=True)
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
         result = super().execute_query(query)
         if not self._is_single_query(query):
             return result
         # Derived classes MUST implement single-query execution.
-        self.check_connection(Log.run_q, raise_error=True)
         try:
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
@@ -417,9 +451,10 @@ class RelationalConnector(DatabaseConnector):
                 queries.append(query)
         return queries
 
-    def get_dataframe(self, name: str) -> Optional[DataFrame]:
+    def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.
         @param name  The name of an existing table or collection in the database.
+        @param columns  A list of column names to keep.
         @return  Sorted DataFrame containing the requested data, or None
         @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
@@ -433,9 +468,10 @@ class RelationalConnector(DatabaseConnector):
             table = Table(name, MetaData(), autoload_with=engine)
             result = connection.execute(select(table))
             df = DataFrame(result.fetchall(), columns=result.keys())
-            df = df_natural_sorted(df)
 
             if df is not None and not df.empty:
+                df = df_natural_sorted(df, sort_columns=columns)
+                df = df[columns] if columns else df
                 Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(name, df), self.verbose)
                 return df
         # If not found, warn but do not fail
@@ -446,8 +482,8 @@ class RelationalConnector(DatabaseConnector):
         """Use the current database connection to create a sibling database in this engine.
         @param database_name  The name of the new database to create.
         @throws Log.Failure  If we fail to create the requested database for any reason."""
-        super().create_database(database_name)
         self.check_connection(Log.create_db, raise_error=True)
+        super().create_database(database_name)
         try:
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
@@ -461,8 +497,8 @@ class RelationalConnector(DatabaseConnector):
         """Delete all data stored in a particular database.
         @param database_name  The name of an existing database.
         @throws Log.Failure  If we fail to drop the target database for any reason."""
-        super().drop_database(database_name)
         self.check_connection(Log.drop_db, raise_error=True)
+        super().drop_database(database_name)
         try:
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
