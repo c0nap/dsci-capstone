@@ -9,6 +9,11 @@ CREATE (table:Furniture {name: 'Table', type: 'surface', x: 5.5, y: 3.0, kg: 'sc
 CREATE (lamp:Furniture {name: 'Lamp', type: 'lighting', x: 5.8, y: 3.1, kg: 'scene'});
 
 // Spatial relationships
+MERGE (bob:Person {name: 'Bob', kg: 'scene'})
+MERGE (sofa:Furniture {name: 'Sofa', kg: 'scene'})
+MERGE (alice:Person {name: 'Alice', kg: 'scene'})
+MERGE (table:Furniture {name: 'Table', kg: 'scene'})
+MERGE (lamp:Furniture {name: 'Lamp', kg: 'scene'})
 CREATE (bob)-[:SITTING_ON]->(sofa)
 CREATE (alice)-[:NEAR {distance: 0.5}]->(table)
 CREATE (lamp)-[:ON_TOP_OF]->(table)
@@ -27,6 +32,9 @@ MERGE (d3_ref:DialogueRef {name: "ref_Alice_lamp", speaker: 'Alice', mentioned_o
 RETURN d1_ref, d2_ref, d3_ref;
 
 // Sequential dialogue flow
+MERGE (d1:Dialogue {name: "Alice_10.5", kg: 'dialogue'})
+MERGE (d2:Dialogue {name: "Bob_12.3", kg: 'dialogue'})
+MERGE (d3:Dialogue {name: "Alice_15.8", kg: 'dialogue'})
 CREATE (d1)-[:FOLLOWED_BY]->(d2)
 CREATE (d2)-[:FOLLOWED_BY]->(d3)
 RETURN d1, d2, d3;

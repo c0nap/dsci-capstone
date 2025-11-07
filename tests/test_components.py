@@ -261,6 +261,15 @@ def test_cypher_example_3(graph_db):
         print(f"database_name: {graph_db.database_name}")
         print(f"graph_name: {graph_db.graph_name}")
 
+        debug_query = "MATCH ()-[r]->() RETURN count(r) as rel_count"
+        debug_df = graph_db.execute_query(debug_query, _filter_results=False)
+        print(f"DEBUG: Total relationships in scene: {debug_df}")
+        
+        # Check if relationships exist at all (ignoring name property)
+        debug_query2 = "MATCH (s)-[r]->(o) RETURN type(r) as relation, labels(s) as s_labels, labels(o) as o_labels"
+        debug_df2 = graph_db.execute_query(debug_query2, _filter_results=False)
+        print(f"DEBUG: Raw relationships:\n{debug_df2}")
+
         # Verify spatial relationships
         triples_scene = graph_db.get_all_triples()
         assert triples_scene is not None
