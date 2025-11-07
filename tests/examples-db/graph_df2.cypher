@@ -20,6 +20,7 @@ CREATE (dave:Person {name: "Dave", age: 28, kg: "social"})
 CREATE (dave)-[:KNOWS]->(alice);
 
 // Mixed: MATCH + CREATE in same statement
+MATCH (alice:Person {name: "Alice", kg: "social"})
 MATCH (b:Person {name: "Bob", kg: "social"})
 CREATE (b)-[:FOLLOWS]->(alice)
 RETURN b;
