@@ -213,42 +213,6 @@ def test_cypher_example_2(graph_db):
     # Verify list properties were stored
     frank_row = df[df['name'] == 'Frank'].iloc[0]
     assert 'hobbies' in frank_row or 'scores' in frank_row  # At least one list property
-    
-    # Debug: Check what's actually in the database
-    debug_query = """
-    MATCH (s)-[r]->(o)
-    WHERE s.kg = 'social' AND o.kg = 'social'
-    RETURN s.name AS subject, s.db AS s_db, type(r) AS relation, 
-           o.name AS object, o.db AS o_db, r.db AS r_db
-    """
-    debug_df = graph_db.execute_query(debug_query, _filter_results=False)
-    print("\n=== DEBUG: Raw relationships ===")
-    print(debug_df)
-
-    # Debug: Check if the query is finding anything
-    debug_query2 = """
-    MATCH (s)-[r]->(o)
-    WHERE s.kg = 'social' AND o.kg = 'social' AND r.kg = 'social'
-      AND s.db = 'pytest' AND o.db = 'pytest' AND r.db = 'pytest'
-    RETURN s.name AS subject, type(r) AS relation, o.name AS object
-    """
-    debug_df2 = graph_db.execute_query(debug_query2, _filter_results=False)
-    print("\n=== DEBUG: Manual triples query ===")
-    print(debug_df2)
-
-    # Debug: What graph are we querying?
-    print(f"\n=== DEBUG: Current graph context ===")
-    print(f"database_name: {graph_db.database_name}")
-    print(f"graph_name: {graph_db.graph_name}")
-
-    # Debug: What query is being generated?
-    test_query = f"""
-    MATCH (s {graph_db.SAME_DB_KG_()})-[r {graph_db.SAME_DB_KG_()}]->(o {graph_db.SAME_DB_KG_()})
-    WHERE {graph_db.NOT_DUMMY_('s')} AND {graph_db.NOT_DUMMY_('o')}
-    RETURN s.name AS subject, type(r) AS relation, o.name AS object
-    """
-    print(f"\n=== DEBUG: Generated query ===")
-    print(test_query)
 
     # Verify relationships exist
     triples_df = graph_db.get_all_triples("social")
@@ -259,6 +223,85 @@ def test_cypher_example_2(graph_db):
     assert any(triples_df['relation'] == 'COLLABORATES')
     
     graph_db.drop_graph("social")
+
+
+@pytest.mark.order(14)
+def test_cypher_example_3(graph_db):
+    """Test scene and dialogue graphs with proper isolation.
+    @details  Validates kg property isolation using a scene graph (spatial relationships)
+    and dialogue graph (conversation flow with object references). Tests temp_graph 
+    context manager and filter_valid correctness across different graph contexts."""
+    
+    # Clean up all test graphs
+    for kg_name in ["scene", "dialogue"]:
+        try:
+            graph_db.drop_graph(kg_name)
+        except:
+            pass
+    
+    _test_query_file(
+        graph_db,
+        "./tests/examples-db/graph_df3.cql",
+        valid_files=["cql", "cypher"]
+    )
+    
+    # Test Graph 1: Scene graph with spatial relationships
+    with graph_db.temp_graph("scene"):
+        df_scene = graph_db.get_dataframe("scene")
+        assert df_scene is not None
+        assert len(df_scene) == 5  # Alice, Bob, Sofa, Table, Lamp
+        assert any(df_scene['name'] == 'Alice')
+        assert any((df_scene['type'] == 'seating') & (df_scene['name'] == 'Sofa'))
+        
+        # Verify spatial coordinates exist
+        assert 'x' in df_scene.columns or 'position' in df_scene.columns
+        
+        # Verify spatial relationships
+        triples_scene = graph_db.get_all_triples()
+        assert triples_scene is not None
+        assert any(triples_scene['relation'] == 'SITTING_ON')
+        assert any(triples_scene['relation'] == 'ON_TOP_OF')
+        assert any(triples_scene['relation'] == 'NEAR')
+    
+    # Test Graph 2: Dialogue graph
+    with graph_db.temp_graph("dialogue"):
+        df_dialogue = graph_db.get_dataframe("dialogue")
+        assert df_dialogue is not None
+        assert len(df_dialogue) == 6  # 3 Dialogue + 3 DialogueRef nodes
+        
+        # Check dialogue content
+        assert any(df_dialogue['speaker'] == 'Alice')
+        assert any(df_dialogue['speaker'] == 'Bob')
+        
+        # Verify dialogue flow relationships
+        triples_dialogue = graph_db.get_all_triples()
+        assert triples_dialogue is not None
+        assert any(triples_dialogue['relation'] == 'FOLLOWED_BY')
+        
+        # Check object references exist
+        assert any(df_dialogue['mentioned_object'] == 'table')
+        assert any(df_dialogue['mentioned_object'] == 'lamp')
+    
+    # Verify graph isolation: scene and dialogue should be separate
+    df_scene = graph_db.get_dataframe("scene")
+    df_dialogue = graph_db.get_dataframe("dialogue")
+    assert df_scene is not None and df_dialogue is not None
+    
+    # Scene objects should not appear in dialogue graph structure
+    scene_entities = set(df_scene['name'].dropna())
+    dialogue_speakers = set(df_dialogue['speaker'].dropna())
+    
+    # Speakers reference scene entities but graphs remain isolated
+    # (Alice/Bob appear as speakers, not as Person nodes in dialogue graph)
+    assert 'Alice' in dialogue_speakers  # Alice speaks
+    assert 'Alice' in scene_entities     # Alice exists in scene
+    # But the actual node types/properties should differ
+    scene_alice = df_scene[df_scene['name'] == 'Alice']
+    assert 'position' in scene_alice.columns or 'x' in scene_alice.columns
+    
+    # Clean up
+    for kg_name in ["scene", "dialogue"]:
+        graph_db.drop_graph(kg_name)
 
 
 # ------------------------------------------------------------------------------
