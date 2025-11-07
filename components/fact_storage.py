@@ -185,12 +185,19 @@ class GraphConnector(DatabaseConnector):
         multi_query = re.sub(r'//.*', '', multi_query)
         # 2. Remove block comments
         multi_query = re.sub(r'/\*.*?\*/', '', multi_query, flags=re.DOTALL)
-        # 3. Split by ; outside of strings and strip
-        parts, buf, in_str = [], '', None
+        # 3. Split by ; outside of strings and strip, respecting escapes
+        parts, buf, in_str, prev_backslash = [], '', None, False
         for ch in multi_query:
-            if ch in "\"'":  # toggle string mode
-                in_str = None if in_str == ch else ch
-            if ch == ';' and not in_str:
+            if prev_backslash:
+                buf += ch
+                prev_backslash = False
+            elif ch == '\\':
+                buf += ch
+                prev_backslash = True
+            elif ch in "\"'" and not prev_backslash:
+                in_str = None if in_str == ch else (ch if in_str is None else in_str)
+                buf += ch
+            elif ch == ';' and not in_str:
                 if buf.strip():
                     parts.append(buf.strip())
                 buf = ''
