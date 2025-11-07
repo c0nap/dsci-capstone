@@ -155,25 +155,15 @@ class GraphConnector(DatabaseConnector):
         try:
             results, meta = db.cypher_query(query)
 
-            # Re-tag nodes with the active database name using a second query.
+            # Re-tag nodes and edges with the active database name using a second query.
             query_lower = query.lower()
-            if "create" in query_lower:
-                if "return" in query_lower:
-                    tag_query = self.TAG_NODES_(results)
-                    if tag_query:
-                        db.cypher_query(tag_query)
-                # Fallback for CREATE statements without RETURN: full sweep across all untagged nodes.
-                else:
-                    # DO NOT set kg here; only db is safe to auto-tag
-                    db.cypher_query(f"""MATCH (n) WHERE n.db IS NULL
-                        SET n.db = '{self.database_name}'""")
+            if "create" in query_lower or "merge" in query_lower:
+                # Always sweep for untagged entities, regardless of RETURN
+                self._tag_db()
                 # Re-fetch to ensure returned nodes include 'db'
-                ids = [obj.element_id for row in (results or []) for obj in row if hasattr(obj, "element_id")]
-                if ids:   # only re-fetch if we actually have ids
-                    ids_str = "[" + ", ".join(f"'{i}'" for i in ids) + "]"
-                    results, meta = db.cypher_query(f"MATCH (n) WHERE elementId(n) IN {ids_str} RETURN n")
+                self._fetch_updated(results)
 
-            # Return nodes from the current database and graph ONLY, despite what the query wants.
+            # Return nodes from the current database ONLY, despite what the query wants.
             #print("Before filter:", results, meta)
             if _filter_results:
                 results, meta = filter_valid(results, meta, self.database_name)
@@ -344,6 +334,23 @@ class GraphConnector(DatabaseConnector):
         @note  Never use this. Enables the existence of an "empty" database."""
         query = f"MATCH (n) WHERE {self.IS_DUMMY_()} DETACH DELETE n"
         self.execute_query(query, _filter_results=False)
+
+    def _tag_db(self) -> None:
+        """Sweeps the database for untagged nodes and relationships, and adds a 'db' attribute."""
+        db.cypher_query(f"""MATCH (n) WHERE n.db IS NULL
+            SET n.db = '{self.database_name}'""")
+        db.cypher_query(f"""MATCH ()-[r]->() WHERE r.db IS NULL
+            SET r.db = '{self.database_name}'""")
+
+    def _fetch_updated(self, results: List[Tuple[Any, ...]]) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
+        """Re-fetch nodes and edges after changing the remote copy in Neo4j.
+        @param results Original list of untagged tuples from db.cypher_query().
+        @return Latest version of results fetched from the database."""
+        ids = [obj.element_id for row in (results or []) for obj in row if hasattr(obj, "element_id")]
+        if not ids:   # only re-fetch if we actually have ids
+            return (None, None)
+        ids_str = "[" + ", ".join(f"'{i}'" for i in ids) + "]"
+        return db.cypher_query(f"MATCH (n) WHERE elementId(n) IN {ids_str} RETURN n")
 
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
@@ -553,32 +560,6 @@ class GraphConnector(DatabaseConnector):
         """
         return f"{{db: '{self.database_name}', kg: '{self.graph_name}'}}"
 
-
-    def TAG_NODES_(self, results):
-        """Generate Cypher to tag returned nodes with database and graph names.
-        @details
-            - For use after a CREATE ... RETURN query.
-            - Collects node IDs from results and builds a SET statement.
-        @param results  Result list returned by db.cypher_query().
-        @return  Cypher query string to update 'db' field, or None if no nodes found.
-        """
-        node_ids = [
-            obj.element_id
-            for row in results or []
-            for obj in row
-            if hasattr(obj, "element_id")
-        ]
-        if not node_ids:
-            return None
-
-        # Build a valid Cypher list literal:
-        ids_str = "[" + ", ".join(f"'{i}'" for i in node_ids) + "]"
-        query = (
-            f"MATCH (n) WHERE elementId(n) IN {ids_str} "
-            f"SET n.db = '{self.database_name}'"
-        )
-        #print("TAG_NODES_ query:", query)
-        return query
 
 
 
