@@ -7,7 +7,7 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.pool import NullPool
 from sqlparse import parse as sql_parse
 from src.util import check_values, df_natural_sorted, Log
-from typing import List, Optional
+from typing import List, Optional, Generator
 from contextlib import contextmanager
 
 
@@ -131,7 +131,7 @@ class DatabaseConnector(Connector):
         pass
 
     @contextmanager
-    def temp_database(self, database_name: str) -> None:
+    def temp_database(self, database_name: str) -> Generator[None, None, None]:
         """Temporarily switch to a pseudo-database, creating and dropping it if needed.
         @details
             - If the target database does not exist, it will be created before yielding

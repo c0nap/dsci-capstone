@@ -2,16 +2,19 @@ import os
 import pytest
 from src.setup import Session
 from src.util import Log
+from src.components import DatabaseConnector, RelationalConnector
+from src.fact_storage import GraphConnector
+from src.document_stroage import DocumentConnector
 import sys
 import time
-from typing import List
+from typing import List, Generator
 
 
 # ------------------------------------------------------------------------------
 # DATABASE FIXTURES: Checkpoint the database connector instances from Session.
 # ------------------------------------------------------------------------------
 @pytest.fixture(scope="module")
-def relational_db(session):
+def relational_db(session: Session) -> RelationalConnector:
     """Fixture to get relational database connection."""
     _relational_db = session.relational_db
     with _relational_db.temp_database("pytest"):
@@ -19,7 +22,7 @@ def relational_db(session):
 
 
 @pytest.fixture(scope="module")
-def docs_db(session):
+def docs_db(session: Session) -> DocumentConnector:
     """Fixture to get document database connection."""
     _docs_db = session.docs_db
     with _docs_db.temp_database("pytest"):
@@ -27,7 +30,7 @@ def docs_db(session):
 
 
 @pytest.fixture(scope="module")
-def graph_db(session):
+def graph_db(session: Session) -> GraphConnector:
     """Fixture to get document database connection."""
     _graph_db = session.graph_db
     with _graph_db.temp_database("pytest"):
@@ -38,19 +41,19 @@ def graph_db(session):
 # BUILT-IN DATABASE TESTS: Run check_connection() for minimal connection test.
 # ------------------------------------------------------------------------------
 @pytest.mark.order(1)
-def test_db_relational_minimal(relational_db):
+def test_db_relational_minimal(relational_db: RelationalConnector) -> None:
     """Tests if the RelationalConnector has a valid connection string."""
     relational_db.check_connection(log_source=Log.pytest_db, raise_error=True)
 
 
 @pytest.mark.order(2)
-def test_db_docs_minimal(docs_db):
+def test_db_docs_minimal(docs_db: DocumentConnector) -> None:
     """Tests if the DocumentConnector has a valid connection string."""
     docs_db.check_connection(log_source=Log.pytest_db, raise_error=True)
 
 
 @pytest.mark.order(3)
-def test_db_graph_minimal(graph_db):
+def test_db_graph_minimal(graph_db: GraphConnector) -> None:
     """Tests if the GraphConnector has a valid connection string."""
     graph_db.check_connection(log_source=Log.pytest_db, raise_error=True)
 
@@ -59,19 +62,19 @@ def test_db_graph_minimal(graph_db):
 # BUILT-IN DATABASE TESTS: Run test_connection() for comprehensive usage tests.
 # ------------------------------------------------------------------------------
 @pytest.mark.order(4)
-def test_db_relational_comprehensive(relational_db):
+def test_db_relational_comprehensive(relational_db: RelationalConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
     relational_db.test_connection(raise_error=True)
 
 
 @pytest.mark.order(5)
-def test_db_docs_comprehensive(docs_db):
+def test_db_docs_comprehensive(docs_db: DocumentConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
     docs_db.test_connection(raise_error=True)
 
 
 @pytest.mark.order(6)
-def test_db_graph_comprehensive(graph_db):
+def test_db_graph_comprehensive(graph_db: GraphConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
     graph_db.test_connection(raise_error=True)
 
@@ -80,7 +83,7 @@ def test_db_graph_comprehensive(graph_db):
 # DATABASE FILE TESTS: Run execute_file with example scripts.
 # ------------------------------------------------------------------------------
 @pytest.fixture(scope="module")
-def load_examples_relational(relational_db):
+def load_examples_relational(relational_db: RelationalConnector) -> Generator[None, None, None]:
     """Fixture to create relational tables using engine-specific syntax."""
     if relational_db.db_type == "MYSQL":
         _test_query_file(relational_db, "./tests/examples-db/rel_postgres_schema.sql", ["sql"])
@@ -95,7 +98,7 @@ def load_examples_relational(relational_db):
 
 
 @pytest.mark.order(7)
-def test_sql_example_1(relational_db, load_examples_relational):
+def test_sql_example_1(relational_db: RelationalConnector, load_examples_relational: Generator[None, None, None]) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected.
@@ -108,7 +111,7 @@ def test_sql_example_1(relational_db, load_examples_relational):
 
 
 @pytest.mark.order(8)
-def test_sql_example_2(relational_db, load_examples_relational):
+def test_sql_example_2(relational_db: RelationalConnector, load_examples_relational: Generator[None, None, None]) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected.
@@ -121,7 +124,7 @@ def test_sql_example_2(relational_db, load_examples_relational):
 
 
 @pytest.mark.order(9)
-def test_mongo_example_1(docs_db):
+def test_mongo_example_1(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected."""
@@ -135,7 +138,7 @@ def test_mongo_example_1(docs_db):
 
 
 @pytest.mark.order(10)
-def test_mongo_example_2(docs_db):
+def test_mongo_example_2(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected."""
@@ -149,7 +152,7 @@ def test_mongo_example_2(docs_db):
 
 
 @pytest.mark.order(11)
-def test_mongo_example_3(docs_db):
+def test_mongo_example_3(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected."""
@@ -166,7 +169,7 @@ def test_mongo_example_3(docs_db):
 
 
 @pytest.mark.order(12)
-def test_cypher_example_1(graph_db):
+def test_cypher_example_1(graph_db: GraphConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected."""
@@ -188,7 +191,7 @@ def test_cypher_example_1(graph_db):
 
 
 @pytest.mark.order(13)
-def test_cypher_example_2(graph_db):
+def test_cypher_example_2(graph_db: GraphConnector) -> None:
     """Test social network graph with relationships and mixed query patterns.
     @details  Validates comment parsing, semicolon splitting, CREATE/MERGE/MATCH,
     relationships with properties, and TAG_NODES_ with/without RETURN."""
@@ -226,7 +229,7 @@ def test_cypher_example_2(graph_db):
 
 
 @pytest.mark.order(14)
-def test_cypher_example_3(graph_db):
+def test_cypher_example_3(graph_db: GraphConnector) -> None:
     """Test scene and dialogue graphs with proper isolation.
     @details  Validates kg property isolation using a scene graph (spatial relationships)
     and dialogue graph (conversation flow with object references). Tests temp_graph 
@@ -307,7 +310,7 @@ def test_cypher_example_3(graph_db):
 # ------------------------------------------------------------------------------
 # FILE TEST WRAPPERS: Reuse the logic to test multiple files within a single test.
 # ------------------------------------------------------------------------------
-def _test_query_file(db_fixture, filename: str, valid_files: List):
+def _test_query_file(db_fixture: DatabaseConnector, filename: str, valid_files: List[str]) -> None:
     """Run queries from a local file through the database.
     @param db_fixture  Fixture corresponding to the current session's database.
     @param filename  The name of a query file (for example ./tests/example1.sql).

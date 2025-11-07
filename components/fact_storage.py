@@ -4,7 +4,7 @@ import os
 from pandas import DataFrame, option_context
 import re
 from src.util import check_values, df_natural_sorted, Log
-from typing import List, Optional, Tuple, Any, Dict
+from typing import List, Optional, Tuple, Any, Dict, Generator
 from contextlib import contextmanager
 
 
@@ -39,7 +39,7 @@ class GraphConnector(DatabaseConnector):
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}"
 
     @contextmanager
-    def temp_graph(self, graph_name: str) -> None:
+    def temp_graph(self, graph_name: str) -> Generator[None, None, None]:
         """Temporarily inspect the specified graph, then swap back when finished.
         @param graph_name  The name of a graph in the current database."""
         old = self.graph_name
@@ -137,6 +137,7 @@ class GraphConnector(DatabaseConnector):
                 return False
             raise Log.Failure(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
         Log.success(Log.gr_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
+        return True
 
     def execute_query(self, query: str, _filter_results: bool = True) -> Optional[DataFrame]:
         """Send a single Cypher query to Neo4j.
@@ -304,7 +305,7 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.drop_db, Log.msg_fail_manage_db("drop", database_name, self.connection_string)) from e
 
-    def drop_graph(self, graph_name: str):
+    def drop_graph(self, graph_name: str) -> None:
         """Delete all nodes stored under a particular graph name.
         @param graph_name  The name of a graph in the current database.
         @throws Log.Failure  If we fail to drop the target graph for any reason."""
