@@ -90,6 +90,16 @@ class LLMConnector(Connector):
         @return  Whether the prompt executed successfully."""
         result = self.execute_full_query("You are a helpful assistant.", query)
         return result.strip() == "pong"
+        # TODO
+
+    def check_connection(self, log_source: str, raise_error: bool) -> bool:
+        """Minimal connection test to determine if our connection string is valid.
+        @param log_source  The Log class prefix indicating which method is performing the check.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the connection test was successful.
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
+        result = self.execute_full_query("You are a helpful assistant.", query)
+        return result.strip() == "pong"
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
         """Send a single prompt to the LLM with separate system and human instructions."""
