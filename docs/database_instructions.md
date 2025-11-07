@@ -191,6 +191,15 @@ For this reason, we recommend keeping `DB_NAME` lowercase in your .env file, but
 - Our PyTests use single quotes inside queries to avoid parsing issues.
 
 
+### Neo4j
+
+Neo4j Community Edition does not have native support for multiple databases or graphs, so our GraphConnector class emulates this using node labels.
+
+- `db` - **Database Name** - Queries should NOT specify `db`, it will be set automatically. All CREATE / MERGE queries will automatically assign this label to the results (nodes _and_ relationships).
+- `kg` - **Graph Name** - Queries MUST specify `kg` on the nodes of their query.
+- `name` - **Node Name** - The human-readable name of the node displayed in Blazor (required).
+
+
 ## Makefile Commands
 
 #### db-start-local
