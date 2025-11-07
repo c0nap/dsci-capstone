@@ -1,8 +1,8 @@
 import os
 import pytest
-from src.components import DatabaseConnector, RelationalConnector
-from src.document_stroage import DocumentConnector
-from src.fact_storage import GraphConnector
+from components.connectors import DatabaseConnector, RelationalConnector
+from components.document_storage import DocumentConnector
+from components.fact_storage import GraphConnector
 from src.setup import Session
 from src.util import Log
 import sys
