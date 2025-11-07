@@ -51,7 +51,7 @@ class GraphConnector(DatabaseConnector):
 
 
     def test_connection(self, raise_error: bool = True) -> bool:
-        """Establish a basic connection to the Neo4j database.
+        """Establish a basic connection to the Neo4j database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
@@ -124,7 +124,7 @@ class GraphConnector(DatabaseConnector):
 
     def check_connection(self, log_source: str, raise_error: bool) -> bool:
         """Minimal connection test to determine if our connection string is valid.
-        @details  Connect to Neo4j using ######
+        @details  Connect to Neo4j executing a query: db.cypher_query()
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.

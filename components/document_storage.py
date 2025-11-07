@@ -55,7 +55,7 @@ class DocumentConnector(DatabaseConnector):
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
 
     def test_connection(self, raise_error: bool = True) -> bool:
-        """Establish a basic connection to the MongoDB database.
+        """Establish a basic connection to the MongoDB database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.

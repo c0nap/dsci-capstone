@@ -36,8 +36,17 @@ class Connector(ABC):
 
     @abstractmethod
     def test_connection(self, raise_error: bool = True) -> bool:
-        """Establish a basic connection to the database.
+        """Establish a basic connection to the database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the connection test was successful.
+        @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
+        pass
+
+    @abstractmethod
+    def check_connection(self, log_source: str, raise_error: bool) -> bool:
+        """Minimal connection test to determine if our connection string is valid.
+        @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
         @throws RuntimeError  If raise_error is True and the connection test fails to complete."""
@@ -310,7 +319,7 @@ class RelationalConnector(DatabaseConnector):
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
 
     def test_connection(self, raise_error: bool = True) -> bool:
-        """Establish a basic connection to the database.
+        """Establish a basic connection to the database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
