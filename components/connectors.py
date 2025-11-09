@@ -441,7 +441,9 @@ class RelationalConnector(DatabaseConnector):
                 result = connection.execute(text(query))
 
                 returns_data = self._returns_data(query)
-                if returns_data and result.returns_rows and result.keys():
+                parsable_to_df = self._parsable_to_df(result)
+                if returns_data and parsable_to_df:
+                    # Fetchall will consume the cursor - we check everything beforehand
                     df = DataFrame(result.fetchall(), columns=result.keys())
                     Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
                     return df
@@ -485,10 +487,16 @@ class RelationalConnector(DatabaseConnector):
           - DDL/DML (CREATE, INSERT, UPDATE, etc.) produce no rows and only rowcount/status.
         @param result  The result of a SQL, Cypher, or JSON query.
         @return  Whether the object is parsable to DataFrame."""
-        if hasattr(result, "returns_rows") and result.returns_rows:
-            keys = getattr(result, "keys", lambda: [])()
-            return bool(keys)  # non-empty column list
-        return False
+        if not hasattr(result, "returns_rows") or not result.returns_rows:
+            return False
+        # Ensure columns list is non-empty
+        keys = getattr(result, "keys", lambda: [])()
+        if not keys:
+            return False
+        # Ensure the result is still open (fetchable)
+        if hasattr(result, "closed") and result.closed:
+            return False
+        return True
 
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.
