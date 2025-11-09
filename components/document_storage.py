@@ -252,6 +252,30 @@ class DocumentConnector(DatabaseConnector):
             queries.append(stripped)
         return queries
 
+    def _returns_data(self, query: str) -> bool:
+        """Checks if a query is structured in a way that returns real data, and not status messages.
+        @details Determines whether a MongoDB command should yield cursor data.
+        - Uses an exclusion list - commands that definitely return a status.
+        - Everything else falls through to execution for validation.
+        @param query  A single pre-validated JSON query string.
+        @return  Whether the query is intended to fetch data (true) or might return a status message (false).
+        """
+        import json
+        cmd = json.loads(query)
+        top_key = next(iter(cmd))
+        # Commands that perform actions and return only status messages
+        non_data_commands = {
+            "insert", "insertOne", "insertMany",
+            "update", "updateOne", "updateMany", "replaceOne",
+            "delete", "deleteOne", "deleteMany",
+            "drop", "dropDatabase", "dropIndexes", "dropIndex",
+            "create", "createIndexes", "createIndex",
+            "renameCollection"
+        }
+        if top_key in non_data_commands:
+            return False
+        return True  # Default to True - let downstream execution handle ambiguous cases
+
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.

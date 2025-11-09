@@ -460,6 +460,22 @@ class RelationalConnector(DatabaseConnector):
                 queries.append(query)
         return queries
 
+    def _returns_data(self, query: str) -> bool:
+        """Checks if a query is structured in a way that returns real data, and not status messages.
+        @details  Determines whether a SQL query should yield tabular data.
+        - Uses an exclusion list - commands that definitely return only status / row count.
+        - Everything else falls through to execution for validation.
+        @param query  A single pre-validated SQL query string.
+        @return  Whether the query is intended to fetch data (true) or might return a status message (false).
+        """
+        q = query.strip().upper()
+        # Commands that never return tabular data (only status/affected rows)
+        non_data_commands = ("CREATE", "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", 
+                             "TRUNCATE", "GRANT", "REVOKE", "BEGIN", "COMMIT", "ROLLBACK")
+        if q.startswith(non_data_commands):
+            return False
+        return True  # Default to True - let downstream execution handle ambiguous cases
+
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.
         @param name  The name of an existing table or collection in the database.

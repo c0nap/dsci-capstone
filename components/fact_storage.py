@@ -207,6 +207,22 @@ class GraphConnector(DatabaseConnector):
             parts.append(buf.strip())
         return parts
 
+    def _returns_data(self, query: str) -> bool:
+        """Checks if a query is structured in a way that returns real data, and not status messages.
+        @details  Determines whether a Cypher query should yield records.
+        RETURN must be present as a keyword (not in a string value) to return data.
+        @param query  A single pre-validated CQL query string.
+        @return  Whether the query is intended to fetch data (true) or might return a status message (false).
+        """
+        import re
+        q = query.strip().upper()
+        # Remove quoted strings to avoid false positives (e.g., {name: "Return of the Jedi"})
+        q_no_strings = re.sub(r"'[^']*'|\"[^\"]*\"", "", q)
+        # Check if RETURN exists as a keyword (word boundary)
+        if re.search(r'\bRETURN\b', q_no_strings):
+            return True
+        return False  # Normally we would let execution handle ambiguous cases, but this basic check is exhaustive.
+
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified Knowledge Graph collection.
         @details
