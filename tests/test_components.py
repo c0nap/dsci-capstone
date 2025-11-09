@@ -71,24 +71,24 @@ def test_db_graph_minimal(graph_db: GraphConnector) -> None:
 @pytest.mark.dependency(name="rel_comprehensive", depends=["rel_minimal"])
 def test_db_relational_comprehensive(relational_db: RelationalConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    connected = relational_db.test_connection(raise_error=True)
-    assert connected
+    operational = relational_db.test_connection(raise_error=True)
+    assert operational
 
 
 @pytest.mark.order(5)
 @pytest.mark.dependency(name="docs_comprehensive", depends=["docs_minimal"])
 def test_db_docs_comprehensive(docs_db: DocumentConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    connected = docs_db.test_connection(raise_error=True)
-    assert connected
+    operational = docs_db.test_connection(raise_error=True)
+    assert operational
 
 
 @pytest.mark.order(6)
 @pytest.mark.dependency(name="graph_comprehensive", depends=["graph_minimal"])
 def test_db_graph_comprehensive(graph_db: GraphConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    connected = graph_db.test_connection(raise_error=True)
-    assert connected
+    operational = graph_db.test_connection(raise_error=True)
+    assert operational
 
 
 # ------------------------------------------------------------------------------

@@ -2,7 +2,7 @@ from components.connectors import DatabaseConnector
 from contextlib import contextmanager
 from neomodel import config, db
 import os
-from pandas import DataFrame, option_context
+from pandas import DataFrame, Series, option_context
 import re
 from src.util import check_values, df_natural_sorted, Log
 from typing import Any, Dict, Generator, List, Optional, Tuple
@@ -93,7 +93,11 @@ class GraphConnector(DatabaseConnector):
                             CREATE (n2:TestPerson {{kg: '{self.graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
                 self.execute_query(query, _filter_results=False)
                 df = self.get_dataframe(self.graph_name)
-                if df is None or check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
+                #### TODO: remove once error handling is fixed
+                # check_values will raise, so this never became an issue until now
+                if df is None:
+                    raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_df, "DataFrame fetched from graph 'test_graph' is None")
+                if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
                     return False
                 query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                 self.execute_query(query, _filter_results=False)
@@ -170,10 +174,8 @@ class GraphConnector(DatabaseConnector):
             else:
                 # Return nodes from the current database ONLY, despite what the query wants.
                 if _filter_results:
-                    df = df.loc[
-                        (df.get("db") == self.database_name) &
-                        (~df.get("_init", False))
-                    ].drop(columns="_init", errors="ignore")
+                    init_col = df["_init"] if "_init" in df.columns else Series(False, index=df.index)
+                    df = df.loc[(df.get("db") == self.database_name) & (~init_col.fillna(False))].drop(columns="_init", errors="ignore")
 
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
                 return df
