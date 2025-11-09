@@ -156,12 +156,13 @@ class GraphConnector(DatabaseConnector):
             results, meta = db.cypher_query(query)
             # Re-tag nodes and edges with self.database_name using a second query.
             # Must also re-fetch from Neo4j to ensure our copy is tagged with 'db'
-            if "create" in q := query.lower() or "merge" in q:  # Save a line without double-computing lower()
-                self._execute_tag_db()
+            q = query.lower()
+            if "create" in q or "merge" in q:
+                self._execute_retag_db()
                 results, meta = self._fetch_latest(results)
 
             returns_data = self._returns_data(query)
-            parsable_to_df = self._parsable_to_df(tuple(results, meta))
+            parsable_to_df = self._parsable_to_df((results, meta))
             df = DataFrame(results, columns=[m for m in meta]) if returns_data and parsable_to_df else None
             if df is None or df.empty:
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
@@ -395,7 +396,7 @@ class GraphConnector(DatabaseConnector):
         query = f"MATCH (n) WHERE {self.IS_DUMMY_()} DETACH DELETE n"
         self.execute_query(query, _filter_results=False)
 
-    def _execute_tag_db(self) -> None:
+    def _execute_retag_db(self) -> None:
         """Sweeps the database for untagged nodes and relationships, and adds a 'db' attribute."""
         db.cypher_query(
             f"""MATCH (n) WHERE n.db IS NULL

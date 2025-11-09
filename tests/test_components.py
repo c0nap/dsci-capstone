@@ -186,7 +186,7 @@ def test_mongo_example_3(docs_db: DocumentConnector) -> None:
 
 
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="graph_example_1", depends=["graph_minimal", "docs_comprehensive"])
+@pytest.mark.dependency(name="graph_example_1", depends=["graph_minimal", "graph_comprehensive"])
 def test_cypher_example_1(graph_db: GraphConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -209,7 +209,7 @@ def test_cypher_example_1(graph_db: GraphConnector) -> None:
 
 
 @pytest.mark.order(13)
-@pytest.mark.dependency(name="graph_example_2", depends=["graph_minimal", "docs_comprehensive"])
+@pytest.mark.dependency(name="graph_example_2", depends=["graph_minimal", "graph_comprehensive"])
 def test_cypher_example_2(graph_db: GraphConnector) -> None:
     """Test social network graph with relationships and mixed query patterns.
     @details  Validates comment parsing, semicolon splitting, CREATE/MERGE/MATCH,
@@ -248,7 +248,7 @@ def test_cypher_example_2(graph_db: GraphConnector) -> None:
 
 
 @pytest.mark.order(14)
-@pytest.mark.dependency(name="graph_example_3", depends=["graph_minimal", "docs_comprehensive"])
+@pytest.mark.dependency(name="graph_example_3", depends=["graph_minimal", "graph_comprehensive"])
 def test_cypher_example_3(graph_db: GraphConnector) -> None:
     """Test scene and dialogue graphs with proper isolation.
     @details  Validates kg property isolation using a scene graph (spatial relationships)
