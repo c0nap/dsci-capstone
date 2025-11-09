@@ -157,17 +157,17 @@ class GraphConnector(DatabaseConnector):
             return result
         # Derived classes MUST implement single-query execution.
         try:
-            results, meta = db.cypher_query(query)
+            elements, meta = db.cypher_query(query)
             # Re-tag nodes and edges with self.database_name using a second query.
             # Must also re-fetch from Neo4j to ensure our copy is tagged with 'db'
             q = query.lower()
             if "create" in q or "merge" in q:
                 self._execute_retag_db()
-                results, meta = self._fetch_latest(results)
-
+                elements, meta = self._fetch_latest(elements)
+            
             returns_data = self._returns_data(query)
-            parsable_to_df = self._parsable_to_df((results, meta))
-            df = DataFrame(results, columns=[m for m in meta]) if returns_data and parsable_to_df else None
+            parsable_to_df = self._parsable_to_df((elements, meta))
+            df = _elements_to_df(elements) if returns_data and parsable_to_df else None
             if df is None or df.empty:
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
                 return None
@@ -175,7 +175,6 @@ class GraphConnector(DatabaseConnector):
                 # Return nodes from the current database ONLY, despite what the query wants.
                 if _filter_results:
                     _filter_to_db(df, self.database_name)
-
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
                 return df
         except Exception as e:
@@ -718,5 +717,54 @@ def _filter_to_db(self, df: DataFrame) -> DataFrame:
     filtered = df.loc[keep].drop(columns="_init", errors="ignore")
     return filtered
 
+
+def _elements_to_df(elements: List[Dict[str, Any]], meta: List[str]) -> DataFrame:
+    """Convert Neo4j query results (nodes and relationships) into a Pandas DataFrame.
+    @details
+        - Accepts the `elements` output of db.cypher_query().
+        - Automatically unwraps NeoModel Node/Relationship objects into plain dicts via `.__properties__`.
+        - Adds an 'element_type' column distinguishing nodes vs relationships.
+        - Supports mixed node and relationship rows.
+        - Builds a DataFrame with column names from `meta` if provided.
+        - Returns an empty DataFrame for no results.
+    @param elements  List of Neo4j query result tuples.
+    @param meta  Optional list of column names corresponding to each element in a row.
+    @return  DataFrame suitable for downstream filtering and analysis.
+    @throws Log.Failure  If unexpected object structures are encountered.
+    """
+    from pandas import DataFrame
+
+    if not elements:
+        return DataFrame()
+
+    # --- Step 1: Normalize NeoModel objects to plain dicts ---
+    normalized = []
+    for row in elements:
+        new_row = []
+        for x in row:
+            if hasattr(x, "__properties__"):
+                # NeoModel Node/Rel: extract property map and preserve IDs/labels
+                props = dict(x.__properties__)
+                props["element_id"] = getattr(x, "element_id", None)
+                props["labels"] = list(getattr(x, "labels", []))
+                # Identify if this is a Node or Relationship object
+                if hasattr(x, "start_node") or hasattr(x, "end_node") or hasattr(x, "nodes"):
+                    props["element_type"] = "relationship"
+                else:
+                    props["element_type"] = "node"
+                new_row.append(props)
+            elif isinstance(x, dict):
+                # If it’s already a dict, tag it generically (no type info)
+                d = dict(x)
+                d.setdefault("element_type", "dict")
+                new_row.append(d)
+            else:
+                # Scalars or unrecognized types — wrap consistently
+                new_row.append({"value": x, "element_type": "scalar"})
+        normalized.append(new_row)
+
+    # --- Step 2: Construct the DataFrame ---
+    df = DataFrame(normalized, columns=meta if meta else None)
+    return df
 
 
