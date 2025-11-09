@@ -260,10 +260,19 @@ class DatabaseConnector(Connector):
         @return  A list of single-query strings."""
         pass
 
+    @abstractmethod
+    def _returns_data(self, query: str) -> bool:
+        """Checks if a query is structured in a way that returns real data, and not status messages.
+        @param query  A single query string.
+        @return  Whether the query is intended to fetch data (true) or might return a status message (false)."""
+        pass
 
-
-
-
+    @abstractmethod
+    def _parsable_df(self, result: Any) -> bool:
+        """Checks if the result of a query is valid (i.e. can be converted to a Pandas DataFrame).
+        @param result  The result of a SQL, Cypher, or JSON query.
+        @return  Whether the object is parsable to DataFrame."""
+        pass
 
 
 
