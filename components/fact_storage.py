@@ -174,8 +174,7 @@ class GraphConnector(DatabaseConnector):
             else:
                 # Return nodes from the current database ONLY, despite what the query wants.
                 if _filter_results:
-                    init_col = df["_init"] if "_init" in df.columns else Series(False, index=df.index)
-                    df = df.loc[(df.get("db") == self.database_name) & (~init_col.fillna(False))].drop(columns="_init", errors="ignore")
+                    _filter_to_db(df, self.database_name)
 
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
                 return df
@@ -651,127 +650,73 @@ class GraphConnector(DatabaseConnector):
         return f"{{db: '{self.database_name}', kg: '{self.graph_name}'}}"
 
 
-def filter_valid(results: List[Tuple[Any, ...]], meta: List[str], db_name: str) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
-    """Filter Cypher query results (nodes or relationships) by database context.
+
+def _filter_to_db(self, df: DataFrame) -> DataFrame:
+    """Filter a DataFrame by database context.
     @details
-        - Keeps entities where 'db' and 'kg' match the given names.
-        - Excludes dummy nodes (_init = true).
-        - Relationships are valid if they or either endpoint match.
-        - Removes meta columns with no valid entities.
-    @param results  List of tuples from db.cypher_query().
-    @param meta  Column names corresponding to each result element.
-    @param db_name  Database name to match.
-    @return  (filtered_results, filtered_meta) with only valid entities, or (None, None) if empty.
+        - Keeps nodes where 'db' matches the current database name and _init is False/absent.
+        - Keeps relationships if either endpoint node (by elementId) matches the same db.
+        - Works on unflattened frames where cells are dicts (node/rel maps).
+        - Safely ignores missing fields; drops a top-level '_init' column if present.
+    @param df  DataFrame potentially containing node and relationship rows.
+    @return  Filtered DataFrame restricted to the active database.
     """
-    if not results:
-        return (None, None)
+    if df is None or df.empty:
+        return df
 
-    def get_props(o: Any) -> Dict[str, Any]:
-        """Extract a properties dict from a Neo4j Node/Relationship or dict-like object.
-        @param o  Object from a query row (Node, Relationship, dict, scalar).
-        @return  Properties dictionary if available; otherwise an empty dict.
-        """
-        if isinstance(o, dict):
-            return o
-        # Convert Node/Relationship property map to dict
-        if hasattr(o, "properties"):  # neo4j driver (v5+)
-            try:
-                return dict(o.properties)
-            except Exception:
-                try:
-                    # some drivers expose mapping-like properties
-                    return {k: o.properties[k] for k in o.properties.keys()}
-                except Exception:
-                    pass
-        # neomodel sometimes exposes __properties__
-        if hasattr(o, "__properties__"):
-            try:
-                return dict(o.__properties__)
-            except Exception:
-                pass
-        # mapping-like fallback
-        try:
-            if hasattr(o, "keys") and hasattr(o, "__getitem__"):
-                return {k: o[k] for k in o.keys()}
-        except Exception:
-            pass
-        return {}
+    # --- Helpers for unflattened (dict-in-cell) rows ---
+    def node_ok(d: Any) -> bool:
+        return (
+            isinstance(d, dict)
+            and d.get("db") == self.database_name
+            and not d.get("_init", False)
+        )
 
-    def valid(o: Any) -> bool:
-        """Determine if an object belongs to the active db and is not a dummy.
-        @param o  Object from a query row (Node, Relationship, dict, scalar).
-        @return  True if object has matching db/kg and _init is None/False; else False.
-        @throws None
-        """
-        d = get_props(o)
-        return isinstance(d, dict) and d.get("db") == db_name and d.get("_init") in (None, False)
+    def elem_id_from_node_map(d: dict) -> Any:
+        # Be flexible about id field names
+        return d.get("element_id") or d.get("node_id") or d.get("id")
 
-    def is_rel(o: Any) -> bool:
-        """Check whether an object is a relationship-like value.
-        @param o  Object from a query row.
-        @return  True if object appears to be a Relationship; else False.
-        @throws None
-        """
-        return (hasattr(o, "start_node") and hasattr(o, "end_node")) or hasattr(o, "nodes")
+    # Build a set of "good" node elementIds present anywhere in the frame
+    good_node_ids = set()
+    for col in df.columns:
+        for v in df[col]:
+            if node_ok(v):
+                eid = elem_id_from_node_map(v)
+                if eid is not None:
+                    good_node_ids.add(eid)
 
-    def row_ok(row: Tuple[Any, ...]) -> bool:
-        """Return True if any element in the row is valid or touches a valid node.
-        @param row  One result tuple from the query.
-        @return  True if row contains a valid node/rel or a rel whose endpoints are valid.
-        @throws None
-        """
-        for x in row:
-            if is_rel(x):
-                s = getattr(x, "start_node", None)
-                e = getattr(x, "end_node", None)
-                if (s is None or e is None) and hasattr(x, "nodes"):
-                    try:
-                        nodes = x.nodes
-                        if nodes and len(nodes) == 2:
-                            s, e = nodes[0], nodes[1]
-                    except Exception:
-                        s = e = None
-                if valid(x) or (s and valid(s)) or (e and valid(e)):
-                    return True
-            elif valid(x):
+    def rel_touches_good(v: Any) -> bool:
+        """True if a relationship dict touches any good node by elementId."""
+        if not isinstance(v, dict):
+            return False
+
+        # Direct endpoint id fields commonly seen in custom packing
+        for k in ("start_id", "end_id", "startElementId", "endElementId"):
+            if v.get(k) in good_node_ids:
                 return True
+
+        # Nested endpoint node maps
+        for k in ("start", "end", "start_node", "end_node"):
+            n = v.get(k)
+            if isinstance(n, dict) and elem_id_from_node_map(n) in good_node_ids:
+                return True
+
+        # List/tuple of endpoint nodes (e.g., 'nodes': [start, end])
+        nodes = v.get("nodes")
+        if isinstance(nodes, (list, tuple)):
+            for n in nodes:
+                if isinstance(n, dict) and elem_id_from_node_map(n) in good_node_ids:
+                    return True
+
         return False
 
-    def col_ok(idx: int, rows: List[Tuple[Any, ...]]) -> bool:
-        """Return True if the column at index idx contains any valid entities.
-        @param idx   Column index into each row.
-        @param rows  Filtered set of rows to inspect.
-        @return  True if any cell in the column is valid or a rel touching valid endpoints.
-        @throws None
-        """
-        for r in rows:
-            cell = r[idx]
-            if is_rel(cell):
-                s = getattr(cell, "start_node", None)
-                e = getattr(cell, "end_node", None)
-                if (s is None or e is None) and hasattr(cell, "nodes"):
-                    try:
-                        nodes = cell.nodes
-                        if nodes and len(nodes) == 2:
-                            s, e = nodes[0], nodes[1]
-                    except Exception:
-                        s = e = None
-                if valid(cell) or (s and valid(s)) or (e and valid(e)):
-                    return True
-            elif valid(cell):
-                return True
-        return False
+    # Row-wise decisions (unflattened): keep if any node_ok OR any rel touches good node
+    any_node_ok = df.apply(lambda row: any(node_ok(v) for v in row), axis=1)
+    any_rel_ok  = df.apply(lambda row: any(rel_touches_good(v) for v in row), axis=1)
 
-    # Keep only rows that contain at least one valid entity
-    kept_rows = [r for r in results if row_ok(r)]
-    if not kept_rows:
-        return (None, None)
+    keep = (any_node_ok | any_rel_ok)
+    filtered = df.loc[keep].drop(columns="_init", errors="ignore")
+    return filtered
 
-    # Keep only columns that contain valid entities
-    kept_cols = [i for i in range(len(meta)) if col_ok(i, kept_rows)]
-    if not kept_cols:
-        return (None, None)
 
-    filtered_results = [tuple(r[i] for i in kept_cols) for r in kept_rows]
-    filtered_meta = [meta[i] for i in kept_cols]
-    return filtered_results, filtered_meta
+
