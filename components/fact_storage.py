@@ -167,7 +167,7 @@ class GraphConnector(DatabaseConnector):
             
             returns_data = self._returns_data(query)
             parsable_to_df = self._parsable_to_df((elements, meta))
-            df = _elements_to_df(elements) if returns_data and parsable_to_df else None
+            df = _elements_to_df(elements, meta) if returns_data and parsable_to_df else None
             if df is None or df.empty:
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
                 return None
@@ -701,7 +701,7 @@ def _filter_to_db(self, df: DataFrame) -> DataFrame:
     return filtered
 
 
-def _elements_to_df(elements: List[Dict[str, Any]], meta: List[str]) -> DataFrame:
+def _elements_to_df(elements: List[Dict[str, Any]], meta: Optional[List[str]] = None) -> DataFrame:
     """Convert Neo4j query results (nodes and relationships) into a Pandas DataFrame.
     @details
         - Accepts the `elements` output of db.cypher_query().
@@ -722,8 +722,10 @@ def _elements_to_df(elements: List[Dict[str, Any]], meta: List[str]) -> DataFram
 
     # --- Step 1: Normalize NeoModel objects to plain dicts ---
     normalized = []
+    element_types = []  # track node/rel/scalar per row
     for row in elements:
         new_row = []
+        row_type = None
         for x in row:
             if hasattr(x, "__properties__"):
                 # NeoModel Node/Rel: extract property map and preserve IDs/labels
@@ -732,22 +734,24 @@ def _elements_to_df(elements: List[Dict[str, Any]], meta: List[str]) -> DataFram
                 props["labels"] = list(getattr(x, "labels", []))
                 # Identify if this is a Node or Relationship object
                 if hasattr(x, "start_node") or hasattr(x, "end_node") or hasattr(x, "nodes"):
-                    props["element_type"] = "relationship"
+                    row_type = "relationship"
                 else:
-                    props["element_type"] = "node"
+                    row_type = "node"
                 new_row.append(props)
             elif isinstance(x, dict):
-                # If it’s already a dict, tag it generically (no type info)
-                d = dict(x)
-                d.setdefault("element_type", "dict")
-                new_row.append(d)
+                new_row.append(x)
+                row_type = row_type or "dict"
+            elif isinstance(x, list):
+                new_row.append(x)
+                row_type = row_type or "list"
             else:
-                # Scalars or unrecognized types — wrap consistently
-                new_row.append({"value": x, "element_type": "scalar"})
+                # Scalars or unrecognized types — keep as-is
+                new_row.append(x)
+                row_type = row_type or "scalar"
         normalized.append(new_row)
+        element_types.append(row_type or "unknown")
 
     # --- Step 2: Construct the DataFrame ---
     df = DataFrame(normalized, columns=meta if meta else None)
+    df["element_type"] = element_types
     return df
-
-
