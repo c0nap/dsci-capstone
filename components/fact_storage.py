@@ -233,7 +233,7 @@ class GraphConnector(DatabaseConnector):
         """Checks if the result of a Neo4j query is valid (i.e. can be converted to a Pandas DataFrame).
         @details
           - Validates shape: (records, meta)
-          - Validates content: rows are iterable, elements are dict-like or have .properties
+          - Validates content: rows are iterable, elements are dict-like or have .__properties__ (NeoModel Node/Rel)
         @param result  The result of a Cypher query.
         @return  Whether the object is parsable to DataFrame.
         """
@@ -251,20 +251,18 @@ class GraphConnector(DatabaseConnector):
         # Defensive content validation
         sample = records[0]
         if isinstance(sample, (list, tuple)):
-            # Each cell should be dict-like, scalar, or have .properties (Node/Rel)
+            # Each cell should be dict-like, scalar, or have .__properties__ (NeoModel Node/Rel)
             for cell in sample:
                 if not (
                     isinstance(cell, (dict, str, int, float, bool))
-                    or hasattr(cell, "properties")
-                    or hasattr(cell, "__properties__")
-                    or (hasattr(cell, "keys") and hasattr(cell, "__getitem__"))
+                    or hasattr(cell, "__properties__")  # NeoModel property map
                 ):
                     return False
         elif not isinstance(sample, (dict, str, int, float, bool)):
             # Single-column result with complex object
-            if not (hasattr(sample, "properties") or hasattr(sample, "__properties__")):
+            if not hasattr(sample, "__properties__"):
                 return False
-        # Structural success only — semantic validation handled by filter_valid
+        # Structural success only — semantic validation handled by filter_valid (or DataFrame-level filters)
         return True
 
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
@@ -427,7 +425,7 @@ class GraphConnector(DatabaseConnector):
                     node_ids.append(obj.element_id)
         if not node_ids and not rel_ids:
             return (None, None)
-            
+
         # Build a single query to get all necessary elements
         parts = []
         if node_ids:
