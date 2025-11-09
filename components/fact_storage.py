@@ -154,25 +154,26 @@ class GraphConnector(DatabaseConnector):
         # Derived classes MUST implement single-query execution.
         try:
             results, meta = db.cypher_query(query)
-
-            # Re-tag nodes and edges with the active database name using a second query.
-            query_lower = query.lower()
-            if "create" in query_lower or "merge" in query_lower:
-                # Always sweep for untagged entities, regardless of RETURN
+            # Re-tag nodes and edges with self.database_name using a second query.
+            # Must also re-fetch from Neo4j to ensure our copy is tagged with 'db'
+            if "create" in q := query.lower() or "merge" in q:  # Save a line without double-computing lower()
                 self._execute_tag_db()
-                # Re-fetch to ensure our copy is tagged with 'db'
-                results, meta = self._get_updated(results)
-
-            # Return nodes from the current database ONLY, despite what the query wants.
-            if _filter_results:
-                results, meta = filter_valid(results, meta, self.database_name)
+                results, meta = self._fetch_latest(results)
 
             returns_data = self._returns_data(query)
-            df = DataFrame(results, columns=[m for m in meta]) if returns_data and meta else None
+            parsable_to_df = self._parsable_to_df(tuple(results, meta))
+            df = DataFrame(results, columns=[m for m in meta]) if returns_data and parsable_to_df else None
             if df is None or df.empty:
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
                 return None
             else:
+                # Return nodes from the current database ONLY, despite what the query wants.
+                if _filter_results:
+                    df = df.loc[
+                        (df.get("db") == self.database_name) &
+                        (~df.get("_init", False))
+                    ].drop(columns="_init", errors="ignore")
+
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
                 return df
         except Exception as e:
@@ -228,23 +229,40 @@ class GraphConnector(DatabaseConnector):
     def _parsable_to_df(self, result: Tuple[Any, Any]) -> bool:
         """Checks if the result of a Neo4j query is valid (i.e. can be converted to a Pandas DataFrame).
         @details
-        - Typical NeoModel db.cypher_query returns (records, meta).
-        - meta contains field metadata; records is a list of rows.
-        - A valid, non-empty records list means tabular output.
+          - Validates shape: (records, meta)
+          - Validates content: rows are iterable, elements are dict-like or have .properties
         @param result  The result of a Cypher query.
-        @return  Whether the object is parsable to DataFrame."""
-        # TODO: filter_valid ?
+        @return  Whether the object is parsable to DataFrame.
+        """
         # Handle tuple: (results, meta)
-        if isinstance(result, tuple) and len(result) == 2:
-            records, meta = result
-            if records and isinstance(records, (list, tuple)):
-                # meta must describe columns
-                if isinstance(meta, (list, tuple, dict)):
-                    return True
+        if not isinstance(result, tuple) or len(result) != 2:
             return False
-        # Handle raw result lists
-        if isinstance(result, (list, tuple)) and result:
-            return True
+        records, meta = result
+        # Must have row data
+        if not records or not isinstance(records, (list, tuple)):
+            return False
+        # Meta must describe columns
+        if not isinstance(meta, (list, tuple, dict)) or len(meta) == 0:
+            return False
+
+        # Defensive content validation
+        sample = records[0]
+        if isinstance(sample, (list, tuple)):
+            # Each cell should be dict-like, scalar, or have .properties (Node/Rel)
+            for cell in sample:
+                if not (
+                    isinstance(cell, (dict, str, int, float, bool))
+                    or hasattr(cell, "properties")
+                    or hasattr(cell, "__properties__")
+                    or (hasattr(cell, "keys") and hasattr(cell, "__getitem__"))
+                ):
+                    return False
+        elif not isinstance(sample, (dict, str, int, float, bool)):
+            # Single-column result with complex object
+            if not (hasattr(sample, "properties") or hasattr(sample, "__properties__")):
+                return False
+        # Structural success only — semantic validation handled by filter_valid
+        return True
 
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified Knowledge Graph collection.
@@ -388,7 +406,7 @@ class GraphConnector(DatabaseConnector):
             SET r.db = '{self.database_name}'"""
         )
 
-    def _get_updated(self, results: List[Tuple[Any, ...]]) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
+    def _fetch_latest(self, results: List[Tuple[Any, ...]]) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
         """Re-fetch nodes and edges after changing the remote copy in Neo4j.
         @param results Original list of untagged tuples from db.cypher_query().
         @return Latest version of results fetched from the database."""
