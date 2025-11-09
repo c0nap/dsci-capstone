@@ -277,6 +277,45 @@ class DocumentConnector(DatabaseConnector):
             return False
         return True  # Default to True - let downstream execution handle ambiguous cases
 
+    def _parsable_to_df(self, result: Any) -> bool:
+        """Checks if the result of a query is valid (i.e. can be converted to a Pandas DataFrame).
+        @details
+        - Handles cursor-style dicts (with 'cursor' or 'firstBatch'),
+          list-of-dict results, and single-document results.
+        - Excludes pure status/meta responses like {'ok': 1}.
+        @param result  The result of a JSON query.
+        @return  Whether the object is parsable to DataFrame."""
+        # TODO: docs_to_df ?
+        # Cursor / batch results
+        if isinstance(result, dict):
+            if "cursor" in result:
+                batch = result["cursor"].get("firstBatch", [])
+                return isinstance(batch, list) and len(batch) > 0
+            if "firstBatch" in result:
+                batch = result["firstBatch"]
+                return isinstance(batch, list) and len(batch) > 0
+
+            # Single-document results
+            # Example: {'ok': 1, 'n': 1} → status, not data
+            # Example: {'databases': [...]} → real data
+            # Check for at least one list-like field of dicts
+            for v in result.values():
+                if isinstance(v, list) and v and isinstance(v[0], (dict, str, int, float)):
+                    return True
+            # Otherwise, just one scalar/status document
+            return False
+
+        # Direct list results (aggregate pipeline or find converted upstream)
+        if isinstance(result, list):
+            if not result:
+                return False
+            # Accept if list of dicts
+            return all(isinstance(x, dict) for x in result)
+
+        # Anything else is not tabular
+        return False
+
+
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.

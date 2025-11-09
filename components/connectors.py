@@ -267,12 +267,12 @@ class DatabaseConnector(Connector):
         @return  Whether the query is intended to fetch data (true) or might return a status message (false)."""
         pass
 
-    # @abstractmethod
-    # def _parsable_df(self, result: Any) -> bool:
-    #     """Checks if the result of a query is valid (i.e. can be converted to a Pandas DataFrame).
-    #     @param result  The result of a SQL, Cypher, or JSON query.
-    #     @return  Whether the object is parsable to DataFrame."""
-    #     pass
+    @abstractmethod
+    def _parsable_to_df(self, result: Any) -> bool:
+        """Checks if the result of a query is valid (i.e. can be converted to a Pandas DataFrame).
+        @param result  The result of a SQL, Cypher, or JSON query.
+        @return  Whether the object is parsable to DataFrame."""
+        pass
 
 
 
@@ -477,6 +477,18 @@ class RelationalConnector(DatabaseConnector):
         if q.startswith(non_data_commands):
             return False
         return True  # Default to True - let downstream execution handle ambiguous cases
+
+    def _parsable_to_df(self, result: Any) -> bool:
+        """Checks if the result of a SQL query is valid (i.e. can be converted to a Pandas DataFrame).
+        @details
+          - SQLAlchemy CursorResult exposes .returns_rows and .keys().
+          - DDL/DML (CREATE, INSERT, UPDATE, etc.) produce no rows and only rowcount/status.
+        @param result  The result of a SQL, Cypher, or JSON query.
+        @return  Whether the object is parsable to DataFrame."""
+        if hasattr(result, "returns_rows") and result.returns_rows:
+            keys = getattr(result, "keys", lambda: [])()
+            return bool(keys)  # non-empty column list
+        return False
 
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.

@@ -225,6 +225,27 @@ class GraphConnector(DatabaseConnector):
             return True
         return False  # Normally we would let execution handle ambiguous cases, but this basic check is exhaustive.
 
+    def _parsable_to_df(self, result: Tuple[Any, Any]) -> bool:
+        """Checks if the result of a Neo4j query is valid (i.e. can be converted to a Pandas DataFrame).
+        @details
+        - Typical NeoModel db.cypher_query returns (records, meta).
+        - meta contains field metadata; records is a list of rows.
+        - A valid, non-empty records list means tabular output.
+        @param result  The result of a Cypher query.
+        @return  Whether the object is parsable to DataFrame."""
+        # TODO: filter_valid ?
+        # Handle tuple: (results, meta)
+        if isinstance(result, tuple) and len(result) == 2:
+            records, meta = result
+            if records and isinstance(records, (list, tuple)):
+                # meta must describe columns
+                if isinstance(meta, (list, tuple, dict)):
+                    return True
+            return False
+        # Handle raw result lists
+        if isinstance(result, (list, tuple)) and result:
+            return True
+
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified Knowledge Graph collection.
         @details
