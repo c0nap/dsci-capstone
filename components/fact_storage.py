@@ -413,12 +413,33 @@ class GraphConnector(DatabaseConnector):
         """Re-fetch nodes and edges after changing the remote copy in Neo4j.
         @param results Original list of untagged tuples from db.cypher_query().
         @return Latest version of results fetched from the database."""
-        if results:
-            ids = [obj.element_id for row in (results or []) for obj in row if hasattr(obj, "element_id")]
-        if not results or not ids:
+        if not results:
             return (None, None)
-        ids_str = "[" + ", ".join(f"'{i}'" for i in ids) + "]"
-        return db.cypher_query(f"MATCH (n) WHERE elementId(n) IN {ids_str} RETURN n")
+        # Gather element IDs for all nodes and relationships
+        node_ids, rel_ids = [], []
+        for row in results:
+            for obj in (row if isinstance(row, (list, tuple)) else [row]):
+                if not hasattr(obj, "element_id"):
+                    continue
+                if hasattr(obj, "start_node") or hasattr(obj, "nodes"):  # relationship
+                    rel_ids.append(obj.element_id)
+                else:  # node
+                    node_ids.append(obj.element_id)
+        if not node_ids and not rel_ids:
+            return (None, None)
+            
+        # Build a single query to get all necessary elements
+        parts = []
+        if node_ids:
+            node_ids_str = "[" + ", ".join(f"'{i}'" for i in node_ids) + "]"
+            parts.append(f"MATCH (n) WHERE elementId(n) IN {node_ids_str} RETURN n")
+        if rel_ids:
+            rel_ids_str = "[" + ", ".join(f"'{i}'" for i in rel_ids) + "]"
+            parts.append(f"MATCH ()-[r]->() WHERE elementId(r) IN {rel_ids_str} RETURN r")
+        union_query = " UNION ALL ".join(parts)
+
+        fresh_results, fresh_meta = db.cypher_query(union_query)
+        return fresh_results, fresh_meta
 
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
