@@ -44,21 +44,24 @@ def graph_db(session: Session) -> GraphConnector:
 @pytest.mark.dependency(name="rel_minimal")
 def test_db_relational_minimal(relational_db: RelationalConnector) -> None:
     """Tests if the RelationalConnector has a valid connection string."""
-    relational_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    connected = relational_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    assert connected
 
 
 @pytest.mark.order(2)
 @pytest.mark.dependency(name="docs_minimal")
 def test_db_docs_minimal(docs_db: DocumentConnector) -> None:
     """Tests if the DocumentConnector has a valid connection string."""
-    docs_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    connected = docs_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    assert connected
 
 
 @pytest.mark.order(3)
 @pytest.mark.dependency(name="graph_minimal")
 def test_db_graph_minimal(graph_db: GraphConnector) -> None:
     """Tests if the GraphConnector has a valid connection string."""
-    graph_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    connected = graph_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    assert connected
 
 
 # ------------------------------------------------------------------------------
@@ -68,21 +71,24 @@ def test_db_graph_minimal(graph_db: GraphConnector) -> None:
 @pytest.mark.dependency(name="rel_comprehensive", depends=["rel_minimal"])
 def test_db_relational_comprehensive(relational_db: RelationalConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    relational_db.test_connection(raise_error=True)
+    connected = relational_db.test_connection(raise_error=True)
+    assert connected
 
 
 @pytest.mark.order(5)
 @pytest.mark.dependency(name="docs_comprehensive", depends=["docs_minimal"])
 def test_db_docs_comprehensive(docs_db: DocumentConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    docs_db.test_connection(raise_error=True)
+    connected = docs_db.test_connection(raise_error=True)
+    assert connected
 
 
 @pytest.mark.order(6)
 @pytest.mark.dependency(name="graph_comprehensive", depends=["graph_minimal"])
 def test_db_graph_comprehensive(graph_db: GraphConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    graph_db.test_connection(raise_error=True)
+    connected = graph_db.test_connection(raise_error=True)
+    assert connected
 
 
 # ------------------------------------------------------------------------------
