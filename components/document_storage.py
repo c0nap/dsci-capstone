@@ -188,7 +188,8 @@ class DocumentConnector(DatabaseConnector):
                     docs = results
 
                 # Convert document list to DataFrame if any docs exist
-                df = _docs_to_df(docs)
+                returns_data = self._returns_data(query)
+                df = _docs_to_df(docs) if returns_data else None
                 if df is None or df.empty:
                     Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
                     return None

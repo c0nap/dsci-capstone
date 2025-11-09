@@ -8,7 +8,7 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.pool import NullPool
 from sqlparse import parse as sql_parse
 from src.util import check_values, df_natural_sorted, Log
-from typing import Generator, List, Optional
+from typing import Generator, List, Optional, Any
 
 
 # Read environment variables at compile time
@@ -267,12 +267,12 @@ class DatabaseConnector(Connector):
         @return  Whether the query is intended to fetch data (true) or might return a status message (false)."""
         pass
 
-    @abstractmethod
-    def _parsable_df(self, result: Any) -> bool:
-        """Checks if the result of a query is valid (i.e. can be converted to a Pandas DataFrame).
-        @param result  The result of a SQL, Cypher, or JSON query.
-        @return  Whether the object is parsable to DataFrame."""
-        pass
+    # @abstractmethod
+    # def _parsable_df(self, result: Any) -> bool:
+    #     """Checks if the result of a query is valid (i.e. can be converted to a Pandas DataFrame).
+    #     @param result  The result of a SQL, Cypher, or JSON query.
+    #     @return  Whether the object is parsable to DataFrame."""
+    #     pass
 
 
 
@@ -439,7 +439,9 @@ class RelationalConnector(DatabaseConnector):
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
                 result = connection.execute(text(query))
-                if result.returns_rows and result.keys():
+
+                returns_data = self._returns_data(query)
+                if returns_data and result.returns_rows and result.keys():
                     df = DataFrame(result.fetchall(), columns=result.keys())
                     Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
                     return df

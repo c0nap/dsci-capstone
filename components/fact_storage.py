@@ -167,7 +167,8 @@ class GraphConnector(DatabaseConnector):
             if _filter_results:
                 results, meta = filter_valid(results, meta, self.database_name)
 
-            df = DataFrame(results, columns=[m for m in meta]) if meta else None
+            returns_data = self._returns_data(query)
+            df = DataFrame(results, columns=[m for m in meta]) if returns_data and meta else None
             if df is None or df.empty:
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
                 return None
@@ -210,7 +211,8 @@ class GraphConnector(DatabaseConnector):
     def _returns_data(self, query: str) -> bool:
         """Checks if a query is structured in a way that returns real data, and not status messages.
         @details  Determines whether a Cypher query should yield records.
-        RETURN must be present as a keyword (not in a string value) to return data.
+        - RETURN must be present as a keyword (not in a string value) to return data.
+        - YIELD is used for stored procedures, and might return data.
         @param query  A single pre-validated CQL query string.
         @return  Whether the query is intended to fetch data (true) or might return a status message (false).
         """
@@ -219,7 +221,7 @@ class GraphConnector(DatabaseConnector):
         # Remove quoted strings to avoid false positives (e.g., {name: "Return of the Jedi"})
         q_no_strings = re.sub(r"'[^']*'|\"[^\"]*\"", "", q)
         # Check if RETURN exists as a keyword (word boundary)
-        if re.search(r'\bRETURN\b', q_no_strings):
+        if re.search(r'\b(RETURN|YIELD)\b', q_no_strings):
             return True
         return False  # Normally we would let execution handle ambiguous cases, but this basic check is exhaustive.
 
