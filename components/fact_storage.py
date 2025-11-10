@@ -675,7 +675,7 @@ def _filter_to_db(df: DataFrame, database_name: str) -> DataFrame:
             and not d.get("_init", False)
         )
 
-    def elem_id_from_node_map(d: dict) -> Any:
+    def elem_id_from_node_map(d: Dict[str, Any]) -> Any:
         # Be flexible about id field names
         return d.get("element_id")# or d.get("node_id") or d.get("id")
 
@@ -742,7 +742,7 @@ def _tuples_to_df(tuples: List[Tuple[Any, ...]], meta: List[str]) -> DataFrame:
     # --- Step 1: Normalize NeoModel and neo4j objects to plain dicts ---
     normalized = []
     for row in tuples:
-        new_row = []
+        new_row: List[Any] = []
         for x in row:
             if x is None:
                 new_row.append(None)

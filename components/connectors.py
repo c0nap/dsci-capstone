@@ -490,7 +490,7 @@ class RelationalConnector(DatabaseConnector):
         if not hasattr(result, "returns_rows") or not result.returns_rows:
             return False
         # Ensure columns list is non-empty
-        keys = getattr(result, "keys", lambda: [])()
+        keys: List[str] = getattr(result, "keys", lambda: [])()
         if not keys:
             return False
         # Ensure the result is still open (fetchable)
