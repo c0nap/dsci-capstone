@@ -773,5 +773,18 @@ def _normalize_elements(df: DataFrame) -> DataFrame:
     @param df  DataFrame containing dict-cast nodes and relationships.
     @return  DataFrame suitable for downstream filtering and analysis.
     """
+    if df is None or df.empty:
+        return DataFrame()
 
+    rows = []
+    for _, row in df.iterrows():
+        for cell in row:
+            if cell is None:
+                continue
+            if isinstance(cell, dict):
+                # Entity dict - add as a row
+                rows.append(dict(cell))
+            # Skip non-dict values (scalars)
+    
+    return DataFrame(rows)
 
