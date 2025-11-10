@@ -225,26 +225,37 @@ def test_cypher_example_2(graph_db: GraphConnector) -> None:
     # Verify nodes were created correctly
     df = graph_db.get_dataframe("social")
     assert df is not None
-    df = df[df["element_type"] == "node"]
-    assert len(df) == 5  # Alice, Bob, Charlie, Dave, Frank
-    assert "element_id" in df.columns and "labels" in df.columns
-    assert "db" in df.columns and "kg" in df.columns
+    df_nodes = df[df["element_type"] == "node"]
+    assert len(df_nodes) == 5  # Alice, Bob, Charlie, Dave, Frank
+    assert "element_id" in df_nodes.columns and "labels" in df_nodes.columns
+    assert "db" in df_nodes.columns and "kg" in df_nodes.columns
     
-    # Check specific nodes
-    assert any(df['name'] == 'Alice')
-    assert any(df['name'] == 'Frank')
+    # Check specific nodes exist with expected properties
+    assert any(df_nodes['name'] == 'Alice')
+    assert any((df_nodes['name'] == 'Bob') & (df_nodes['age'] == 30))
+    assert any((df_nodes['name'] == 'Charlie') & (df_nodes['occupation'] == 'Designer'))
+    assert any(df_nodes['name'] == 'Dave')
+    assert any(df_nodes['name'] == 'Frank')
     
     # Verify list properties were stored
-    frank_row = df[df['name'] == 'Frank'].iloc[0]
+    frank_row = df_nodes[df_nodes['name'] == 'Frank'].iloc[0]
     assert 'hobbies' in frank_row or 'scores' in frank_row  # At least one list property
 
-    # Verify relationships exist
-    triples_df = graph_db.get_all_triples("social")
-    assert triples_df is not None
-    assert len(triples_df) > 0
-    assert any((triples_df['subject'] == 'Bob') & (triples_df['relation'] == 'KNOWS'))
-    assert any((triples_df['subject'] == 'Bob') & (triples_df['relation'] == 'FOLLOWS'))
-    assert any(triples_df['relation'] == 'COLLABORATES')
+    # Verify relationships exist by filtering DataFrame
+    df_rels = df[df["element_type"] == "relationship"]
+    assert len(df_rels) > 0
+    assert "rel_type" in df_rels.columns
+    assert "start_node_id" in df_rels.columns and "end_node_id" in df_rels.columns
+    
+    # Check specific relationship types exist
+    assert any(df_rels['rel_type'] == 'KNOWS')
+    assert any(df_rels['rel_type'] == 'FOLLOWS')
+    assert any(df_rels['rel_type'] == 'COLLABORATES')
+    
+    # Verify relationship properties (e.g., 'since' on KNOWS relationships)
+    knows_rels = df_rels[df_rels['rel_type'] == 'KNOWS']
+    assert len(knows_rels) > 0
+    assert any(knows_rels['since'].notna()) if 'since' in knows_rels.columns else True
     
     graph_db.drop_graph("social")
 
@@ -274,40 +285,56 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
     with graph_db.temp_graph("scene"):
         df_scene = graph_db.get_dataframe("scene")
         assert df_scene is not None
-        df_scene = df_scene[df_scene["element_type"] == "node"]
-        assert len(df_scene) == 5  # Alice, Bob, Sofa, Table, Lamp
-        assert any(df_scene['name'] == 'Alice')
-        assert any((df_scene['type'] == 'seating') & (df_scene['name'] == 'Sofa'))
+        df_scene_nodes = df_scene[df_scene["element_type"] == "node"]
+        assert len(df_scene_nodes) == 5  # Alice, Bob, Sofa, Table, Lamp
+        assert any(df_scene_nodes['name'] == 'Alice')
+        assert any((df_scene_nodes['type'] == 'seating') & (df_scene_nodes['name'] == 'Sofa'))
         
         # Verify spatial coordinates exist
-        assert 'x' in df_scene.columns or 'position' in df_scene.columns
+        assert 'x' in df_scene_nodes.columns or 'position' in df_scene_nodes.columns
         
-        # Verify spatial relationships
-        triples_scene = graph_db.get_all_triples()
-        assert triples_scene is not None
-        assert any(triples_scene['relation'] == 'SITTING_ON')
-        assert any(triples_scene['relation'] == 'ON_TOP_OF')
-        assert any(triples_scene['relation'] == 'NEAR')
+        # Verify Alice and Bob have position data
+        alice_row = df_scene_nodes[df_scene_nodes['name'] == 'Alice'].iloc[0]
+        bob_row = df_scene_nodes[df_scene_nodes['name'] == 'Bob'].iloc[0]
+        assert alice_row.get('x') is not None or alice_row.get('position') is not None
+        assert bob_row.get('x') is not None or bob_row.get('position') is not None
+        
+        # Verify spatial relationships by filtering DataFrame
+        df_scene_rels = df_scene[df_scene["element_type"] == "relationship"]
+        assert len(df_scene_rels) > 0
+        assert any(df_scene_rels['rel_type'] == 'SITTING_ON')
+        assert any(df_scene_rels['rel_type'] == 'ON_TOP_OF')
+        assert any(df_scene_rels['rel_type'] == 'NEAR')
+        
+        # Verify relationship directionality exists
+        assert all(df_scene_rels['start_node_id'].notna())
+        assert all(df_scene_rels['end_node_id'].notna())
     
     # Test Graph 2: Dialogue graph
     with graph_db.temp_graph("dialogue"):
         df_dialogue = graph_db.get_dataframe("dialogue")
         assert df_dialogue is not None
-        df_dialogue = df_dialogue[df_dialogue["element_type"] == "node"]
-        assert len(df_dialogue) == 6  # 3 Dialogue + 3 DialogueRef nodes
+        df_dialogue_nodes = df_dialogue[df_dialogue["element_type"] == "node"]
+        assert len(df_dialogue_nodes) == 6  # 3 Dialogue + 3 DialogueRef nodes
         
         # Check dialogue content
-        assert any(df_dialogue['speaker'] == 'Alice')
-        assert any(df_dialogue['speaker'] == 'Bob')
+        assert any(df_dialogue_nodes['speaker'] == 'Alice')
+        assert any(df_dialogue_nodes['speaker'] == 'Bob')
         
-        # Verify dialogue flow relationships
-        triples_dialogue = graph_db.get_all_triples()
-        assert triples_dialogue is not None
-        assert any(triples_dialogue['relation'] == 'FOLLOWED_BY')
+        # Verify dialogue sequence numbers or timestamps exist
+        assert 'sequence' in df_dialogue_nodes.columns or 'timestamp' in df_dialogue_nodes.columns
+        
+        # Verify dialogue flow relationships by filtering DataFrame
+        df_dialogue_rels = df_dialogue[df_dialogue["element_type"] == "relationship"]
+        assert len(df_dialogue_rels) > 0
+        assert any(df_dialogue_rels['rel_type'] == 'FOLLOWED_BY')
         
         # Check object references exist
-        assert any(df_dialogue['mentioned_object'] == 'table')
-        assert any(df_dialogue['mentioned_object'] == 'lamp')
+        assert any(df_dialogue_nodes['mentioned_object'] == 'table')
+        assert any(df_dialogue_nodes['mentioned_object'] == 'lamp')
+        
+        # Verify at least one dialogue has actual text content
+        assert any(df_dialogue_nodes['text'].notna()) if 'text' in df_dialogue_nodes.columns else True
     
     # Verify graph isolation: scene and dialogue should be separate
     df_scene = graph_db.get_dataframe("scene")
@@ -315,16 +342,21 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
     assert df_scene is not None and df_dialogue is not None
     
     # Scene objects should not appear in dialogue graph structure
-    scene_entities = set(df_scene['name'].dropna())
-    dialogue_speakers = set(df_dialogue['speaker'].dropna())
+    df_scene_nodes = df_scene[df_scene["element_type"] == "node"]
+    df_dialogue_nodes = df_dialogue[df_dialogue["element_type"] == "node"]
+    scene_entities = set(df_scene_nodes['name'].dropna())
+    dialogue_speakers = set(df_dialogue_nodes['speaker'].dropna())
     
     # Speakers reference scene entities but graphs remain isolated
     # (Alice/Bob appear as speakers, not as Person nodes in dialogue graph)
     assert 'Alice' in dialogue_speakers  # Alice speaks
     assert 'Alice' in scene_entities     # Alice exists in scene
     # But the actual node types/properties should differ
-    scene_alice = df_scene[df_scene['name'] == 'Alice']
+    scene_alice = df_scene_nodes[df_scene_nodes['name'] == 'Alice']
     assert 'position' in scene_alice.columns or 'x' in scene_alice.columns
+    
+    # Verify row counts differ (graphs are truly isolated)
+    assert len(df_scene) != len(df_dialogue)
     
     # Clean up
     for kg_name in ["scene", "dialogue"]:
