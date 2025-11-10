@@ -8,7 +8,7 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.pool import NullPool
 from sqlparse import parse as sql_parse
 from src.util import check_values, df_natural_sorted, Log
-from typing import Generator, List, Optional, Any
+from typing import Any, Generator, List, Optional
 
 
 # Read environment variables at compile time
@@ -286,6 +286,8 @@ class DatabaseConnector(Connector):
 
 
 
+
+
 class RelationalConnector(DatabaseConnector):
     """Connector for relational databases (MySQL, PostgreSQL).
     @details
@@ -474,8 +476,7 @@ class RelationalConnector(DatabaseConnector):
         """
         q = query.strip().upper()
         # Commands that never return tabular data (only status/affected rows)
-        non_data_commands = ("CREATE", "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", 
-                             "TRUNCATE", "GRANT", "REVOKE", "BEGIN", "COMMIT", "ROLLBACK")
+        non_data_commands = ("CREATE", "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE", "GRANT", "REVOKE", "BEGIN", "COMMIT", "ROLLBACK")
         if q.startswith(non_data_commands):
             return False
         return True  # Default to True - let downstream execution handle ambiguous cases

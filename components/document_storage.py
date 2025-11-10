@@ -262,6 +262,7 @@ class DocumentConnector(DatabaseConnector):
         @return  Whether the query is intended to fetch data (true) or might return a status message (false).
         """
         import json
+
         cmd = json.loads(query)
         top_key = next(iter(cmd))
         # Commands that perform actions and return only status messages
@@ -315,7 +316,6 @@ class DocumentConnector(DatabaseConnector):
         # Anything else is not tabular
         return False
 
-
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.
@@ -324,7 +324,7 @@ class DocumentConnector(DatabaseConnector):
         @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
         # Re-use the logic from execute_query
-        query = { "find": name, "filter": {} }
+        query = {"find": name, "filter": {}}
         df = self.execute_query(json.dumps(query))
 
         if df is not None and not df.empty:
@@ -390,6 +390,12 @@ class DocumentConnector(DatabaseConnector):
         with mongo_handle(host=self.connection_string, alias="drop_dum") as db:
             if "init" in db.list_collection_names() and db.command("dbstats")["collections"] > 1:
                 db["init"].drop()
+
+
+
+
+
+
 
 
 
@@ -539,6 +545,12 @@ def _sanitize_json(text: str) -> str:
 
     # Strip trailing whitespace
     return ''.join(result).strip()
+
+
+
+
+
+
 
 
 

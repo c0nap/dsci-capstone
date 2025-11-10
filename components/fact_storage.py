@@ -1,9 +1,9 @@
 from components.connectors import DatabaseConnector
 from contextlib import contextmanager
-from neomodel import config, db
 from neo4j.graph import Node, Relationship
+from neomodel import config, db
 import os
-from pandas import DataFrame, Series, option_context
+from pandas import DataFrame, option_context, Series
 import re
 from src.util import check_values, df_natural_sorted, Log
 from typing import Any, Dict, Generator, List, Optional, Tuple
@@ -165,7 +165,7 @@ class GraphConnector(DatabaseConnector):
             if "create" in q or "merge" in q:
                 self._execute_retag_db()
                 tuples, meta = self._fetch_latest(tuples)
-            
+
             returns_data = self._returns_data(query)
             parsable_to_df = self._parsable_to_df((tuples, meta))
             df = _tuples_to_df(tuples, meta) if returns_data and parsable_to_df else None
@@ -236,7 +236,7 @@ class GraphConnector(DatabaseConnector):
         @return  Whether the object is parsable to DataFrame.
         """
         from neo4j.graph import Node, Relationship
-        
+
         # Handle tuple: (results, meta)
         if not isinstance(result, tuple) or len(result) != 2:
             return False
@@ -253,11 +253,7 @@ class GraphConnector(DatabaseConnector):
         if isinstance(row, (list, tuple)):
             # Each cell should be dict-like, scalar, or have .__properties__ (NeoModel Node/Rel)
             for x in row:
-                if not (
-                    x is None
-                    or isinstance(x, (dict, str, int, float, bool, Node, Relationship))
-                    or hasattr(x, "__properties__")
-                ):
+                if not (x is None or isinstance(x, (dict, str, int, float, bool, Node, Relationship)) or hasattr(x, "__properties__")):
                     return False
         elif not isinstance(row, (dict, str, int, float, bool, Node, Relationship)):
             # Single-column result with complex object
@@ -653,6 +649,18 @@ class GraphConnector(DatabaseConnector):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 def _filter_to_db(df: DataFrame, database_name: str) -> DataFrame:
     """Filter a DataFrame by database context.
     @details
@@ -669,15 +677,11 @@ def _filter_to_db(df: DataFrame, database_name: str) -> DataFrame:
 
     # --- Helpers for unflattened (dict-in-cell) rows ---
     def node_ok(d: Any) -> bool:
-        return (
-            isinstance(d, dict)
-            and d.get("db") == database_name
-            and not d.get("_init", False)
-        )
+        return isinstance(d, dict) and d.get("db") == database_name and not d.get("_init", False)
 
     def elem_id_from_node_map(d: Dict[str, Any]) -> Any:
         # Be flexible about id field names
-        return d.get("element_id")# or d.get("node_id") or d.get("id")
+        return d.get("element_id")  # or d.get("node_id") or d.get("id")
 
     # Build a set of "good" node elementIds present anywhere in the frame
     good_node_ids = set()
@@ -715,12 +719,11 @@ def _filter_to_db(df: DataFrame, database_name: str) -> DataFrame:
 
     # Row-wise decisions (unflattened): keep if any node_ok OR any rel touches good node
     any_node_ok = df.apply(lambda row: any(node_ok(v) for v in row), axis=1)
-    any_rel_ok  = df.apply(lambda row: any(rel_touches_good(v) for v in row), axis=1)
+    any_rel_ok = df.apply(lambda row: any(rel_touches_good(v) for v in row), axis=1)
 
-    keep = (any_node_ok | any_rel_ok)
+    keep = any_node_ok | any_rel_ok
     filtered = df.loc[keep].drop(columns="_init", errors="ignore")
     return filtered
-
 
 
 def _tuples_to_df(tuples: List[Tuple[Any, ...]], meta: List[str]) -> DataFrame:
@@ -803,6 +806,5 @@ def _normalize_elements(df: DataFrame) -> DataFrame:
                 # Entity dict - add as a row
                 rows.append(dict(element))
             # Skip non-dict values (scalars)
-    
-    return DataFrame(rows)
 
+    return DataFrame(rows)
