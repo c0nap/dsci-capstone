@@ -724,7 +724,7 @@ def _elements_to_df(elements: List[Dict[str, Any]], meta: Optional[List[str]] = 
     element_types = []  # track node/rel/scalar per row
     for row in elements:
         new_row = []
-        row_type = None
+        element_type = None
         for x in row:
             if x is None:
                 continue
@@ -735,22 +735,22 @@ def _elements_to_df(elements: List[Dict[str, Any]], meta: Optional[List[str]] = 
                 props["labels"] = list(getattr(x, "labels", []))
                 # Identify if this is a Node or Relationship object
                 if hasattr(x, "start_node") or hasattr(x, "end_node") or hasattr(x, "nodes"):
-                    row_type = "relationship"
+                    element_type = "relationship"
                 else:
-                    row_type = "node"
+                    element_type = "node"
                 new_row.append(props)
             elif isinstance(x, dict):
                 new_row.append(x)
-                row_type = row_type or "dict"
+                element_type = "dict"
             elif isinstance(x, list):
                 new_row.append(x)
-                row_type = row_type or "list"
+                element_type = "list"
             else:
                 # Scalars or unrecognized types — keep as-is
                 new_row.append(x)
-                row_type = row_type or "scalar"
+                element_type = "scalar"
         normalized.append(new_row)
-        element_types.append(row_type or "unknown")
+        element_types.append("unknown")
 
     # --- Step 2: Construct the DataFrame ---
     df = DataFrame(normalized, columns=meta if meta else None)
