@@ -1,6 +1,7 @@
 from components.connectors import DatabaseConnector
 from contextlib import contextmanager
 from neomodel import config, db
+from neo4j.graph import Node, Relationship
 import os
 from pandas import DataFrame, Series, option_context
 import re
@@ -720,13 +721,26 @@ def _tuples_to_df(tuples: List[Tuple[Any, ...]], meta: List[str]) -> DataFrame:
     if not tuples:
         return DataFrame()
 
-    # --- Step 1: Normalize NeoModel objects to plain dicts ---
+    # --- Step 1: Normalize NeoModel and neo4j objects to plain dicts ---
     normalized = []
     for row in tuples:
         new_row = []
         for x in row:
             if x is None:
                 new_row.append(None)
+            elif isinstance(x, (Node, Relationship)):
+                # neo4j.graph Node/Rel: extract properties via dict conversion
+                props = dict(x)
+                props["element_id"] = x.element_id
+                if isinstance(x, Node):
+                    props["labels"] = list(x.labels)
+                    props["element_type"] = "node"
+                else:
+                    props["element_type"] = "relationship"
+                    props["rel_type"] = x.type
+                    props["start_node_id"] = x.start_node.element_id if x.start_node else None
+                    props["end_node_id"] = x.end_node.element_id if x.end_node else None
+                new_row.append(props)
             elif hasattr(x, "__properties__"):
                 # NeoModel Node/Rel: extract property map and preserve IDs/labels
                 props = dict(x.__properties__)
@@ -738,12 +752,8 @@ def _tuples_to_df(tuples: List[Tuple[Any, ...]], meta: List[str]) -> DataFrame:
                 else:
                     props["element_type"] = "node"
                 new_row.append(props)
-            elif isinstance(x, dict):
-                new_row.append(x)
-            elif isinstance(x, list):
-                new_row.append(x)
             else:
-                # Scalars or unrecognized types — keep as-is
+                # Scalars, lists, dicts, or unrecognized types — keep as-is
                 new_row.append(x)
         normalized.append(new_row)
 
