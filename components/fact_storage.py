@@ -174,7 +174,7 @@ class GraphConnector(DatabaseConnector):
             else:
                 # Return nodes from the current database ONLY, despite what the query wants.
                 if _filter_results:
-                    _filter_to_db(df, self.database_name)
+                    df = _filter_to_db(df, self.database_name)
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
                 return df
         except Exception as e:
@@ -246,18 +246,19 @@ class GraphConnector(DatabaseConnector):
             return False
 
         # Defensive content validation
-        sample = records[0]
-        if isinstance(sample, (list, tuple)):
+        row = records[0]
+        if isinstance(row, (list, tuple)):
             # Each cell should be dict-like, scalar, or have .__properties__ (NeoModel Node/Rel)
-            for cell in sample:
+            for x in row:
                 if not (
-                    isinstance(cell, (dict, str, int, float, bool))
-                    or hasattr(cell, "__properties__")  # NeoModel property map
+                    x is None
+                    or isinstance(x, (dict, str, int, float, bool))
+                    or hasattr(x, "__properties__")  # NeoModel property map
                 ):
                     return False
-        elif not isinstance(sample, (dict, str, int, float, bool)):
+        elif not isinstance(row, (dict, str, int, float, bool)):
             # Single-column result with complex object
-            if not hasattr(sample, "__properties__"):
+            if row is not None and not hasattr(row, "__properties__"):
                 return False
         # Structural success only — semantic validation handled by filter_valid (or DataFrame-level filters)
         return True
@@ -715,8 +716,6 @@ def _elements_to_df(elements: List[Dict[str, Any]], meta: Optional[List[str]] = 
     @return  DataFrame suitable for downstream filtering and analysis.
     @throws Log.Failure  If unexpected object structures are encountered.
     """
-    from pandas import DataFrame
-
     if not elements:
         return DataFrame()
 
@@ -727,7 +726,9 @@ def _elements_to_df(elements: List[Dict[str, Any]], meta: Optional[List[str]] = 
         new_row = []
         row_type = None
         for x in row:
-            if hasattr(x, "__properties__"):
+            if x is None:
+                continue
+            elif hasattr(x, "__properties__"):
                 # NeoModel Node/Rel: extract property map and preserve IDs/labels
                 props = dict(x.__properties__)
                 props["element_id"] = getattr(x, "element_id", None)
