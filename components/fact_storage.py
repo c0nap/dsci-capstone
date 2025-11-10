@@ -702,19 +702,30 @@ def _filter_to_db(self, df: DataFrame) -> DataFrame:
     return filtered
 
 
-def _elements_to_df(elements: List[Dict[str, Any]], meta: Optional[List[str]] = None) -> DataFrame:
+def _tuples_to_df(elements: List[Dict[str, Any]], meta: List[str] = None) -> DataFrame:
     """Convert Neo4j query results (nodes and relationships) into a Pandas DataFrame.
     @details
         - Accepts the `elements` output of db.cypher_query().
         - Automatically unwraps NeoModel Node/Relationship objects into plain dicts via `.__properties__`.
-        - Adds an 'element_type' column distinguishing nodes vs relationships.
-        - Supports mixed node and relationship rows.
-        - Builds a DataFrame with column names from `meta` if provided.
+        - Adds an 'element_type' property distinguishing nodes vs relationships.
+    Example Query: MATCH (a) (r) (b) RETURN a AS node_1, r AS edge, b AS node_2;
+    Result: DataFrame with `node_1` and `node_2` columns containing Nodes converted to dicts,
+        and an `edge` column containing a dict-cast relationship (element_type: relation).
+    @param tuples  List of Neo4j query result tuples.
+    @param meta  List of element aliases returned by the query, and used here as column names.
+    @return  DataFrame with requested columns.
+    """
+
+def _normalize_elements(df: DataFrame) -> DataFrame:
+    """Convert Neo4j query results (nodes and relationships) into a Pandas DataFrame.
+    @details
+        - Accepts the DataFrame output of @ref components.fact_storage.GraphConnector.execute_query.
+        - Explodes dict-cast elements from columns into rows, resulting in 1 node or relation per row.
+        - Normalizes node and relation properties as columns. `element_id`, `element_type` are shared.
+        - Node-only properties (e.g. labels) are None for relationships, and likewise for relations (e.g. start_node).
         - Returns an empty DataFrame for no results.
-    @param elements  List of Neo4j query result tuples.
-    @param meta  Optional list of column names corresponding to each element in a row.
+    @param df  DataFrame containing dict-cast nodes and relationships.
     @return  DataFrame suitable for downstream filtering and analysis.
-    @throws Log.Failure  If unexpected object structures are encountered.
     """
     if not elements:
         return DataFrame()
