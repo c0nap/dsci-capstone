@@ -199,10 +199,11 @@ def test_cypher_example_1(graph_db: GraphConnector) -> None:
     )
     df = graph_db.get_dataframe("pets")
     assert (df is not None)
-    assert (len(df) == 5)
-    assert ("node_id" in df.columns and "labels" in df.columns)
+    assert ("element_id" in df.columns and "element_type" in df.columns)
     assert ("db" in df.columns and "kg" in df.columns)
-    assert (len(df.columns) == 8)
+    assert (len(df) == 5)
+    assert (len(df.columns) == 9)
+    # db-kg (2), elem-id-type (2), labels (1), and 4 expected (name, species, weight, age)
     assert (df.iloc[-1]['name'] == 'Buddy')
     assert any((df['species'] == 'Rabbit') & (df['age'] == 4))
     graph_db.drop_graph("pets")
@@ -224,6 +225,7 @@ def test_cypher_example_2(graph_db: GraphConnector) -> None:
     # Verify nodes were created correctly
     df = graph_db.get_dataframe("social")
     assert df is not None
+    df = df[df["element_type"] == "node"]
     assert len(df) == 5  # Alice, Bob, Charlie, Dave, Frank
     assert "node_id" in df.columns and "labels" in df.columns
     assert "db" in df.columns and "kg" in df.columns
@@ -272,6 +274,7 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
     with graph_db.temp_graph("scene"):
         df_scene = graph_db.get_dataframe("scene")
         assert df_scene is not None
+        df_scene = df_scene[df_scene["element_type"] == "node"]
         assert len(df_scene) == 5  # Alice, Bob, Sofa, Table, Lamp
         assert any(df_scene['name'] == 'Alice')
         assert any((df_scene['type'] == 'seating') & (df_scene['name'] == 'Sofa'))
@@ -290,6 +293,7 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
     with graph_db.temp_graph("dialogue"):
         df_dialogue = graph_db.get_dataframe("dialogue")
         assert df_dialogue is not None
+        df_dialogue = df_dialogue[df_dialogue["element_type"] == "node"]
         assert len(df_dialogue) == 6  # 3 Dialogue + 3 DialogueRef nodes
         
         # Check dialogue content

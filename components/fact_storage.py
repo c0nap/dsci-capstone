@@ -286,10 +286,11 @@ class GraphConnector(DatabaseConnector):
                 OPTIONAL MATCH (n)-[r {self.SAME_DB_KG_()}]->(m)
                 RETURN n, r, m"""
             df = self.execute_query(query)
-        df = _normalize_elements(df) if df else None
+        if df is not None and not df.empty:
+            df = _normalize_elements(df)
 
         if df is not None and not df.empty:
-            df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'node_id', 'labels'], sort_columns=columns)
+            df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'element_id', 'element_type', 'labels'], sort_columns=columns)
             df = df[columns] if columns else df
             Log.success(Log.gr_db + Log.get_df, Log.msg_good_graph(name, df), self.verbose)
             return df
@@ -638,7 +639,7 @@ class GraphConnector(DatabaseConnector):
 
 
 
-def _filter_to_db(self, df: DataFrame) -> DataFrame:
+def _filter_to_db(df: DataFrame, database_name: str) -> DataFrame:
     """Filter a DataFrame by database context.
     @details
         - Keeps nodes where 'db' matches the current database name and _init is False/absent.
@@ -646,6 +647,7 @@ def _filter_to_db(self, df: DataFrame) -> DataFrame:
         - Works on unflattened frames where cells are dicts (node/rel maps).
         - Safely ignores missing fields; drops a top-level '_init' column if present.
     @param df  DataFrame containing node and relationship rows.
+    @param database_name The name of the current pseudo-database.
     @return  Filtered DataFrame restricted to the active database.
     """
     if df is None or df.empty:
@@ -655,13 +657,13 @@ def _filter_to_db(self, df: DataFrame) -> DataFrame:
     def node_ok(d: Any) -> bool:
         return (
             isinstance(d, dict)
-            and d.get("db") == self.database_name
+            and d.get("db") == database_name
             and not d.get("_init", False)
         )
 
     def elem_id_from_node_map(d: dict) -> Any:
         # Be flexible about id field names
-        return d.get("element_id") or d.get("node_id") or d.get("id")
+        return d.get("element_id")# or d.get("node_id") or d.get("id")
 
     # Build a set of "good" node elementIds present anywhere in the frame
     good_node_ids = set()
