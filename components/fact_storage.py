@@ -157,17 +157,17 @@ class GraphConnector(DatabaseConnector):
             return result
         # Derived classes MUST implement single-query execution.
         try:
-            elements, meta = db.cypher_query(query)
+            tuples, meta = db.cypher_query(query)
             # Re-tag nodes and edges with self.database_name using a second query.
             # Must also re-fetch from Neo4j to ensure our copy is tagged with 'db'
             q = query.lower()
             if "create" in q or "merge" in q:
                 self._execute_retag_db()
-                elements, meta = self._fetch_latest(elements)
+                tuples, meta = self._fetch_latest(tuples)
             
             returns_data = self._returns_data(query)
-            parsable_to_df = self._parsable_to_df((elements, meta))
-            df = _elements_to_df(elements, meta) if returns_data and parsable_to_df else None
+            parsable_to_df = self._parsable_to_df((tuples, meta))
+            df = _tuples_to_df(tuples, meta) if returns_data and parsable_to_df else None
             if df is None or df.empty:
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
                 return None
@@ -283,6 +283,7 @@ class GraphConnector(DatabaseConnector):
                 OPTIONAL MATCH (n)-[r {self.SAME_DB_KG_()}]->(m)
                 RETURN n, r, m"""
             df = self.execute_query(query)
+        df = _normalize_elements(df) if df else None
 
         if df is not None and not df.empty:
             df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'node_id', 'labels'], sort_columns=columns)
