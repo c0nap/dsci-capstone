@@ -431,10 +431,10 @@ class GraphConnector(DatabaseConnector):
         parts = []
         if node_ids:
             node_ids_str = "[" + ", ".join(f"'{i}'" for i in node_ids) + "]"
-            parts.append(f"MATCH (n) WHERE elementId(n) IN {node_ids_str} RETURN n")
+            parts.append(f"MATCH (n) WHERE elementId(n) IN {node_ids_str} RETURN n AS element")
         if rel_ids:
             rel_ids_str = "[" + ", ".join(f"'{i}'" for i in rel_ids) + "]"
-            parts.append(f"MATCH ()-[r]->() WHERE elementId(r) IN {rel_ids_str} RETURN r")
+            parts.append(f"MATCH ()-[r]->() WHERE elementId(r) IN {rel_ids_str} RETURN r AS element")
         union_query = " UNION ALL ".join(parts)
 
         fresh_results, fresh_meta = db.cypher_query(union_query)
