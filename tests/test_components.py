@@ -232,10 +232,15 @@ def test_cypher_example_2(graph_db: GraphConnector) -> None:
     
     # Check specific nodes exist with expected properties
     assert any(df_nodes['name'] == 'Alice')
-    assert any((df_nodes['name'] == 'Bob') & (df_nodes['age'] == 30))
-    assert any((df_nodes['name'] == 'Charlie') & (df_nodes['occupation'] == 'Designer'))
-    assert any(df_nodes['name'] == 'Dave')
+    assert any((df_nodes['name'] == 'Bob') & (df_nodes['age'] == 25))
+    assert any((df_nodes['name'] == 'Charlie') & (df_nodes['age'] == 35))
+    assert any((df_nodes['name'] == 'Dave') & (df_nodes['age'] == 28))
     assert any(df_nodes['name'] == 'Frank')
+    
+    # Verify Alice has correct age
+    alice_rows = df_nodes[df_nodes['name'] == 'Alice']
+    assert len(alice_rows) == 1
+    assert alice_rows.iloc[0]['age'] == 30
     
     # Verify list properties were stored
     frank_row = df_nodes[df_nodes['name'] == 'Frank'].iloc[0]
@@ -252,10 +257,18 @@ def test_cypher_example_2(graph_db: GraphConnector) -> None:
     assert any(df_rels['rel_type'] == 'FOLLOWS')
     assert any(df_rels['rel_type'] == 'COLLABORATES')
     
-    # Verify relationship properties (e.g., 'since' on KNOWS relationships)
+    # Verify there are multiple KNOWS relationships
     knows_rels = df_rels[df_rels['rel_type'] == 'KNOWS']
-    assert len(knows_rels) > 0
+    assert len(knows_rels) >= 3  # Alice->Bob, Bob->Charlie, Dave->Alice
+    
+    # Verify relationship properties (e.g., 'since' on KNOWS, 'project' on COLLABORATES)
     assert any(knows_rels['since'].notna()) if 'since' in knows_rels.columns else True
+    collab_rels = df_rels[df_rels['rel_type'] == 'COLLABORATES']
+    assert len(collab_rels) >= 1
+    if 'project' in collab_rels.columns:
+        assert any(collab_rels['project'] == 'AI')
+    if 'hours' in collab_rels.columns:
+        assert any(collab_rels['hours'] == 120)
     
     graph_db.drop_graph("social")
 
@@ -288,23 +301,31 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
         df_scene_nodes = df_scene[df_scene["element_type"] == "node"]
         assert len(df_scene_nodes) == 5  # Alice, Bob, Sofa, Table, Lamp
         assert any(df_scene_nodes['name'] == 'Alice')
+        assert any(df_scene_nodes['name'] == 'Bob')
         assert any((df_scene_nodes['type'] == 'seating') & (df_scene_nodes['name'] == 'Sofa'))
+        assert any((df_scene_nodes['type'] == 'surface') & (df_scene_nodes['name'] == 'Table'))
+        assert any((df_scene_nodes['type'] == 'lighting') & (df_scene_nodes['name'] == 'Lamp'))
         
-        # Verify spatial coordinates exist
-        assert 'x' in df_scene_nodes.columns or 'position' in df_scene_nodes.columns
+        # Verify spatial coordinates exist for all nodes
+        assert 'x' in df_scene_nodes.columns and 'y' in df_scene_nodes.columns
         
         # Verify Alice and Bob have position data
         alice_row = df_scene_nodes[df_scene_nodes['name'] == 'Alice'].iloc[0]
         bob_row = df_scene_nodes[df_scene_nodes['name'] == 'Bob'].iloc[0]
-        assert alice_row.get('x') is not None or alice_row.get('position') is not None
-        assert bob_row.get('x') is not None or bob_row.get('position') is not None
+        assert alice_row['position'] == 'standing' and alice_row['x'] == 5.0
+        assert bob_row['position'] == 'sitting' and bob_row['x'] == 2.1
         
         # Verify spatial relationships by filtering DataFrame
         df_scene_rels = df_scene[df_scene["element_type"] == "relationship"]
-        assert len(df_scene_rels) > 0
+        assert len(df_scene_rels) == 3  # SITTING_ON, NEAR, ON_TOP_OF
         assert any(df_scene_rels['rel_type'] == 'SITTING_ON')
         assert any(df_scene_rels['rel_type'] == 'ON_TOP_OF')
         assert any(df_scene_rels['rel_type'] == 'NEAR')
+        
+        # Verify NEAR relationship has distance property
+        near_rels = df_scene_rels[df_scene_rels['rel_type'] == 'NEAR']
+        if 'distance' in near_rels.columns:
+            assert any(near_rels['distance'] == 0.5)
         
         # Verify relationship directionality exists
         assert all(df_scene_rels['start_node_id'].notna())
@@ -317,46 +338,60 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
         df_dialogue_nodes = df_dialogue[df_dialogue["element_type"] == "node"]
         assert len(df_dialogue_nodes) == 6  # 3 Dialogue + 3 DialogueRef nodes
         
-        # Check dialogue content
-        assert any(df_dialogue_nodes['speaker'] == 'Alice')
-        assert any(df_dialogue_nodes['speaker'] == 'Bob')
+        # Check dialogue nodes exist
+        assert any((df_dialogue_nodes['speaker'] == 'Alice') & (df_dialogue_nodes['timestamp'] == 10.5))
+        assert any((df_dialogue_nodes['speaker'] == 'Bob') & (df_dialogue_nodes['timestamp'] == 12.3))
+        assert any((df_dialogue_nodes['speaker'] == 'Alice') & (df_dialogue_nodes['timestamp'] == 15.8))
         
-        # Verify dialogue sequence numbers or timestamps exist
-        assert 'sequence' in df_dialogue_nodes.columns or 'timestamp' in df_dialogue_nodes.columns
+        # Verify timestamp ordering
+        dialogue_only = df_dialogue_nodes[df_dialogue_nodes['timestamp'].notna()]
+        assert len(dialogue_only) == 3
         
         # Verify dialogue flow relationships by filtering DataFrame
         df_dialogue_rels = df_dialogue[df_dialogue["element_type"] == "relationship"]
-        assert len(df_dialogue_rels) > 0
-        assert any(df_dialogue_rels['rel_type'] == 'FOLLOWED_BY')
+        assert len(df_dialogue_rels) == 2  # Two FOLLOWED_BY relationships
+        assert all(df_dialogue_rels['rel_type'] == 'FOLLOWED_BY')
         
-        # Check object references exist
+        # Check object references exist (DialogueRef nodes)
+        assert any(df_dialogue_nodes['mentioned_object'] == 'book')
         assert any(df_dialogue_nodes['mentioned_object'] == 'table')
         assert any(df_dialogue_nodes['mentioned_object'] == 'lamp')
         
-        # Verify at least one dialogue has actual text content
+        # Verify dialogue text content exists
         assert any(df_dialogue_nodes['text'].notna()) if 'text' in df_dialogue_nodes.columns else True
+        alice_dialogue = df_dialogue_nodes[(df_dialogue_nodes['speaker'] == 'Alice') & (df_dialogue_nodes['text'].notna())]
+        assert len(alice_dialogue) >= 2  # Alice speaks twice
     
-    # Verify graph isolation: scene and dialogue should be separate
+    # Verify graph isolation: scene and dialogue should be separate despite cross-graph query
     df_scene = graph_db.get_dataframe("scene")
     df_dialogue = graph_db.get_dataframe("dialogue")
     assert df_scene is not None and df_dialogue is not None
     
-    # Scene objects should not appear in dialogue graph structure
+    # Extract nodes only for comparison
     df_scene_nodes = df_scene[df_scene["element_type"] == "node"]
     df_dialogue_nodes = df_dialogue[df_dialogue["element_type"] == "node"]
     scene_entities = set(df_scene_nodes['name'].dropna())
     dialogue_speakers = set(df_dialogue_nodes['speaker'].dropna())
     
-    # Speakers reference scene entities but graphs remain isolated
-    # (Alice/Bob appear as speakers, not as Person nodes in dialogue graph)
+    # Speakers reference scene entities (cross-graph semantic links are intentional)
+    # Alice/Bob appear as speakers in dialogue, AND as Person nodes in scene
     assert 'Alice' in dialogue_speakers  # Alice speaks
     assert 'Alice' in scene_entities     # Alice exists in scene
-    # But the actual node types/properties should differ
-    scene_alice = df_scene_nodes[df_scene_nodes['name'] == 'Alice']
-    assert 'position' in scene_alice.columns or 'x' in scene_alice.columns
+    assert 'Bob' in dialogue_speakers    # Bob speaks
+    assert 'Bob' in scene_entities       # Bob exists in scene
     
-    # Verify row counts differ (graphs are truly isolated)
-    assert len(df_scene) != len(df_dialogue)
+    # Verify graphs have different data models through property schemas
+    scene_alice = df_scene_nodes[df_scene_nodes['name'] == 'Alice'].iloc[0]
+    assert scene_alice['position'] == 'standing'
+    assert 'x' in scene_alice.index and scene_alice['x'] == 5.0
+    
+    # Dialogue nodes have conversational properties
+    dialogue_props = set(df_dialogue_nodes.columns)
+    assert 'speaker' in dialogue_props or 'text' in dialogue_props or 'mentioned_object' in dialogue_props
+    
+    # Scene nodes have spatial/physical properties
+    scene_props = set(df_scene_nodes.columns)
+    assert 'position' in scene_props or 'x' in scene_props or 'type' in scene_props
     
     # Clean up
     for kg_name in ["scene", "dialogue"]:
