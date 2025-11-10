@@ -235,6 +235,8 @@ class GraphConnector(DatabaseConnector):
         @param result  The result of a Cypher query.
         @return  Whether the object is parsable to DataFrame.
         """
+        from neo4j.graph import Node, Relationship
+        
         # Handle tuple: (results, meta)
         if not isinstance(result, tuple) or len(result) != 2:
             return False
@@ -253,15 +255,15 @@ class GraphConnector(DatabaseConnector):
             for x in row:
                 if not (
                     x is None
-                    or isinstance(x, (dict, str, int, float, bool))
-                    or hasattr(x, "__properties__")  # NeoModel property map
+                    or isinstance(x, (dict, str, int, float, bool, Node, Relationship))
+                    or hasattr(x, "__properties__")
                 ):
                     return False
-        elif not isinstance(row, (dict, str, int, float, bool)):
+        elif not isinstance(row, (dict, str, int, float, bool, Node, Relationship)):
             # Single-column result with complex object
             if row is not None and not hasattr(row, "__properties__"):
                 return False
-        # Structural success only — semantic validation handled by filter_valid (or DataFrame-level filters)
+        # Structural success only — semantic validation handled by _tuples_to_df and filter_to_db
         return True
 
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
@@ -778,12 +780,12 @@ def _normalize_elements(df: DataFrame) -> DataFrame:
 
     rows = []
     for _, row in df.iterrows():
-        for cell in row:
-            if cell is None:
+        for element in row:
+            if element is None:
                 continue
-            if isinstance(cell, dict):
+            if isinstance(element, dict) and "element_id" in element:
                 # Entity dict - add as a row
-                rows.append(dict(cell))
+                rows.append(dict(element))
             # Skip non-dict values (scalars)
     
     return DataFrame(rows)
