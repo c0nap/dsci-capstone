@@ -282,9 +282,23 @@ class GraphConnector(DatabaseConnector):
 
         with self.temp_graph(name):
             # Fetch both nodes and relationships belonging to this graph and DB
-            query = f"""MATCH (n {self.SAME_DB_KG_()})
-                OPTIONAL MATCH (n)-[r {self.SAME_DB_KG_()}]->(m)
-                RETURN n, r, m"""
+            # 1. Get all nodes in this graph.
+            # 2. Get all relationships STARTING in this graph.
+            # 3. Get all relationships ENDING in this graph.
+            # UNION automatically handles duplicates, and we only RETURN n or r, never m.
+            query = f"""
+            MATCH (n {self.SAME_DB_KG_()})
+            WHERE {self.NOT_DUMMY_('n')}
+            RETURN n AS element
+            UNION
+            MATCH (n {self.SAME_DB_KG_()})-[r]->(m)
+            WHERE {self.NOT_DUMMY_('n')}
+            RETURN r AS element
+            UNION
+            MATCH (n)-[r]->(m {self.SAME_DB_KG_()})
+            WHERE {self.NOT_DUMMY_('m')}
+            RETURN r AS element
+            """
             df = self.execute_query(query)
         if df is not None and not df.empty:
             df = _normalize_elements(df)

@@ -227,7 +227,7 @@ def test_cypher_example_2(graph_db: GraphConnector) -> None:
     assert df is not None
     df = df[df["element_type"] == "node"]
     assert len(df) == 5  # Alice, Bob, Charlie, Dave, Frank
-    assert "node_id" in df.columns and "labels" in df.columns
+    assert "element_id" in df.columns and "labels" in df.columns
     assert "db" in df.columns and "kg" in df.columns
     
     # Check specific nodes
