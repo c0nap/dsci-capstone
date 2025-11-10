@@ -722,13 +722,11 @@ def _tuples_to_df(tuples: List[Tuple[Any, ...]], meta: List[str]) -> DataFrame:
 
     # --- Step 1: Normalize NeoModel objects to plain dicts ---
     normalized = []
-    element_types = []  # track node/rel/scalar per row
     for row in tuples:
         new_row = []
-        element_type = None
         for x in row:
             if x is None:
-                continue
+                new_row.append(None)
             elif hasattr(x, "__properties__"):
                 # NeoModel Node/Rel: extract property map and preserve IDs/labels
                 props = dict(x.__properties__)
@@ -736,26 +734,21 @@ def _tuples_to_df(tuples: List[Tuple[Any, ...]], meta: List[str]) -> DataFrame:
                 props["labels"] = list(getattr(x, "labels", []))
                 # Identify if this is a Node or Relationship object
                 if hasattr(x, "start_node") or hasattr(x, "end_node") or hasattr(x, "nodes"):
-                    element_type = "relationship"
+                    props["element_type"] = "relationship"
                 else:
-                    element_type = "node"
+                    props["element_type"] = "node"
                 new_row.append(props)
             elif isinstance(x, dict):
                 new_row.append(x)
-                element_type = "dict"
             elif isinstance(x, list):
                 new_row.append(x)
-                element_type = "list"
             else:
                 # Scalars or unrecognized types — keep as-is
                 new_row.append(x)
-                element_type = "scalar"
         normalized.append(new_row)
-        element_types.append("unknown")
 
     # --- Step 2: Construct the DataFrame ---
     df = DataFrame(normalized, columns=meta if meta else None)
-    df["element_type"] = element_types
     return df
 
 
