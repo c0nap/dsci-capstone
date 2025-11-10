@@ -218,7 +218,6 @@ class GraphConnector(DatabaseConnector):
         @param query  A single pre-validated CQL query string.
         @return  Whether the query is intended to fetch data (true) or might return a status message (false).
         """
-        import re
         q = query.strip().upper()
         # Remove quoted strings to avoid false positives (e.g., {name: "Return of the Jedi"})
         q_no_strings = re.sub(r"'[^']*'|\"[^\"]*\"", "", q)
@@ -266,40 +265,24 @@ class GraphConnector(DatabaseConnector):
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified Knowledge Graph collection.
         @details
-            - Fetches all public node attributes, the internal ID, and all labels (e.g. :Person :Character)
-            - Does not explode lists or nested values
-            - Different approach than DocumentConnector because our node attributes are usually flat key:value already.
-        @param name  The name of an existing table or collection in the database.
+            - Fetches all nodes and relationships belonging to the active database + graph name.
+            - Includes public attributes, element_id, labels, and element_type.
+            - Uses execute_query() for DataFrame conversion and filtering.
+            - Does not explode lists or nested values.
+        @param name  The name of an existing graph or subgraph.
         @param columns  A list of column names to keep.
-        @return  DataFrame containing the requested data, or None
-        @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
+        @return  DataFrame containing the requested data, or None.
+        @throws Log.Failure  If we fail to create the requested DataFrame for any reason.
+        """
         self.check_connection(Log.get_df, raise_error=True)
 
         with self.temp_graph(name):
-            # Get all nodes in the specified graph
-            query = f"MATCH (n {self.SAME_DB_KG_()}) RETURN n"
-            results = self.execute_query(query)
-        if results is None:
-            return None
+            # Fetch both nodes and relationships belonging to this graph and DB
+            query = f"""MATCH (n {self.SAME_DB_KG_()})
+                OPTIONAL MATCH (n)-[r {self.SAME_DB_KG_()}]->(m)
+                RETURN n, r, m"""
+            df = self.execute_query(query)
 
-        # Create a row for each node with attributes as columns - might be unbalanced
-        rows = []
-        for node in results.iloc[:, 0]:
-            # Extract all user-visible properties
-            if hasattr(node, "properties") and node.properties:
-                row = dict(node.properties)
-            elif hasattr(node, "keys") and hasattr(node, "__getitem__"):
-                # Some neomodel/neo4j Node types expose mapping-like access
-                row = {k: node[k] for k in node.keys()}
-            else:
-                row = {}
-            # Always include ID and labels
-            row["node_id"] = getattr(node, "element_id", None)
-            row["labels"] = list(getattr(node, "labels", []))
-            rows.append(row)
-
-        # Pandas will fill in NaN where necessary
-        df = DataFrame(rows)
         if df is not None and not df.empty:
             df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'node_id', 'labels'], sort_columns=columns)
             df = df[columns] if columns else df
@@ -657,7 +640,7 @@ def _filter_to_db(self, df: DataFrame) -> DataFrame:
         - Keeps relationships if either endpoint node (by elementId) matches the same db.
         - Works on unflattened frames where cells are dicts (node/rel maps).
         - Safely ignores missing fields; drops a top-level '_init' column if present.
-    @param df  DataFrame potentially containing node and relationship rows.
+    @param df  DataFrame containing node and relationship rows.
     @return  Filtered DataFrame restricted to the active database.
     """
     if df is None or df.empty:
