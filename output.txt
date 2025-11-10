@@ -1,34 +1,34 @@
 (env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python-dev
-[+] Building 3.1s (20/20) FINISHED                                                                       docker:default
- => [internal] load build definition from Dockerfile.python                                                        0.0s
- => => transferring dockerfile: 1.29kB                                                                             0.0s
- => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.4s
- => [internal] load .dockerignore                                                                                  0.1s
- => => transferring context: 79B                                                                                   0.0s
- => [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c205e18d  0.0s
- => => resolve docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c205e18d98  0.0s
- => [internal] load build context                                                                                  0.5s
- => => transferring context: 9.81kB                                                                                0.5s
- => CACHED [ 2/15] WORKDIR /pipeline                                                                               0.0s
- => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make pand  0.0s
- => CACHED [ 4/15] COPY req/requirements.txt requirements.txt                                                      0.0s
- => CACHED [ 5/15] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
- => CACHED [ 6/15] COPY src/ src/                                                                                  0.0s
- => CACHED [ 7/15] COPY tests/ tests/                                                                              0.0s
- => CACHED [ 8/15] COPY db/ db/                                                                                    0.0s
- => [ 9/15] COPY components/ components/                                                                           0.1s
- => [10/15] COPY datasets/ datasets/                                                                               0.2s
- => [11/15] COPY .env .env                                                                                         0.1s
- => [12/15] COPY Makefile .                                                                                        0.0s
- => [13/15] RUN make env-docker                                                                                    0.7s
- => [14/15] RUN mv .env.docker .env                                                                                0.4s
- => [15/15] COPY pyproject.toml .                                                                                  0.1s
- => exporting to image                                                                                             0.2s
- => => exporting layers                                                                                            0.2s
- => => writing image sha256:91865cc521036c2940c31b6b97e685c973173c226ed2f5571b3508b4205fc055                       0.0s
- => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                                  0.0s
+[+] Building 3.3s (20/20) FINISHED                                                               docker:default
+ => [internal] load build definition from Dockerfile.python                                                0.0s
+ => => transferring dockerfile: 1.29kB                                                                     0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                        0.4s
+ => [internal] load .dockerignore                                                                          0.1s
+ => => transferring context: 79B                                                                           0.0s
+ => [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8  0.0s
+ => => resolve docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c2  0.0s
+ => [internal] load build context                                                                          0.6s
+ => => transferring context: 9.73MB                                                                        0.6s
+ => CACHED [ 2/15] WORKDIR /pipeline                                                                       0.0s
+ => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential m  0.0s
+ => CACHED [ 4/15] COPY req/requirements.txt requirements.txt                                              0.0s
+ => CACHED [ 5/15] RUN pip install --no-cache-dir -r requirements.txt                                      0.0s
+ => CACHED [ 6/15] COPY src/ src/                                                                          0.0s
+ => CACHED [ 7/15] COPY tests/ tests/                                                                      0.0s
+ => CACHED [ 8/15] COPY db/ db/                                                                            0.0s
+ => [ 9/15] COPY components/ components/                                                                   0.1s
+ => [10/15] COPY datasets/ datasets/                                                                       0.1s
+ => [11/15] COPY .env .env                                                                                 0.1s
+ => [12/15] COPY Makefile .                                                                                0.0s
+ => [13/15] RUN make env-docker                                                                            0.6s
+ => [14/15] RUN mv .env.docker .env                                                                        0.4s
+ => [15/15] COPY pyproject.toml .                                                                          0.0s
+ => exporting to image                                                                                     0.2s
+ => => exporting layers                                                                                    0.2s
+ => => writing image sha256:c77160f4178db3c8bbe9fa86aa3cc358b9599a5c95f91ed78cf25440c8aad9ae               0.0s
+ => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                          0.0s
 container-python
-5151a3867f6378d0e89ab7dedda2066a1cce386fff01fff5f102203d005d57b6
+218a7870629d3bf2762d6c9c628360f55dc2a26080fe9dc98555563977a409fb
 Network 'capstone_default' already exists; continue...
 Deleted old chunks...
  * Serving Flask app 'main'
@@ -39,9 +39,9 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://172.17.0.5:5054
 Press CTRL+C to quit
 [STATUS] Story 1: preprocessing -> in-progress
-127.0.0.1 - - [07/Nov/2025 06:03:11] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Nov/2025 23:16:12] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> in-progress
-127.0.0.1 - - [07/Nov/2025 06:03:11] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Nov/2025 23:16:12] "POST /status/story HTTP/1.1" 200 -
 
 ==================================================
 Processing: ./datasets/examples/trilogy-wishes-2.epub
@@ -49,240 +49,270 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 === STORY SUMMARY ===
 Total chunks: 254
 [STATUS] Story 1: preprocessing -> completed
-127.0.0.1 - - [07/Nov/2025 06:03:14] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Nov/2025 23:16:13] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> completed
-127.0.0.1 - - [07/Nov/2025 06:03:14] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Nov/2025 23:16:13] "POST /status/story HTTP/1.1" 200 -
 
 Chunk details:
-  index: Chunk(len=1427, book=2, chapter=12, story=1, lines=[3788,3819], story%=58.721, chapter%=59.483)
+  index: Chunk(len=1453, book=2, chapter=7, story=1, lines=[819,844], story%=11.747, chapter%=24.116)
 
-‘Nonsense,’ Robert urged, ‘it said beautiful and delightful, and towels and baths aren’t THAT, however good they may be for you. Let it go. I suppose it won’t give us the slip,’ he added, pushing back his chair and standing up.
-‘Hush!’ said the Phoenix; ‘how can you? Don’t trample on its feelings just because it’s only a carpet.’
-‘But how can it do it—unless one of us is on it to do the wishing?’ asked Robert. He spoke with a rising hope that it MIGHT be necessary for one to go and why not Robert? But the Phoenix quickly threw cold water on his new-born dream.
-‘Why, you just write your wish on a paper, and pin it on the carpet.’
-So a leaf was torn from Anthea’s arithmetic book, and on it Cyril wrote in large round-hand the following:
-We wish you to go to your dear native home, and bring back the most beautiful and delightful productions of it you can—and not to be gone long, please.
-Then the paper was laid on the carpet.
-‘Writing down, please,’ said the Phoenix; ‘the carpet can’t read a paper whose back is turned to it, any more than you can.’
-It was pinned fast, and the table and chairs having been moved, the carpet simply and suddenly vanished, rather like a patch of water on a hearth under a fierce fire. The edges got smaller and smaller, and then it disappeared from sight.
-‘It may take it some time to collect the beautiful and delightful things,’ said the Phoenix. ‘I should wash up—I mean wash down.’
-    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-12_p.59483]
+‘Because there are donkeys there,’ said she.
+‘Not in November, silly,’ said Cyril; and the discussion got warmer and warmer, and still nothing was settled.
+‘I vote we let the Phoenix decide,’ said Robert, at last. So they stroked it till it woke. ‘We want to go somewhere abroad,’ they said, ‘and we can’t make up our minds where.’
+‘Let the carpet make up ITS mind, if it has one,’ said the Phoenix.
+‘Just say you wish to go abroad.’
+So they did; and the next moment the world seemed to spin upside down, and when it was right way up again and they were ungiddy enough to look about them, they were out of doors.
+Out of doors—this is a feeble way to express where they were. They were out of—out of the earth, or off it. In fact, they were floating steadily, safely, splendidly, in the crisp clear air, with the pale bright blue of the sky above them, and far down below the pale bright sun-diamonded waves of the sea. The carpet had stiffened itself somehow, so that it was square and firm like a raft, and it steered itself so beautifully and kept on its way so flat and fearless that no one was at all afraid of tumbling off. In front of them lay land.
+‘The coast of France,’ said the Phoenix, waking up and pointing with its wing. ‘Where do you wish to go? I should always keep one wish, of course—for emergencies—otherwise you may get into an emergency from which you can’t emerge at all.’
+But the children were far too deeply interested to listen.
+    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-7_p.24116]
 
 NLP output:
-('Bath', 'subclass of', 'towel')
-('Let it go', 'has part', 'Let it go')
-('Let it go', 'part of', 'Let it go')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('Orwell', 'Nineteen Eighty-Four', 'author')
-('followed by', 'Orwell', 'Nineteen Eighty-Four')
-('author', 'follows', 'Nineteen Eighty-Four')
-('Hush!', 'performer', 'Hush!')
-('said the Phoenix', 'characters', 'Phoenix')
-('Phoenix', 'present in work', 'said the Phoenix')
-('Don’t trample on its feelings just because it’s only a carpet', 'said to be the same as', 'trample on its feelings just because it’s only a carpet')
-('trample on its feelings just because it’s only a carpet', 'said to be the same as', 'Don’t trample on its feelings just because it’s only a carpet')
-('trample on its feelings just because it’s only a carpet', 'said', 'Don’t trample on its feelings just because it’s only a carpet')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Milton', 'Milton', 'author')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('I vote we let the Phoenix decide', 'participant', 'Robert')
 ('John Milton', 'notable work', 'Paradise Lost')
 ('Paradise Lost', 'author', 'John Milton')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
-("A Midsummer Night's Dream", 'author', 'William Shakespeare')
-('the Phoenix', 'present in work', 'his new-born dream')
-('his new-born dream', 'characters', 'the Phoenix')
-('pin it on the carpet', 'subclass of', 'wish')
-('Anthea', 'spouse', 'Cyril')
-('Cyril', 'spouse', 'Anthea')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
+('Phoenix', 'product or material produced', 'carpet')
+('London', 'capital of', 'England')
+('England', 'capital', 'London')
+('the world seemed to spin upside down', 'opposite of', 'right way up')
+('right way up', 'opposite of', 'the world seemed to spin upside down')
+('Out of doors', 'instance of', 'expression')
+('out of—out of the earth', 'different from', 'off it')
+('off it', 'different from', 'out of—out of the earth')
+('sea', 'opposite of', 'sky')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
 ('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
 ('George Orwell', 'Nineteen Eighty-Four', 'author')
-('followed by', 'George Orwell', 'Nineteen Eighty-Four')
-('author', 'follows', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'George Orwell')
-('Writing down', 'different from', 'paper')
-('paper', 'different from', 'Writing down')
-('hearth', 'use', 'fire')
-('World War I', 'followed by', 'World War II')
-('World War II', 'follows', 'World War I')
-('World War II', 'World War II', 'followed by')
-('World War I', 'World War II', 'follows')
-('Phoenix', 'owner of', 'beautiful and delightful things')
-('beautiful and delightful things', 'owned by', 'Phoenix')
-('wash up', 'said to be the same as', 'wash down')
-('wash down', 'said to be the same as', 'wash up')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('Land', 'instance of', 'land')
+('coast', 'country', 'France')
+('Where do you wish to go', 'instance of', 'wish')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Milton', 'Milton', 'author')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('Henry Wadsworth Longfellow', 'notable work', 'The Merry Wives of Windsor')
+('The Merry Wives of Windsor', 'author', 'Henry Wadsworth Longfellow')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('Bath', 'subclass of', 'towel')
-('Let it go', 'has part', 'Let it go')
-('Let it go', 'part of', 'Let it go')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('Orwell', 'Nineteen Eighty-Four', 'author')
-('followed by', 'Orwell', 'Nineteen Eighty-Four')
-('author', 'follows', 'Nineteen Eighty-Four')
-('Hush!', 'performer', 'Hush!')
-('said the Phoenix', 'characters', 'Phoenix')
-('Phoenix', 'present in work', 'said the Phoenix')
-('Don’t trample on its feelings just because it’s only a carpet', 'said to be the same as', 'trample on its feelings just because it’s only a carpet')
-('trample on its feelings just because it’s only a carpet', 'said to be the same as', 'Don’t trample on its feelings just because it’s only a carpet')
-('trample on its feelings just because it’s only a carpet', 'said', 'Don’t trample on its feelings just because it’s only a carpet')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Milton', 'Milton', 'author')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('I vote we let the Phoenix decide', 'participant', 'Robert')
 ('John Milton', 'notable work', 'Paradise Lost')
 ('Paradise Lost', 'author', 'John Milton')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('William Shakespeare', 'notable work', "A Midsummer Night's Dream")
-("A Midsummer Night's Dream", 'author', 'William Shakespeare')
-('the Phoenix', 'present in work', 'his new-born dream')
-('his new-born dream', 'characters', 'the Phoenix')
-('pin it on the carpet', 'subclass of', 'wish')
-('Anthea', 'spouse', 'Cyril')
-('Cyril', 'spouse', 'Anthea')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
+('Phoenix', 'product or material produced', 'carpet')
+('London', 'capital of', 'England')
+('England', 'capital', 'London')
+('the world seemed to spin upside down', 'opposite of', 'right way up')
+('right way up', 'opposite of', 'the world seemed to spin upside down')
+('Out of doors', 'instance of', 'expression')
+('out of—out of the earth', 'different from', 'off it')
+('off it', 'different from', 'out of—out of the earth')
+('sea', 'opposite of', 'sky')
 ('George Orwell', 'notable work', 'Nineteen Eighty-Four')
 ('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
 ('George Orwell', 'Nineteen Eighty-Four', 'author')
-('followed by', 'George Orwell', 'Nineteen Eighty-Four')
-('author', 'follows', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'George Orwell')
-('Writing down', 'different from', 'paper')
-('paper', 'different from', 'Writing down')
-('hearth', 'use', 'fire')
-('World War I', 'followed by', 'World War II')
-('World War II', 'follows', 'World War I')
-('World War II', 'World War II', 'followed by')
-('World War I', 'World War II', 'follows')
-('Phoenix', 'owner of', 'beautiful and delightful things')
-('beautiful and delightful things', 'owned by', 'Phoenix')
-('wash up', 'said to be the same as', 'wash down')
-('wash down', 'said to be the same as', 'wash up')
+('George Orwell', 'Nineteen Eighty-Four', 'author')
+('Land', 'instance of', 'land')
+('coast', 'country', 'France')
+('Where do you wish to go', 'instance of', 'wish')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Milton', 'Milton', 'author')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('Henry Wadsworth Longfellow', 'notable work', 'The Merry Wives of Windsor')
+('The Merry Wives of Windsor', 'author', 'Henry Wadsworth Longfellow')
 
 And here is the original text:
-‘Nonsense,’ Robert urged, ‘it said beautiful and delightful, and towels and baths aren’t THAT, however good they may be for you. Let it go. I suppose it won’t give us the slip,’ he added, pushing back his chair and standing up.
-‘Hush!’ said the Phoenix; ‘how can you? Don’t trample on its feelings just because it’s only a carpet.’
-‘But how can it do it—unless one of us is on it to do the wishing?’ asked Robert. He spoke with a rising hope that it MIGHT be necessary for one to go and why not Robert? But the Phoenix quickly threw cold water on his new-born dream.
-‘Why, you just write your wish on a paper, and pin it on the carpet.’
-So a leaf was torn from Anthea’s arithmetic book, and on it Cyril wrote in large round-hand the following:
-We wish you to go to your dear native home, and bring back the most beautiful and delightful productions of it you can—and not to be gone long, please.
-Then the paper was laid on the carpet.
-‘Writing down, please,’ said the Phoenix; ‘the carpet can’t read a paper whose back is turned to it, any more than you can.’
-It was pinned fast, and the table and chairs having been moved, the carpet simply and suddenly vanished, rather like a patch of water on a hearth under a fierce fire. The edges got smaller and smaller, and then it disappeared from sight.
-‘It may take it some time to collect the beautiful and delightful things,’ said the Phoenix. ‘I should wash up—I mean wash down.’
+‘Because there are donkeys there,’ said she.
+‘Not in November, silly,’ said Cyril; and the discussion got warmer and warmer, and still nothing was settled.
+‘I vote we let the Phoenix decide,’ said Robert, at last. So they stroked it till it woke. ‘We want to go somewhere abroad,’ they said, ‘and we can’t make up our minds where.’
+‘Let the carpet make up ITS mind, if it has one,’ said the Phoenix.
+‘Just say you wish to go abroad.’
+So they did; and the next moment the world seemed to spin upside down, and when it was right way up again and they were ungiddy enough to look about them, they were out of doors.
+Out of doors—this is a feeble way to express where they were. They were out of—out of the earth, or off it. In fact, they were floating steadily, safely, splendidly, in the crisp clear air, with the pale bright blue of the sky above them, and far down below the pale bright sun-diamonded waves of the sea. The carpet had stiffened itself somehow, so that it was square and firm like a raft, and it steered itself so beautifully and kept on its way so flat and fearless that no one was at all afraid of tumbling off. In front of them lay land.
+‘The coast of France,’ said the Phoenix, waking up and pointing with its wing. ‘Where do you wish to go? I should always keep one wish, of course—for emergencies—otherwise you may get into an emergency from which you can’t emerge at all.’
+But the children were far too deeply interested to listen.
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s":"Phoenix","r":"says","o":"Hush!"},
-  {"s":"Phoenix","r":"says","o":"Don't trample on its feelings just because it's only a carpet"},
-  {"s":"Phoenix","r":"explains","o":"write your wish on a paper and pin it on the carpet"},
-  {"s":"carpet","r":"vanished","o":"from sight"},
-  {"s":"table and chairs","r":"were moved","o":"carpet"},
-  {"s":"leaf","r":"torn from","o":"Anthea's arithmetic book"},
-  {"s":"Cyril","r":"wrote on","o":"leaf"},
-  {"s":"Cyril","r":"wrote","o":"We wish you to go to your dear native home, and bring back the most beautiful and delightful productions of it you can—and not to be gone long, please."},
-  {"s":"Anthea","r":"spouse","o":"Cyril"},
-  {"s":"Cyril","r":"spouse","o":"Anthea"},
-  {"s":"leaf","r":"laid on","o":"carpet"},
-  {"s":"carpet","r":"unable to read","o":"paper whose back is turned to it"},
-  {"s":"Phoenix","r":"says","o":"It may take it some time to collect the beautiful and delightful things"},
-  {"s":"Phoenix","r":"says","o":"I should wash up—I mean wash down"}
+  {"s":"Robert","r":"said","o":"I vote we let the Phoenix decide"},
+  {"s":"The Phoenix","r":"said","o":"Let the carpet make up ITS mind, if it has one"},
+  {"s":"Robert","r":"stated","o":"We want to go somewhere abroad"},
+  {"s":"They","r":"stroked","o":"the Phoenix till it woke"},
+  {"s":"They","r":"replied","o":"Just say you wish to go abroad"},
+  {"s":"The world","r":"spun","o":"upside down"},
+  {"s":"The world","r":"returned to","o":"right way up"},
+  {"s":"They","r":"arrived","o":"out of doors"},
+  {"s":"They","r":"were","o":"out of the earth"},
+  {"s":"They","r":"floated","o":"steadily in the crisp clear air"},
+  {"s":"The sky","r":"was","o":"pale bright blue above them"},
+  {"s":"The sea","r":"had","o":"pale bright sun-diamonded waves"},
+  {"s":"The carpet","r":"stiffened","o":"itself; it became square and firm like a raft"},
+  {"s":"The carpet","r":"steered","o":"itself beautifully"},
+  {"s":"The carpet","r":"kept","o":"its way flat and fearless"},
+  {"s":"They","r":"were not","o":"afraid of tumbling off"},
+  {"s":"In front of them","r":"lay","o":"land"},
+  {"s":"The Phoenix","r":"said","o":"The coast of France"},
+  {"s":"The Phoenix","r":"woke up and pointed","o":"with its wing at the coast of France"},
+  {"s":"The Phoenix","r":"asked","o":"Where do you wish to go?"},
+  {"s":"The Phoenix","r":"said","o":"I should always keep one wish, for emergencies"},
+  {"s":"The coast of France","r":"was","o":"in front of them"},
+  {"s":"The children","r":"were","o":"too deeply interested to listen"},
+  {"s":"They","r":"set off","o":"to go abroad"}
 ]
 
 ==================================================
 
 
 Valid JSON
-[STATUS] Chunk story-1_book-2_chapter-12_p.59483: relation_extraction -> in-progress
-127.0.0.1 - - [07/Nov/2025 06:07:23] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.59483: llm_inference -> in-progress
-127.0.0.1 - - [07/Nov/2025 06:07:23] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.59483: relation_extraction -> completed
-127.0.0.1 - - [07/Nov/2025 06:07:23] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.59483: llm_inference -> completed
-127.0.0.1 - - [07/Nov/2025 06:07:23] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.59483: graph_verbalization -> in-progress
-127.0.0.1 - - [07/Nov/2025 06:07:23] "POST /status/chunk HTTP/1.1" 200 -
-Phoenix says Hush!
-Phoenix says Don't trample on its feelings just because it's only a carpet
-Phoenix explains write your wish on a paper and pin it on the carpet
-carpet vanished from sight
-table and chairs were moved carpet
-leaf torn from Anthea's arithmetic book
-Cyril wrote on leaf
-Cyril wrote We wish you to go to your dear native home, and bring back the most beautiful and delightful productions of it you can—and not to be gone long, please.
-Anthea spouse Cyril
-Cyril spouse Anthea
-leaf laid on carpet
-carpet unable to read paper whose back is turned to it
-Phoenix says It may take it some time to collect the beautiful and delightful things
-Phoenix says I should wash up—I mean wash down
+[STATUS] Chunk story-1_book-2_chapter-7_p.24116: relation_extraction -> in-progress
+127.0.0.1 - - [10/Nov/2025 23:19:44] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.24116: llm_inference -> in-progress
+127.0.0.1 - - [10/Nov/2025 23:19:44] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.24116: relation_extraction -> completed
+127.0.0.1 - - [10/Nov/2025 23:19:44] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.24116: llm_inference -> completed
+127.0.0.1 - - [10/Nov/2025 23:19:44] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.24116: graph_verbalization -> in-progress
+127.0.0.1 - - [10/Nov/2025 23:19:44] "POST /status/chunk HTTP/1.1" 200 -
+Robert said I vote we let the Phoenix decide
+The Phoenix said Let the carpet make up ITS mind, if it has one
+Robert stated We want to go somewhere abroad
+They stroked the Phoenix till it woke
+They replied Just say you wish to go abroad
+The world spun upside down
+The world returned to right way up
+They arrived out of doors
+They were out of the earth
+They floated steadily in the crisp clear air
+The sky was pale bright blue above them
+The sea had pale bright sun-diamonded waves
+The carpet stiffened itself; it became square and firm like a raft
+The carpet steered itself beautifully
+The carpet kept its way flat and fearless
+They were not afraid of tumbling off
+In front of them lay land
+The Phoenix said The coast of France
+The Phoenix woke up and pointed with its wing at the coast of France
+The Phoenix asked Where do you wish to go?
+The Phoenix said I should always keep one wish, for emergencies
+The coast of France was in front of them
+The children were too deeply interested to listen
+They set off to go abroad
 
 Most relevant nodes:
-  node_name  edge_count
-0   Phoenix           5
-1     Cyril           4
-2    carpet           4
+     node_name  edge_count
+0         They           7
+1  The Phoenix           5
+2      Phoenix           5
 
 Triples which best represent the graph:
-Phoenix SAYS I should wash up_I mean wash down
-Phoenix SAYS It may take it some time to collect the beautiful and delightful things
-Phoenix EXPLAINS write your wish on a paper and pin it on the carpet
-Phoenix SAYS Don_t trample on its feelings just because it_s only a carpet
+They WERE_NOT afraid of tumbling off
+They STROKED the Phoenix till it woke
+They REPLIED Just say you wish to go abroad
+They ARRIVED out of doors
+They WERE out of the earth
+They FLOATED steadily in the crisp clear air
+They SET_OFF to go abroad
+The Phoenix SAID Let the carpet make up ITS mind_ if it has one
+The Phoenix SAID The coast of France
+The Phoenix WOKE_UP_AND_POINTED with its wing at the coast of France
+The Phoenix ASKED Where do you wish to go
+The Phoenix SAID I should always keep one wish_ for emergencies
 Phoenix SAYS Hush
-Cyril SPOUSE Anthea
-Cyril WROTE We wish you to go to your dear native home_ and bring back the most beautiful and delightful productions of it you can_and not to be gone long_ please
-Cyril WROTE_ON leaf
-carpet UNABLE_TO_READ paper whose back is turned to it
-carpet VANISHED from sight
+Phoenix SAYS Don_t trample on its feelings just because it_s only a carpet
+Phoenix EXPLAINS write your wish on a paper and pin it on the carpet
+Phoenix SAYS It may take it some time to collect the beautiful and delightful things
+Phoenix SAYS I should wash up_I mean wash down
 
-[STATUS] Chunk story-1_book-2_chapter-12_p.59483: graph_verbalization -> completed
-127.0.0.1 - - [07/Nov/2025 06:07:30] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.24116: graph_verbalization -> completed
+127.0.0.1 - - [10/Nov/2025 23:19:47] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Story 1: summarization -> in-progress
-127.0.0.1 - - [07/Nov/2025 06:07:30] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.59483: summarization -> in-progress
-127.0.0.1 - - [07/Nov/2025 06:07:30] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Nov/2025 23:19:47] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.24116: summarization -> in-progress
+127.0.0.1 - - [10/Nov/2025 23:19:47] "POST /status/chunk HTTP/1.1" 200 -
 
 Generated summary:
-Phoenix guides cleaning and gathering beautiful things, and explains a ritual: write your wish on a paper and pin it to the carpet, while urging not to trample the carpet’s feelings and to hush. Cyril, Anthea’s spouse, writes on a leaf a request to go to their native home and bring back its most beautiful things, not to be gone long. A carpet cannot read a paper whose back is turned to it, and the carpet vanishes from sight.
-    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-12_p.59483]
+A group of children awakens a magical phoenix and a sentient carpet. Fearless, they decide to go abroad, lift off, and float through the crisp air toward the coast of France. The phoenix asks where they wish to go, and directs them to write their wish on a paper and pin it to the carpet, which will gather beautiful things for the journey and may take some time. The carpet should be treated with kindness, and the phoenix lets it decide its path. They depart outdoors to begin their voyage toward France.
+    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-7_p.24116]
 [STATUS] Story 1: summarization -> completed
-127.0.0.1 - - [07/Nov/2025 06:07:43] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.59483: summarization -> completed
-127.0.0.1 - - [07/Nov/2025 06:07:43] "POST /status/chunk HTTP/1.1" 200 -
-[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.59483' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [07/Nov/2025 06:07:43] "POST /process_story HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.59483, task=questeval, status=started
+127.0.0.1 - - [10/Nov/2025 23:20:05] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-7_p.24116: summarization -> completed
+127.0.0.1 - - [10/Nov/2025 23:20:05] "POST /status/chunk HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-7_p.24116' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
+[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.24116, task=questeval, status=started
+127.0.0.1 - - [10/Nov/2025 23:20:05] "POST /process_story HTTP/1.1" 200 -
 Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
-172.18.0.6 - - [07/Nov/2025 06:07:43] "POST /callback HTTP/1.1" 200 -
-[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.59483' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [07/Nov/2025 06:07:43] "POST /process_story HTTP/1.1" 200 -
+172.18.0.6 - - [10/Nov/2025 23:20:05] "POST /callback HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-7_p.24116' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [10/Nov/2025 23:20:05] "POST /process_story HTTP/1.1" 200 -
 Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}
 Initial processing complete. Server listening for additional requests from Blazor...
 Press Ctrl+C to stop.
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.59483, task=bookscore, status=started
-172.18.0.7 - - [07/Nov/2025 06:07:44] "POST /callback HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.59483, task=bookscore, status=completed
+[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.24116, task=bookscore, status=started
+172.18.0.7 - - [10/Nov/2025 23:20:05] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.24116, task=bookscore, status=completed
 [STORY COMPLETE] All chunks completed metric_bookscore for story 1
-172.18.0.7 - - [07/Nov/2025 06:07:55] "POST /callback HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.59483, task=questeval, status=completed
+172.18.0.7 - - [10/Nov/2025 23:20:18] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.24116, task=questeval, status=completed
 [STORY COMPLETE] All chunks completed metric_questeval for story 1
-Downloading builder script: 6.27kB [00:00, 782kB/s]
-Downloading builder script: 7.95kB [00:00, 5.24MB/s]
-Matplotlib is building the font cache; this may take a moment.
+Downloading builder script: 6.27kB [00:00, 2.12MB/s]
+Downloading builder script: 7.95kB [00:00, 18.3MB/s]
 Some weights of RobertaModel were not initialized from the model checkpoint at roberta-large and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Phoenix guides cleaning and gathering beautiful things, and explains a ritual: write your wish on a paper and pin it to the carpet, while urging not to trample the carpet’s feelings and to hush. Cyril, Anthea’s spouse, writes on a leaf a request to go to their native home and bring back its most beautiful things, not to be gone long. A carpet cannot read a paper whose back is turned to it, and the carpet vanishes from sight.', 'goldSummaryText': '‘Nonsense,’ Robert urged, ‘it said beautiful and delightful, and towels and baths aren’t THAT, however good they may be for you. Let it go. I suppose it won’t give us the slip,’ he added, pushing back his chair and standing up.\n‘Hush!’ said the Phoenix; ‘how can you? Don’t trample on its feelings just because it’s only a carpet.’\n‘But how can it do it—unless one of us is on it to do the wishing?’ asked Robert. He spoke with a rising hope that it MIGHT be necessary for one to go and why not Robert? But the Phoenix quickly threw cold water on his new-born dream.\n‘Why, you just write your wish on a paper, and pin it on the carpet.’\nSo a leaf was torn from Anthea’s arithmetic book, and on it Cyril wrote in l', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8579991459846497, 'recall': 0.8258775472640991, 'f1Score': 0.8416319489479065}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.3736839026287689}, {'name': 'ROUGE-1', 'value': 0.3805309734513274}, {'name': 'ROUGE-2', 'value': 0.125}, {'name': 'ROUGE-L', 'value': 0.17699115044247787}, {'name': 'ROUGE-Lsum', 'value': 0.29203539823008845}]}, 'qaResults': []}
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'A group of children awakens a magical phoenix and a sentient carpet. Fearless, they decide to go abroad, lift off, and float through the crisp air toward the coast of France. The phoenix asks where they wish to go, and directs them to write their wish on a paper and pin it to the carpet, which will gather beautiful things for the journey and may take some time. The carpet should be treated with kindness, and the phoenix lets it decide its path. They depart outdoors to begin their voyage toward France.', 'goldSummaryText': '‘Because there are donkeys there,’ said she.\n‘Not in November, silly,’ said Cyril; and the discussion got warmer and warmer, and still nothing was settled.\n‘I vote we let the Phoenix decide,’ said Robert, at last. So they stroked it till it woke. ‘We want to go somewhere abroad,’ they said, ‘and we can’t make up our minds where.’\n‘Let the carpet make up ITS mind, if it has one,’ said the Phoenix.\n‘Just say you wish to go abroad.’\nSo they did; and the next moment the world seemed to spin upside down, and when it was right way up again and they were ungiddy enough to look about them, they were out of doors.\nOut of doors—this is a feeble way to express where they were. They were out of—out of the earth, or off it. In fa', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8450875282287598, 'recall': 0.8166887164115906, 'f1Score': 0.8306454420089722}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.3027239699273936}, {'name': 'ROUGE-1', 'value': 0.32340425531914896}, {'name': 'ROUGE-2', 'value': 0.07725321888412016}, {'name': 'ROUGE-L', 'value': 0.16170212765957448}, {'name': 'ROUGE-Lsum', 'value': 0.28085106382978725}]}, 'qaResults': []}
 
 Output sent to web app.
 [PIPELINE FINALIZED] Story 1 fully processed
-172.18.0.6 - - [07/Nov/2025 06:12:29] "POST /callback HTTP/1.1" 200 -
-INFO:werkzeug:172.18.0.6 - - [07/Nov/2025 06:12:29] "POST /callback HTTP/1.1" 200 -
+172.18.0.6 - - [10/Nov/2025 23:25:38] "POST /callback HTTP/1.1" 200 -
+INFO:werkzeug:172.18.0.6 - - [10/Nov/2025 23:25:38] "POST /callback HTTP/1.1" 200 -
 ^Cmake[2]: *** [Makefile:77: docker-start] Interrupt
 make[1]: *** [Makefile:89: docker-python] Interrupt
 make: *** [Makefile:124: docker-python-dev] Interrupt
@@ -295,17 +325,17 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:5002
  * Running on http://172.17.0.4:5002
 Press CTRL+C to quit
-[QUEUED] chunk 'story-1_book-2_chapter-12_p.59483' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-172.18.0.8 - - [07/Nov/2025 06:07:43] "POST /tasks/queue HTTP/1.1" 202 -
-FINISHED: chunk ID: story-1_book-2_chapter-12_p.59483, result:
-{'value': 0.0, 'annotations': {'Phoenix guides cleaning and gathering beautiful things, and explains a ritual: write your wish on a paper and pin it to the carpet, while urging not to trample the carpet’s feelings and to hush.': {'questions': 'What is the significance of the ritual? Why is it important not to trample the carpet’s feelings? What does it mean for the carpet to vanish from sight?', 'types': ['entity omission', 'causal omission', 'salience']}, 'Cyril, Anthea’s spouse, writes on a leaf a request to go to their native home and bring back its most beautiful things, not to be gone long.': {'questions': "What is Cyril's relationship with Anthea? What is their native home? Why does he want to bring back beautiful things?", 'types': ['entity omission', 'causal omission']}, 'A carpet cannot read a paper whose back is turned to it, and the carpet vanishes from sight.': {'questions': 'Why does the carpet vanish? What is the significance of the carpet being unable to read the paper?', 'types': ['event omission', 'causal omission', 'entity omission']}}, 'model_used': 'openai-model_gpt-4o-mini'}
+[QUEUED] chunk 'story-1_book-2_chapter-7_p.24116' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+172.18.0.8 - - [10/Nov/2025 23:20:05] "POST /tasks/queue HTTP/1.1" 202 -
+FINISHED: chunk ID: story-1_book-2_chapter-7_p.24116, result:
+{'value': 0.0, 'annotations': {'A group of children awakens a magical phoenix and a sentient carpet.': {'questions': 'What are the names of the children? How did they awaken the phoenix and the carpet? What is the significance of the phoenix and the carpet in the story?', 'types': ['entity omission']}, 'Fearless, they decide to go abroad, lift off, and float through the crisp air toward the coast of France.': {'questions': 'How do the children lift off? What is the mechanism or magic that allows them to float through the air?', 'types': ['event omission', 'causal omission']}, 'The phoenix asks where they wish to go, and directs them to write their wish on a paper and pin it to the carpet, which will gather beautiful things for the journey and may take some time.': {'questions': "What kind of beautiful things will the carpet gather? Why does it take some time? What happens if they don't treat the carpet with kindness?", 'types': ['entity omission', 'causal omission']}, 'The carpet should be treated with kindness, and the phoenix lets it decide its path.': {'questions': 'Why does the carpet need to be treated with kindness? What does it mean for the phoenix to let the carpet decide its path? How does this affect the journey?', 'types': ['entity omission', 'causal omission']}, 'They depart outdoors to begin their voyage toward France.': {'questions': 'Why are they departing outdoors? Is there a specific reason for choosing this location? What preparations did they make before departing?', 'types': ['entity omission', 'event omission']}}, 'model_used': 'openai-model_gpt-4o-mini'}
 (env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-qeval
-Downloading: 6.81kB [00:00, 9.42MB/s]
+Downloading: 6.81kB [00:00, 8.59MB/s]
 WARNING:root:Downloading language model for the spaCy model.
 DEPRECATION: https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl#egg=en_core_web_sm==3.0.0 contains an egg fragment with a non-PEP 508 name. pip 25.1 will enforce this behaviour change. A possible replacement is to use the req @ url syntax, and remove the egg fragment. Discussion can be found at https://github.com/pypa/pip/issues/13157
 Collecting en-core-web-sm==3.0.0
   Downloading https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl (13.7 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 37.0 MB/s eta 0:00:00
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 35.3 MB/s eta 0:00:00
 Requirement already satisfied: spacy<3.1.0,>=3.0.0 in /usr/local/lib/python3.8/site-packages (from en-core-web-sm==3.0.0) (3.0.6)
 Requirement already satisfied: spacy-legacy<3.1.0,>=3.0.4 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.0.12)
 Requirement already satisfied: murmurhash<1.1.0,>=0.28.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.0.13)
@@ -351,11 +381,11 @@ You can now load the package via spacy.load('en_core_web_sm')
    Use a production WSGI server instead.
  * Debug mode: off
 INFO:werkzeug: * Running on http://0.0.0.0:5001/ (Press CTRL+C to quit)
-[QUEUED] chunk 'story-1_book-2_chapter-12_p.59483' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-INFO:werkzeug:172.18.0.8 - - [07/Nov/2025 06:07:43] "POST /tasks/queue HTTP/1.1" 202 -
-Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.predictions.transform.dense.bias', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.decoder.weight', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.weight', 'cls.predictions.bias', 'cls.seq_relationship.bias', 'cls.predictions.transform.LayerNorm.weight']
+[QUEUED] chunk 'story-1_book-2_chapter-7_p.24116' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+INFO:werkzeug:172.18.0.8 - - [10/Nov/2025 23:20:05] "POST /tasks/queue HTTP/1.1" 202 -
+Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias', 'cls.seq_relationship.weight']
 - This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
 - This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-FINISHED: chunk ID: story-1_book-2_chapter-12_p.59483, result:
-{'value': 0.3736839026287689, 'has_reference': False}
+FINISHED: chunk ID: story-1_book-2_chapter-7_p.24116, result:
+{'value': 0.3027239699273936, 'has_reference': False}
 Failed to notify boss: HTTPConnectionPool(host='python_service', port=5054): Read timed out. (read timeout=5)
