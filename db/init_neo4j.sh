@@ -16,17 +16,72 @@ NEO4J_HTTP_PORT=$4
 MAX_RETRIES=4
 RETRY_DELAY=5
 
-# --- SET INITIAL PASSWORD ---
+# --- SET INITIAL SETTINGS ---
 echo "$ECHO_PREFIX Setting Neo4j initial password..."
 neo4j-admin dbms set-initial-password "$NEO4J_PASSWORD"
-
-# --- START NEO4J SERVER IN BACKGROUND ---
-# Start the main Neo4j server process in the background so cypher-shell has a server to connect to.
-echo "$ECHO_PREFIX Starting Neo4j server in background..."
 # Docker Compose settings will not propagate since Neo4j is no longer the primary process
 echo "server.bolt.listen_address=0.0.0.0:$NEO4J_PORT" >> /var/lib/neo4j/conf/neo4j.conf
 echo "server.http.listen_address=0.0.0.0:$NEO4J_HTTP_PORT" >> /var/lib/neo4j/conf/neo4j.conf
 
+
+# --- INSTALL PLUGINS FROM /startup/neo4j-plugins.json ---
+echo "$ECHO_PREFIX Installing Neo4j plugins..."
+mkdir -p /plugins
+
+# Ensure required utilities are present (POSIX-safe test)
+if ! command -v jq >/dev/null 2>&1; then
+    echo "$ECHO_PREFIX Installing jq, curl, unzip, wget..."
+    apt-get update -qq && apt-get install -y -qq jq curl unzip wget >/dev/null
+fi
+
+PLUGIN_MANIFEST="/startup/neo4j-plugins.json"
+if [ ! -f "$PLUGIN_MANIFEST" ]; then
+    echo "$ECHO_PREFIX No plugin manifest found at $PLUGIN_MANIFEST — skipping plugin install."
+else
+    # Read plugin names one per line
+    jq -r 'keys[]' "$PLUGIN_MANIFEST" | while IFS= read -r plugin; do
+        echo "$ECHO_PREFIX Processing plugin: $plugin"
+
+        versions_url=$(jq -r --arg p "$plugin" '.[$p].versions // empty' "$PLUGIN_MANIFEST")
+        location=$(jq -r --arg p "$plugin" '.[$p].location // empty' "$PLUGIN_MANIFEST")
+
+        download_url=""
+        if [ -n "$versions_url" ]; then
+            echo "$ECHO_PREFIX Fetching versions from $versions_url"
+            download_url=$(curl -fsSL "$versions_url" | jq -r '.[0].url // .[0].downloads[0].url // empty')
+        fi
+
+        if [ -n "$download_url" ]; then
+            echo "$ECHO_PREFIX Downloading $plugin from $download_url"
+            fname=$(basename "$download_url")
+            wget -q "$download_url" -O "/plugins/$fname"
+            case "$fname" in
+                *.zip) unzip -qo "/plugins/$fname" -d /plugins ;;
+            esac
+        elif [ -n "$location" ]; then
+            echo "$ECHO_PREFIX Plugin $plugin specifies location only ($location) — skipping download."
+        else
+            echo "$ECHO_PREFIX WARNING: No download info for $plugin — skipping."
+            continue
+        fi
+
+        # Append plugin-specific config
+        jq -r --arg p "$plugin" '.[$p].properties | to_entries[]? | "\(.key)=\(.value)"' "$PLUGIN_MANIFEST" |
+        while IFS= read -r prop; do
+            # Skip blank lines and already-present entries
+            if [ -n "$prop" ] && ! grep -q "^$prop" /var/lib/neo4j/conf/neo4j.conf 2>/dev/null; then
+                echo "$prop" >> /var/lib/neo4j/conf/neo4j.conf
+                echo "$ECHO_PREFIX Added config: $prop"
+            fi
+        done
+    done
+fi
+echo "$ECHO_PREFIX Plugin installation complete."
+
+
+# --- START NEO4J SERVER IN BACKGROUND ---
+# Start the main Neo4j server process in the background so cypher-shell has a server to connect to.
+echo "$ECHO_PREFIX Starting Neo4j server in background..."
 neo4j console &
 NEO4J_PID=$!
 
