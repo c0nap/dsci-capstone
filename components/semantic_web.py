@@ -120,19 +120,19 @@ class KnowledgeGraph:
         return result_df
 
 
-    def get_subgraph_by_nodes(self, node_names: List[str]) -> DataFrame:
+    def get_subgraph_by_nodes(self, node_ids: List[str]) -> DataFrame:
         """Return all triples where subject or object is in the specified node list.
-        @param node_names  List of node names to filter by.
+        @param node_ids  List of node element IDs to filter by.
         @return  DataFrame with columns: subject, relation, object
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
         pass
     
-    def get_neighborhood(self, node_name: str, depth: int = 1) -> DataFrame:
+    def get_neighborhood(self, node_id: str, depth: int = 1) -> DataFrame:
         """Get k-hop neighborhood around a central node.
         @details  Returns all triples within k hops of the specified node. A 1-hop neighborhood
         includes all direct neighbors, 2-hop includes neighbors-of-neighbors, etc.
-        @param node_name  The name of the central node.
+        @param node_id  The element ID of the central node.
         @param depth  Number of hops to traverse (default: 1).
         @return  DataFrame with columns: subject, relation, object
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
@@ -144,7 +144,7 @@ class KnowledgeGraph:
         @details  Performs random walks to sample a representative subgraph. More diverse than
         degree-based filtering and better preserves graph structure. Each walk starts from a
         randomly selected node in start_nodes and continues for walk_length steps.
-        @param start_nodes  List of node names to use as starting points.
+        @param start_nodes  List of node IDs to use as starting points.
         @param walk_length  Number of steps in each random walk.
         @param num_walks  Number of random walks to perform (default: 1).
         @return  DataFrame with columns: subject, relation, object
