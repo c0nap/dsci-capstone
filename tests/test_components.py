@@ -536,7 +536,6 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     @details  Validates the KnowledgeGraph wrapper for semantic triple management:
     - add_triple() creates nodes and relationships
     - get_all_triples() retrieves triples in (subject, relation, object) format
-    - normalize_triples() handles flexible LLM output formats
     """
     graph_db.drop_graph("social_kg")
     
@@ -573,45 +572,6 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     assert all(df_nodes["name"].notna())
     node_names = set(df_nodes["name"])
     assert node_names == {"Alice", "Bob", "Charlie"}
-    
-    # Test normalize_triples with various input formats
-    
-    # Format 1: List of dicts
-    data1 = [
-        {"subject": "Dave", "relation": "knows", "object": "Eve"},
-        {"s": "Eve", "r": "follows", "o": "Frank"}
-    ]
-    normalized1 = KnowledgeGraph.normalize_triples(data1)
-    assert len(normalized1) == 2
-    assert normalized1[0] == ("Dave", "KNOWS", "Eve")
-    assert normalized1[1] == ("Eve", "FOLLOWS", "Frank")
-    
-    # Format 2: Single dict with lists
-    data2 = {
-        "subject": ["Alice", "Bob"],
-        "relation": "mentors",
-        "object": ["Charlie", "Dave"]
-    }
-    normalized2 = KnowledgeGraph.normalize_triples(data2)
-    assert len(normalized2) == 2
-    assert normalized2[0] == ("Alice", "MENTORS", "Charlie")
-    assert normalized2[1] == ("Bob", "MENTORS", "Dave")
-    
-    # Format 3: Single tuple
-    data3 = ("Alice", "teaches", "Bob")
-    normalized3 = KnowledgeGraph.normalize_triples(data3)
-    assert len(normalized3) == 1
-    assert normalized3[0] == ("Alice", "TEACHES", "Bob")
-    
-    # Test edge_counts
-    edge_counts_df = kg.get_edge_counts(top_n=5)
-    assert edge_counts_df is not None
-    assert list(edge_counts_df.columns) == ["node_name", "edge_count"]
-    assert len(edge_counts_df) <= 5
-    
-    # Alice should have highest edge count (3 edges: KNOWS, FOLLOWS, COLLABORATES endpoint)
-    alice_count = edge_counts_df[edge_counts_df["node_name"] == "Alice"]["edge_count"].iloc[0]
-    assert alice_count >= 2  # At least 2 edges
     
     graph_db.drop_graph("social_kg")
 

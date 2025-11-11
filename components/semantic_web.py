@@ -1,7 +1,7 @@
 from components.fact_storage import GraphConnector
 from pandas import DataFrame, option_context
 from src.util import Log
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Dict
 import re
 
 class KnowledgeGraph:
