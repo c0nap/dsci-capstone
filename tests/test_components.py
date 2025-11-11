@@ -528,6 +528,9 @@ def _test_query_file(db_fixture: DatabaseConnector, filename: str, valid_files: 
 
 # TODO: Move the following to a different test file
 from components.semantic_web import KnowledgeGraph
+import pytest
+from components.fact_storage import GraphConnector
+from pandas import DataFrame
 
 @pytest.mark.order(16)
 @pytest.mark.dependency(name="knowledge_graph_triples", depends=["graph_minimal", "graph_comprehensive"])
@@ -536,6 +539,7 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     @details  Validates the KnowledgeGraph wrapper for semantic triple management:
     - add_triple() creates nodes and relationships
     - get_all_triples() retrieves triples as element IDs
+    - get_triple_properties() constructs a DataFrame with element properties as columns
     - convert_triple_names() maps IDs to human-readable names
     """
     graph_db.drop_graph("social_kg")
@@ -617,4 +621,198 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     assert len(alice_knows_bob) == 1
     
     graph_db.drop_graph("social_kg")
+
+
+
+
+
+
+@pytest.fixture
+def nature_scene_graph(graph_db: GraphConnector) -> KnowledgeGraph:
+    """Create a scene graph with multiple location-based communities for testing.
+    @details  Graph structure represents a park with distinct areas:
+    - Playground: swings, slide, kids
+    - Bench area: bench, parents
+    - Forest: trees, rock, path
+    - School building: doors, windows, classroom
+    Each area forms a natural community for GraphRAG testing.
+    """
+    graph_db.drop_graph("nature_scene")
+    kg = KnowledgeGraph("nature_scene", graph_db)
+    
+    # Playground community
+    kg.add_triple("Kid1", "PLAYS_ON", "Swings")
+    kg.add_triple("Kid2", "PLAYS_ON", "Slide")
+    kg.add_triple("Swings", "LOCATED_IN", "Playground")
+    kg.add_triple("Slide", "LOCATED_IN", "Playground")
+    kg.add_triple("Kid1", "NEAR", "Kid2")
+    
+    # Bench area community
+    kg.add_triple("Parent1", "SITS_ON", "Bench")
+    kg.add_triple("Parent2", "SITS_ON", "Bench")
+    kg.add_triple("Bench", "LOCATED_IN", "BenchArea")
+    kg.add_triple("Parent1", "WATCHES", "Kid1")
+    kg.add_triple("Parent2", "WATCHES", "Kid2")
+    
+    # Forest community
+    kg.add_triple("Oak", "LOCATED_IN", "Forest")
+    kg.add_triple("Pine", "LOCATED_IN", "Forest")
+    kg.add_triple("Rock", "NEAR", "Oak")
+    kg.add_triple("Path", "CONNECTS", "Forest")
+    kg.add_triple("Path", "CONNECTS", "Playground")
+    
+    # School building community
+    kg.add_triple("Door", "PART_OF", "School")
+    kg.add_triple("Window", "PART_OF", "School")
+    kg.add_triple("Classroom", "INSIDE", "School")
+    kg.add_triple("Desk", "INSIDE", "Classroom")
+    kg.add_triple("Whiteboard", "INSIDE", "Classroom")
+    
+    # Cross-community connections
+    kg.add_triple("Playground", "ADJACENT_TO", "BenchArea")
+    kg.add_triple("BenchArea", "ADJACENT_TO", "Forest")
+    kg.add_triple("School", "NEAR", "Playground")
+    
+    yield kg
+    
+    graph_db.drop_graph("nature_scene")
+
+
+@pytest.mark.order(17)
+@pytest.mark.dependency(name="subgraph_by_nodes", depends=["knowledge_graph_triples"])
+def test_get_subgraph_by_nodes(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test filtering triples by specific node IDs.
+    @details  Validates that get_subgraph_by_nodes correctly filters triples where
+    either subject or object matches the provided node list.
+    """
+    kg = nature_scene_graph
+    
+    # Get all triples to extract some node IDs
+    all_triples = kg.get_all_triples()
+    assert all_triples is not None
+    assert len(all_triples) > 0
+    
+    # Get the full graph to find specific node IDs
+    elements_df = kg.database.get_dataframe(kg.graph_name)
+    nodes_df = elements_df[elements_df["element_type"] == "node"]
+    
+    # Find Kid1 and Swings node IDs
+    kid1_id = nodes_df[nodes_df["name"] == "Kid1"]["element_id"].iloc[0]
+    swings_id = nodes_df[nodes_df["name"] == "Swings"]["element_id"].iloc[0]
+    
+    # Get subgraph containing only triples with Kid1 or Swings
+    subgraph = kg.get_subgraph_by_nodes([kid1_id, swings_id])
+    assert subgraph is not None
+    assert len(subgraph) > 0
+    
+    # Convert to names for verification
+    named_subgraph = kg.convert_triple_names(subgraph)
+    
+    # Should include Kid1 PLAYS_ON Swings
+    assert any(
+        (named_subgraph["subject"] == "Kid1") & 
+        (named_subgraph["relation"] == "PLAYS_ON") & 
+        (named_subgraph["object"] == "Swings")
+    )
+    
+    # Should include Kid1 NEAR Kid2
+    assert any(
+        (named_subgraph["subject"] == "Kid1") & 
+        (named_subgraph["relation"] == "NEAR")
+    )
+    
+    # Should include Swings LOCATED_IN Playground
+    assert any(
+        (named_subgraph["subject"] == "Swings") & 
+        (named_subgraph["relation"] == "LOCATED_IN")
+    )
+    
+    # All triples should involve Kid1 or Swings
+    for _, row in named_subgraph.iterrows():
+        assert row["subject"] in ["Kid1", "Swings"] or row["object"] in ["Kid1", "Swings"]
+
+
+@pytest.mark.order(18)
+@pytest.mark.dependency(name="neighborhood", depends=["knowledge_graph_triples"])
+def test_get_neighborhood(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test k-hop neighborhood expansion around a central node.
+    @details  Validates that get_neighborhood correctly finds all triples within
+    k hops of a starting node.
+    """
+    kg = nature_scene_graph
+    
+    # Get node IDs
+    elements_df = kg.database.get_dataframe(kg.graph_name)
+    nodes_df = elements_df[elements_df["element_type"] == "node"]
+    playground_id = nodes_df[nodes_df["name"] == "Playground"]["element_id"].iloc[0]
+    
+    # Test 1-hop neighborhood
+    neighborhood_1hop = kg.get_neighborhood(playground_id, depth=1)
+    assert neighborhood_1hop is not None
+    assert len(neighborhood_1hop) > 0
+    
+    named_1hop = kg.convert_triple_names(neighborhood_1hop)
+    
+    # Should include direct connections to Playground
+    assert any(named_1hop["subject"] == "Playground")
+    assert any(named_1hop["object"] == "Playground")
+    
+    # Should include Swings and Slide located in Playground
+    assert any(
+        (named_1hop["subject"] == "Swings") & 
+        (named_1hop["relation"] == "LOCATED_IN") & 
+        (named_1hop["object"] == "Playground")
+    )
+    
+    # Test 2-hop neighborhood (should reach further)
+    neighborhood_2hop = kg.get_neighborhood(playground_id, depth=2)
+    assert neighborhood_2hop is not None
+    assert len(neighborhood_2hop) >= len(neighborhood_1hop)
+    
+    named_2hop = kg.convert_triple_names(neighborhood_2hop)
+    
+    # Should reach Kids who play on equipment in Playground
+    assert any(named_2hop["subject"] == "Kid1") or any(named_2hop["object"] == "Kid1")
+
+
+@pytest.mark.order(19)
+@pytest.mark.dependency(name="random_walk_sample", depends=["knowledge_graph_triples"])
+def test_get_random_walk_sample(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test random walk sampling starting from specified nodes.
+    @details  Validates that get_random_walk_sample generates a representative
+    subgraph by following random paths through the graph.
+    """
+    kg = nature_scene_graph
+    
+    # Get node IDs
+    elements_df = kg.database.get_dataframe(kg.graph_name)
+    nodes_df = elements_df[elements_df["element_type"] == "node"]
+    kid1_id = nodes_df[nodes_df["name"] == "Kid1"]["element_id"].iloc[0]
+    
+    # Perform random walk with length 3
+    sample = kg.get_random_walk_sample([kid1_id], walk_length=3, num_walks=1)
+    assert sample is not None
+    assert len(sample) > 0
+    assert len(sample) <= 3  # Should visit at most walk_length edges
+    
+    named_sample = kg.convert_triple_names(sample)
+    
+    # Should start from or near Kid1 (first edge should involve Kid1)
+    first_triple = named_sample.iloc[0]
+    assert first_triple["subject"] == "Kid1" or first_triple["object"] == "Kid1"
+    
+    # Test multiple walks produces more coverage
+    sample_multi = kg.get_random_walk_sample([kid1_id], walk_length=5, num_walks=3)
+    assert sample_multi is not None
+    # Multiple walks should visit more unique edges (though may overlap)
+    assert len(sample_multi) >= len(sample)
+    
+    # All sampled triples should be valid (exist in original graph)
+    all_triples = kg.get_all_triples()
+    for _, row in sample.iterrows():
+        assert any(
+            (all_triples["subject_id"] == row["subject_id"]) &
+            (all_triples["relation_id"] == row["relation_id"]) &
+            (all_triples["object_id"] == row["object_id"])
+        )
 

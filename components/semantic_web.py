@@ -1,5 +1,5 @@
 from components.fact_storage import GraphConnector
-from pandas import DataFrame, option_context
+from pandas import DataFrame, option_context, concat
 from src.util import Log
 from typing import Any, List, Optional, Tuple, Dict
 import re
@@ -237,7 +237,7 @@ class KnowledgeGraph:
                 current = set(neighbors["subject_id"]).union(neighbors["object_id"]) - visited
 
             result_df = (
-                DataFrame() if not all_edges else pd.concat(all_edges, ignore_index=True).drop_duplicates()
+                DataFrame() if not all_edges else concat(all_edges, ignore_index=True).drop_duplicates()
             )
 
             Log.success(Log.kg + Log.gr_rag, f"Found {len(result_df)} triples in {depth}-hop neighborhood.", self.verbose)
