@@ -492,9 +492,10 @@ def test_cypher_example_4(graph_db: GraphConnector) -> None:
         
         return None
     
-    # Verify main chain path: Alice speaks -> Alice enters hall (5 hops)
-    path_length_main = find_path_length(alice_speaks_id, alice_enters_id, df_rels)
-    assert path_length_main == 5
+    # Verify shortest path (uses alternate branch): Alice speaks -> Alice enters hall (3 hops)
+    # Path: Alice speaks -> Charlie arrives (alternate) -> Charlie speaks -> Alice enters hall
+    path_length_shortest = find_path_length(alice_speaks_id, alice_enters_id, df_rels)
+    assert path_length_shortest == 3
     
     # Verify branch path exists: Alice speaks -> Charlie arrives (1 hop via alternate)
     path_length_alt = find_path_length(alice_speaks_id, charlie_arrives_id, df_rels)
