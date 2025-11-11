@@ -85,6 +85,53 @@ class KnowledgeGraph:
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to pivot triple properties: {e}") from e
 
+    def convert_triple_names(self, df_ids: DataFrame, df_lookup: Optional[DataFrame] = None) -> DataFrame:
+        """Maps a DataFrame containing element ID columns (subject_id, relation_id, object_id) to human-readable names.
+        @note
+        - Requires that nodes and relationships still exist in the graph database; otherwise must specify df_lookup.
+        @param df_ids  DataFrame with columns: subject_id, relation_id, object_id.
+        @param df_lookup  DataFrame fetched from @ref components.fact_storage.GraphConnector.get_dataframe with columns: element_id, name, and rel_type.
+        @return  DataFrame with columns: subject, relation, object.
+        @raises Log.Failure  If mapping fails or required IDs are missing.
+        """
+        try:
+            if df_ids is None:
+                return None
+            if df_ids.empty:  # Ensure the DataFrame has correct columns even if no data. For legacy compatibility
+                return DataFrame(columns=["subject", "relation", "object"])
+    
+            # Use provided lookup DataFrame if given, otherwise query the connector
+            elements_df = df_lookup or self.connector.get_dataframe(self.graph_name)
+            if elements_df is None or elements_df.empty:
+                raise Log.Failure(Log.kg + Log.gr_rag, Log.bad_triples(self.graph_name))
+    
+            # Build lookup dictionaries for efficiency. Can now use df.map(dict)
+            node_map = (
+                elements_df[elements_df["element_type"] == "node"]
+                .set_index("element_id")["name"]
+                .to_dict()
+            )
+            rel_map = (
+                elements_df[elements_df["element_type"] == "relationship"]
+                .set_index("element_id")["rel_type"]
+                .to_dict()
+            )
+    
+            # Map IDs to readable names
+            df_named = df_ids.assign(
+                subject=df_ids["subject_id"].map(node_map),
+                relation=df_ids["relation_id"].map(rel_map),
+                object=df_ids["object_id"].map(node_map)
+            )
+            # Drop ID columns and reorder
+            df_named = df_named.drop(columns=["subject_id", "relation_id", "object_id"], errors="ignore")[
+                ["subject", "relation", "object"]
+            ]
+
+            return df_named
+        except Exception as e:
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to convert triple names: {e}") from e
+
 
     def print_nodes(self, max_rows: int = 20, max_col_width: int = 50) -> None:
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
