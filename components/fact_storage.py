@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from neo4j.graph import Node, Relationship
 from neomodel import config, db
 import os
-from pandas import DataFrame, option_context, Series
+from pandas import DataFrame, Series
 import re
 from src.util import check_values, df_natural_sorted, Log
 from typing import Any, Dict, Generator, List, Optional, Tuple

@@ -1,4 +1,8 @@
-
+from components.fact_storage import GraphConnector
+from pandas import DataFrame, option_context
+from src.util import Log
+from typing import Any, List, Optional, Tuple
+import re
 
 class KnowledgeGraph:
 
@@ -151,13 +155,10 @@ class KnowledgeGraph:
             except Exception as e:
                 raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.") from e
 
-    def get_all_triples(self, graph_name: Optional[str] = None) -> DataFrame:
+    def get_all_triples(self) -> DataFrame:
         """Return all triples in the specified graph as a pandas DataFrame.
-        @param graph_name  The graph to query. If None, uses self.graph_name.
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame."""
-
-        target_graph = graph_name if graph_name is not None else self.graph_name
-        with self.connector.temp_graph(target_graph):
+        with self.connector.temp_graph(self.graph_name):
             # No need to apply the DB-KG pattern to relationships - relaxes query requirements.
             query = f"""
             MATCH (s {self.connector.SAME_DB_KG_()})-[r]->(o {self.connector.SAME_DB_KG_()})

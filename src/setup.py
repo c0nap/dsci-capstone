@@ -1,6 +1,7 @@
 from components.connectors import RelationalConnector
 from components.document_storage import DocumentConnector
 from components.fact_storage import GraphConnector
+from components.semantic_web import KnowledgeGraph
 from dotenv import load_dotenv
 import os
 from src.util import all_none
@@ -39,8 +40,11 @@ class Session:
         self.relational_db = RelationalConnector.from_env(verbose=verbose)
         ## Stores input text, pre-processed chunks, JSON intermediates, and final output.
         self.docs_db = DocumentConnector(verbose=verbose)
-        ## Main storage for entities (nodes) and relations (edges).
+        ## Stores entities (nodes) and relations (edges).
         self.graph_db = GraphConnector(verbose=verbose)
+        ## Main storage for initial pipeline.
+        self.main_graph = KnowledgeGraph("main", self.graph_db)
+        # TODO: Split into scene graph, event graph, and social graph.
 
         # TODO: Do not interact with these directly, provide them to EAV Model and Knowledge Graph classes
 
