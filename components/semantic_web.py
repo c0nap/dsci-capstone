@@ -121,15 +121,15 @@ class KnowledgeGraph:
         """
         try:
             triples_df = self.get_triple_property_df()
-            cols = ["subject", "relation", "object"]
+            cols = ["subject_id", "relation_id", "object_id"]
 
             if triples_df is None or triples_df.empty:
                 Log.success(Log.gr_db + Log.kg, "Found 0 triples in graph.", self.verbose)
                 return DataFrame(columns=cols)
 
             # Extract and rename columns
-            triples_df = triples_df[["n1.name", "r.rel_type", "n2.name"]].rename(
-                columns={"n1.name": "subject", "r.rel_type": "relation", "n2.name": "object"}
+            triples_df = triples_df[["n1.element_id", "r.element_id", "n2.element_id"]].rename(
+                columns={"n1.element_id": "subject_id", "r.element_id": "relation_id", "n2.element_id": "object_id"}
             )
             Log.success(Log.gr_db + Log.kg, f"Found {len(triples_df)} triples in graph.", self.verbose)
             return triples_df
@@ -138,7 +138,7 @@ class KnowledgeGraph:
     def get_subgraph_by_nodes(self, node_ids: List[str]) -> DataFrame:
         """Return all triples where subject or object is in the specified node list.
         @param node_ids  List of node element IDs to filter by.
-        @return  DataFrame with columns: subject, relation, object
+        @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
         pass
@@ -149,7 +149,7 @@ class KnowledgeGraph:
         includes all direct neighbors, 2-hop includes neighbors-of-neighbors, etc.
         @param node_id  The element ID of the central node.
         @param depth  Number of hops to traverse (default: 1).
-        @return  DataFrame with columns: subject, relation, object
+        @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
         pass
@@ -162,7 +162,7 @@ class KnowledgeGraph:
         @param start_nodes  List of node IDs to use as starting points.
         @param walk_length  Number of steps in each random walk.
         @param num_walks  Number of random walks to perform (default: 1).
-        @return  DataFrame with columns: subject, relation, object
+        @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
         pass
@@ -175,7 +175,7 @@ class KnowledgeGraph:
         summarized independently. Requires nodes to have a 'community_id' property assigned.
         - Afterwards, you may run a summary step which generates community summaries for each cluster (as described in the paper).
         @param community_id  The identifier of the community to retrieve.
-        @return  DataFrame with columns: subject, relation, object
+        @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame or community detection has not been run.
         """
         try:
