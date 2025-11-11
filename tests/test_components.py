@@ -535,7 +535,8 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     """Test KnowledgeGraph triple operations using add_triple and get_all_triples.
     @details  Validates the KnowledgeGraph wrapper for semantic triple management:
     - add_triple() creates nodes and relationships
-    - get_all_triples() retrieves triples in (subject, relation, object) format
+    - get_all_triples() retrieves triples as element IDs
+    - convert_triple_names() maps IDs to human-readable names
     """
     graph_db.drop_graph("social_kg")
     
@@ -549,8 +550,19 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     kg.add_triple("Charlie", "COLLABORATES", "Alice")
     kg.add_triple("Bob", "FOLLOWS", "Alice")
     
-    # Retrieve all triples
-    triples_df = kg.get_all_triples()
+    # Retrieve all triples (returns element IDs)
+    triples_ids_df = kg.get_all_triples()
+    assert triples_ids_df is not None
+    assert len(triples_ids_df) == 5
+    assert list(triples_ids_df.columns) == ["subject_id", "relation_id", "object_id"]
+    
+    # Verify all ID columns contain non-null values
+    assert all(triples_ids_df["subject_id"].notna())
+    assert all(triples_ids_df["relation_id"].notna())
+    assert all(triples_ids_df["object_id"].notna())
+    
+    # Convert IDs to human-readable names
+    triples_df = kg.convert_triple_names(triples_ids_df)
     assert triples_df is not None
     assert len(triples_df) == 5
     assert list(triples_df.columns) == ["subject", "relation", "object"]
@@ -572,6 +584,37 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     assert all(df_nodes["name"].notna())
     node_names = set(df_nodes["name"])
     assert node_names == {"Alice", "Bob", "Charlie"}
+    
+    # Test convert_triple_names with pre-fetched lookup DataFrame
+    elements_df = graph_db.get_dataframe("social_kg")
+    triples_df_cached = kg.convert_triple_names(triples_ids_df, df_lookup=elements_df)
+    assert triples_df_cached is not None
+    assert len(triples_df_cached) == 5
+    # Should produce identical results to direct conversion
+    assert triples_df_cached.equals(triples_df)
+    
+    # Test edge case: empty DataFrame
+    empty_df = DataFrame(columns=["subject_id", "relation_id", "object_id"])
+    empty_result = kg.convert_triple_names(empty_df)
+    assert empty_result is not None
+    assert empty_result.empty
+    assert list(empty_result.columns) == ["subject", "relation", "object"]
+    
+    # Test get_triple_properties (full pivoted view)
+    props_df = kg.get_triple_properties()
+    assert props_df is not None
+    assert len(props_df) == 5
+    # Should have prefixed columns for both nodes and relationship
+    assert "n1.name" in props_df.columns
+    assert "n2.name" in props_df.columns
+    assert "r.rel_type" in props_df.columns
+    # Verify one specific triple's properties
+    alice_knows_bob = props_df[
+        (props_df["n1.name"] == "Alice") & 
+        (props_df["r.rel_type"] == "KNOWS") & 
+        (props_df["n2.name"] == "Bob")
+    ]
+    assert len(alice_knows_bob) == 1
     
     graph_db.drop_graph("social_kg")
 
