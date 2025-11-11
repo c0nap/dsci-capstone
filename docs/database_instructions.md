@@ -193,12 +193,19 @@ For this reason, we recommend keeping `DB_NAME` lowercase in your .env file, but
 
 ### Neo4j
 
-Neo4j Community Edition does not have native support for multiple databases or graphs, so our GraphConnector class emulates this using node labels.
+Neo4j Community Edition does not have native support for multiple databases or graphs, so our GraphConnector class emulates this using node properties.
 
 - `db` - **Database Name** - Queries should NOT specify `db`, it will be set automatically. All CREATE / MERGE queries will automatically assign this label to the results (nodes _and_ relationships).
-- `kg` - **Graph Name** - Queries MUST specify `kg` on the nodes of their query.
-- `name` - **Node Name** - The human-readable name of the node displayed in Blazor (required).
-
+- `kg` - **Graph Name** - Queries MUST specify `kg` on the nodes of their query. Relations are considered part of a graph if either `start_node` or `end_node` are tagged.
+- `name` - **Node Name** - The human-readable name of the node to be displayed in Blazor, _e.g._ Alice, Bob, Alice's Workplace.
+- `rel_type` - **Relation Name** - The human-friendly predicate of a triple, _e.g._ `:worksAt`, `:employedBy`.
+- `element_id` - **Element ID** - Unique internal identifier for nodes and relationships.
+- `element_type` - **Element Type** - Determines whether a graph element is treated as a Node or Relationship. Both are mapped to dictionaries by `execute_query`, whereas `get_dataframe` further normalizes attributes as columns (1 element per row).
+- `start_node_id` - **From Node ID** - Element ID of the node this edge originates from.
+- `end_node_id` - **To Node ID** - Element ID of the node this edge points to.
+- `labels` - **Node Labels** - Corresponds to object classes in the ontology, _e.g._ `:Person`, `:Company`.
+- Unknown node properties are interpreted as **entity data** and can be enforced by the ontology. For example, all `:Person` nodes can be validated to have a `.name` property.
+- Any other edge properties are interpreted as **triple metadata** and are ignored by the reasoner. Some implementations use properties like `confidence: 0.9` or `creation_date: 2009-11-10`.
 
 ## Makefile Commands
 
