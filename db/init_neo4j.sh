@@ -16,6 +16,12 @@ NEO4J_HTTP_PORT=$4
 MAX_RETRIES=4
 RETRY_DELAY=5
 
+# --- Generate official plugin manifest if not already present ---
+if [ -n "$NEO4J_PLUGINS" ]; then
+    echo "$ECHO_PREFIX Detected NEO4J_PLUGINS; generating manifest..."
+    /startup/docker-entrypoint.sh neo4j console --version >/dev/null 2>&1 || true
+fi
+
 # --- SET INITIAL SETTINGS ---
 echo "$ECHO_PREFIX Setting Neo4j initial password..."
 neo4j-admin dbms set-initial-password "$NEO4J_PASSWORD"
@@ -45,21 +51,19 @@ else
 
         download_url=""
         if [ -n "$versions_url" ]; then
-            echo "$ECHO_PREFIX Fetching versions from $versions_url"
+            echo "$ECHO_PREFIX      Fetching versions from $versions_url"
             download_url=$(wget -q -O - "$versions_url" | grep -Eo 'https[^"]+\.(jar|zip)' | head -n 1)
         fi
 
         if [ -n "$download_url" ]; then
-            echo "$ECHO_PREFIX Downloading $plugin from $download_url"
+            echo "$ECHO_PREFIX      Downloading $plugin from $download_url"
             fname=$(basename "$download_url")
             wget -q -L --content-disposition "$download_url" -O "$PLUGIN_DIR/$fname"
             case "$fname" in
                 *.zip) unzip -qo "$PLUGIN_DIR/$fname" -d $PLUGIN_DIR ;;
             esac
-        elif [ -n "$location" ]; then
-            echo "$ECHO_PREFIX Plugin $plugin specifies location only ($location) — skipping download."
         else
-            echo "$ECHO_PREFIX WARNING: No download info for $plugin — skipping."
+            echo "$ECHO_PREFIX      WARNING: No download info for $plugin — skipping."
             continue
         fi
 
@@ -79,13 +83,11 @@ else
                     dbms.security.procedures.unrestricted|dbms.security.procedures.allowlist|server.unmanaged_extension_classes)
                         if [ -n "$key" ] && ! grep -q "^$key=" /var/lib/neo4j/conf/neo4j.conf 2>/dev/null; then
                             echo "$prop" >> /var/lib/neo4j/conf/neo4j.conf
-                            echo "$ECHO_PREFIX Added config: $prop"
-                        else
-                            echo "$ECHO_PREFIX Skipping duplicate or empty key: $key"
+                            echo "$ECHO_PREFIX      Added config: $prop"
                         fi
                         ;;
                     *)
-                        echo "$ECHO_PREFIX Skipping unsupported config key: $key"
+                        # Unsupported key — silently skip
                         ;;
                 esac
             done
