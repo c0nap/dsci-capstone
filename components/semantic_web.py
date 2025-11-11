@@ -236,3 +236,135 @@ class KnowledgeGraph:
             print(triples_df)
 
 
+
+    # ------------------------------------------------------------------------
+    # Subgraph Selection
+    # ------------------------------------------------------------------------
+    
+    def get_subgraph_by_nodes(self, node_names: List[str]) -> DataFrame:
+        """Return all triples where subject or object is in the specified node list.
+        @param node_names  List of node names to filter by.
+        @return  DataFrame with columns: subject, relation, object
+        @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
+        """
+        pass
+    
+    def get_neighborhood(self, node_name: str, depth: int = 1) -> DataFrame:
+        """Get k-hop neighborhood around a central node.
+        @details  Returns all triples within k hops of the specified node. A 1-hop neighborhood
+        includes all direct neighbors, 2-hop includes neighbors-of-neighbors, etc.
+        @param node_name  The name of the central node.
+        @param depth  Number of hops to traverse (default: 1).
+        @return  DataFrame with columns: subject, relation, object
+        @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
+        """
+        pass
+    
+    def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
+        """Sample subgraph using random walk traversal starting from specified nodes.
+        @details  Performs random walks to sample a representative subgraph. More diverse than
+        degree-based filtering and better preserves graph structure. Each walk starts from a
+        randomly selected node in start_nodes and continues for walk_length steps.
+        @param start_nodes  List of node names to use as starting points.
+        @param walk_length  Number of steps in each random walk.
+        @param num_walks  Number of random walks to perform (default: 1).
+        @return  DataFrame with columns: subject, relation, object
+        @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
+        """
+        pass
+    
+    def get_community_subgraph(self, community_id: str) -> DataFrame:
+        """Return all triples belonging to a specific community.
+        @details  Communities are densely connected subgraphs detected via clustering algorithms
+        (e.g., Leiden, Louvain). This enables GraphRAG-style hierarchical summarization where
+        each community can be summarized independently. Requires nodes to have a 'community_id'
+        property assigned via community detection.
+        @param community_id  The identifier of the community to retrieve.
+        @return  DataFrame with columns: subject, relation, object
+        @throws Log.Failure  If the query fails to retrieve the requested DataFrame or community detection has not been run.
+        """
+        pass
+    
+    # ------------------------------------------------------------------------
+    # Verbalization Formats
+    # ------------------------------------------------------------------------
+    
+    def to_triple_string(self, triples_df: Optional[DataFrame] = None, format: str = "natural") -> str:
+        """Convert triples to string representation in various formats.
+        @details  Supports multiple output formats for LLM consumption:
+        - "natural": Human-readable sentences (e.g., "Alice knows Bob.")
+        - "triple": Raw triple format (e.g., "Alice KNOWS Bob")
+        - "json": JSON array of objects with s/r/o keys
+        @param triples_df  DataFrame with subject/relation/object columns. If None, uses all triples from this graph.
+        @param format  Output format: "natural", "triple", or "json" (default: "natural").
+        @return  String representation of triples in the specified format.
+        @throws ValueError  If format is not recognized.
+        """
+        pass
+    
+    def to_contextualized_string(self, focus_nodes: Optional[List[str]] = None, top_n: int = 5) -> str:
+        """Convert triples to contextualized string grouped by focus nodes.
+        @details  Groups triples by subject nodes and formats them with context headers.
+        This provides better structure for LLM comprehension compared to flat triple lists.
+        If focus_nodes is None, uses the top_n most connected nodes.
+        Example output:
+            Facts about Alice:
+              - knows Bob
+              - works_at Company
+              - lives_in City
+        @param focus_nodes  List of node names to group by. If None, uses top_n by degree.
+        @param top_n  Number of top nodes to use if focus_nodes is None (default: 5).
+        @return  Formatted string with contextualized triple groups.
+        """
+        pass
+    
+    def to_narrative(self, strategy: str = "path", start_node: Optional[str] = None, max_triples: int = 50) -> str:
+        """Convert graph to narrative text using specified strategy.
+        @details  Transforms structured triples into natural language narrative:
+        - "path": Follow edges sequentially from start_node, creating a story-like flow
+        - "cluster": Group related entities and describe them thematically
+        - "summary": High-level overview of graph contents and structure
+        @param strategy  Narrative generation strategy: "path", "cluster", or "summary" (default: "path").
+        @param start_node  Starting node for "path" strategy. If None, uses highest-degree node.
+        @param max_triples  Maximum number of triples to include (default: 50).
+        @return  Natural language narrative describing the graph.
+        @throws ValueError  If strategy is not recognized.
+        """
+        pass
+    
+    # ------------------------------------------------------------------------
+    # Graph Statistics and Metadata
+    # ------------------------------------------------------------------------
+    
+    def get_summary_stats(self) -> Dict[str, Any]:
+        """Return summary statistics about the graph structure.
+        @details  Provides metadata useful for LLM context, including:
+        - node_count: Total number of nodes
+        - edge_count: Total number of relationships
+        - relation_types: List of unique relationship types
+        - avg_degree: Average node degree (edges per node)
+        - top_nodes: List of most connected nodes (top 5 by degree)
+        - density: Graph density (actual edges / possible edges)
+        @return  Dictionary containing graph statistics.
+        """
+        pass
+    
+    def get_node_context(self, node_name: str, include_neighbors: bool = True) -> str:
+        """Return natural language description of a node and its relationships.
+        @details  Generates a human-readable summary of a single node suitable for LLM context.
+        Example: "Alice is connected to 5 entities. She knows Bob and Charlie, works at Company, 
+        lives in City, and follows Dave."
+        @param node_name  The name of the node to describe.
+        @param include_neighbors  Whether to list neighbor names (default: True).
+        @return  Natural language description of the node.
+        @throws Log.Failure  If the node does not exist in the graph.
+        """
+        pass
+    
+    def get_relation_summary(self) -> DataFrame:
+        """Return summary of relationship types and their frequencies.
+        @details  Provides an overview of what types of relationships exist in the graph
+        and how common each type is. Useful for understanding graph schema.
+        @return  DataFrame with columns: relation_type, count, example_triple
+        """
+        pass
