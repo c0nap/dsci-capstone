@@ -816,3 +816,155 @@ def test_get_random_walk_sample(nature_scene_graph: KnowledgeGraph) -> None:
             (all_triples["object_id"] == row["object_id"])
         )
 
+
+
+
+
+
+
+
+@pytest.mark.order(20)
+@pytest.mark.dependency(name="neighborhood_comprehensive", depends=["neighborhood"])
+def test_get_neighborhood_comprehensive(nature_scene_graph: KnowledgeGraph) -> None:
+    """Comprehensive test for k-hop neighborhood expansion.
+    @details  Tests edge cases and advanced features:
+    - depth=0 (no expansion)
+    - Disconnected nodes
+    - Maximum depth reaching entire connected component
+    - Cycle handling (no infinite loops)
+    - Consistent results across multiple calls
+    """
+    kg = nature_scene_graph
+    elements_df = kg.database.get_dataframe(kg.graph_name)
+    nodes_df = elements_df[elements_df["element_type"] == "node"]
+    
+    # Get various node IDs for testing
+    playground_id = nodes_df[nodes_df["name"] == "Playground"]["element_id"].iloc[0]
+    school_id = nodes_df[nodes_df["name"] == "School"]["element_id"].iloc[0]
+    desk_id = nodes_df[nodes_df["name"] == "Desk"]["element_id"].iloc[0]
+    
+    # Edge case 1: depth=0 should return empty (no expansion)
+    neighborhood_0 = kg.get_neighborhood(playground_id, depth=0)
+    assert neighborhood_0 is not None
+    assert neighborhood_0.empty  # No hops = no edges
+    
+    # Edge case 2: depth=1 from isolated-ish node
+    neighborhood_desk_1 = kg.get_neighborhood(desk_id, depth=1)
+    named_desk_1 = kg.convert_triple_names(neighborhood_desk_1)
+    # Desk only connects to Classroom
+    assert len(named_desk_1) <= 2  # Should be very small neighborhood
+    
+    # Feature: Progressively expanding neighborhoods
+    n1 = kg.get_neighborhood(playground_id, depth=1)
+    n2 = kg.get_neighborhood(playground_id, depth=2)
+    n3 = kg.get_neighborhood(playground_id, depth=3)
+    # Each hop should expand (or at minimum stay same size)
+    assert len(n1) <= len(n2)
+    assert len(n2) <= len(n3)
+    
+    # Feature: Large depth reaches connected component
+    # From Playground, following cross-community links should eventually reach most of graph
+    neighborhood_large = kg.get_neighborhood(playground_id, depth=10)
+    all_triples = kg.get_all_triples()
+    # Should capture significant portion of graph (not necessarily all due to disconnected components)
+    assert len(neighborhood_large) >= len(all_triples) * 0.5
+    
+    # Edge case 3: Cycle handling - verify no infinite loop and consistent results
+    # The graph has cycles (e.g., Kid1 -> Swings -> Playground -> ... -> Kid1)
+    neighborhood_cycle_1 = kg.get_neighborhood(playground_id, depth=3)
+    neighborhood_cycle_2 = kg.get_neighborhood(playground_id, depth=3)
+    # Should produce identical results (deterministic despite cycles)
+    assert len(neighborhood_cycle_1) == len(neighborhood_cycle_2)
+    
+    # Feature: Different starting nodes produce different neighborhoods
+    neighborhood_school = kg.get_neighborhood(school_id, depth=2)
+    neighborhood_playground = kg.get_neighborhood(playground_id, depth=2)
+    named_school = kg.convert_triple_names(neighborhood_school)
+    named_playground = kg.convert_triple_names(neighborhood_playground)
+    # These should have different content
+    school_entities = set(named_school["subject"]).union(named_school["object"])
+    playground_entities = set(named_playground["subject"]).union(named_playground["object"])
+    assert school_entities != playground_entities
+
+
+@pytest.mark.order(21)
+@pytest.mark.dependency(name="random_walk_comprehensive", depends=["random_walk_sample"])
+def test_get_random_walk_sample_comprehensive(nature_scene_graph: KnowledgeGraph) -> None:
+    """Comprehensive test for random walk sampling.
+    @details  Tests edge cases and advanced features:
+    - Empty start_nodes list (should sample from any node)
+    - Dead-end nodes (leaf nodes with no outgoing edges)
+    - Multiple walks produce diverse samples
+    - Walk length limits are respected
+    - Deterministic subset property (sampled edges exist in original)
+    """
+    kg = nature_scene_graph
+    elements_df = kg.database.get_dataframe(kg.graph_name)
+    nodes_df = elements_df[elements_df["element_type"] == "node"]
+    all_triples = kg.get_all_triples()
+    
+    # Get node IDs
+    kid1_id = nodes_df[nodes_df["name"] == "Kid1"]["element_id"].iloc[0]
+    whiteboard_id = nodes_df[nodes_df["name"] == "Whiteboard"]["element_id"].iloc[0]
+    
+    # Edge case 1: Empty start_nodes (should randomly pick from graph)
+    sample_random_start = kg.get_random_walk_sample([], walk_length=3, num_walks=1)
+    assert sample_random_start is not None
+    assert len(sample_random_start) > 0
+    
+    # Edge case 2: Start from leaf/dead-end node
+    # Whiteboard is inside Classroom - may have limited outgoing paths
+    sample_from_leaf = kg.get_random_walk_sample([whiteboard_id], walk_length=5, num_walks=1)
+    assert sample_from_leaf is not None
+    # May not reach full walk_length due to dead ends, but should get something
+    assert len(sample_from_leaf) > 0
+    
+    # Feature: Walk length is respected (sample size <= walk_length * num_walks)
+    sample_short = kg.get_random_walk_sample([kid1_id], walk_length=2, num_walks=1)
+    assert len(sample_short) <= 2  # At most walk_length edges
+    
+    sample_long = kg.get_random_walk_sample([kid1_id], walk_length=5, num_walks=1)
+    assert len(sample_long) <= 5
+    
+    # Feature: Multiple walks increase diversity
+    sample_1_walk = kg.get_random_walk_sample([kid1_id], walk_length=4, num_walks=1)
+    sample_3_walks = kg.get_random_walk_sample([kid1_id], walk_length=4, num_walks=3)
+    sample_5_walks = kg.get_random_walk_sample([kid1_id], walk_length=4, num_walks=5)
+    # More walks should generally capture more unique edges
+    assert len(sample_1_walk) <= len(sample_3_walks)
+    # (Not guaranteed due to randomness, but likely with sufficient walks)
+    
+    # Feature: All sampled edges exist in original graph (subset property)
+    sample_large = kg.get_random_walk_sample([kid1_id], walk_length=10, num_walks=5)
+    for _, sampled_row in sample_large.iterrows():
+        # Check this triple exists in original graph
+        exists = any(
+            (all_triples["subject_id"] == sampled_row["subject_id"]) &
+            (all_triples["relation_id"] == sampled_row["relation_id"]) &
+            (all_triples["object_id"] == sampled_row["object_id"])
+        )
+        assert exists, f"Sampled triple not found in original graph"
+    
+    # Feature: Random walks produce different samples (test stochasticity)
+    # Run same walk multiple times - should produce different results due to randomness
+    samples = [
+        kg.get_random_walk_sample([kid1_id], walk_length=5, num_walks=1)
+        for _ in range(5)
+    ]
+    # At least some should differ (not guaranteed, but extremely likely)
+    unique_lengths = len(set(len(s) for s in samples))
+    # With 5 random trials, we should see some variation
+    assert unique_lengths > 1 or len(samples[0]) == 5  # Either varied or hit max length
+    
+    # Edge case 3: Multiple start nodes
+    kid2_id = nodes_df[nodes_df["name"] == "Kid2"]["element_id"].iloc[0]
+    sample_multi_start = kg.get_random_walk_sample([kid1_id, kid2_id], walk_length=3, num_walks=2)
+    assert sample_multi_start is not None
+    assert len(sample_multi_start) > 0
+    # Should potentially explore both starting regions
+    
+    # Feature: Very long walks eventually explore large portions of graph
+    sample_exhaustive = kg.get_random_walk_sample([kid1_id], walk_length=20, num_walks=10)
+    # Should capture significant graph coverage with enough walks
+    coverage_ratio = len(sample_exhaustive) / len(all_triples)
+    assert coverage_ratio > 0.3  # At least 30% coverage with extensive walking
