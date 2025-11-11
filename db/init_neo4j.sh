@@ -24,31 +24,28 @@ echo "server.bolt.listen_address=0.0.0.0:$NEO4J_PORT" >> /var/lib/neo4j/conf/neo
 echo "server.http.listen_address=0.0.0.0:$NEO4J_HTTP_PORT" >> /var/lib/neo4j/conf/neo4j.conf
 
 
+
 # --- INSTALL PLUGINS FROM /startup/neo4j-plugins.json ---
 echo "$ECHO_PREFIX Installing Neo4j plugins..."
 mkdir -p /plugins
 
-# Ensure required utilities are present (POSIX-safe test)
-if ! command -v jq >/dev/null 2>&1; then
-    echo "$ECHO_PREFIX Installing jq, curl, unzip, wget..."
-    apt-get update -qq && apt-get install -y -qq jq curl unzip wget >/dev/null
-fi
-
 PLUGIN_MANIFEST="/startup/neo4j-plugins.json"
 if [ ! -f "$PLUGIN_MANIFEST" ]; then
-    echo "$ECHO_PREFIX No plugin manifest found at $PLUGIN_MANIFEST — skipping plugin install."
+    echo "$ECHO_PREFIX No plugin manifest found — skipping plugin install."
 else
-    # Read plugin names one per line
-    jq -r 'keys[]' "$PLUGIN_MANIFEST" | while IFS= read -r plugin; do
+    # Extract plugin names (skip property keys)
+    grep -oE '"[A-Za-z0-9._-]+": *\{' "$PLUGIN_MANIFEST" | \
+    cut -d'"' -f2 | while IFS= read -r plugin; do
+        [ "$plugin" = "properties" ] && continue
         echo "$ECHO_PREFIX Processing plugin: $plugin"
 
-        versions_url=$(jq -r --arg p "$plugin" '.[$p].versions // empty' "$PLUGIN_MANIFEST")
-        location=$(jq -r --arg p "$plugin" '.[$p].location // empty' "$PLUGIN_MANIFEST")
+        versions_url=$(grep -A1 "\"$plugin\"" "$PLUGIN_MANIFEST" | grep '"versions"' | sed 's/.*"versions": *"//; s/".*//')
+        location=$(grep -A1 "\"$plugin\"" "$PLUGIN_MANIFEST" | grep '"location"' | sed 's/.*"location": *"//; s/".*//')
 
         download_url=""
         if [ -n "$versions_url" ]; then
             echo "$ECHO_PREFIX Fetching versions from $versions_url"
-            download_url=$(curl -fsSL "$versions_url" | jq -r '.[0].url // .[0].downloads[0].url // empty')
+            download_url=$(wget -q -O - "$versions_url" | grep -m1 '"url"' | sed 's/.*"url": *"//; s/".*//')
         fi
 
         if [ -n "$download_url" ]; then
@@ -65,18 +62,38 @@ else
             continue
         fi
 
-        # Append plugin-specific config
-        jq -r --arg p "$plugin" '.[$p].properties | to_entries[]? | "\(.key)=\(.value)"' "$PLUGIN_MANIFEST" |
-        while IFS= read -r prop; do
-            # Skip blank lines and already-present entries
-            if [ -n "$prop" ] && ! grep -q "^$prop" /var/lib/neo4j/conf/neo4j.conf 2>/dev/null; then
-                echo "$prop" >> /var/lib/neo4j/conf/neo4j.conf
-                echo "$ECHO_PREFIX Added config: $prop"
-            fi
-        done
+        # Append plugin-specific config lines
+        grep '"properties"' -A10 "$PLUGIN_MANIFEST" | awk -v p="$plugin" '
+            $0 ~ "\""p"\"" {inblock=1; next}
+            inblock && /\}/ {inblock=0}
+            inblock && /": *"/ {
+                gsub(/[",]/,"")
+                split($0,a,":")
+                print a[1]"="a[2]
+            }' | while IFS= read -r prop; do
+                key=$(printf '%s' "$prop" | cut -d'=' -f1)
+
+                # Filter for supported config keys (Community Edition safe)
+                case "$key" in
+                    dbms.security.*|server.unmanaged_extension_classes|dbms.security.procedures.*|dbms.security.procedures.allowlist)
+                        if [ -n "$key" ] && ! grep -q "^$key=" /var/lib/neo4j/conf/neo4j.conf 2>/dev/null; then
+                            echo "$prop" >> /var/lib/neo4j/conf/neo4j.conf
+                            echo "$ECHO_PREFIX Added config: $prop"
+                        else
+                            echo "$ECHO_PREFIX Skipping duplicate or empty key: $key"
+                        fi
+                        ;;
+                    *)
+                        echo "$ECHO_PREFIX Skipping unsupported config key: $key"
+                        ;;
+                esac
+            done
     done
 fi
+
 echo "$ECHO_PREFIX Plugin installation complete."
+
+
 
 
 # --- START NEO4J SERVER IN BACKGROUND ---
