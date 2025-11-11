@@ -33,7 +33,7 @@ class KnowledgeGraph:
         subject = re.sub(r"[^A-Za-z0-9_ ]", "_", subject).strip("_ ")
         object_ = re.sub(r"[^A-Za-z0-9_ ]", "_", object_).strip("_ ")
         if not relation or not subject or not object_:
-            raise Log.Failure(Log.gr_db + Log.kg, f"Invalid triple: ({subject})-[:{relation}]->({object_})")
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Invalid triple: ({subject})-[:{relation}]->({object_})")
 
         # Temporarily switch to this graph's context for the operation
         with self.database.temp_graph(self.graph_name):
@@ -48,9 +48,9 @@ class KnowledgeGraph:
             try:
                 df = self.database.execute_query(query, _filter_results=False)
                 if df is not None:
-                    Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+                    Log.success(Log.kg + Log.gr_rag, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
             except Exception as e:
-                raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
+                raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
     
     def get_triple_properties(self) -> Optional[DataFrame]:
         """Pivot the graph elements DataFrame to expose node and relationship properties as columns.
@@ -171,15 +171,17 @@ class KnowledgeGraph:
             cols = ["subject_id", "relation_id", "object_id"]
 
             if triples_df is None or triples_df.empty:
-                Log.success(Log.gr_db + Log.kg, "Found 0 triples in graph.", self.verbose)
+                Log.success(Log.kg + Log.gr_rag, "Found 0 triples in graph.", self.verbose)
                 return DataFrame(columns=cols)
 
             # Extract and rename columns
             triples_df = triples_df[["n1.element_id", "r.element_id", "n2.element_id"]].rename(
                 columns={"n1.element_id": "subject_id", "r.element_id": "relation_id", "n2.element_id": "object_id"}
             )
-            Log.success(Log.gr_db + Log.kg, f"Found {len(triples_df)} triples in graph.", self.verbose)
+            Log.success(Log.kg + Log.gr_rag, f"Found {len(triples_df)} triples in graph.", self.verbose)
             return triples_df
+        except Exception as e:
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve triples: {e}") from e
 
 
     def get_subgraph_by_nodes(self, node_ids: List[str]) -> DataFrame:
@@ -327,7 +329,7 @@ class KnowledgeGraph:
         """
         df = self.database.get_dataframe(self.graph_name)
         if df is None or df.empty:
-            raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.")
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to fetch edge_counts DataFrame.")
         
         # Filter to nodes only
         df_nodes = df[df["element_type"] == "node"].copy()
@@ -348,7 +350,7 @@ class KnowledgeGraph:
         result_df = DataFrame(list(edge_counts.items()), columns=["node_name", "edge_count"])
         result_df = result_df.sort_values("edge_count", ascending=False).head(top_n)
         
-        Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.", self.verbose)
+        Log.success(Log.kg + Log.gr_rag, f"Found top-{top_n} most popular nodes.", self.verbose)
         return result_df
     
     def get_node_context(self, node_name: str, include_neighbors: bool = True) -> str:
