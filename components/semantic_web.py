@@ -246,10 +246,10 @@ class KnowledgeGraph:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to get neighborhood") from e
     
     def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
-        """Sample subgraph using random walk traversal starting from specified nodes.
-        @details  Performs random walks to sample a representative subgraph. More diverse than
-        degree-based filtering and better preserves graph structure. Each walk starts from a
-        randomly selected node in start_nodes and continues for walk_length steps.
+        """Sample subgraph using directed random walk traversal starting from specified nodes.
+        @details
+        - More diverse than degree-based filtering (nodes with many edges) and better preserves graph structure.
+        - Each walk starts from a random node in start_nodes and continues for walk_length steps.
         @param start_nodes  List of node IDs to use as starting points.
         @param walk_length  Number of steps in each random walk.
         @param num_walks  Number of random walks to perform (default: 1).
@@ -262,31 +262,27 @@ class KnowledgeGraph:
             if triples_df is None or triples_df.empty:
                 raise Log.Failure(Log.kg + Log.gr_rag, f"No triples available in graph {self.graph_name}")
 
-            # Precompute adjacency list for efficient traversal
+            # Build directed adjacency: subject -> [rows where subject_id == subject]
             adjacency = {}
             for _, row in triples_df.iterrows():
-                s, o = row["subject_id"], row["object_id"]
+                s = row["subject_id"]
                 adjacency.setdefault(s, []).append(row)
-                adjacency.setdefault(o, []).append(row)
+
+            if not adjacency:
+                raise Log.Failure(Log.kg + Log.gr_rag, f"Graph has no directed edges")
 
             sampled_edges = []
-            all_nodes = list(adjacency.keys())
-            if not all_nodes:
-                raise Log.Failure(Log.kg + Log.gr_rag, f"Graph has no connected nodes")
+            valid_starts = [n for n in start_nodes if n in adjacency] or list(adjacency.keys())
 
             for _ in range(num_walks):
-                current = random.choice(start_nodes or all_nodes)
-                visited = set()
+                current = random.choice(valid_starts)
                 for _ in range(walk_length):
                     neighbors = adjacency.get(current, [])
                     if not neighbors:
-                        break
+                        break  # dead end
                     edge = random.choice(neighbors)
                     sampled_edges.append(edge)
-                    # Move to the other node in this edge
-                    next_node = edge["object_id"] if edge["subject_id"] == current else edge["subject_id"]
-                    visited.add(current)
-                    current = next_node
+                    current = edge["object_id"]  # move along directed edge
 
             if not sampled_edges:
                 raise Log.Failure(Log.kg + Log.gr_rag, f"No triples visited during random walk")
@@ -299,13 +295,12 @@ class KnowledgeGraph:
 
             Log.success(
                 Log.kg + Log.gr_rag,
-                f"Random-walk sampled {len(result_df)} triples ({num_walks} walks, length {walk_length}).",
+                f"Directed random-walk sampled {len(result_df)} triples ({num_walks} walks × length {walk_length}).",
                 self.verbose,
             )
             return result_df
         except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to perform random walk sample") from e
-
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to perform directed random walk sample") from e
 
 
 
