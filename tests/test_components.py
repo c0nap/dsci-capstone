@@ -527,6 +527,7 @@ def _test_query_file(db_fixture: DatabaseConnector, filename: str, valid_files: 
 
 
 # TODO: Move the following to a different test file
+from components.semantic_web import KnowledgeGraph
 
 @pytest.mark.order(16)
 @pytest.mark.dependency(name="knowledge_graph_triples", depends=["graph_minimal", "graph_comprehensive"])
