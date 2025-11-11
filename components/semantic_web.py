@@ -50,6 +50,40 @@ class KnowledgeGraph:
             except Exception as e:
                 raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
     
+    def get_triple_properties(self) -> Optional[DataFrame]:
+        """Pivot the graph elements DataFrame to expose node and relationship properties as columns.
+        @details
+        - Builds a joined view of properties from both nodes (n1, n2) and the relationship (r).
+        - Removes redundant fields such as: db, kg, element_type, start_node_id, and end_node_id.
+        - Usage: n1.element_id, r.rel_type, n2.name, etc.
+        @return  DataFrame where each row represents one triple (n1, r, n2).
+        @throws Log.Failure  If the elements DataFrame cannot be loaded or pivoting fails.
+        """
+        try:
+            elements_df = self.database.get_dataframe(self.graph_name)
+            if elements_df is None or elements_df.empty:
+                raise Log.Failure(Log.kg + Log.gr_rag, Log.bad_triples(self.graph_name))
+    
+            # Split nodes and relationships
+            nodes = elements_df[elements_df["element_type"] == "node"].drop(
+                columns=["element_type", "db", "kg"], errors="ignore"
+            )
+            rels = elements_df[elements_df["element_type"] == "relationship"].drop(
+                columns=["element_type", "db", "kg"], errors="ignore"
+            )
+    
+            # Join relationship to its start (n1) and end (n2) nodes
+            triples_df = (
+                rels.merge(nodes.add_prefix("n1."), left_on="start_node_id", right_on="n1.element_id")
+                    .merge(nodes.add_prefix("n2."), left_on="end_node_id", right_on="n2.element_id")
+            )
+    
+            triples_df = triples_df.drop(columns=["start_node_id", "end_node_id"], errors="ignore")
+            return triples_df
+        except Exception as e:
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to pivot triple properties: {e}") from e
+
+
     def print_nodes(self, max_rows: int = 20, max_col_width: int = 50) -> None:
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
         nodes_df = self.database.get_dataframe(self.graph_name)
@@ -164,7 +198,7 @@ class KnowledgeGraph:
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame or community detection has not been run.
         """
         try:
-            triples_df = self.get_triple_property_df()
+            triples_df = self.get_triple_properties()
             if triples_df is None:
                 raise Log.Failure(Log.kg + Log.gr_rag, Log.bad_triples(self.graph_name))
 
@@ -189,7 +223,7 @@ class KnowledgeGraph:
         the approach assigns each node a `community_id` property, and builds (optionally) a hierarchy of
         community levels (larger communities containing sub-communities) for summarization at different granularities.
         - Afterwards, you can call `get_community_subgraph()` to extract each community’s triples for summarization.
-        @raises Log.Failure  If the graph has not been constructed or loaded, or if the community detection algorithm fails.
+        @throws Log.Failure  If the graph has not been constructed or loaded, or if the community detection algorithm fails.
         """
         pass
     
