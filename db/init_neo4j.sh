@@ -27,7 +27,8 @@ echo "server.http.listen_address=0.0.0.0:$NEO4J_HTTP_PORT" >> /var/lib/neo4j/con
 
 # --- INSTALL PLUGINS FROM /startup/neo4j-plugins.json ---
 echo "$ECHO_PREFIX Installing Neo4j plugins..."
-mkdir -p /plugins
+mkdir -p /var/lib/neo4j/plugins
+PLUGIN_DIR=/var/lib/neo4j/plugins
 
 PLUGIN_MANIFEST="/startup/neo4j-plugins.json"
 if [ ! -f "$PLUGIN_MANIFEST" ]; then
@@ -45,15 +46,15 @@ else
         download_url=""
         if [ -n "$versions_url" ]; then
             echo "$ECHO_PREFIX Fetching versions from $versions_url"
-            download_url=$(wget -q -O - "$versions_url" | grep -m1 '"url"' | sed 's/.*"url": *"//; s/".*//')
+            download_url=$(wget -q -O - "$versions_url" | grep -Eo 'https[^"]+\.(jar|zip)' | head -n 1)
         fi
 
         if [ -n "$download_url" ]; then
             echo "$ECHO_PREFIX Downloading $plugin from $download_url"
             fname=$(basename "$download_url")
-            wget -q "$download_url" -O "/plugins/$fname"
+            wget -q -L --content-disposition "$download_url" -O "$PLUGIN_DIR/$fname"
             case "$fname" in
-                *.zip) unzip -qo "/plugins/$fname" -d /plugins ;;
+                *.zip) unzip -qo "$PLUGIN_DIR/$fname" -d $PLUGIN_DIR ;;
             esac
         elif [ -n "$location" ]; then
             echo "$ECHO_PREFIX Plugin $plugin specifies location only ($location) — skipping download."
@@ -75,7 +76,7 @@ else
 
                 # Filter for supported config keys (Community Edition safe)
                 case "$key" in
-                    dbms.security.*|server.unmanaged_extension_classes|dbms.security.procedures.*|dbms.security.procedures.allowlist)
+                    dbms.security.procedures.unrestricted|dbms.security.procedures.allowlist|server.unmanaged_extension_classes)
                         if [ -n "$key" ] && ! grep -q "^$key=" /var/lib/neo4j/conf/neo4j.conf 2>/dev/null; then
                             echo "$prop" >> /var/lib/neo4j/conf/neo4j.conf
                             echo "$ECHO_PREFIX Added config: $prop"
