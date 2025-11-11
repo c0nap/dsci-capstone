@@ -12,9 +12,9 @@ class KnowledgeGraph:
     """
 
     def __init__(self, name: str, connector: GraphConnector) -> None:
-        ##
+        ## The name of this graph. Matches node.kg for all nodes in the graph database.
         self.graph_name = name
-        ##
+        ## Reference to a pre-configured graph database wrapper.
         self.connector = connector
 
     def add_triple(self, subject: str, relation: str, object_: str) -> None:

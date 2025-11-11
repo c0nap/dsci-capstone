@@ -26,8 +26,8 @@ class GraphConnector(DatabaseConnector):
         # Connect neomodel - URL never needs to change for Neo4j
         config.DATABASE_URL = self.connection_string
 
-        ## The name of the current graph. Matches node.kg for all nodes in the graph.
-        self.graph_name: Optional[str] = "default"
+        ## The name of a graph in the database; keeps queries short and readable, and matches the `kg` node property.
+        self._graph_name: Optional[str] = "default"
 
     def change_database(self, new_database: str) -> None:
         """Update the connection URI to reference a different database in the same engine.
@@ -36,19 +36,19 @@ class GraphConnector(DatabaseConnector):
         """
         Log.success(Log.gr_db + Log.swap_db, Log.msg_swap_db(self.database_name, new_database), self.verbose)
         self.database_name = new_database
-        self.graph_name = "default"
+        self._graph_name = "default"
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}"
 
     @contextmanager
     def temp_graph(self, graph_name: str) -> Generator[None, None, None]:
         """Temporarily inspect the specified graph, then swap back when finished.
         @param graph_name  The name of a graph in the current database."""
-        old = self.graph_name
-        self.graph_name = graph_name
+        old = self._graph_name
+        self._graph_name = graph_name
         try:
             yield
         finally:
-            self.graph_name = old
+            self._graph_name = old
 
     def test_connection(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the Neo4j database, and test full functionality.
@@ -90,10 +90,10 @@ class GraphConnector(DatabaseConnector):
             with self.temp_graph("test_graph"):
                 query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                 self.execute_query(query, _filter_results=False)
-                query = f"""CREATE (n1:TestPerson {{kg: '{self.graph_name}', name: 'Alice', age: 30}})
-                            CREATE (n2:TestPerson {{kg: '{self.graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
+                query = f"""CREATE (n1:TestPerson {{kg: '{self._graph_name}', name: 'Alice', age: 30}})
+                            CREATE (n2:TestPerson {{kg: '{self._graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
                 self.execute_query(query, _filter_results=False)
-                df = self.get_dataframe(self.graph_name)
+                df = self.get_dataframe(self._graph_name)
                 #### TODO: remove once error handling is fixed
                 # check_values will raise, so this never became an issue until now
                 if df is None:
@@ -456,7 +456,7 @@ class GraphConnector(DatabaseConnector):
         @details  Usage: MATCH (n {self.SAME_DB_KG_()})
         @return  A string containing Cypher code.
         """
-        return f"{{db: '{self.database_name}', kg: '{self.graph_name}'}}"
+        return f"{{db: '{self.database_name}', kg: '{self._graph_name}'}}"
 
 
 
