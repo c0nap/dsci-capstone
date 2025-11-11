@@ -192,7 +192,20 @@ class KnowledgeGraph:
         @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
-        pass
+        try:
+            triples_df = self.get_all_triples()
+            if triples_df is None or triples_df.empty:
+                raise Log.Failure(Log.kg + Log.gr_rag, f"No triples in graph {self.graph_name}")
+
+            # Filter triples where either endpoint is in node_ids
+            sub_df = triples_df[
+                triples_df["subject_id"].isin(node_ids) | triples_df["object_id"].isin(node_ids)
+            ].reset_index(drop=True)
+
+            Log.success(Log.kg + Log.gr_rag, f"Found {len(sub_df)} triples for given nodes.", self.verbose)
+            return sub_df
+        except Exception as e:
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to get subgraph by nodes") from e
     
     def get_neighborhood(self, node_id: str, depth: int = 1) -> DataFrame:
         """Get k-hop neighborhood around a central node.
@@ -203,7 +216,34 @@ class KnowledgeGraph:
         @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
-        pass
+        try:
+            triples_df = self.get_all_triples()
+            if triples_df is None or triples_df.empty:
+                raise Log.Failure(Log.kg + Log.gr_rag, f"No triples in graph {self.graph_name}")
+
+            current = {node_id}
+            visited = set()
+            all_edges = []
+
+            # Perform k-hop expansion
+            for _ in range(depth):
+                neighbors = triples_df[
+                    triples_df["subject_id"].isin(current) | triples_df["object_id"].isin(current)
+                ]
+                if neighbors.empty:
+                    break
+                all_edges.append(neighbors)
+                visited |= current
+                current = set(neighbors["subject_id"]).union(neighbors["object_id"]) - visited
+
+            result_df = (
+                DataFrame() if not all_edges else pd.concat(all_edges, ignore_index=True).drop_duplicates()
+            )
+
+            Log.success(Log.kg + Log.gr_rag, f"Found {len(result_df)} triples in {depth}-hop neighborhood.", self.verbose)
+            return result_df
+        except Exception as e:
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to get neighborhood") from e
     
     def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
         """Sample subgraph using random walk traversal starting from specified nodes.
@@ -216,7 +256,61 @@ class KnowledgeGraph:
         @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
-        pass
+        try:
+            import random
+            triples_df = self.get_all_triples()
+            if triples_df is None or triples_df.empty:
+                raise Log.Failure(Log.kg + Log.gr_rag, f"No triples available in graph {self.graph_name}")
+
+            # Precompute adjacency list for efficient traversal
+            adjacency = {}
+            for _, row in triples_df.iterrows():
+                s, o = row["subject_id"], row["object_id"]
+                adjacency.setdefault(s, []).append(row)
+                adjacency.setdefault(o, []).append(row)
+
+            sampled_edges = []
+            all_nodes = list(adjacency.keys())
+            if not all_nodes:
+                raise Log.Failure(Log.kg + Log.gr_rag, f"Graph has no connected nodes")
+
+            for _ in range(num_walks):
+                current = random.choice(start_nodes or all_nodes)
+                visited = set()
+                for _ in range(walk_length):
+                    neighbors = adjacency.get(current, [])
+                    if not neighbors:
+                        break
+                    edge = random.choice(neighbors)
+                    sampled_edges.append(edge)
+                    # Move to the other node in this edge
+                    next_node = edge["object_id"] if edge["subject_id"] == current else edge["subject_id"]
+                    visited.add(current)
+                    current = next_node
+
+            if not sampled_edges:
+                raise Log.Failure(Log.kg + Log.gr_rag, f"No triples visited during random walk")
+
+            result_df = (
+                DataFrame(sampled_edges)[["subject_id", "relation_id", "object_id"]]
+                .drop_duplicates()
+                .reset_index(drop=True)
+            )
+
+            Log.success(
+                Log.kg + Log.gr_rag,
+                f"Random-walk sampled {len(result_df)} triples ({num_walks} walks, length {walk_length}).",
+                self.verbose,
+            )
+            return result_df
+        except Exception as e:
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to perform random walk sample") from e
+
+
+
+
+
+
     
     def get_community_subgraph(self, community_id: str) -> DataFrame:
         """Return all triples belonging to a specific GraphRAG community.
