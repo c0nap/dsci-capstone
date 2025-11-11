@@ -195,6 +195,12 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:aa6d3c74b28b31c833a1d89d8b0d0180d" id="r_aa6d3c74b28b31c833a1d89d8b0d0180d"><td class="memItemLeft" align="right" valign="top">list[str]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#aa6d3c74b28b31c833a1d89d8b0d0180d">_split_combined</a> (self, str multi_query)</td></tr>
 <tr class="memdesc:aa6d3c74b28b31c833a1d89d8b0d0180d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Divides a string into non-divisible MongoDB commands by splitting on semicolons at depth 0.  <br /></td></tr>
 <tr class="separator:aa6d3c74b28b31c833a1d89d8b0d0180d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7464755128959c1a31285d886c10dcc" id="r_aa7464755128959c1a31285d886c10dcc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#aa7464755128959c1a31285d886c10dcc">_returns_data</a> (self, str query)</td></tr>
+<tr class="memdesc:aa7464755128959c1a31285d886c10dcc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a query is structured in a way that returns real data, and not status messages.  <br /></td></tr>
+<tr class="separator:aa7464755128959c1a31285d886c10dcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab28f173d61b9e4ba11459f1e903972b4" id="r_ab28f173d61b9e4ba11459f1e903972b4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#ab28f173d61b9e4ba11459f1e903972b4">_parsable_to_df</a> (self, Any result)</td></tr>
+<tr class="memdesc:ab28f173d61b9e4ba11459f1e903972b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the result of a query is valid (i.e.  <br /></td></tr>
+<tr class="separator:ab28f173d61b9e4ba11459f1e903972b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classcomponents_1_1connectors_1_1DatabaseConnector"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classcomponents_1_1connectors_1_1DatabaseConnector')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html">DatabaseConnector</a></td></tr>
 <tr class="memitem:abf425f0d46449a2375a03a6c85c70b61 inherit pro_methods_classcomponents_1_1connectors_1_1DatabaseConnector" id="r_abf425f0d46449a2375a03a6c85c70b61"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#abf425f0d46449a2375a03a6c85c70b61">_is_single_query</a> (self, str query)</td></tr>
 <tr class="memdesc:abf425f0d46449a2375a03a6c85c70b61 inherit pro_methods_classcomponents_1_1connectors_1_1DatabaseConnector"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a string contains multiple queries.  <br /></td></tr>
@@ -252,6 +258,109 @@ Protected Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="ab28f173d61b9e4ba11459f1e903972b4" name="ab28f173d61b9e4ba11459f1e903972b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab28f173d61b9e4ba11459f1e903972b4">&#9670;&#160;</a></span>_parsable_to_df()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> bool _parsable_to_df </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Any&#160;</td>
+          <td class="paramname"><em>result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Checks if the result of a query is valid (i.e. </p>
+<p>can be converted to a Pandas DataFrame).</p>
+<ul>
+<li>Handles cursor-style dicts (with 'cursor' or 'firstBatch'), list-of-dict results, and single-document results.</li>
+<li>Excludes pure status/meta responses like {'ok': 1}. <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">result</td><td>The result of a JSON query. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Whether the object is parsable to DataFrame. </dd></dl>
+</li>
+</ul>
+
+<p>Reimplemented from <a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#ab28f173d61b9e4ba11459f1e903972b4">DatabaseConnector</a>.</p>
+
+</div>
+</div>
+<a id="aa7464755128959c1a31285d886c10dcc" name="aa7464755128959c1a31285d886c10dcc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa7464755128959c1a31285d886c10dcc">&#9670;&#160;</a></span>_returns_data()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> bool _returns_data </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>query</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Checks if a query is structured in a way that returns real data, and not status messages. </p>
+<p>Determines whether a MongoDB command should yield cursor data.</p><ul>
+<li>Uses an exclusion list - commands that definitely return a status.</li>
+<li>Everything else falls through to execution for validation. <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">query</td><td>A single pre-validated JSON query string. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Whether the query is intended to fetch data (true) or might return a status message (false). </dd></dl>
+</li>
+</ul>
+
+<p>Reimplemented from <a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#aa7464755128959c1a31285d886c10dcc">DatabaseConnector</a>.</p>
+
+</div>
+</div>
 <a id="aa6d3c74b28b31c833a1d89d8b0d0180d" name="aa6d3c74b28b31c833a1d89d8b0d0180d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa6d3c74b28b31c833a1d89d8b0d0180d">&#9670;&#160;</a></span>_split_combined()</h2>
 

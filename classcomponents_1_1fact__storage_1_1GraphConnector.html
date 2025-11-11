@@ -204,6 +204,7 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aaa0ffd8cdad125c22be209e5cce9ee9c" id="r_aaa0ffd8cdad125c22be209e5cce9ee9c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#aaa0ffd8cdad125c22be209e5cce9ee9c">database_name</a></td></tr>
 <tr class="separator:aaa0ffd8cdad125c22be209e5cce9ee9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9e289eddb591991c9bc7321dc5b186b" id="r_aa9e289eddb591991c9bc7321dc5b186b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#aa9e289eddb591991c9bc7321dc5b186b">verbose</a></td></tr>
+<tr class="memdesc:aa9e289eddb591991c9bc7321dc5b186b"><td class="mdescLeft">&#160;</td><td class="mdescRight">TODO: remove once error handling is fixed check_values will raise, so this never became an issue until now.  <br /></td></tr>
 <tr class="separator:aa9e289eddb591991c9bc7321dc5b186b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3323a9a6d1bacd1bf02e51e2b8ef5f4b" id="r_a3323a9a6d1bacd1bf02e51e2b8ef5f4b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#a3323a9a6d1bacd1bf02e51e2b8ef5f4b">graph_name</a></td></tr>
 <tr class="separator:a3323a9a6d1bacd1bf02e51e2b8ef5f4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -233,12 +234,18 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:ad2130d33be4d41c012f714e9dfb824a3" id="r_ad2130d33be4d41c012f714e9dfb824a3"><td class="memItemLeft" align="right" valign="top">List[str]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#ad2130d33be4d41c012f714e9dfb824a3">_split_combined</a> (self, str multi_query)</td></tr>
 <tr class="memdesc:ad2130d33be4d41c012f714e9dfb824a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Divides a string into non-divisible CQL queries, ignoring comments.  <br /></td></tr>
 <tr class="separator:ad2130d33be4d41c012f714e9dfb824a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a15ce12f8e6565e4968dbd7d4f9cbcb" id="r_a1a15ce12f8e6565e4968dbd7d4f9cbcb"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#a1a15ce12f8e6565e4968dbd7d4f9cbcb">_execute_tag_db</a> (self)</td></tr>
-<tr class="memdesc:a1a15ce12f8e6565e4968dbd7d4f9cbcb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sweeps the database for untagged nodes and relationships, and adds a 'db' attribute.  <br /></td></tr>
-<tr class="separator:a1a15ce12f8e6565e4968dbd7d4f9cbcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab66ff735ac11d9f5e9b0070cafe0e82b" id="r_ab66ff735ac11d9f5e9b0070cafe0e82b"><td class="memItemLeft" align="right" valign="top">Tuple[Optional[List[Tuple[Any,...]]], Optional[List[str]]]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#ab66ff735ac11d9f5e9b0070cafe0e82b">_get_updated</a> (self, List[Tuple[Any,...]] results)</td></tr>
-<tr class="memdesc:ab66ff735ac11d9f5e9b0070cafe0e82b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Re-fetch nodes and edges after changing the remote copy in Neo4j.  <br /></td></tr>
-<tr class="separator:ab66ff735ac11d9f5e9b0070cafe0e82b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7464755128959c1a31285d886c10dcc" id="r_aa7464755128959c1a31285d886c10dcc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#aa7464755128959c1a31285d886c10dcc">_returns_data</a> (self, str query)</td></tr>
+<tr class="memdesc:aa7464755128959c1a31285d886c10dcc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a query is structured in a way that returns real data, and not status messages.  <br /></td></tr>
+<tr class="separator:aa7464755128959c1a31285d886c10dcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa92c802cffab33b2b589afffb1d3a3de" id="r_aa92c802cffab33b2b589afffb1d3a3de"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#aa92c802cffab33b2b589afffb1d3a3de">_parsable_to_df</a> (self, Tuple[Any, Any] result)</td></tr>
+<tr class="memdesc:aa92c802cffab33b2b589afffb1d3a3de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the result of a Neo4j query is valid (i.e.  <br /></td></tr>
+<tr class="separator:aa92c802cffab33b2b589afffb1d3a3de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00f2f3cef85e7d59359d194ec6604d29" id="r_a00f2f3cef85e7d59359d194ec6604d29"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#a00f2f3cef85e7d59359d194ec6604d29">_execute_retag_db</a> (self)</td></tr>
+<tr class="memdesc:a00f2f3cef85e7d59359d194ec6604d29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sweeps the database for untagged nodes and relationships, and adds a 'db' attribute.  <br /></td></tr>
+<tr class="separator:a00f2f3cef85e7d59359d194ec6604d29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6fe7508fbd322a46f49a14866709c66c" id="r_a6fe7508fbd322a46f49a14866709c66c"><td class="memItemLeft" align="right" valign="top">Tuple[Optional[List[Tuple[Any,...]]], Optional[List[str]]]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#a6fe7508fbd322a46f49a14866709c66c">_fetch_latest</a> (self, List[Tuple[Any,...]] results)</td></tr>
+<tr class="memdesc:a6fe7508fbd322a46f49a14866709c66c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Re-fetch nodes and edges after changing the remote copy in Neo4j.  <br /></td></tr>
+<tr class="separator:a6fe7508fbd322a46f49a14866709c66c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classcomponents_1_1connectors_1_1DatabaseConnector"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classcomponents_1_1connectors_1_1DatabaseConnector')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html">DatabaseConnector</a></td></tr>
 <tr class="memitem:abf425f0d46449a2375a03a6c85c70b61 inherit pro_methods_classcomponents_1_1connectors_1_1DatabaseConnector" id="r_abf425f0d46449a2375a03a6c85c70b61"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#abf425f0d46449a2375a03a6c85c70b61">_is_single_query</a> (self, str query)</td></tr>
 <tr class="memdesc:abf425f0d46449a2375a03a6c85c70b61 inherit pro_methods_classcomponents_1_1connectors_1_1DatabaseConnector"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a string contains multiple queries.  <br /></td></tr>
@@ -291,8 +298,8 @@ Protected Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a1a15ce12f8e6565e4968dbd7d4f9cbcb" name="a1a15ce12f8e6565e4968dbd7d4f9cbcb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1a15ce12f8e6565e4968dbd7d4f9cbcb">&#9670;&#160;</a></span>_execute_tag_db()</h2>
+<a id="a00f2f3cef85e7d59359d194ec6604d29" name="a00f2f3cef85e7d59359d194ec6604d29"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a00f2f3cef85e7d59359d194ec6604d29">&#9670;&#160;</a></span>_execute_retag_db()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -301,7 +308,7 @@ Protected Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"> None _execute_tag_db </td>
+          <td class="memname"> None _execute_retag_db </td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname"><em>self</em></td><td>)</td>
@@ -319,8 +326,8 @@ Protected Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ab66ff735ac11d9f5e9b0070cafe0e82b" name="ab66ff735ac11d9f5e9b0070cafe0e82b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab66ff735ac11d9f5e9b0070cafe0e82b">&#9670;&#160;</a></span>_get_updated()</h2>
+<a id="a6fe7508fbd322a46f49a14866709c66c" name="a6fe7508fbd322a46f49a14866709c66c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6fe7508fbd322a46f49a14866709c66c">&#9670;&#160;</a></span>_fetch_latest()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -329,7 +336,7 @@ Protected Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]] _get_updated </td>
+          <td class="memname"> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]] _fetch_latest </td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname"><em>self</em>, </td>
@@ -361,6 +368,109 @@ Protected Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Latest version of results fetched from the database. </dd></dl>
+
+</div>
+</div>
+<a id="aa92c802cffab33b2b589afffb1d3a3de" name="aa92c802cffab33b2b589afffb1d3a3de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa92c802cffab33b2b589afffb1d3a3de">&#9670;&#160;</a></span>_parsable_to_df()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> bool _parsable_to_df </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Tuple[Any, Any]&#160;</td>
+          <td class="paramname"><em>result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Checks if the result of a Neo4j query is valid (i.e. </p>
+<p>can be converted to a Pandas DataFrame).</p>
+<ul>
+<li>Validates shape: (records, meta)</li>
+<li>Validates content: rows are iterable, elements are dict-like or have .__properties__ (NeoModel Node/Rel) <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">result</td><td>The result of a Cypher query. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Whether the object is parsable to DataFrame. </dd></dl>
+</li>
+</ul>
+
+<p>Reimplemented from <a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#ab28f173d61b9e4ba11459f1e903972b4">DatabaseConnector</a>.</p>
+
+</div>
+</div>
+<a id="aa7464755128959c1a31285d886c10dcc" name="aa7464755128959c1a31285d886c10dcc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa7464755128959c1a31285d886c10dcc">&#9670;&#160;</a></span>_returns_data()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> bool _returns_data </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>query</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Checks if a query is structured in a way that returns real data, and not status messages. </p>
+<p>Determines whether a Cypher query should yield records.</p><ul>
+<li>RETURN must be present as a keyword (not in a string value) to return data.</li>
+<li>YIELD is used for stored procedures, and might return data. <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">query</td><td>A single pre-validated CQL query string. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Whether the query is intended to fetch data (true) or might return a status message (false). </dd></dl>
+</li>
+</ul>
+
+<p>Reimplemented from <a class="el" href="classcomponents_1_1connectors_1_1DatabaseConnector.html#aa7464755128959c1a31285d886c10dcc">DatabaseConnector</a>.</p>
 
 </div>
 </div>
@@ -879,16 +989,17 @@ Protected Member Functions</h2></td></tr>
 
 <p>Automatically generate and run a query for the specified Knowledge Graph collection. </p>
 <ul>
-<li>Fetches all public node attributes, the internal ID, and all labels (e.g. :Person :Character)</li>
-<li>Does not explode lists or nested values</li>
-<li>Different approach than DocumentConnector because our node attributes are usually flat key:value already. <dl class="params"><dt>Parameters</dt><dd>
+<li>Fetches all nodes and relationships belonging to the active database + graph name.</li>
+<li>Includes public attributes, element_id, labels, and element_type.</li>
+<li>Uses execute_query() for DataFrame conversion and filtering.</li>
+<li>Does not explode lists or nested values. <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">name</td><td>The name of an existing table or collection in the database. </td></tr>
+    <tr><td class="paramname">name</td><td>The name of an existing graph or subgraph. </td></tr>
     <tr><td class="paramname">columns</td><td>A list of column names to keep. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>DataFrame containing the requested data, or None </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>DataFrame containing the requested data, or None. </dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">Log.Failure</td><td>If we fail to create the requested DataFrame for any reason. </td></tr>
@@ -1324,6 +1435,8 @@ Protected Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>TODO: remove once error handling is fixed check_values will raise, so this never became an issue until now. </p>
 
 </div>
 </div>
