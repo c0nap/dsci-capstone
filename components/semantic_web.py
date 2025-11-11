@@ -5,6 +5,11 @@ from typing import Any, List, Optional, Tuple
 import re
 
 class KnowledgeGraph:
+    """Manages a single graph within Neo4j.
+    @details
+        - Handles safe conversion of LLM output to structured triples.
+        - Provides helper functions to add and retrieve triples.
+    """
 
     def __init__(self, name: str, connector: GraphConnector) -> None:
         ##
@@ -31,20 +36,22 @@ class KnowledgeGraph:
         if not relation or not subject or not object_:
             raise Log.Failure(Log.gr_db + Log.kg, f"Invalid triple: ({subject})-[:{relation}]->({object_})")
 
-        # Merge subject/object and connect via relation
-        query = f"""
-        MERGE (s {{name: '{subject}', db: '{self.connector.database_name}', kg: '{self.graph_name}'}})
-        MERGE (o {{name: '{object_}', db: '{self.connector.database_name}', kg: '{self.graph_name}'}})
-        MERGE (s)-[r:{relation}]->(o)
-        RETURN s, r, o
-        """
+        # Temporarily switch to this graph's context for the operation
+        with self.connector.temp_graph(self.graph_name):
+            # Merge subject/object and connect via relation
+            query = f"""
+            MERGE (s {{name: '{subject}', db: '{self.connector.database_name}', kg: '{self.graph_name}'}})
+            MERGE (o {{name: '{object_}', db: '{self.connector.database_name}', kg: '{self.graph_name}'}})
+            MERGE (s)-[r:{relation}]->(o)
+            RETURN s, r, o
+            """
 
-        try:
-            df = self.connector.execute_query(query, _filter_results=False)
-            if df is not None:
-                Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.connector.verbose)
-        except Exception as e:
-            raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
+            try:
+                df = self.connector.execute_query(query, _filter_results=False)
+                if df is not None:
+                    Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.connector.verbose)
+            except Exception as e:
+                raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
 
     @staticmethod
     def normalize_triples(data: Any) -> List[Tuple[str, str, str]]:
@@ -139,44 +146,72 @@ class KnowledgeGraph:
         @return  DataFrame with columns: node_name, edge_count
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
-        with self.connector.temp_graph(self.graph_name):
-            query = f"""
-            MATCH (n {self.connector.SAME_DB_KG_()})
-            WHERE {self.connector.NOT_DUMMY_()}
-            OPTIONAL MATCH (n)-[r]-()
-            WITH n.name as node_name, count(r) as edge_count
-            ORDER BY edge_count DESC, rand()
-            LIMIT {top_n}
-            RETURN node_name, edge_count"""
-            try:
-                df = self.connector.execute_query(query, _filter_results=False)
-                Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.", self.connector.verbose)
-                return df
-            except Exception as e:
-                raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.") from e
+        df = self.connector.get_dataframe(self.graph_name)
+        if df is None or df.empty:
+            raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.")
+        
+        # Filter to nodes only
+        df_nodes = df[df["element_type"] == "node"].copy()
+        df_rels = df[df["element_type"] == "relationship"].copy()
+        
+        # Count edges per node by matching element_id with start_node_id/end_node_id
+        edge_counts = {}
+        for _, node in df_nodes.iterrows():
+            node_id = node["element_id"]
+            node_name = node.get("name", None)
+            if node_name is None:
+                continue
+            # Count relationships where this node is start or end
+            count = len(df_rels[(df_rels["start_node_id"] == node_id) | (df_rels["end_node_id"] == node_id)])
+            edge_counts[node_name] = count
+        
+        # Convert to DataFrame and sort
+        result_df = DataFrame(list(edge_counts.items()), columns=["node_name", "edge_count"])
+        result_df = result_df.sort_values("edge_count", ascending=False).head(top_n)
+        
+        Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.", self.connector.verbose)
+        return result_df
 
     def get_all_triples(self) -> DataFrame:
         """Return all triples in the specified graph as a pandas DataFrame.
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame."""
-        with self.connector.temp_graph(self.graph_name):
-            # No need to apply the DB-KG pattern to relationships - relaxes query requirements.
-            query = f"""
-            MATCH (s {self.connector.SAME_DB_KG_()})-[r]->(o {self.connector.SAME_DB_KG_()})
-            WHERE {self.connector.NOT_DUMMY_('s')} AND {self.connector.NOT_DUMMY_('o')}
-            RETURN s.name AS subject, type(r) AS relation, o.name AS object
-            """
-            try:
-                df = self.connector.execute_query(query, _filter_results=False)
-                # Always return a DataFrame with the 3 desired columns, even if empty or None
-                cols = ["subject", "relation", "object"]
-                if df is None:
-                    df = DataFrame()
-                df = df.reindex(columns=cols)
-
-                Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.", self.connector.verbose)
-                return df
-            except Exception as e:
-                raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch all_triples DataFrame.") from e
+        df = self.connector.get_dataframe(self.graph_name)
+        
+        # Always return a DataFrame with the 3 desired columns, even if empty or None
+        cols = ["subject", "relation", "object"]
+        if df is None or df.empty:
+            result_df = DataFrame(columns=cols)
+            Log.success(Log.gr_db + Log.kg, f"Found 0 triples in graph.", self.connector.verbose)
+            return result_df
+        
+        # Filter to relationships only
+        df_rels = df[df["element_type"] == "relationship"].copy()
+        df_nodes = df[df["element_type"] == "node"].copy()
+        
+        # Build triples by matching relationship endpoints to node names
+        triples = []
+        for _, rel in df_rels.iterrows():
+            start_id = rel.get("start_node_id")
+            end_id = rel.get("end_node_id")
+            rel_type = rel.get("rel_type")
+            
+            # Find subject and object names
+            subject_node = df_nodes[df_nodes["element_id"] == start_id]
+            object_node = df_nodes[df_nodes["element_id"] == end_id]
+            
+            if not subject_node.empty and not object_node.empty:
+                subject_name = subject_node.iloc[0].get("name")
+                object_name = object_node.iloc[0].get("name")
+                if subject_name and object_name and rel_type:
+                    triples.append({
+                        "subject": subject_name,
+                        "relation": rel_type,
+                        "object": object_name
+                    })
+        
+        result_df = DataFrame(triples, columns=cols)
+        Log.success(Log.gr_db + Log.kg, f"Found {len(result_df)} triples in graph.", self.connector.verbose)
+        return result_df
 
     def print_nodes(self, max_rows: int = 20, max_col_width: int = 50) -> None:
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
@@ -199,4 +234,5 @@ class KnowledgeGraph:
         with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
             print(f"Graph triples ({len(triples_df)} total):")
             print(triples_df)
+
 
