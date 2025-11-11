@@ -11,11 +11,13 @@ class KnowledgeGraph:
         - Provides helper functions to add and retrieve triples.
     """
 
-    def __init__(self, name: str, database: GraphConnector) -> None:
+    def __init__(self, name: str, database: GraphConnector, verbose: bool = False) -> None:
         ## The name of this graph. Matches node.kg for all nodes in the graph database.
         self.graph_name = name
         ## Reference to a pre-configured graph database wrapper.
         self.database = database
+        ## Whether to print debug messages.
+        self.verbose = verbose
 
     def add_triple(self, subject: str, relation: str, object_: str) -> None:
         """Add a semantic triple to the graph using raw Cypher.
@@ -46,7 +48,7 @@ class KnowledgeGraph:
             try:
                 df = self.database.execute_query(query, _filter_results=False)
                 if df is not None:
-                    Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.database.verbose)
+                    Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
             except Exception as e:
                 raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
     
@@ -122,14 +124,14 @@ class KnowledgeGraph:
             cols = ["subject", "relation", "object"]
 
             if triples_df is None or triples_df.empty:
-                Log.success(Log.gr_db + Log.kg, "Found 0 triples in graph.", self.database.verbose)
+                Log.success(Log.gr_db + Log.kg, "Found 0 triples in graph.", self.verbose)
                 return DataFrame(columns=cols)
 
             # Extract and rename columns
             triples_df = triples_df[["n1.name", "r.rel_type", "n2.name"]].rename(
                 columns={"n1.name": "subject", "r.rel_type": "relation", "n2.name": "object"}
             )
-            Log.success(Log.gr_db + Log.kg, f"Found {len(triples_df)} triples in graph.", self.database.verbose)
+            Log.success(Log.gr_db + Log.kg, f"Found {len(triples_df)} triples in graph.", self.verbose)
             return triples_df
 
 
@@ -299,7 +301,7 @@ class KnowledgeGraph:
         result_df = DataFrame(list(edge_counts.items()), columns=["node_name", "edge_count"])
         result_df = result_df.sort_values("edge_count", ascending=False).head(top_n)
         
-        Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.", self.database.verbose)
+        Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.", self.verbose)
         return result_df
     
     def get_node_context(self, node_name: str, include_neighbors: bool = True) -> str:
