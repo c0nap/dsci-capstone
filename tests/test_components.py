@@ -424,23 +424,23 @@ def test_cypher_example_4(graph_db: GraphConnector) -> None:
     dialogue_events = df_nodes[df_nodes['labels'].apply(lambda x: 'DialogueEvent' in x if isinstance(x, list) else False)]
     action_events = df_nodes[df_nodes['labels'].apply(lambda x: 'ActionEvent' in x if isinstance(x, list) else False)]
     scene_events = df_nodes[df_nodes['labels'].apply(lambda x: 'SceneEvent' in x if isinstance(x, list) else False)]
-    assert len(dialogue_events) == 3  # Alice, Bob, Charlie speak
-    assert len(action_events) == 2   # Alice hired, Charlie arrives
-    assert len(scene_events) == 2    # Bob leaves room, Alice enters hall
+    assert len(dialogue_events) == 3  # Knight, Guide Master, Wizard speak
+    assert len(action_events) == 2   # Knight hired, Wizard arrives
+    assert len(scene_events) == 2    # Guide Master leaves room, Knight enters hall
     
     # Verify Wave 2 properties were added via MERGE/SET (property mutation)
-    alice_speaks = df_nodes[df_nodes['name'] == 'Alice speaks'].iloc[0]
-    assert alice_speaks['speaker'] == 'Alice'  # Wave 1 property
-    assert alice_speaks['says'] == 'I accept the quest'  # Wave 2 property
-    assert alice_speaks['audience'] == 'Guild Master'    # Wave 2 property
+    knight_speaks = df_nodes[df_nodes['name'] == 'Knight speaks'].iloc[0]
+    assert knight_speaks['speaker'] == 'Knight'  # Wave 1 property
+    assert knight_speaks['says'] == 'I accept the quest'  # Wave 2 property
+    assert knight_speaks['audience'] == 'Guild Master'    # Wave 2 property
     
-    bob_speaks = df_nodes[df_nodes['name'] == 'Bob speaks'].iloc[0]
-    assert bob_speaks['says'] == 'The dragon stirs'
-    assert bob_speaks['audience'] == 'townspeople'
+    guild_master_speaks = df_nodes[df_nodes['name'] == 'Guide Master speaks'].iloc[0]
+    assert guild_master_speaks['says'] == 'The dragon stirs'
+    assert guild_master_speaks['audience'] == 'townspeople'
     
-    charlie_arrives = df_nodes[df_nodes['name'] == 'Charlie arrives'].iloc[0]
-    assert charlie_arrives['action'] == 'arrives'
-    assert charlie_arrives['method'] == 'teleportation'
+    wizard_arrives = df_nodes[df_nodes['name'] == 'Wizard arrives'].iloc[0]
+    assert wizard_arrives['action'] == 'arrives'
+    assert wizard_arrives['method'] == 'teleportation'
     
     # Verify relationships form a DAG with consistent rel_type
     df_rels = df[df["element_type"] == "relationship"]
@@ -455,7 +455,7 @@ def test_cypher_example_4(graph_db: GraphConnector) -> None:
     # Check that snippets were added via MERGE/SET
     assert all(df_rels['snippet'].notna())
     assert any(df_rels['snippet'] == 'The Guild Master nodded approvingly')
-    assert any(df_rels['snippet'] == 'The following day, Alice')
+    assert any(df_rels['snippet'] == 'The following day, Knight')
     
     # Verify alternate path exists (branch in DAG)
     alternate_rels = df_rels[df_rels['alternate'].notna() & (df_rels['alternate'] == True)]
@@ -463,13 +463,13 @@ def test_cypher_example_4(graph_db: GraphConnector) -> None:
     assert alternate_rels.iloc[0]['line'] == 43
     assert alternate_rels.iloc[0]['snippet'] == 'Suddenly, a portal opened'
     
-    # Multi-hop path verification: Find paths from "Alice speaks" to various endpoints
-    alice_speaks_id = df_nodes[df_nodes['name'] == 'Alice speaks'].iloc[0]['element_id']
-    alice_enters_id = df_nodes[df_nodes['name'] == 'Alice enters hall'].iloc[0]['element_id']
-    charlie_arrives_id = df_nodes[df_nodes['name'] == 'Charlie arrives'].iloc[0]['element_id']
-    bob_speaks_id = df_nodes[df_nodes['name'] == 'Bob speaks'].iloc[0]['element_id']
+    # Multi-hop path verification: Find paths from "Knight speaks" to various endpoints
+    knight_speaks_id = df_nodes[df_nodes['name'] == 'Knight speaks'].iloc[0]['element_id']
+    knight_enters_id = df_nodes[df_nodes['name'] == 'Knight enters hall'].iloc[0]['element_id']
+    wizard_arrives_id = df_nodes[df_nodes['name'] == 'Wizard arrives'].iloc[0]['element_id']
+    guild_master_speaks_id = df_nodes[df_nodes['name'] == 'Guide Master speaks'].iloc[0]['element_id']
     
-    # Path 1: Alice speaks -> Alice is hired -> Bob leaves room -> Bob speaks (3 hops)
+    # Path 1: Knight speaks -> Knight is hired -> Guide Master leaves room -> Guide Master speaks (3 hops)
     def find_path_length(start_id: str, end_id: str, df_rels: DataFrame) -> Optional[int]:
         """BFS to find shortest path length between two nodes."""
         from collections import deque
@@ -491,21 +491,21 @@ def test_cypher_example_4(graph_db: GraphConnector) -> None:
         
         return None
     
-    # Verify shortest path (uses alternate branch): Alice speaks -> Alice enters hall (3 hops)
-    # Path: Alice speaks -> Charlie arrives (alternate) -> Charlie speaks -> Alice enters hall
-    path_length_shortest = find_path_length(alice_speaks_id, alice_enters_id, df_rels)
+    # Verify shortest path (uses alternate branch): Knight speaks -> Knight enters hall (3 hops)
+    # Path: Knight speaks -> Wizard arrives (alternate) -> Wizard speaks -> Knight enters hall
+    path_length_shortest = find_path_length(knight_speaks_id, knight_enters_id, df_rels)
     assert path_length_shortest == 3
     
-    # Verify branch path exists: Alice speaks -> Charlie arrives (1 hop via alternate)
-    path_length_alt = find_path_length(alice_speaks_id, charlie_arrives_id, df_rels)
+    # Verify branch path exists: Knight speaks -> Wizard arrives (1 hop via alternate)
+    path_length_alt = find_path_length(knight_speaks_id, wizard_arrives_id, df_rels)
     assert path_length_alt == 1  # Direct alternate path
     
-    # Verify intermediate path: Alice speaks -> Bob speaks (3 hops)
-    path_length_mid = find_path_length(alice_speaks_id, bob_speaks_id, df_rels)
+    # Verify intermediate path: Knight speaks -> Guide Master speaks (3 hops)
+    path_length_mid = find_path_length(knight_speaks_id, guild_master_speaks_id, df_rels)
     assert path_length_mid == 3
     
-    # Verify DAG property: no cycles (Charlie arrives cannot reach Alice speaks)
-    reverse_path = find_path_length(charlie_arrives_id, alice_speaks_id, df_rels)
+    # Verify DAG property: no cycles (Wizard arrives cannot reach Knight speaks)
+    reverse_path = find_path_length(wizard_arrives_id, knight_speaks_id, df_rels)
     assert reverse_path is None  # No backward path in DAG
     
     graph_db.drop_graph("events")
