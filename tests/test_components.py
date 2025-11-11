@@ -41,42 +41,54 @@ def graph_db(session: Session) -> GraphConnector:
 # BUILT-IN DATABASE TESTS: Run check_connection() for minimal connection test.
 # ------------------------------------------------------------------------------
 @pytest.mark.order(1)
+@pytest.mark.dependency(name="rel_minimal")
 def test_db_relational_minimal(relational_db: RelationalConnector) -> None:
     """Tests if the RelationalConnector has a valid connection string."""
-    relational_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    connected = relational_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    assert connected
 
 
 @pytest.mark.order(2)
+@pytest.mark.dependency(name="docs_minimal")
 def test_db_docs_minimal(docs_db: DocumentConnector) -> None:
     """Tests if the DocumentConnector has a valid connection string."""
-    docs_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    connected = docs_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    assert connected
 
 
 @pytest.mark.order(3)
+@pytest.mark.dependency(name="graph_minimal")
 def test_db_graph_minimal(graph_db: GraphConnector) -> None:
     """Tests if the GraphConnector has a valid connection string."""
-    graph_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    connected = graph_db.check_connection(log_source=Log.pytest_db, raise_error=True)
+    assert connected
 
 
 # ------------------------------------------------------------------------------
 # BUILT-IN DATABASE TESTS: Run test_connection() for comprehensive usage tests.
 # ------------------------------------------------------------------------------
 @pytest.mark.order(4)
+@pytest.mark.dependency(name="rel_comprehensive", depends=["rel_minimal"])
 def test_db_relational_comprehensive(relational_db: RelationalConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    relational_db.test_connection(raise_error=True)
+    operational = relational_db.test_connection(raise_error=True)
+    assert operational
 
 
 @pytest.mark.order(5)
+@pytest.mark.dependency(name="docs_comprehensive", depends=["docs_minimal"])
 def test_db_docs_comprehensive(docs_db: DocumentConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    docs_db.test_connection(raise_error=True)
+    operational = docs_db.test_connection(raise_error=True)
+    assert operational
 
 
 @pytest.mark.order(6)
+@pytest.mark.dependency(name="graph_comprehensive", depends=["graph_minimal"])
 def test_db_graph_comprehensive(graph_db: GraphConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    graph_db.test_connection(raise_error=True)
+    operational = graph_db.test_connection(raise_error=True)
+    assert operational
 
 
 # ------------------------------------------------------------------------------
@@ -98,6 +110,7 @@ def load_examples_relational(relational_db: RelationalConnector) -> Generator[No
 
 
 @pytest.mark.order(7)
+@pytest.mark.dependency(name="rel_example_1", depends=["rel_minimal", "rel_comprehensive"])
 def test_sql_example_1(relational_db: RelationalConnector, load_examples_relational: Generator[None, None, None]) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -111,6 +124,7 @@ def test_sql_example_1(relational_db: RelationalConnector, load_examples_relatio
 
 
 @pytest.mark.order(8)
+@pytest.mark.dependency(name="rel_example_2", depends=["rel_minimal", "rel_comprehensive"])
 def test_sql_example_2(relational_db: RelationalConnector, load_examples_relational: Generator[None, None, None]) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -124,6 +138,7 @@ def test_sql_example_2(relational_db: RelationalConnector, load_examples_relatio
 
 
 @pytest.mark.order(9)
+@pytest.mark.dependency(name="docs_example_1", depends=["docs_minimal", "docs_comprehensive"])
 def test_mongo_example_1(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -138,6 +153,7 @@ def test_mongo_example_1(docs_db: DocumentConnector) -> None:
 
 
 @pytest.mark.order(10)
+@pytest.mark.dependency(name="docs_example_2", depends=["docs_minimal", "docs_comprehensive"])
 def test_mongo_example_2(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -152,6 +168,7 @@ def test_mongo_example_2(docs_db: DocumentConnector) -> None:
 
 
 @pytest.mark.order(11)
+@pytest.mark.dependency(name="docs_example_3", depends=["docs_minimal", "docs_comprehensive"])
 def test_mongo_example_3(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -169,6 +186,7 @@ def test_mongo_example_3(docs_db: DocumentConnector) -> None:
 
 
 @pytest.mark.order(12)
+@pytest.mark.dependency(name="graph_example_1", depends=["graph_minimal", "graph_comprehensive"])
 def test_cypher_example_1(graph_db: GraphConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -181,16 +199,18 @@ def test_cypher_example_1(graph_db: GraphConnector) -> None:
     )
     df = graph_db.get_dataframe("pets")
     assert (df is not None)
-    assert (len(df) == 5)
-    assert ("node_id" in df.columns and "labels" in df.columns)
+    assert ("element_id" in df.columns and "element_type" in df.columns)
     assert ("db" in df.columns and "kg" in df.columns)
-    assert (len(df.columns) == 8)
+    assert (len(df) == 5)
+    assert (len(df.columns) == 9)
+    # db-kg (2), elem-id-type (2), labels (1), and 4 expected (name, species, weight, age)
     assert (df.iloc[-1]['name'] == 'Buddy')
     assert any((df['species'] == 'Rabbit') & (df['age'] == 4))
     graph_db.drop_graph("pets")
 
 
 @pytest.mark.order(13)
+@pytest.mark.dependency(name="graph_example_2", depends=["graph_minimal", "graph_comprehensive"])
 def test_cypher_example_2(graph_db: GraphConnector) -> None:
     """Test social network graph with relationships and mixed query patterns.
     @details  Validates comment parsing, semicolon splitting, CREATE/MERGE/MATCH,
@@ -205,8 +225,9 @@ def test_cypher_example_2(graph_db: GraphConnector) -> None:
     # Verify nodes were created correctly
     df = graph_db.get_dataframe("social")
     assert df is not None
+    df = df[df["element_type"] == "node"]
     assert len(df) == 5  # Alice, Bob, Charlie, Dave, Frank
-    assert "node_id" in df.columns and "labels" in df.columns
+    assert "element_id" in df.columns and "labels" in df.columns
     assert "db" in df.columns and "kg" in df.columns
     
     # Check specific nodes
@@ -229,6 +250,7 @@ def test_cypher_example_2(graph_db: GraphConnector) -> None:
 
 
 @pytest.mark.order(14)
+@pytest.mark.dependency(name="graph_example_3", depends=["graph_minimal", "graph_comprehensive"])
 def test_cypher_example_3(graph_db: GraphConnector) -> None:
     """Test scene and dialogue graphs with proper isolation.
     @details  Validates kg property isolation using a scene graph (spatial relationships)
@@ -252,6 +274,7 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
     with graph_db.temp_graph("scene"):
         df_scene = graph_db.get_dataframe("scene")
         assert df_scene is not None
+        df_scene = df_scene[df_scene["element_type"] == "node"]
         assert len(df_scene) == 5  # Alice, Bob, Sofa, Table, Lamp
         assert any(df_scene['name'] == 'Alice')
         assert any((df_scene['type'] == 'seating') & (df_scene['name'] == 'Sofa'))
@@ -270,6 +293,7 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
     with graph_db.temp_graph("dialogue"):
         df_dialogue = graph_db.get_dataframe("dialogue")
         assert df_dialogue is not None
+        df_dialogue = df_dialogue[df_dialogue["element_type"] == "node"]
         assert len(df_dialogue) == 6  # 3 Dialogue + 3 DialogueRef nodes
         
         # Check dialogue content

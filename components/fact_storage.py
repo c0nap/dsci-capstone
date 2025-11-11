@@ -1,8 +1,9 @@
 from components.connectors import DatabaseConnector
 from contextlib import contextmanager
+from neo4j.graph import Node, Relationship
 from neomodel import config, db
 import os
-from pandas import DataFrame, option_context
+from pandas import DataFrame, option_context, Series
 import re
 from src.util import check_values, df_natural_sorted, Log
 from typing import Any, Dict, Generator, List, Optional, Tuple
@@ -93,7 +94,11 @@ class GraphConnector(DatabaseConnector):
                             CREATE (n2:TestPerson {{kg: '{self.graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
                 self.execute_query(query, _filter_results=False)
                 df = self.get_dataframe(self.graph_name)
-                if df is None or check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
+                #### TODO: remove once error handling is fixed
+                # check_values will raise, so this never became an issue until now
+                if df is None:
+                    raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_df, "DataFrame fetched from graph 'test_graph' is None")
+                if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
                     return False
                 query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                 self.execute_query(query, _filter_results=False)
@@ -103,7 +108,7 @@ class GraphConnector(DatabaseConnector):
             raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
 
         try:  # Test create/drop functionality with tmp database
-            tmp_db = f"test_conn"  # Do not use context manager: interferes with traceback
+            tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
             working_database = self.database_name
             if self.database_exists(tmp_db):
                 self.drop_database(tmp_db)
@@ -153,25 +158,24 @@ class GraphConnector(DatabaseConnector):
             return result
         # Derived classes MUST implement single-query execution.
         try:
-            results, meta = db.cypher_query(query)
+            tuples, meta = db.cypher_query(query)
+            # Re-tag nodes and edges with self.database_name using a second query.
+            # Must also re-fetch from Neo4j to ensure our copy is tagged with 'db'
+            q = query.lower()
+            if "create" in q or "merge" in q:
+                self._execute_retag_db()
+                tuples, meta = self._fetch_latest(tuples)
 
-            # Re-tag nodes and edges with the active database name using a second query.
-            query_lower = query.lower()
-            if "create" in query_lower or "merge" in query_lower:
-                # Always sweep for untagged entities, regardless of RETURN
-                self._execute_tag_db()
-                # Re-fetch to ensure our copy is tagged with 'db'
-                results, meta = self._get_updated(results)
-
-            # Return nodes from the current database ONLY, despite what the query wants.
-            if _filter_results:
-                results, meta = filter_valid(results, meta, self.database_name)
-
-            df = DataFrame(results, columns=[m for m in meta]) if meta else None
+            returns_data = self._returns_data(query)
+            parsable_to_df = self._parsable_to_df((tuples, meta))
+            df = _tuples_to_df(tuples, meta) if returns_data and parsable_to_df else None
             if df is None or df.empty:
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
                 return None
             else:
+                # Return nodes from the current database ONLY, despite what the query wants.
+                if _filter_results:
+                    df = _filter_to_db(df, self.database_name)
                 Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
                 return df
         except Exception as e:
@@ -207,45 +211,96 @@ class GraphConnector(DatabaseConnector):
             parts.append(buf.strip())
         return parts
 
+    def _returns_data(self, query: str) -> bool:
+        """Checks if a query is structured in a way that returns real data, and not status messages.
+        @details  Determines whether a Cypher query should yield records.
+        - RETURN must be present as a keyword (not in a string value) to return data.
+        - YIELD is used for stored procedures, and might return data.
+        @param query  A single pre-validated CQL query string.
+        @return  Whether the query is intended to fetch data (true) or might return a status message (false).
+        """
+        q = query.strip().upper()
+        # Remove quoted strings to avoid false positives (e.g., {name: "Return of the Jedi"})
+        q_no_strings = re.sub(r"'[^']*'|\"[^\"]*\"", "", q)
+        # Check if RETURN exists as a keyword (word boundary)
+        if re.search(r'\b(RETURN|YIELD)\b', q_no_strings):
+            return True
+        return False  # Normally we would let execution handle ambiguous cases, but this basic check is exhaustive.
+
+    def _parsable_to_df(self, result: Tuple[Any, Any]) -> bool:
+        """Checks if the result of a Neo4j query is valid (i.e. can be converted to a Pandas DataFrame).
+        @details
+          - Validates shape: (records, meta)
+          - Validates content: rows are iterable, elements are dict-like or have .__properties__ (NeoModel Node/Rel)
+        @param result  The result of a Cypher query.
+        @return  Whether the object is parsable to DataFrame.
+        """
+        from neo4j.graph import Node, Relationship
+
+        # Handle tuple: (results, meta)
+        if not isinstance(result, tuple) or len(result) != 2:
+            return False
+        records, meta = result
+        # Must have row data
+        if not records or not isinstance(records, (list, tuple)):
+            return False
+        # Meta must describe columns
+        if not isinstance(meta, (list, tuple, dict)) or len(meta) == 0:
+            return False
+
+        # Defensive content validation
+        row = records[0]
+        if isinstance(row, (list, tuple)):
+            # Each cell should be dict-like, scalar, or have .__properties__ (NeoModel Node/Rel)
+            for x in row:
+                if not (x is None or isinstance(x, (dict, str, int, float, bool, Node, Relationship)) or hasattr(x, "__properties__")):
+                    return False
+        elif not isinstance(row, (dict, str, int, float, bool, Node, Relationship)):
+            # Single-column result with complex object
+            if row is not None and not hasattr(row, "__properties__"):
+                return False
+        # Structural success only — semantic validation handled by _tuples_to_df and filter_to_db
+        return True
+
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified Knowledge Graph collection.
         @details
-            - Fetches all public node attributes, the internal ID, and all labels (e.g. :Person :Character)
-            - Does not explode lists or nested values
-            - Different approach than DocumentConnector because our node attributes are usually flat key:value already.
-        @param name  The name of an existing table or collection in the database.
+            - Fetches all nodes and relationships belonging to the active database + graph name.
+            - Includes public attributes, element_id, labels, and element_type.
+            - Uses execute_query() for DataFrame conversion and filtering.
+            - Does not explode lists or nested values.
+        @param name  The name of an existing graph or subgraph.
         @param columns  A list of column names to keep.
-        @return  DataFrame containing the requested data, or None
-        @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
+        @return  DataFrame containing the requested data, or None.
+        @throws Log.Failure  If we fail to create the requested DataFrame for any reason.
+        """
         self.check_connection(Log.get_df, raise_error=True)
 
         with self.temp_graph(name):
-            # Get all nodes in the specified graph
-            query = f"MATCH (n {self.SAME_DB_KG_()}) RETURN n"
-            results = self.execute_query(query)
-        if results is None:
-            return None
-
-        # Create a row for each node with attributes as columns - might be unbalanced
-        rows = []
-        for node in results.iloc[:, 0]:
-            # Extract all user-visible properties
-            if hasattr(node, "properties") and node.properties:
-                row = dict(node.properties)
-            elif hasattr(node, "keys") and hasattr(node, "__getitem__"):
-                # Some neomodel/neo4j Node types expose mapping-like access
-                row = {k: node[k] for k in node.keys()}
-            else:
-                row = {}
-            # Always include ID and labels
-            row["node_id"] = getattr(node, "element_id", None)
-            row["labels"] = list(getattr(node, "labels", []))
-            rows.append(row)
-
-        # Pandas will fill in NaN where necessary
-        df = DataFrame(rows)
+            # Fetch both nodes and relationships belonging to this graph and DB
+            # 1. Get all nodes in this graph.
+            # 2. Get all relationships STARTING in this graph.
+            # 3. Get all relationships ENDING in this graph.
+            # UNION automatically handles duplicates, and we only RETURN n or r, never m.
+            query = f"""
+            MATCH (n {self.SAME_DB_KG_()})
+            WHERE {self.NOT_DUMMY_('n')}
+            RETURN n AS element
+            UNION
+            MATCH (n {self.SAME_DB_KG_()})-[r]->(m)
+            WHERE {self.NOT_DUMMY_('n')}
+            RETURN r AS element
+            UNION
+            MATCH (n)-[r]->(m {self.SAME_DB_KG_()})
+            WHERE {self.NOT_DUMMY_('m')}
+            RETURN r AS element
+            """
+            df = self.execute_query(query)
         if df is not None and not df.empty:
-            df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'node_id', 'labels'], sort_columns=columns)
+            df = _normalize_elements(df)
+
+        if df is not None and not df.empty:
+            df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'element_id', 'element_type', 'labels'], sort_columns=columns)
             df = df[columns] if columns else df
             Log.success(Log.gr_db + Log.get_df, Log.msg_good_graph(name, df), self.verbose)
             return df
@@ -338,7 +393,7 @@ class GraphConnector(DatabaseConnector):
         query = f"MATCH (n) WHERE {self.IS_DUMMY_()} DETACH DELETE n"
         self.execute_query(query, _filter_results=False)
 
-    def _execute_tag_db(self) -> None:
+    def _execute_retag_db(self) -> None:
         """Sweeps the database for untagged nodes and relationships, and adds a 'db' attribute."""
         db.cypher_query(
             f"""MATCH (n) WHERE n.db IS NULL
@@ -349,16 +404,37 @@ class GraphConnector(DatabaseConnector):
             SET r.db = '{self.database_name}'"""
         )
 
-    def _get_updated(self, results: List[Tuple[Any, ...]]) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
+    def _fetch_latest(self, results: List[Tuple[Any, ...]]) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
         """Re-fetch nodes and edges after changing the remote copy in Neo4j.
         @param results Original list of untagged tuples from db.cypher_query().
         @return Latest version of results fetched from the database."""
-        if results:
-            ids = [obj.element_id for row in (results or []) for obj in row if hasattr(obj, "element_id")]
-        if not results or not ids:
+        if not results:
             return (None, None)
-        ids_str = "[" + ", ".join(f"'{i}'" for i in ids) + "]"
-        return db.cypher_query(f"MATCH (n) WHERE elementId(n) IN {ids_str} RETURN n")
+        # Gather element IDs for all nodes and relationships
+        node_ids, rel_ids = [], []
+        for row in results:
+            for obj in (row if isinstance(row, (list, tuple)) else [row]):
+                if not hasattr(obj, "element_id"):
+                    continue
+                if hasattr(obj, "start_node") or hasattr(obj, "nodes"):  # relationship
+                    rel_ids.append(obj.element_id)
+                else:  # node
+                    node_ids.append(obj.element_id)
+        if not node_ids and not rel_ids:
+            return (None, None)
+
+        # Build a single query to get all necessary elements
+        parts = []
+        if node_ids:
+            node_ids_str = "[" + ", ".join(f"'{i}'" for i in node_ids) + "]"
+            parts.append(f"MATCH (n) WHERE elementId(n) IN {node_ids_str} RETURN n AS element")
+        if rel_ids:
+            rel_ids_str = "[" + ", ".join(f"'{i}'" for i in rel_ids) + "]"
+            parts.append(f"MATCH ()-[r]->() WHERE elementId(r) IN {rel_ids_str} RETURN r AS element")
+        union_query = " UNION ALL ".join(parts)
+
+        fresh_results, fresh_meta = db.cypher_query(union_query)
+        return fresh_results, fresh_meta
 
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
@@ -572,127 +648,163 @@ class GraphConnector(DatabaseConnector):
         return f"{{db: '{self.database_name}', kg: '{self.graph_name}'}}"
 
 
-def filter_valid(results: List[Tuple[Any, ...]], meta: List[str], db_name: str) -> Tuple[Optional[List[Tuple[Any, ...]]], Optional[List[str]]]:
-    """Filter Cypher query results (nodes or relationships) by database context.
+
+
+
+
+
+
+
+
+
+
+
+
+
+def _filter_to_db(df: DataFrame, database_name: str) -> DataFrame:
+    """Filter a DataFrame by database context.
     @details
-        - Keeps entities where 'db' and 'kg' match the given names.
-        - Excludes dummy nodes (_init = true).
-        - Relationships are valid if they or either endpoint match.
-        - Removes meta columns with no valid entities.
-    @param results  List of tuples from db.cypher_query().
-    @param meta  Column names corresponding to each result element.
-    @param db_name  Database name to match.
-    @return  (filtered_results, filtered_meta) with only valid entities, or (None, None) if empty.
+        - Keeps nodes where 'db' matches the current database name and _init is False/absent.
+        - Keeps relationships if either endpoint node (by elementId) matches the same db.
+        - Works on unflattened frames where cells are dicts (node/rel maps).
+        - Safely ignores missing fields; drops a top-level '_init' column if present.
+    @param df  DataFrame containing node and relationship rows.
+    @param database_name The name of the current pseudo-database.
+    @return  Filtered DataFrame restricted to the active database.
     """
-    if not results:
-        return (None, None)
+    if df is None or df.empty:
+        return df
 
-    def get_props(o: Any) -> Dict[str, Any]:
-        """Extract a properties dict from a Neo4j Node/Relationship or dict-like object.
-        @param o  Object from a query row (Node, Relationship, dict, scalar).
-        @return  Properties dictionary if available; otherwise an empty dict.
-        """
-        if isinstance(o, dict):
-            return o
-        # Convert Node/Relationship property map to dict
-        if hasattr(o, "properties"):  # neo4j driver (v5+)
-            try:
-                return dict(o.properties)
-            except Exception:
-                try:
-                    # some drivers expose mapping-like properties
-                    return {k: o.properties[k] for k in o.properties.keys()}
-                except Exception:
-                    pass
-        # neomodel sometimes exposes __properties__
-        if hasattr(o, "__properties__"):
-            try:
-                return dict(o.__properties__)
-            except Exception:
-                pass
-        # mapping-like fallback
-        try:
-            if hasattr(o, "keys") and hasattr(o, "__getitem__"):
-                return {k: o[k] for k in o.keys()}
-        except Exception:
-            pass
-        return {}
+    # --- Helpers for unflattened (dict-in-cell) rows ---
+    def node_ok(d: Any) -> bool:
+        return isinstance(d, dict) and d.get("db") == database_name and not d.get("_init", False)
 
-    def valid(o: Any) -> bool:
-        """Determine if an object belongs to the active db and is not a dummy.
-        @param o  Object from a query row (Node, Relationship, dict, scalar).
-        @return  True if object has matching db/kg and _init is None/False; else False.
-        @throws None
-        """
-        d = get_props(o)
-        return isinstance(d, dict) and d.get("db") == db_name and d.get("_init") in (None, False)
+    def elem_id_from_node_map(d: Dict[str, Any]) -> Any:
+        # Be flexible about id field names
+        return d.get("element_id")  # or d.get("node_id") or d.get("id")
 
-    def is_rel(o: Any) -> bool:
-        """Check whether an object is a relationship-like value.
-        @param o  Object from a query row.
-        @return  True if object appears to be a Relationship; else False.
-        @throws None
-        """
-        return (hasattr(o, "start_node") and hasattr(o, "end_node")) or hasattr(o, "nodes")
+    # Build a set of "good" node elementIds present anywhere in the frame
+    good_node_ids = set()
+    for col in df.columns:
+        for v in df[col]:
+            if node_ok(v):
+                eid = elem_id_from_node_map(v)
+                if eid is not None:
+                    good_node_ids.add(eid)
 
-    def row_ok(row: Tuple[Any, ...]) -> bool:
-        """Return True if any element in the row is valid or touches a valid node.
-        @param row  One result tuple from the query.
-        @return  True if row contains a valid node/rel or a rel whose endpoints are valid.
-        @throws None
-        """
+    def rel_touches_good(v: Any) -> bool:
+        """True if a relationship dict touches any good node by elementId."""
+        if not isinstance(v, dict):
+            return False
+
+        # Direct endpoint id fields commonly seen in custom packing
+        for k in ("start_id", "end_id", "startElementId", "endElementId"):
+            if v.get(k) in good_node_ids:
+                return True
+
+        # Nested endpoint node maps
+        for k in ("start", "end", "start_node", "end_node"):
+            n = v.get(k)
+            if isinstance(n, dict) and elem_id_from_node_map(n) in good_node_ids:
+                return True
+
+        # List/tuple of endpoint nodes (e.g., 'nodes': [start, end])
+        nodes = v.get("nodes")
+        if isinstance(nodes, (list, tuple)):
+            for n in nodes:
+                if isinstance(n, dict) and elem_id_from_node_map(n) in good_node_ids:
+                    return True
+
+        return False
+
+    # Row-wise decisions (unflattened): keep if any node_ok OR any rel touches good node
+    any_node_ok = df.apply(lambda row: any(node_ok(v) for v in row), axis=1)
+    any_rel_ok = df.apply(lambda row: any(rel_touches_good(v) for v in row), axis=1)
+
+    keep = any_node_ok | any_rel_ok
+    filtered = df.loc[keep].drop(columns="_init", errors="ignore")
+    return filtered
+
+
+def _tuples_to_df(tuples: List[Tuple[Any, ...]], meta: List[str]) -> DataFrame:
+    """Convert Neo4j query results (nodes and relationships) into a Pandas DataFrame.
+    @details
+        - Accepts the `tuples` output of db.cypher_query().
+        - Automatically unwraps NeoModel Node/Relationship objects into plain dicts via `.__properties__`.
+        - Adds an 'element_type' property distinguishing nodes vs relationships.
+    Example Query: MATCH (a)-[r]->(b) RETURN a AS node_1, r AS edge, b AS node_2;
+    Result: DataFrame with `node_1` and `node_2` columns containing Nodes converted to dicts,
+        and an `edge` column containing a dict-cast relationship (element_type: relation).
+    @param tuples  List of Neo4j query result tuples.
+    @param meta  List of element aliases returned by the query, and used here as column names.
+    @return  DataFrame with requested columns.
+    """
+    if not tuples:
+        return DataFrame()
+
+    # --- Step 1: Normalize NeoModel and neo4j objects to plain dicts ---
+    normalized = []
+    for row in tuples:
+        new_row: List[Any] = []
         for x in row:
-            if is_rel(x):
-                s = getattr(x, "start_node", None)
-                e = getattr(x, "end_node", None)
-                if (s is None or e is None) and hasattr(x, "nodes"):
-                    try:
-                        nodes = x.nodes
-                        if nodes and len(nodes) == 2:
-                            s, e = nodes[0], nodes[1]
-                    except Exception:
-                        s = e = None
-                if valid(x) or (s and valid(s)) or (e and valid(e)):
-                    return True
-            elif valid(x):
-                return True
-        return False
+            if x is None:
+                new_row.append(None)
+            elif isinstance(x, (Node, Relationship)):
+                # neo4j.graph Node/Rel: extract properties via dict conversion
+                props = dict(x)
+                props["element_id"] = x.element_id
+                if isinstance(x, Node):
+                    props["labels"] = list(x.labels)
+                    props["element_type"] = "node"
+                else:
+                    props["element_type"] = "relationship"
+                    props["rel_type"] = x.type
+                    props["start_node_id"] = x.start_node.element_id if x.start_node else None
+                    props["end_node_id"] = x.end_node.element_id if x.end_node else None
+                new_row.append(props)
+            elif hasattr(x, "__properties__"):
+                # NeoModel Node/Rel: extract property map and preserve IDs/labels
+                props = dict(x.__properties__)
+                props["element_id"] = getattr(x, "element_id", None)
+                props["labels"] = list(getattr(x, "labels", []))
+                # Identify if this is a Node or Relationship object
+                if hasattr(x, "start_node") or hasattr(x, "end_node") or hasattr(x, "nodes"):
+                    props["element_type"] = "relationship"
+                else:
+                    props["element_type"] = "node"
+                new_row.append(props)
+            else:
+                # Scalars, lists, dicts, or unrecognized types — keep as-is
+                new_row.append(x)
+        normalized.append(new_row)
 
-    def col_ok(idx: int, rows: List[Tuple[Any, ...]]) -> bool:
-        """Return True if the column at index idx contains any valid entities.
-        @param idx   Column index into each row.
-        @param rows  Filtered set of rows to inspect.
-        @return  True if any cell in the column is valid or a rel touching valid endpoints.
-        @throws None
-        """
-        for r in rows:
-            cell = r[idx]
-            if is_rel(cell):
-                s = getattr(cell, "start_node", None)
-                e = getattr(cell, "end_node", None)
-                if (s is None or e is None) and hasattr(cell, "nodes"):
-                    try:
-                        nodes = cell.nodes
-                        if nodes and len(nodes) == 2:
-                            s, e = nodes[0], nodes[1]
-                    except Exception:
-                        s = e = None
-                if valid(cell) or (s and valid(s)) or (e and valid(e)):
-                    return True
-            elif valid(cell):
-                return True
-        return False
+    # --- Step 2: Construct the DataFrame ---
+    df = DataFrame(normalized, columns=meta if meta else None)
+    return df
 
-    # Keep only rows that contain at least one valid entity
-    kept_rows = [r for r in results if row_ok(r)]
-    if not kept_rows:
-        return (None, None)
 
-    # Keep only columns that contain valid entities
-    kept_cols = [i for i in range(len(meta)) if col_ok(i, kept_rows)]
-    if not kept_cols:
-        return (None, None)
+def _normalize_elements(df: DataFrame) -> DataFrame:
+    """Convert Neo4j query results (nodes and relationships) into a Pandas DataFrame.
+    @details
+        - Accepts the DataFrame output of @ref components.fact_storage.GraphConnector.execute_query.
+        - Explodes dict-cast elements from columns into rows, resulting in 1 node or relation per row.
+        - Normalizes node and relation properties as columns. `element_id`, `element_type` are shared.
+        - Node-only properties (e.g. labels) are None for relationships, and likewise for relations (e.g. start_node).
+        - Returns an empty DataFrame for no results.
+    @param df  DataFrame containing dict-cast nodes and relationships.
+    @return  DataFrame suitable for downstream filtering and analysis.
+    """
+    if df is None or df.empty:
+        return DataFrame()
 
-    filtered_results = [tuple(r[i] for i in kept_cols) for r in kept_rows]
-    filtered_meta = [meta[i] for i in kept_cols]
-    return filtered_results, filtered_meta
+    rows = []
+    for _, row in df.iterrows():
+        for element in row:
+            if element is None:
+                continue
+            if isinstance(element, dict) and "element_id" in element:
+                # Entity dict - add as a row
+                rows.append(dict(element))
+            # Skip non-dict values (scalars)
+
+    return DataFrame(rows)

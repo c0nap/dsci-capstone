@@ -8,7 +8,7 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.pool import NullPool
 from sqlparse import parse as sql_parse
 from src.util import check_values, df_natural_sorted, Log
-from typing import Generator, List, Optional
+from typing import Any, Generator, List, Optional
 
 
 # Read environment variables at compile time
@@ -260,8 +260,19 @@ class DatabaseConnector(Connector):
         @return  A list of single-query strings."""
         pass
 
+    @abstractmethod
+    def _returns_data(self, query: str) -> bool:
+        """Checks if a query is structured in a way that returns real data, and not status messages.
+        @param query  A single query string.
+        @return  Whether the query is intended to fetch data (true) or might return a status message (false)."""
+        pass
 
-
+    @abstractmethod
+    def _parsable_to_df(self, result: Any) -> bool:
+        """Checks if the result of a query is valid (i.e. can be converted to a Pandas DataFrame).
+        @param result  The result of a SQL, Cypher, or JSON query.
+        @return  Whether the object is parsable to DataFrame."""
+        pass
 
 
 
@@ -361,7 +372,7 @@ class RelationalConnector(DatabaseConnector):
                 raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
 
             try:  # Create a table, insert dummy data, and use get_dataframe
-                tmp_table = f"test_table"
+                tmp_table = "test_table"
                 self.execute_query(f"DROP TABLE IF EXISTS {tmp_table} CASCADE;")
                 self.execute_query(
                     f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');"
@@ -430,7 +441,11 @@ class RelationalConnector(DatabaseConnector):
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
                 result = connection.execute(text(query))
-                if result.returns_rows and result.keys():
+
+                returns_data = self._returns_data(query)
+                parsable_to_df = self._parsable_to_df(result)
+                if returns_data and parsable_to_df:
+                    # Fetchall will consume the cursor - we check everything beforehand
                     df = DataFrame(result.fetchall(), columns=result.keys())
                     Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
                     return df
@@ -451,6 +466,39 @@ class RelationalConnector(DatabaseConnector):
                 queries.append(query)
         return queries
 
+    def _returns_data(self, query: str) -> bool:
+        """Checks if a query is structured in a way that returns real data, and not status messages.
+        @details  Determines whether a SQL query should yield tabular data.
+        - Uses an exclusion list - commands that definitely return only status / row count.
+        - Everything else falls through to execution for validation.
+        @param query  A single pre-validated SQL query string.
+        @return  Whether the query is intended to fetch data (true) or might return a status message (false).
+        """
+        q = query.strip().upper()
+        # Commands that never return tabular data (only status/affected rows)
+        non_data_commands = ("CREATE", "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE", "GRANT", "REVOKE", "BEGIN", "COMMIT", "ROLLBACK")
+        if q.startswith(non_data_commands):
+            return False
+        return True  # Default to True - let downstream execution handle ambiguous cases
+
+    def _parsable_to_df(self, result: Any) -> bool:
+        """Checks if the result of a SQL query is valid (i.e. can be converted to a Pandas DataFrame).
+        @details
+          - SQLAlchemy CursorResult exposes .returns_rows and .keys().
+          - DDL/DML (CREATE, INSERT, UPDATE, etc.) produce no rows and only rowcount/status.
+        @param result  The result of a SQL, Cypher, or JSON query.
+        @return  Whether the object is parsable to DataFrame."""
+        if not hasattr(result, "returns_rows") or not result.returns_rows:
+            return False
+        # Ensure columns list is non-empty
+        keys: List[str] = getattr(result, "keys", lambda: [])()
+        if not keys:
+            return False
+        # Ensure the result is still open (fetchable)
+        if hasattr(result, "closed") and result.closed:
+            return False
+        return True
+
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.
         @param name  The name of an existing table or collection in the database.
@@ -462,18 +510,15 @@ class RelationalConnector(DatabaseConnector):
         # Postgres will auto-lowercase all table names.
         if self.db_type == "POSTGRES":
             name = name.lower()
+        # Re-use the logic from execute_query
+        query = f"SELECT * FROM {name};"
+        df = self.execute_query(query)
 
-        engine = create_engine(self.connection_string, poolclass=NullPool)
-        with engine.begin() as connection:
-            table = Table(name, MetaData(), autoload_with=engine)
-            result = connection.execute(select(table))
-            df = DataFrame(result.fetchall(), columns=result.keys())
-
-            if df is not None and not df.empty:
-                df = df_natural_sorted(df, sort_columns=columns)
-                df = df[columns] if columns else df
-                Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(name, df), self.verbose)
-                return df
+        if df is not None and not df.empty:
+            df = df_natural_sorted(df, sort_columns=columns)
+            df = df[columns] if columns else df
+            Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(name, df), self.verbose)
+            return df
         # If not found, warn but do not fail
         Log.warn(Log.rel_db + Log.get_df, Log.msg_bad_table(name), self.verbose)
         return None

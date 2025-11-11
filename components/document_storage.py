@@ -85,7 +85,7 @@ class DocumentConnector(DatabaseConnector):
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
 
             try:  # Create a collection, insert dummy data, and use get_dataframe
-                tmp_collection = f"test_collection"
+                tmp_collection = "test_collection"
                 if tmp_collection in db.list_collection_names():
                     db.drop_collection(tmp_collection)
                 db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
@@ -100,7 +100,7 @@ class DocumentConnector(DatabaseConnector):
                 raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
 
             try:  # Test create/drop functionality with tmp database
-                tmp_db = f"test_conn"  # Do not use context manager: interferes with traceback
+                tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
                 working_database = self.database_name
                 if self.database_exists(tmp_db):
                     self.drop_database(tmp_db)
@@ -188,7 +188,8 @@ class DocumentConnector(DatabaseConnector):
                     docs = results
 
                 # Convert document list to DataFrame if any docs exist
-                df = _docs_to_df(docs)
+                returns_data = self._returns_data(query)
+                df = _docs_to_df(docs) if returns_data else None
                 if df is None or df.empty:
                     Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
                     return None
@@ -252,6 +253,69 @@ class DocumentConnector(DatabaseConnector):
             queries.append(stripped)
         return queries
 
+    def _returns_data(self, query: str) -> bool:
+        """Checks if a query is structured in a way that returns real data, and not status messages.
+        @details Determines whether a MongoDB command should yield cursor data.
+        - Uses an exclusion list - commands that definitely return a status.
+        - Everything else falls through to execution for validation.
+        @param query  A single pre-validated JSON query string.
+        @return  Whether the query is intended to fetch data (true) or might return a status message (false).
+        """
+        import json
+
+        cmd = json.loads(query)
+        top_key = next(iter(cmd))
+        # Commands that perform actions and return only status messages
+        non_data_commands = {
+            "insert", "insertOne", "insertMany",
+            "update", "updateOne", "updateMany", "replaceOne",
+            "delete", "deleteOne", "deleteMany",
+            "drop", "dropDatabase", "dropIndexes", "dropIndex",
+            "create", "createIndexes", "createIndex",
+            "renameCollection"
+        }
+        if top_key in non_data_commands:
+            return False
+        return True  # Default to True - let downstream execution handle ambiguous cases
+
+    def _parsable_to_df(self, result: Any) -> bool:
+        """Checks if the result of a query is valid (i.e. can be converted to a Pandas DataFrame).
+        @details
+        - Handles cursor-style dicts (with 'cursor' or 'firstBatch'),
+          list-of-dict results, and single-document results.
+        - Excludes pure status/meta responses like {'ok': 1}.
+        @param result  The result of a JSON query.
+        @return  Whether the object is parsable to DataFrame."""
+        # TODO: docs_to_df ?
+        # Cursor / batch results
+        if isinstance(result, dict):
+            if "cursor" in result:
+                batch = result["cursor"].get("firstBatch", [])
+                return isinstance(batch, list) and len(batch) > 0
+            if "firstBatch" in result:
+                batch = result["firstBatch"]
+                return isinstance(batch, list) and len(batch) > 0
+
+            # Single-document results
+            # Example: {'ok': 1, 'n': 1} → status, not data
+            # Example: {'databases': [...]} → real data
+            # Check for at least one list-like field of dicts
+            for v in result.values():
+                if isinstance(v, list) and v and isinstance(v[0], (dict, str, int, float)):
+                    return True
+            # Otherwise, just one scalar/status document
+            return False
+
+        # Direct list results (aggregate pipeline or find converted upstream)
+        if isinstance(result, list):
+            if not result:
+                return False
+            # Accept if list of dicts
+            return all(isinstance(x, dict) for x in result)
+
+        # Anything else is not tabular
+        return False
+
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.
@@ -259,16 +323,15 @@ class DocumentConnector(DatabaseConnector):
         @return  DataFrame containing the requested data, or None
         @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
-        with mongo_handle(host=self.connection_string, alias="get_df") as db:
-            # Results will be a list of documents
-            docs = list(db[name].find({}))
-            df = _docs_to_df(docs)
+        # Re-use the logic from execute_query
+        query = {"find": name, "filter": {}}
+        df = self.execute_query(json.dumps(query))
 
-            if df is not None and not df.empty:
-                df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
-                df = df[columns] if columns else df
-                Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
-                return df
+        if df is not None and not df.empty:
+            df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
+            df = df[columns] if columns else df
+            Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
+            return df
         # If not found, warn but do not fail
         Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
         return None
@@ -327,6 +390,12 @@ class DocumentConnector(DatabaseConnector):
         with mongo_handle(host=self.connection_string, alias="drop_dum") as db:
             if "init" in db.list_collection_names() and db.command("dbstats")["collections"] > 1:
                 db["init"].drop()
+
+
+
+
+
+
 
 
 
@@ -476,6 +545,12 @@ def _sanitize_json(text: str) -> str:
 
     # Strip trailing whitespace
     return ''.join(result).strip()
+
+
+
+
+
+
 
 
 
