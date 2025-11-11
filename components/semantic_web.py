@@ -70,20 +70,22 @@ class KnowledgeGraph:
             nodes = elements_df[elements_df["element_type"] == "node"].drop(
                 columns=["element_type", "db", "kg"], errors="ignore"
             )
-            rels = elements_df[elements_df["element_type"] == "relationship"].drop(
-                columns=["element_type", "db", "kg"], errors="ignore"
+            rels = (
+                elements_df[elements_df["element_type"] == "relationship"]
+                .drop(columns=["element_type", "db", "kg"], errors="ignore")
+                .add_prefix("r.")
             )
     
             # Join relationship to its start (n1) and end (n2) nodes
             triples_df = (
-                rels.merge(nodes.add_prefix("n1."), left_on="start_node_id", right_on="n1.element_id")
-                    .merge(nodes.add_prefix("n2."), left_on="end_node_id", right_on="n2.element_id")
+                rels.merge(nodes.add_prefix("n1."), left_on="r.start_node_id", right_on="n1.element_id")
+                    .merge(nodes.add_prefix("n2."), left_on="r.end_node_id", right_on="n2.element_id")
             )
     
-            triples_df = triples_df.drop(columns=["start_node_id", "end_node_id"], errors="ignore")
+            triples_df = triples_df.drop(columns=["r.start_node_id", "r.end_node_id"], errors="ignore")
             return triples_df
         except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to pivot triple properties: {e}") from e
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to pivot triple properties") from e
 
     def convert_triple_names(self, df_ids: DataFrame, df_lookup: Optional[DataFrame] = None) -> DataFrame:
         """Maps a DataFrame containing element ID columns (subject_id, relation_id, object_id) to human-readable names.
@@ -101,7 +103,7 @@ class KnowledgeGraph:
                 return DataFrame(columns=["subject", "relation", "object"])
     
             # Use provided lookup DataFrame if given, otherwise query the connector
-            elements_df = df_lookup or self.connector.get_dataframe(self.graph_name)
+            elements_df = df_lookup if df_lookup is not None else self.database.get_dataframe(self.graph_name)
             if elements_df is None or elements_df.empty:
                 raise Log.Failure(Log.kg + Log.gr_rag, Log.bad_triples(self.graph_name))
     
@@ -130,7 +132,7 @@ class KnowledgeGraph:
 
             return df_named
         except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to convert triple names: {e}") from e
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to convert triple names") from e
 
 
     def print_nodes(self, max_rows: int = 20, max_col_width: int = 50) -> None:
@@ -167,7 +169,7 @@ class KnowledgeGraph:
         @throws Log.Failure  If the query fails to retrieve or process the DataFrame.
         """
         try:
-            triples_df = self.get_triple_property_df()
+            triples_df = self.get_triple_properties()
             cols = ["subject_id", "relation_id", "object_id"]
 
             if triples_df is None or triples_df.empty:
@@ -181,7 +183,7 @@ class KnowledgeGraph:
             Log.success(Log.kg + Log.gr_rag, f"Found {len(triples_df)} triples in graph.", self.verbose)
             return triples_df
         except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve triples: {e}") from e
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve triples") from e
 
 
     def get_subgraph_by_nodes(self, node_ids: List[str]) -> DataFrame:
