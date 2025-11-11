@@ -114,44 +114,23 @@ class KnowledgeGraph:
     
     def get_all_triples(self) -> DataFrame:
         """Return all triples in the specified graph as a pandas DataFrame.
-        @throws Log.Failure  If the query fails to retrieve the requested DataFrame."""
-        df = self.database.get_dataframe(self.graph_name)
-        
-        # Always return a DataFrame with the 3 desired columns, even if empty or None
-        cols = ["subject", "relation", "object"]
-        if df is None or df.empty:
-            result_df = DataFrame(columns=cols)
-            Log.success(Log.gr_db + Log.kg, f"Found 0 triples in graph.", self.database.verbose)
-            return result_df
-        
-        # Filter to relationships only
-        df_rels = df[df["element_type"] == "relationship"].copy()
-        df_nodes = df[df["element_type"] == "node"].copy()
-        
-        # Build triples by matching relationship endpoints to node names
-        triples = []
-        for _, rel in df_rels.iterrows():
-            start_id = rel.get("start_node_id")
-            end_id = rel.get("end_node_id")
-            rel_type = rel.get("rel_type")
-            
-            # Find subject and object names
-            subject_node = df_nodes[df_nodes["element_id"] == start_id]
-            object_node = df_nodes[df_nodes["element_id"] == end_id]
-            
-            if not subject_node.empty and not object_node.empty:
-                subject_name = subject_node.iloc[0].get("name")
-                object_name = object_node.iloc[0].get("name")
-                if subject_name and object_name and rel_type:
-                    triples.append({
-                        "subject": subject_name,
-                        "relation": rel_type,
-                        "object": object_name
-                    })
-        
-        result_df = DataFrame(triples, columns=cols)
-        Log.success(Log.gr_db + Log.kg, f"Found {len(result_df)} triples in graph.", self.database.verbose)
-        return result_df
+        @return  Returns (subject, relation, object) columns only.
+        @throws Log.Failure  If the query fails to retrieve or process the DataFrame.
+        """
+        try:
+            triples_df = self.get_triple_property_df()
+            cols = ["subject", "relation", "object"]
+
+            if triples_df is None or triples_df.empty:
+                Log.success(Log.gr_db + Log.kg, "Found 0 triples in graph.", self.database.verbose)
+                return DataFrame(columns=cols)
+
+            # Extract and rename columns
+            triples_df = triples_df[["n1.name", "r.rel_type", "n2.name"]].rename(
+                columns={"n1.name": "subject", "r.rel_type": "relation", "n2.name": "object"}
+            )
+            Log.success(Log.gr_db + Log.kg, f"Found {len(triples_df)} triples in graph.", self.database.verbose)
+            return triples_df
 
 
     def get_subgraph_by_nodes(self, node_ids: List[str]) -> DataFrame:
