@@ -153,14 +153,43 @@ class KnowledgeGraph:
         pass
     
     def get_community_subgraph(self, community_id: str) -> DataFrame:
-        """Return all triples belonging to a specific community.
-        @details  Communities are densely connected subgraphs detected via clustering algorithms
-        (e.g., Leiden, Louvain). This enables GraphRAG-style hierarchical summarization where
-        each community can be summarized independently. Requires nodes to have a 'community_id'
-        property assigned via community detection.
+        """Return all triples belonging to a specific GraphRAG community.
+        @details
+        - Communities are densely connected subgraphs detected via clustering algorithms.
+        - This enables GraphRAG-style hierarchical summarization where each community can be
+        summarized independently. Requires nodes to have a 'community_id' property assigned.
+        - Afterwards, you may run a summary step which generates community summaries for each cluster (as described in the paper).
         @param community_id  The identifier of the community to retrieve.
         @return  DataFrame with columns: subject, relation, object
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame or community detection has not been run.
+        """
+        try:
+            triples_df = self.get_triple_property_df()
+            if triples_df is None:
+                raise Log.Failure(Log.kg + Log.gr_rag, Log.bad_triples(self.graph_name))
+
+            # Only nodes are tagged. Include triples where both nodes match community ID.
+            triples_df = triples_df.query("n1.community_id == @community_id and n2.community_id == @community_id")
+            if triples_df.empty:
+                raise Log.Failure(Log.kg + Log.gr_rag, f"No triples found for community_id {community_id}")
+
+            triples_df = triples_df[["n1.name", "r.rel_type", "n2.name"]].rename(
+                columns={"n1.name": "subject", "r.rel_type": "relation", "n2.name": "object"}
+            )
+            return triples_df
+        except Exception as e:
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve community subgraph") from e
+
+    def detect_community_clusters(self) -> None:
+        """Run community detection on the graph as describe by GraphRAG paper.
+        @details
+        - Assigns a `community_id` property to all nodes.
+        - Partitions the graph's nodes into topic-coherent communities.
+        Typical algorithms include Leiden (recommended) or Louvain. For weighted undirected graphs
+        the approach assigns each node a `community_id` property, and builds (optionally) a hierarchy of
+        community levels (larger communities containing sub-communities) for summarization at different granularities.
+        - Afterwards, you can call `get_community_subgraph()` to extract each community’s triples for summarization.
+        @raises Log.Failure  If the graph has not been constructed or loaded, or if the community detection algorithm fails.
         """
         pass
     
