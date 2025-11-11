@@ -5,9 +5,10 @@ from components.document_storage import DocumentConnector
 from components.fact_storage import GraphConnector
 from src.setup import Session
 from src.util import Log
+from pandas import DataFrame
 import sys
 import time
-from typing import Generator, List
+from typing import Generator, List, Optional
 
 
 # ------------------------------------------------------------------------------
@@ -396,6 +397,118 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
     # Clean up
     for kg_name in ["scene", "dialogue"]:
         graph_db.drop_graph(kg_name)
+
+
+@pytest.mark.order(15)
+@pytest.mark.dependency(name="graph_example_4", depends=["graph_minimal", "graph_comprehensive"])
+def test_cypher_example_4(graph_db: GraphConnector) -> None:
+    """Test event graph with property mutations and multi-hop traversal.
+    @details  Validates MERGE property updates (2-wave assignment), relationship chains
+    in DAG structure, consistent rel_type with varied properties, and multi-hop path queries.
+    Tests that properties added via SET after initial CREATE are properly stored."""
+    graph_db.drop_graph("events")
+    _test_query_file(
+        graph_db,
+        "./tests/examples-db/graph_df4.cypher",
+        valid_files=["cql", "cypher"]
+    )
+    
+    # Verify all event nodes were created with correct types
+    df = graph_db.get_dataframe("events")
+    assert df is not None
+    df_nodes = df[df["element_type"] == "node"]
+    assert len(df_nodes) == 7  # 7 event nodes
+    assert "element_id" in df_nodes.columns and "labels" in df_nodes.columns
+    assert "db" in df_nodes.columns and "kg" in df_nodes.columns
+    
+    # Verify event types exist
+    dialogue_events = df_nodes[df_nodes['labels'].apply(lambda x: 'DialogueEvent' in x if isinstance(x, list) else False)]
+    action_events = df_nodes[df_nodes['labels'].apply(lambda x: 'ActionEvent' in x if isinstance(x, list) else False)]
+    scene_events = df_nodes[df_nodes['labels'].apply(lambda x: 'SceneEvent' in x if isinstance(x, list) else False)]
+    assert len(dialogue_events) == 3  # Alice, Bob, Charlie speak
+    assert len(action_events) == 2   # Alice hired, Charlie arrives
+    assert len(scene_events) == 2    # Bob leaves room, Alice enters hall
+    
+    # Verify Wave 2 properties were added via MERGE/SET (property mutation)
+    alice_speaks = df_nodes[df_nodes['name'] == 'Alice speaks'].iloc[0]
+    assert alice_speaks['speaker'] == 'Alice'  # Wave 1 property
+    assert alice_speaks['says'] == 'I accept the quest'  # Wave 2 property
+    assert alice_speaks['audience'] == 'Guild Master'    # Wave 2 property
+    
+    bob_speaks = df_nodes[df_nodes['name'] == 'Bob speaks'].iloc[0]
+    assert bob_speaks['says'] == 'The dragon stirs'
+    assert bob_speaks['audience'] == 'townspeople'
+    
+    charlie_arrives = df_nodes[df_nodes['name'] == 'Charlie arrives'].iloc[0]
+    assert charlie_arrives['action'] == 'arrives'
+    assert charlie_arrives['method'] == 'teleportation'
+    
+    # Verify relationships form a DAG with consistent rel_type
+    df_rels = df[df["element_type"] == "relationship"]
+    assert len(df_rels) == 7  # 6 main chain + 1 alternate path
+    assert all(df_rels['rel_type'] == 'followedBy')
+    
+    # Verify relationship properties (line numbers and snippets from Wave 2)
+    assert all(df_rels['line'].notna())
+    assert any(df_rels['line'] == 42)
+    assert any(df_rels['line'] == 102)
+    
+    # Check that snippets were added via MERGE/SET
+    assert all(df_rels['snippet'].notna())
+    assert any(df_rels['snippet'] == 'The Guild Master nodded approvingly')
+    assert any(df_rels['snippet'] == 'The following day, Alice')
+    
+    # Verify alternate path exists (branch in DAG)
+    alternate_rels = df_rels[df_rels['alternate'].notna() & (df_rels['alternate'] == True)]
+    assert len(alternate_rels) == 1
+    assert alternate_rels.iloc[0]['line'] == 43
+    assert alternate_rels.iloc[0]['snippet'] == 'Suddenly, a portal opened'
+    
+    # Multi-hop path verification: Find paths from "Alice speaks" to various endpoints
+    alice_speaks_id = df_nodes[df_nodes['name'] == 'Alice speaks'].iloc[0]['element_id']
+    alice_enters_id = df_nodes[df_nodes['name'] == 'Alice enters hall'].iloc[0]['element_id']
+    charlie_arrives_id = df_nodes[df_nodes['name'] == 'Charlie arrives'].iloc[0]['element_id']
+    bob_speaks_id = df_nodes[df_nodes['name'] == 'Bob speaks'].iloc[0]['element_id']
+    
+    # Path 1: Alice speaks -> Alice is hired -> Bob leaves room -> Bob speaks (3 hops)
+    def find_path_length(start_id: str, end_id: str, df_rels: DataFrame) -> Optional[int]:
+        """BFS to find shortest path length between two nodes."""
+        from collections import deque
+        visited = {start_id}
+        queue = deque([(start_id, 0)])
+        
+        while queue:
+            current_id, depth = queue.popleft()
+            if current_id == end_id:
+                return depth
+            
+            # Find outgoing edges from current node
+            next_rels = df_rels[df_rels['start_node_id'] == current_id]
+            for _, rel in next_rels.iterrows():
+                next_id = rel['end_node_id']
+                if next_id not in visited:
+                    visited.add(next_id)
+                    queue.append((next_id, depth + 1))
+        
+        return None
+    
+    # Verify main chain path: Alice speaks -> Alice enters hall (5 hops)
+    path_length_main = find_path_length(alice_speaks_id, alice_enters_id, df_rels)
+    assert path_length_main == 5
+    
+    # Verify branch path exists: Alice speaks -> Charlie arrives (1 hop via alternate)
+    path_length_alt = find_path_length(alice_speaks_id, charlie_arrives_id, df_rels)
+    assert path_length_alt == 1  # Direct alternate path
+    
+    # Verify intermediate path: Alice speaks -> Bob speaks (3 hops)
+    path_length_mid = find_path_length(alice_speaks_id, bob_speaks_id, df_rels)
+    assert path_length_mid == 3
+    
+    # Verify DAG property: no cycles (Charlie arrives cannot reach Alice speaks)
+    reverse_path = find_path_length(charlie_arrives_id, alice_speaks_id, df_rels)
+    assert reverse_path is None  # No backward path in DAG
+    
+    graph_db.drop_graph("events")
 
 
 # ------------------------------------------------------------------------------
