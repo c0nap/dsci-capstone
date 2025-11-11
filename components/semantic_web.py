@@ -2,9 +2,11 @@
 
 class KnowledgeGraph:
 
-	def __init__(self, name):
-		##
-		self.graph_name = name
+    def __init__(self, name: str, connector: GraphConnector) -> None:
+        ##
+        self.graph_name = name
+        ##
+        self.connector = connector
 
     # ------------------------------------------------------------------------
     # Knowledge Graph helpers for Semantic Triples
@@ -14,7 +16,7 @@ class KnowledgeGraph:
         @param subject  A string representing the entity performing an action.
         @param relation  A string describing the action.
         @param object_  A string representing the entity being acted upon.
-        @note  LLM output should be pre-normalized using @ref components.fact_storage.GraphConnector.normalize_triples.
+        @note  LLM output should be pre-normalized using @ref KnowledgeGraph.normalize_triples.
         @throws Log.Failure  If the triple cannot be added to our graph database.
         """
 
@@ -27,16 +29,16 @@ class KnowledgeGraph:
 
         # Merge subject/object and connect via relation
         query = f"""
-        MERGE (s {{name: '{subject}', db: '{self.database_name}', kg: '{self.graph_name}'}})
-        MERGE (o {{name: '{object_}', db: '{self.database_name}', kg: '{self.graph_name}'}})
+        MERGE (s {{name: '{subject}', db: '{self.connector.database_name}', kg: '{self.graph_name}'}})
+        MERGE (o {{name: '{object_}', db: '{self.connector.database_name}', kg: '{self.graph_name}'}})
         MERGE (s)-[r:{relation}]->(o)
         RETURN s, r, o
         """
 
         try:
-            df = self.execute_query(query, _filter_results=False)
+            df = self.connector.execute_query(query, _filter_results=False)
             if df is not None:
-                Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+                Log.success(Log.gr_db + Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.connector.verbose)
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
 
@@ -133,20 +135,21 @@ class KnowledgeGraph:
         @return  DataFrame with columns: node_name, edge_count
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
-        query = f"""
-        MATCH (n {self.SAME_DB_KG_()})
-        WHERE {self.NOT_DUMMY_()}
-        OPTIONAL MATCH (n)-[r]-()
-        WITH n.name as node_name, count(r) as edge_count
-        ORDER BY edge_count DESC, rand()
-        LIMIT {top_n}
-        RETURN node_name, edge_count"""
-        try:
-            df = self.execute_query(query, _filter_results=False)
-            Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.", self.verbose)
-            return df
-        except Exception as e:
-            raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.") from e
+        with self.connector.temp_graph(self.graph_name):
+            query = f"""
+            MATCH (n {self.connector.SAME_DB_KG_()})
+            WHERE {self.connector.NOT_DUMMY_()}
+            OPTIONAL MATCH (n)-[r]-()
+            WITH n.name as node_name, count(r) as edge_count
+            ORDER BY edge_count DESC, rand()
+            LIMIT {top_n}
+            RETURN node_name, edge_count"""
+            try:
+                df = self.connector.execute_query(query, _filter_results=False)
+                Log.success(Log.gr_db + Log.kg, f"Found top-{top_n} most popular nodes.", self.connector.verbose)
+                return df
+            except Exception as e:
+                raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch edge_counts DataFrame.") from e
 
     def get_all_triples(self, graph_name: Optional[str] = None) -> DataFrame:
         """Return all triples in the specified graph as a pandas DataFrame.
@@ -154,29 +157,29 @@ class KnowledgeGraph:
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame."""
 
         target_graph = graph_name if graph_name is not None else self.graph_name
-        with self.temp_graph(target_graph):
+        with self.connector.temp_graph(target_graph):
             # No need to apply the DB-KG pattern to relationships - relaxes query requirements.
             query = f"""
-            MATCH (s {self.SAME_DB_KG_()})-[r]->(o {self.SAME_DB_KG_()})
-            WHERE {self.NOT_DUMMY_('s')} AND {self.NOT_DUMMY_('o')}
+            MATCH (s {self.connector.SAME_DB_KG_()})-[r]->(o {self.connector.SAME_DB_KG_()})
+            WHERE {self.connector.NOT_DUMMY_('s')} AND {self.connector.NOT_DUMMY_('o')}
             RETURN s.name AS subject, type(r) AS relation, o.name AS object
             """
             try:
-                df = self.execute_query(query, _filter_results=False)
+                df = self.connector.execute_query(query, _filter_results=False)
                 # Always return a DataFrame with the 3 desired columns, even if empty or None
                 cols = ["subject", "relation", "object"]
                 if df is None:
                     df = DataFrame()
                 df = df.reindex(columns=cols)
 
-                Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.", self.verbose)
+                Log.success(Log.gr_db + Log.kg, f"Found {len(df)} triples in graph.", self.connector.verbose)
                 return df
             except Exception as e:
                 raise Log.Failure(Log.gr_db + Log.kg, f"Failed to fetch all_triples DataFrame.") from e
 
     def print_nodes(self, max_rows: int = 20, max_col_width: int = 50) -> None:
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
-        nodes_df = self.get_dataframe(self.graph_name)
+        nodes_df = self.connector.get_dataframe(self.graph_name)
         if nodes_df is None:
             return
 
@@ -195,3 +198,4 @@ class KnowledgeGraph:
         with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
             print(f"Graph triples ({len(triples_df)} total):")
             print(triples_df)
+
