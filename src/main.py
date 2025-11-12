@@ -365,6 +365,7 @@ def output_single(session):
     print(edge_count_df)
 
     triples_df = session.main_graph.get_all_triples()
+    triples_df = session.main_graph.convert_to_names(triples_df)
     triples_string = ""
     for _, row in edge_count_df.iterrows():
         node_name = row.get("node_name")

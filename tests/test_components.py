@@ -540,7 +540,7 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     - add_triple() creates nodes and relationships
     - get_all_triples() retrieves triples as element IDs
     - get_triple_properties() constructs a DataFrame with element properties as columns
-    - convert_triple_names() maps IDs to human-readable names
+    - convert_to_names() maps IDs to human-readable names
     """
     graph_db.drop_graph("social_kg")
     
@@ -566,7 +566,7 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     assert all(triples_ids_df["object_id"].notna())
     
     # Convert IDs to human-readable names
-    triples_df = kg.convert_triple_names(triples_ids_df)
+    triples_df = kg.convert_to_names(triples_ids_df)
     assert triples_df is not None
     assert len(triples_df) == 5
     assert list(triples_df.columns) == ["subject", "relation", "object"]
@@ -589,9 +589,9 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     node_names = set(df_nodes["name"])
     assert node_names == {"Alice", "Bob", "Charlie"}
     
-    # Test convert_triple_names with pre-fetched lookup DataFrame
+    # Test convert_to_names with pre-fetched lookup DataFrame
     elements_df = graph_db.get_dataframe("social_kg")
-    triples_df_cached = kg.convert_triple_names(triples_ids_df, df_lookup=elements_df)
+    triples_df_cached = kg.convert_to_names(triples_ids_df, df_lookup=elements_df)
     assert triples_df_cached is not None
     assert len(triples_df_cached) == 5
     # Should produce identical results to direct conversion
@@ -599,7 +599,7 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     
     # Test edge case: empty DataFrame
     empty_df = DataFrame(columns=["subject_id", "relation_id", "object_id"])
-    empty_result = kg.convert_triple_names(empty_df)
+    empty_result = kg.convert_to_names(empty_df)
     assert empty_result is not None
     assert empty_result.empty
     assert list(empty_result.columns) == ["subject", "relation", "object"]
@@ -706,7 +706,7 @@ def test_get_subgraph_by_nodes(nature_scene_graph: KnowledgeGraph) -> None:
     assert len(subgraph) > 0
     
     # Convert to names for verification
-    named_subgraph = kg.convert_triple_names(subgraph)
+    named_subgraph = kg.convert_to_names(subgraph)
     
     # Should include Kid1 PLAYS_ON Swings
     assert any(
@@ -751,7 +751,7 @@ def test_get_neighborhood(nature_scene_graph: KnowledgeGraph) -> None:
     assert neighborhood_1hop is not None
     assert len(neighborhood_1hop) > 0
     
-    named_1hop = kg.convert_triple_names(neighborhood_1hop)
+    named_1hop = kg.convert_to_names(neighborhood_1hop)
     
     # Should include direct connections to Playground
     assert any(named_1hop["subject"] == "Playground")
@@ -769,7 +769,7 @@ def test_get_neighborhood(nature_scene_graph: KnowledgeGraph) -> None:
     assert neighborhood_2hop is not None
     assert len(neighborhood_2hop) >= len(neighborhood_1hop)
     
-    named_2hop = kg.convert_triple_names(neighborhood_2hop)
+    named_2hop = kg.convert_to_names(neighborhood_2hop)
     
     # Should reach Kids who play on equipment in Playground
     assert any(named_2hop["subject"] == "Kid1") or any(named_2hop["object"] == "Kid1")
@@ -795,7 +795,7 @@ def test_get_random_walk_sample(nature_scene_graph: KnowledgeGraph) -> None:
     assert len(sample) > 0
     assert len(sample) <= 3  # Should visit at most walk_length edges
     
-    named_sample = kg.convert_triple_names(sample)
+    named_sample = kg.convert_to_names(sample)
     
     # Should start from Kid1 (first edge in walk must have Kid1 as subject)
     first_triple = named_sample.iloc[0]
@@ -851,7 +851,7 @@ def test_get_neighborhood_comprehensive(nature_scene_graph: KnowledgeGraph) -> N
     
     # Edge case 2: depth=1 from isolated-ish node
     neighborhood_desk_1 = kg.get_neighborhood(desk_id, depth=1)
-    named_desk_1 = kg.convert_triple_names(neighborhood_desk_1)
+    named_desk_1 = kg.convert_to_names(neighborhood_desk_1)
     # Desk only connects to Classroom
     assert len(named_desk_1) <= 2  # Should be very small neighborhood
     
@@ -880,8 +880,8 @@ def test_get_neighborhood_comprehensive(nature_scene_graph: KnowledgeGraph) -> N
     # Feature: Different starting nodes produce different neighborhoods
     neighborhood_school = kg.get_neighborhood(school_id, depth=2)
     neighborhood_playground = kg.get_neighborhood(playground_id, depth=2)
-    named_school = kg.convert_triple_names(neighborhood_school)
-    named_playground = kg.convert_triple_names(neighborhood_playground)
+    named_school = kg.convert_to_names(neighborhood_school)
+    named_playground = kg.convert_to_names(neighborhood_playground)
     # These should have different content
     school_entities = set(named_school["subject"]).union(named_school["object"])
     playground_entities = set(named_playground["subject"]).union(named_playground["object"])

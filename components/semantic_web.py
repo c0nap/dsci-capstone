@@ -84,7 +84,7 @@ class KnowledgeGraph:
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to pivot triple properties") from e
 
-    def convert_triple_names(self, df_ids: DataFrame, df_lookup: Optional[DataFrame] = None) -> DataFrame:
+    def convert_to_names(self, df_ids: DataFrame, df_lookup: Optional[DataFrame] = None) -> DataFrame:
         """Maps a DataFrame containing element ID columns (subject_id, relation_id, object_id) to human-readable names.
         @note
         - Requires that nodes and relationships still exist in the graph database; otherwise must specify df_lookup.
@@ -488,7 +488,7 @@ class KnowledgeGraph:
     def get_edge_counts(self, top_n: int = 10) -> DataFrame:
         """Return node names and their edge counts, ordered by edge count descending.
         @param top_n  Number of top nodes to return (by edge count). Default is 10.
-        @return  DataFrame with columns: node_name, edge_count
+        @return  DataFrame with columns: node_id, edge_count
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
         df = self.database.get_dataframe(self.graph_name)
@@ -503,27 +503,27 @@ class KnowledgeGraph:
         edge_counts = {}
         for _, node in df_nodes.iterrows():
             node_id = node["element_id"]
-            node_name = node.get("name", None)
             if node_name is None:
                 continue
             # Count relationships where this node is start or end
             count = len(df_rels[(df_rels["start_node_id"] == node_id) | (df_rels["end_node_id"] == node_id)])
-            edge_counts[node_name] = count
+            edge_counts[node_id] = count
         
         # Convert to DataFrame and sort
-        result_df = DataFrame(list(edge_counts.items()), columns=["node_name", "edge_count"])
+        result_df = DataFrame(list(edge_counts.items()), columns=["element_id", "edge_count"])
+        result_df = result_df.rename(columns={"element_id": "node_id"})
         result_df = result_df.sort_values("edge_count", ascending=False).head(top_n)
         
         Log.success(Log.kg + Log.gr_rag, f"Found top-{top_n} most popular nodes.", self.verbose)
         return result_df
     
-    def get_node_context(self, node_name: str, include_neighbors: bool = True) -> str:
+    def get_node_context(self, node_id: str, include_neighbors: bool = True) -> str:
         """Return natural language description of a node and its relationships.
         @details  Generates a human-readable summary of a single node suitable for LLM context.
         Example: "Alice is connected to 5 entities. She knows Bob and Charlie, works at Company, 
         lives in City, and follows Dave."
-        @param node_name  The name of the node to describe.
-        @param include_neighbors  Whether to list neighbor names (default: True).
+        @param node_id  The element ID of the node to describe.
+        @param include_neighbors  Whether to list neighbor node IDs (default: True).
         @return  Natural language description of the node.
         @throws Log.Failure  If the node does not exist in the graph.
         """
