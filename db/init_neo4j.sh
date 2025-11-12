@@ -28,8 +28,8 @@ echo "server.http.listen_address=0.0.0.0:$NEO4J_HTTP_PORT" >> /var/lib/neo4j/con
 echo "$ECHO_PREFIX Installing Neo4j plugins..."
 PLUGIN_DIR=/var/lib/neo4j/plugins
 echo "$ECHO_PREFIX      Downloading GDS..."
-wget -q -O "$PLUGIN_DIR/neo4j-graph-data-science-2.13.2.jar" \
-  "https://github.com/neo4j/graph-data-science/releases/download/2.13.2/neo4j-graph-data-science-2.13.2.jar"
+wget -q -O "$PLUGIN_DIR/neo4j-graph-data-science-2.22.0.jar" \
+  "https://github.com/neo4j/graph-data-science/releases/download/2.22.0/neo4j-graph-data-science-2.22.0.jar"
 echo "$ECHO_PREFIX      Downloading n10s..."
 wget -q -O "$PLUGIN_DIR/neosemantics-5.26.0.jar" \
   "https://github.com/neo4j-labs/neosemantics/releases/download/5.26.0/neosemantics-5.26.0.jar"

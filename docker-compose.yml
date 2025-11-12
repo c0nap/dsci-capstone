@@ -131,7 +131,7 @@ services:
       default:     # attach to our docker network
         aliases:   # does not replace service_name
           - databases_service
-    image: neo4j:5.26
+    image: neo4j:2025.09
     volumes:
       - neo4j_data:/data
       - ./db/init_neo4j.sh:/init_neo4j.sh
