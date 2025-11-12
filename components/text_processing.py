@@ -3,6 +3,7 @@ import os
 import re
 import spacy
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from typing import Any, List, Tuple
 
 
 nlp = spacy.blank("en")  # blank English model, no pipeline
