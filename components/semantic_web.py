@@ -139,7 +139,7 @@ class KnowledgeGraph:
             if not filtered_pairs:
                 return df_ids 
             # Re-assign the filtered lists
-            name_columns, id_columns = zip(*filtered_pairs)
+            name_columns, id_columns = tuple(zip(*filtered_pairs))
             name_columns = list(name_columns)
             id_columns = list(id_columns)
 
@@ -538,7 +538,7 @@ class KnowledgeGraph:
         edge_counts = {}
         for _, node in df_nodes.iterrows():
             node_id = node["element_id"]
-            if node_name is None:
+            if node_id is None:
                 continue
             # Count relationships where this node is start or end
             count = len(df_rels[(df_rels["start_node_id"] == node_id) | (df_rels["end_node_id"] == node_id)])
