@@ -176,11 +176,33 @@ The updated code documentation can be found at the URL [c0nap.github.io/dsci-cap
 
 ## Development
 
-OpenAI - GPT-5 and GPT-4o
-Gemini - 2.5 Flash
-Claude - Sonnet 4.5
+We use code-generation tools like ChatGPT and Claude in this project. Their scope is limited to developer-in-the-loop (Copy / Paste) and spiked project-planning discussions.
+
+AI is uniquely helpful here due to the many moving parts in the pipeline, such as:
+- Metrics implemented from scientific literature
+- 4 messy datasets (Project Gutenberg, BookSum, NarrativeQA, LitBank)
+- 3 database wrappers for 4 engine types (Neo4j, MongoDB, PostgreSQL, MySQL)
+- 2 endpoint frameworks (Flask, Blazor) which also need database access
+- Interactive UI in Blazor
+- Optimized and scalable system architecture in Python
+- NLP tooling with local HuggingFace models and LangChain API calls
+- Deployment as container images (Docker, GitHub Actions)
+- Code quality tools (Doxygen, MyPy)
+
+We consulted with various sizes and configuration of LLM models during development, and each provider took a different role based on their individual strengths and weaknesses. These observations are noted below.
+
+### ChatGPT
+
+OpenAI - GPT-5 and GPT-4o - Plus (free 1-month trial)
 
 
+### Claude
+
+Claude - Sonnet 4.5 - Pro ($20 for November)
+
+### Gemini
+
+Gemini - 2.5 Flash - Pro (free student subscription)
 
 ## Testing
 
