@@ -7,7 +7,7 @@ Data Science Capstone - Patrick Conan
 Doxygen is an external tool which automatically generates code documentation. We include pre-generated docs in our `/docs/html` folder which can be viewed by opening `annotated.html` in your web browser.
 
 
-## Guidelines for Understanding Doxygen-Style Code
+# Guidelines for Understanding Doxygen-Style Code
 
 ### Project Notes
 
@@ -105,7 +105,7 @@ class DatabaseConnector:
 - Helper function names should be prefixed with an underscore _e.g._ `_parse_json`.
 
 
-## Manually Generating Documentation with Doxygen
+# Manually Generating Documentation with Doxygen
 
 These instructions are based on a [tutorial](https://www.woolseyworkshop.com/2020/06/25/documenting-python-programs-with-doxygen/) created by John Woolsey in 2020.
 
@@ -169,4 +169,35 @@ To manually dispatch this workflow during development, visit [GitHub Actions](ht
 Once the `docs` branch contains `index.html`, you're ready to set up [GitHub Pages](https://github.com/c0nap/dsci-capstone/settings/pages). This will create a new `github-pages` deployment based on the contents of `origin/docs`.
 
 The updated code documentation can be found at the URL [c0nap.github.io/dsci-capstone](https://c0nap.github.io/dsci-capstone/).
+
+
+
+# Role of Generative AI
+
+OpenAI - GPT-5 and GPT-4o
+Gemini - 2.5 Flash
+Claude - Sonnet 4.5
+
+
+## Integrate Usage via API Calls
+
+LLMs also play a vital role in our text-processing pipeline.
+
+Specific usage examples:
+- **Relation Extraction** - In the early stages of development, the REBEL model was used for NLP, but gave bad results since it was trained on Wikipedia articles and intended for WikiData or news article applications. We used `gpt-5-nano` to 
+- **BooookScore Metric** - The original paper implemented BookScore using many LLM prompts to judge summary coherence. Their work was designed for `gpt-4` - but in 2025 these legacy models are very expensive ($30 / 1M input - ended up as $0.80 per 1500-char chunk). We upgraded the model to `gpt-4o-mini` for testing, and `gpt-4o` for full production-level runs of the pipeline. However, the `gpt-5` models did not give reliable output, and the current code has no built-in stopping mechanism (we provide a 5-minute timeout instead).
+
+Planned usage (TODO):
+- Infer metaphors and other implicit triples
+- Sanity check for triples - filter down OpenIE
+- Structured data extraction (social relationships, events, dialogue attribution)
+
+## Limitations
+
+- As noted by the authors of BookScore, LLMs contain implicit knowledge about classical books - these full texts are in their training data. One way of getting around this is changing entity names, e.g. rename all instances of "Mary" to "Jane". Although some nuance may be lost in some situations, this is usually inconsequential. For example: `"What's your favorite food, Jane?" "Maple syrup, becuase it start with the letter 'M' just like 'Jane'!"`
+- Without official funding for this project, the role of LLMs must be minimized to keep costs within budget. Testing and development should use smaller models, and full runs with 100+ books use a $10 budget each.
+
+
+# Error Handling and Logging Design
+
 
