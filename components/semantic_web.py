@@ -24,7 +24,7 @@ class KnowledgeGraph:
         @param subject  A string representing the entity performing an action.
         @param relation  A string describing the action.
         @param object_  A string representing the entity being acted upon.
-        @note  LLM output should be pre-normalized using @ref KnowledgeGraph.normalize_triples.
+        @note  LLM output should be pre-normalized using @ref components.text_processing.LLMConnector.normalize_triples.
         @throws Log.Failure  If the triple cannot be added to our graph database.
         """
 
@@ -41,7 +41,7 @@ class KnowledgeGraph:
         MERGE (o {{name: '{object_}', kg: '{self.graph_name}'}})
         MERGE (s)-[r:{relation}]->(o)
         RETURN s, r, o
-        """
+        """  # NOTE: this query has a DIRECTED relationship!
         try:
             df = self.database.execute_query(query)
             if df is not None:
@@ -92,7 +92,7 @@ class KnowledgeGraph:
         @param drop_ids  Whether to remove columns from results: subject_id, relation_id, object_id.
         @param df_lookup  Optional DataFrame fetched from @ref components.fact_storage.GraphConnector.get_dataframe with required columns: element_id, elemenet_type, name, and rel_type.
         @return  DataFrame with added columns: subject, relation, object.
-        @raises Log.Failure  If mapping fails or required IDs are missing.
+        @throws Log.Failure  If mapping fails or required IDs are missing.
         """
         df_ids = self.find_element_names(df_ids, ["subject", "object"], ["subject_id", "object_id"],
             "node", "name", drop_ids, df_lookup)
@@ -108,15 +108,15 @@ class KnowledgeGraph:
         """Helper function which maps element IDs to human-readable names.
         @note
         - Requires the provided nodes or edges to still exist in the graph database; otherwise must specify df_lookup.
-        @param df_ids  DataFrame with required columns: <id_columns>.
+        @param df_ids  DataFrame with required columns: *id_columns*.
         @param name_columns  Required list of column names to create.
         @param id_columns  Required list of columns containing element IDs.
         @param element_type  Whether to match nodes or relationships. Value must be "node" or "relationship".
-        @param name_property  Required element property from <df_lookup> to use as the display name.
-        @param drop_ids  Whether to remove <id_columns> from results.
-        @param df_lookup  Optional DataFrame fetched from @ref components.fact_storage.GraphConnector.get_dataframe with required columns: element_id, elemenet_type, and <name_property>.
-        @return  DataFrame with added columns: <name_columns>.
-        @raises Log.Failure  If mapping fails or required IDs are missing.
+        @param name_property  Required element property from *df_lookup* to use as the display name.
+        @param drop_ids  Whether to remove *id_columns* from results.
+        @param df_lookup  Optional DataFrame fetched from @ref components.fact_storage.GraphConnector.get_dataframe with required columns: element_id, elemenet_type, and *name_property*.
+        @return  DataFrame with added columns: *name_columns*.
+        @throws Log.Failure  If mapping fails or required IDs are missing.
         """
         try:
             if df_ids is None:
