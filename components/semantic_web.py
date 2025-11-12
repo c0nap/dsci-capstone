@@ -1,8 +1,9 @@
 from components.fact_storage import GraphConnector
-from pandas import DataFrame, option_context, concat
-from src.util import Log
-from typing import Any, List, Optional, Tuple, Dict
+from pandas import concat, DataFrame, option_context
 import re
+from src.util import Log
+from typing import Any, Dict, List, Optional, Tuple
+
 
 class KnowledgeGraph:
     """Manages a single graph within Neo4j.
@@ -48,7 +49,7 @@ class KnowledgeGraph:
                 Log.success(Log.kg + Log.gr_rag, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
-    
+
     def get_triple_properties(self) -> Optional[DataFrame]:
         """Pivot the graph elements DataFrame to expose node and relationship properties as columns.
         @details
@@ -62,23 +63,20 @@ class KnowledgeGraph:
             elements_df = self.database.get_dataframe(self.graph_name)
             if elements_df is None or elements_df.empty:
                 raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
-    
+
             # Split nodes and relationships
-            nodes = elements_df[elements_df["element_type"] == "node"].drop(
-                columns=["element_type", "db", "kg"], errors="ignore"
-            )
+            nodes = elements_df[elements_df["element_type"] == "node"].drop(columns=["element_type", "db", "kg"], errors="ignore")
             rels = (
                 elements_df[elements_df["element_type"] == "relationship"]
                 .drop(columns=["element_type", "db", "kg"], errors="ignore")
                 .add_prefix("r.")
             )
-    
+
             # Join relationship to its start (n1) and end (n2) nodes
-            triples_df = (
-                rels.merge(nodes.add_prefix("n1."), left_on="r.start_node_id", right_on="n1.element_id")
-                    .merge(nodes.add_prefix("n2."), left_on="r.end_node_id", right_on="n2.element_id")
+            triples_df = rels.merge(nodes.add_prefix("n1."), left_on="r.start_node_id", right_on="n1.element_id").merge(
+                nodes.add_prefix("n2."), left_on="r.end_node_id", right_on="n2.element_id"
             )
-    
+
             triples_df = triples_df.drop(columns=["r.start_node_id", "r.end_node_id"], errors="ignore")
             return triples_df
         except Exception as e:
@@ -94,17 +92,22 @@ class KnowledgeGraph:
         @return  DataFrame with added columns: subject, relation, object.
         @throws Log.Failure  If mapping fails or required IDs are missing.
         """
-        df_ids = self.find_element_names(df_ids, ["subject", "object"], ["subject_id", "object_id"],
-            "node", "name", drop_ids, df_lookup)
-        df_ids = self.find_element_names(df_ids, ["relation"], ["relation_id"],
-            "relationship", "rel_type", drop_ids, df_lookup)
+        df_ids = self.find_element_names(df_ids, ["subject", "object"], ["subject_id", "object_id"], "node", "name", drop_ids, df_lookup)
+        df_ids = self.find_element_names(df_ids, ["relation"], ["relation_id"], "relationship", "rel_type", drop_ids, df_lookup)
         # Keep minimum of 2 database queries, but must correct the column order.
         name_cols_ordered = ["subject", "relation", "object"]
         return df_ids[[col for col in df_ids.columns if col not in name_cols_ordered] + name_cols_ordered]
 
-    def find_element_names(self, df_ids: DataFrame, name_columns: List[str], id_columns: List[str], 
-        element_type: str, name_property: str, drop_ids: bool = False,
-        df_lookup: Optional[DataFrame] = None) -> DataFrame:
+    def find_element_names(
+        self,
+        df_ids: DataFrame,
+        name_columns: List[str],
+        id_columns: List[str],
+        element_type: str,
+        name_property: str,
+        drop_ids: bool = False,
+        df_lookup: Optional[DataFrame] = None,
+    ) -> DataFrame:
         """Helper function which maps element IDs to human-readable names.
         @note
         - Requires the provided nodes or edges to still exist in the graph database; otherwise must specify df_lookup.
@@ -126,35 +129,28 @@ class KnowledgeGraph:
                 return DataFrame(columns=out_cols)
 
             if len(name_columns) != len(id_columns):
-                raise Log.Failure(Log.kg, f"name_columns (size {len(name_columns)}) and id_columns (size {len(id_columns)}) must have the same length.")
+                raise Log.Failure(
+                    Log.kg, f"name_columns (size {len(name_columns)}) and id_columns (size {len(id_columns)}) must have the same length."
+                )
 
             # --- Filter out non-existent columns in df_ids ---
             valid_cols = set(df_ids.columns)
-            filtered_pairs = [
-                (name_col, id_col)
-                for name_col, id_col in zip(name_columns, id_columns)
-                if id_col in valid_cols
-            ]
+            filtered_pairs = [(name_col, id_col) for name_col, id_col in zip(name_columns, id_columns) if id_col in valid_cols]
             # If no valid columns are left, return the original DataFrame
             if not filtered_pairs:
-                return df_ids 
+                return df_ids
             # Re-assign the filtered lists
             name_columns, id_columns = map(list, zip(*filtered_pairs))
             name_columns = list(name_columns)
             id_columns = list(id_columns)
 
-
             # Search in provided DataFrame if given, otherwise query the connector
             df_lookup = df_lookup if df_lookup is not None else self.database.get_dataframe(self.graph_name)
             if df_lookup is None or df_lookup.empty:
                 raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
-    
+
             # Build lookup dictionaries for efficiency. Can now use df.map(dict)
-            id_to_name_map = (
-                df_lookup[df_lookup["element_type"] == element_type]
-                .set_index("element_id")[name_property]
-                .to_dict()
-            )
+            id_to_name_map = df_lookup[df_lookup["element_type"] == element_type].set_index("element_id")[name_property].to_dict()
             # Map IDs to readable names dynamically
             df_named = df_ids.copy()
             for name_col, id_col in zip(name_columns, id_columns):
@@ -165,7 +161,6 @@ class KnowledgeGraph:
             return df_named[ordered_cols]
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to convert triple names") from e
-
 
     def print_nodes(self, max_rows: int = 20, max_col_width: int = 50) -> None:
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
@@ -189,12 +184,10 @@ class KnowledgeGraph:
             print(f"Graph triples ({len(triples_df)} total):")
             print(triples_df)
 
-
-
     # ------------------------------------------------------------------------
     # Subgraph Selection
     # ------------------------------------------------------------------------
-    
+
     def get_all_triples(self) -> DataFrame:
         """Return all triples in the specified graph as a pandas DataFrame.
         @return  Returns (subject, relation, object) columns only.
@@ -217,7 +210,6 @@ class KnowledgeGraph:
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve triples") from e
 
-
     def get_subgraph_by_nodes(self, node_ids: List[str]) -> DataFrame:
         """Return all triples where subject or object is in the specified node list.
         @param node_ids  List of node element IDs to filter by.
@@ -230,15 +222,13 @@ class KnowledgeGraph:
                 raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
 
             # Filter triples where either endpoint is in node_ids
-            sub_df = triples_df[
-                triples_df["subject_id"].isin(node_ids) | triples_df["object_id"].isin(node_ids)
-            ].reset_index(drop=True)
+            sub_df = triples_df[triples_df["subject_id"].isin(node_ids) | triples_df["object_id"].isin(node_ids)].reset_index(drop=True)
 
             Log.success(Log.kg + Log.gr_rag, f"Found {len(sub_df)} triples for given nodes.", self.verbose)
             return sub_df
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to get subgraph by nodes") from e
-    
+
     def get_neighborhood(self, node_id: str, depth: int = 1) -> DataFrame:
         """Get k-hop neighborhood around a central node.
         @details  Returns all triples within k hops of the specified node. A 1-hop neighborhood
@@ -259,24 +249,20 @@ class KnowledgeGraph:
 
             # Perform k-hop expansion
             for _ in range(depth):
-                neighbors = triples_df[
-                    triples_df["subject_id"].isin(current) | triples_df["object_id"].isin(current)
-                ]
+                neighbors = triples_df[triples_df["subject_id"].isin(current) | triples_df["object_id"].isin(current)]
                 if neighbors.empty:
                     break
                 all_edges.append(neighbors)
                 visited |= current
                 current = set(neighbors["subject_id"]).union(neighbors["object_id"]) - visited
 
-            result_df = (
-                DataFrame() if not all_edges else concat(all_edges, ignore_index=True).drop_duplicates()
-            )
+            result_df = DataFrame() if not all_edges else concat(all_edges, ignore_index=True).drop_duplicates()
 
             Log.success(Log.kg + Log.gr_rag, f"Found {len(result_df)} triples in {depth}-hop neighborhood.", self.verbose)
             return result_df
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to get neighborhood") from e
-    
+
     def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
         """Sample subgraph using directed random walk traversal starting from specified nodes.
         @details
@@ -290,6 +276,7 @@ class KnowledgeGraph:
         """
         try:
             import random
+
             triples_df = self.get_all_triples()
             if triples_df is None or triples_df.empty:
                 raise Log.Failure(Log.kg + Log.gr_rag, f"No triples available in graph {self.graph_name}")
@@ -319,11 +306,7 @@ class KnowledgeGraph:
             if not sampled_edges:
                 raise Log.Failure(Log.kg + Log.gr_rag, f"No triples visited during random walk")
 
-            result_df = (
-                DataFrame(sampled_edges)[["subject_id", "relation_id", "object_id"]]
-                .drop_duplicates()
-                .reset_index(drop=True)
-            )
+            result_df = DataFrame(sampled_edges)[["subject_id", "relation_id", "object_id"]].drop_duplicates().reset_index(drop=True)
 
             Log.success(
                 Log.kg + Log.gr_rag,
@@ -334,11 +317,6 @@ class KnowledgeGraph:
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to perform directed random walk sample") from e
 
-
-
-
-
-    
     def get_community_subgraph(self, community_id: int) -> DataFrame:
         """Return all triples belonging to a specific GraphRAG community.
         @details
@@ -356,10 +334,7 @@ class KnowledgeGraph:
                 raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
 
             # Only nodes are tagged. Include triples where both nodes match community ID.
-            triples_df = triples_df[
-                (triples_df["n1.community_id"] == community_id) & 
-                (triples_df["n2.community_id"] == community_id)
-            ]
+            triples_df = triples_df[(triples_df["n1.community_id"] == community_id) & (triples_df["n2.community_id"] == community_id)]
             if triples_df.empty:
                 Log.warn(Log.kg + Log.gr_rag, f"No triples found for community_id {community_id}")
                 # Return empty DataFrame with correct schema
@@ -372,7 +347,6 @@ class KnowledgeGraph:
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve community subgraph") from e
 
-    
     def detect_community_clusters(self, method: str = "leiden", multi_level: bool = False, max_levels: int = 10) -> None:
         """Run community detection on the graph as described by the GraphRAG paper.
         @details
@@ -390,7 +364,7 @@ class KnowledgeGraph:
             method = method.lower().strip()
             if method not in {"leiden", "louvain"}:
                 raise Log.Failure(Log.kg + Log.gr_rag, f"Unsupported community detection method: {method}")
-    
+
             # Creates an in-memory projection using native projection with property filters
             query_setup_gds = f"""
             CALL gds.graph.project(
@@ -404,7 +378,7 @@ class KnowledgeGraph:
                 }}
             ) YIELD graphName, nodeCount, relationshipCount
             """
-            
+
             # Runs the selected community detection algorithm.
             if multi_level:
                 options = f"writeProperty: 'community_list', includeIntermediateCommunities: true"
@@ -420,7 +394,7 @@ class KnowledgeGraph:
             """
             # Cleans up the temporary projection.
             query_drop_gds = f"CALL gds.graph.drop('{self.graph_name}') YIELD graphName"
-    
+
             # --- Execute sequentially ---
             try:  # Drop any existing projection (in case of previous failure)
                 self.database.execute_query(query_drop_gds)
@@ -429,37 +403,42 @@ class KnowledgeGraph:
             self.database.execute_query(query_setup_gds)
             self.database.execute_query(query_detect_communities)
             self.database.execute_query(query_drop_gds)
-    
+
             # Clean up GDS-generated metadata: keep only community_id or community_list, remove everything else.
-            self.database.execute_query("""
+            self.database.execute_query(
+            """
             MATCH (n)
             WHERE n.communityLevel IS NOT NULL
             REMOVE n.communityLevel
-            """)
+            """
+            )
 
             # Clear the property we're NOT using in this mode
             if multi_level:
-                self.database.execute_query("""
+                self.database.execute_query(
+                """
                 MATCH (n)
                 WHERE n.community_id IS NOT NULL
                 REMOVE n.community_id
-                """)
+                """
+                )
             else:
-                self.database.execute_query("""
+                self.database.execute_query(
+                """
                 MATCH (n)
                 WHERE n.community_list IS NOT NULL
                 REMOVE n.community_list
-                """)
-        
+                """
+                )
+
             Log.success(Log.kg + Log.gr_rag, f"Community detection ({method}) complete.", self.database.verbose)
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to run community detection") from e
 
-
     # ------------------------------------------------------------------------
     # Verbalization Formats
     # ------------------------------------------------------------------------
-    
+
     def to_triple_string(self, triples_df: Optional[DataFrame] = None, format: str = "natural") -> str:
         """Convert triples to string representation in various formats.
         @details  Supports multiple output formats for LLM consumption:
@@ -472,7 +451,7 @@ class KnowledgeGraph:
         @throws ValueError  If format is not recognized.
         """
         pass
-    
+
     def to_contextualized_string(self, focus_nodes: Optional[List[str]] = None, top_n: int = 5) -> str:
         """Convert triples to contextualized string grouped by focus nodes.
         @details  Groups triples by subject nodes and formats them with context headers.
@@ -488,7 +467,7 @@ class KnowledgeGraph:
         @return  Formatted string with contextualized triple groups.
         """
         pass
-    
+
     def to_narrative(self, strategy: str = "path", start_node: Optional[str] = None, max_triples: int = 50) -> str:
         """Convert graph to narrative text using specified strategy.
         @details  Transforms structured triples into natural language narrative:
@@ -502,11 +481,11 @@ class KnowledgeGraph:
         @throws ValueError  If strategy is not recognized.
         """
         pass
-    
+
     # ------------------------------------------------------------------------
     # Graph Statistics and Metadata
     # ------------------------------------------------------------------------
-    
+
     def get_summary_stats(self) -> Dict[str, Any]:
         """Return summary statistics about the graph structure.
         @details  Provides metadata useful for LLM context, including:
@@ -529,11 +508,11 @@ class KnowledgeGraph:
         df = self.database.get_dataframe(self.graph_name)
         if df is None or df.empty:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to fetch edge_counts DataFrame.")
-        
+
         # Filter to nodes only
         df_nodes = df[df["element_type"] == "node"].copy()
         df_rels = df[df["element_type"] == "relationship"].copy()
-        
+
         # Count edges per node by matching element_id with start_node_id/end_node_id
         edge_counts = {}
         for _, node in df_nodes.iterrows():
@@ -543,19 +522,19 @@ class KnowledgeGraph:
             # Count relationships where this node is start or end
             count = len(df_rels[(df_rels["start_node_id"] == node_id) | (df_rels["end_node_id"] == node_id)])
             edge_counts[node_id] = count
-        
+
         # Convert to DataFrame and sort
         result_df = DataFrame(list(edge_counts.items()), columns=["element_id", "edge_count"])
         result_df = result_df.rename(columns={"element_id": "node_id"})
         result_df = result_df.sort_values("edge_count", ascending=False).head(top_n)
-        
+
         Log.success(Log.kg + Log.gr_rag, f"Found top-{top_n} most popular nodes.", self.verbose)
         return result_df
-    
+
     def get_node_context(self, node_id: str, include_neighbors: bool = True) -> str:
         """Return natural language description of a node and its relationships.
         @details  Generates a human-readable summary of a single node suitable for LLM context.
-        Example: "Alice is connected to 5 entities. She knows Bob and Charlie, works at Company, 
+        Example: "Alice is connected to 5 entities. She knows Bob and Charlie, works at Company,
         lives in City, and follows Dave."
         @param node_id  The element ID of the node to describe.
         @param include_neighbors  Whether to list neighbor node IDs (default: True).
@@ -563,7 +542,7 @@ class KnowledgeGraph:
         @throws Log.Failure  If the node does not exist in the graph.
         """
         pass
-    
+
     def get_relation_summary(self) -> DataFrame:
         """Return summary of relationship types and their frequencies.
         @details  Provides an overview of what types of relationships exist in the graph

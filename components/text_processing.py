@@ -133,7 +133,6 @@ class LLMConnector(Connector):
             content = f.read()
         return self.execute_query(content)
 
-
     # TODO: Generalize this - normalize_to_dict(keys=["s","r","o"])
     @staticmethod
     def normalize_triples(data: Any) -> List[Tuple[str, str, str]]:
@@ -221,4 +220,3 @@ class LLMConnector(Connector):
             if all([s_clean, r_clean, o_clean]):
                 clean_triples.append((s_clean, r_clean, o_clean))
         return clean_triples
-

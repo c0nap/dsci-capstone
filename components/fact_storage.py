@@ -436,7 +436,6 @@ class GraphConnector(DatabaseConnector):
         fresh_results, fresh_meta = db.cypher_query(union_query)
         return fresh_results, fresh_meta
 
-
     def IS_DUMMY_(self, alias: str = 'n') -> str:
         """Generates Cypher code to select dummy nodes inside a WHERE clause.
         @details  Usage: MATCH (n) WHERE {self.IS_DUMMY_('n')};
