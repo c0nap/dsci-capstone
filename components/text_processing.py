@@ -3,7 +3,6 @@ import os
 import re
 import spacy
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-from typing import Any, List, Tuple
 
 
 nlp = spacy.blank("en")  # blank English model, no pipeline
@@ -55,6 +54,7 @@ from langchain_core.prompts import (
     SystemMessagePromptTemplate,
 )
 from langchain_openai import ChatOpenAI
+from typing import Any, List, Tuple
 
 
 class LLMConnector(Connector):

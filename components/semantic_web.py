@@ -61,7 +61,7 @@ class KnowledgeGraph:
         try:
             elements_df = self.database.get_dataframe(self.graph_name)
             if elements_df is None or elements_df.empty:
-                raise Log.Failure(Log.kg + Log.gr_rag, Log.bad_triples(self.graph_name))
+                raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
     
             # Split nodes and relationships
             nodes = elements_df[elements_df["element_type"] == "node"].drop(
@@ -139,7 +139,7 @@ class KnowledgeGraph:
             if not filtered_pairs:
                 return df_ids 
             # Re-assign the filtered lists
-            name_columns, id_columns = tuple(zip(*filtered_pairs))
+            name_columns, id_columns = map(list, zip(*filtered_pairs))
             name_columns = list(name_columns)
             id_columns = list(id_columns)
 
@@ -147,7 +147,7 @@ class KnowledgeGraph:
             # Search in provided DataFrame if given, otherwise query the connector
             df_lookup = df_lookup if df_lookup is not None else self.database.get_dataframe(self.graph_name)
             if df_lookup is None or df_lookup.empty:
-                raise Log.Failure(Log.kg + Log.gr_rag, Log.bad_triples(self.graph_name))
+                raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
     
             # Build lookup dictionaries for efficiency. Can now use df.map(dict)
             id_to_name_map = (
@@ -227,7 +227,7 @@ class KnowledgeGraph:
         try:
             triples_df = self.get_all_triples()
             if triples_df is None or triples_df.empty:
-                raise Log.Failure(Log.kg + Log.gr_rag, f"No triples in graph {self.graph_name}")
+                raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
 
             # Filter triples where either endpoint is in node_ids
             sub_df = triples_df[
@@ -251,7 +251,7 @@ class KnowledgeGraph:
         try:
             triples_df = self.get_all_triples()
             if triples_df is None or triples_df.empty:
-                raise Log.Failure(Log.kg + Log.gr_rag, f"No triples in graph {self.graph_name}")
+                raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
 
             current = {node_id}
             visited = set()
@@ -295,7 +295,7 @@ class KnowledgeGraph:
                 raise Log.Failure(Log.kg + Log.gr_rag, f"No triples available in graph {self.graph_name}")
 
             # Build directed adjacency: subject -> [rows where subject_id == subject]
-            adjacency = {}
+            adjacency: Dict[str, List[Any]] = {}
             for _, row in triples_df.iterrows():
                 s = row["subject_id"]
                 adjacency.setdefault(s, []).append(row)
@@ -353,7 +353,7 @@ class KnowledgeGraph:
         try:
             triples_df = self.get_triple_properties()
             if triples_df is None:
-                raise Log.Failure(Log.kg + Log.gr_rag, Log.bad_triples(self.graph_name))
+                raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
 
             # Only nodes are tagged. Include triples where both nodes match community ID.
             triples_df = triples_df[
