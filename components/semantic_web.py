@@ -351,20 +351,20 @@ class KnowledgeGraph:
             if method not in {"leiden", "louvain"}:
                 raise Log.Failure(Log.kg + Log.gr_rag, f"Unsupported community detection method: {method}")
     
-            # --- Query templates ---
-            # Creates an in-memory projection of the current graph.
-            # Note: we pretend the graph is UNDIRECTED, and GraphRAG expects this.
-            with self.database.temp_graph(self.graph_name):
-                node_query = f"MATCH (n {self.database.SAME_DB_KG_()}) WHERE {self.database.NOT_DUMMY_()} RETURN id(n) AS id"
-            # df = self.get_triple_properties()
-            # rel_types = df["r.rel_type"].unique().tolist()
-            # rel_query = ", ".join(f"'{rt}'" for rt in rel_types)
-            rel_query = f"MATCH ()-[r]-() WHERE r.db = '{self.database.database_name}'"
-            query_setup_gds = f"""CALL gds.graph.project.cypher('{self.graph_name}',
-            "{node_query}",
-            "{rel_query} RETURN id(startNode(r)) AS source, id(endNode(r)) AS target, type(r) AS type",
-            {{orientation: 'UNDIRECTED'}})
+            # Creates an in-memory projection using native projection with property filters
+            query_setup_gds = f"""
+            CALL gds.graph.project(
+                '{self.graph_name}',
+                '*',
+                {{
+                    ALL: {{
+                        type: '*',
+                        orientation: 'UNDIRECTED'
+                    }}
+                }}
+            ) YIELD graphName, nodeCount, relationshipCount
             """
+            
             # Runs the selected community detection algorithm.
             if multi_level:
                 options = f"writeProperty: 'community_list', includeIntermediateCommunities: true"
