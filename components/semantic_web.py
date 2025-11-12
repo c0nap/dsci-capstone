@@ -321,9 +321,13 @@ class KnowledgeGraph:
                 raise Log.Failure(Log.kg + Log.gr_rag, Log.bad_triples(self.graph_name))
 
             # Only nodes are tagged. Include triples where both nodes match community ID.
-            triples_df = triples_df.query("n1.community_id == @community_id and n2.community_id == @community_id")
+            triples_df = triples_df[
+                (triples_df["n1.community_id"] == community_id) & 
+                (triples_df["n2.community_id"] == community_id)
+            ]
             if triples_df.empty:
-                raise Log.Failure(Log.kg + Log.gr_rag, f"No triples found for community_id {community_id}")
+                Log.warn(Log.kg + Log.gr_rag, f"No triples found for community_id {community_id}")
+                return triples_df
 
             triples_df = triples_df[["n1.name", "r.rel_type", "n2.name"]].rename(
                 columns={"n1.name": "subject", "r.rel_type": "relation", "n2.name": "object"}
