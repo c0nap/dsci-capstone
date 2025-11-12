@@ -333,8 +333,7 @@ class KnowledgeGraph:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve community subgraph") from e
 
     
-    def detect_community_clusters(self, method: str = "leiden", multi_level: bool = False,
-        resolution: float = 1.0, max_levels: int = 10) -> None:
+    def detect_community_clusters(self, method: str = "leiden", multi_level: bool = False, max_levels: int = 10) -> None:
         """Run community detection on the graph as described by the GraphRAG paper.
         @details
         - Assigns a `community_id` property to all nodes, and optionally `level_id`.
@@ -345,7 +344,6 @@ class KnowledgeGraph:
         - Louvain - quickly groups nodes but may yield fragmented subcommunities.
         @param method  The community detection algorithm to run. Options: "leiden" (default) or "louvain".
         @param multi_level  Whether to record hierarchical levels (`level_id`) for multi-scale summarization.
-        @param resolution  Controls granularity — higher = more/smaller communities (default: 1.0).
         @param max_levels  Maximum hierarchy depth to compute (default: 10).
         @throws Log.Failure  If GDS is unavailable or any query fails."""
         try:
@@ -364,7 +362,8 @@ class KnowledgeGraph:
             rel_query = f"MATCH ()-[r]-() WHERE r.db = '{self.database.database_name}'"
             query_setup_gds = f"""CALL gds.graph.project.cypher('{self.graph_name}',
             "{node_query}",
-            "{rel_query} RETURN id(startNode(r)) AS source, id(endNode(r)) AS target, type(r) AS type")
+            "{rel_query} RETURN id(startNode(r)) AS source, id(endNode(r)) AS target, type(r) AS type",
+            {{orientation: 'UNDIRECTED'}})
             """
             # Runs the selected community detection algorithm.
             if multi_level:
@@ -376,13 +375,17 @@ class KnowledgeGraph:
             query_detect_communities = f"""
             CALL gds.{method}.write(
                 '{self.graph_name}',
-                {{ {options}, resolution: {resolution} }}
+                {{ {options} }}
             )
             """
             # Cleans up the temporary projection.
-            query_drop_gds = f"CALL gds.graph.drop('{self.graph_name}')"
+            query_drop_gds = f"CALL gds.graph.drop('{self.graph_name}') YIELD graphName"
     
             # --- Execute sequentially ---
+            try:  # Drop any existing projection (in case of previous failure)
+                self.database.execute_query(query_drop_gds)
+            except:
+                pass  # Graph didn't exist, that's fine
             self.database.execute_query(query_setup_gds)
             self.database.execute_query(query_detect_communities)
             self.database.execute_query(query_drop_gds)
