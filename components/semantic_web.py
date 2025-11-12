@@ -332,13 +332,14 @@ class KnowledgeGraph:
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve community subgraph") from e
 
+    
     def detect_community_clusters(self, method: str = "leiden", multi_level: bool = False,
-        resolution: float = 1.0, max_levels: int = 10, orientation: str = "UNDIRECTED") -> None:
+        resolution: float = 1.0, max_levels: int = 10) -> None:
         """Run community detection on the graph as described by the GraphRAG paper.
         @details
         - Assigns a `community_id` property to all nodes, and optionally `level_id`.
         - Partitions the graph's nodes into topic-coherent communities.
-        - Afterwards, you can call `get_community_subgraph()` to extract each community’s triples for summarization.
+        - Afterwards, you can call `get_community_subgraph()` to extract each community's triples for summarization.
         Clustering Methods
         - Leiden (recommended) - improvement of Louvain ensuring well-connected, stable communities; supports multi-level hierarchy.
         - Louvain - quickly groups nodes but may yield fragmented subcommunities.
@@ -346,7 +347,6 @@ class KnowledgeGraph:
         @param multi_level  Whether to record hierarchical levels (`level_id`) for multi-scale summarization.
         @param resolution  Controls granularity — higher = more/smaller communities (default: 1.0).
         @param max_levels  Maximum hierarchy depth to compute (default: 10).
-        @param orientation  Graph projection direction, typically `''` for community detection.
         @throws Log.Failure  If GDS is unavailable or any query fails."""
         try:
             method = method.lower().strip()
@@ -356,21 +356,16 @@ class KnowledgeGraph:
             # --- Query templates ---
             # Creates an in-memory projection of the current graph.
             # Note: we pretend the graph is UNDIRECTED, and GraphRAG expects this.
-            r = self.database.execute_query(f"MATCH ()-[r:PART_OF]-() RETURN count(r)")
-            print(r.to_string())
-            df = self.get_triple_properties()
-            print(df.to_string())
-            rel_types = df["r.rel_type"].unique().tolist()
-            rel_projection = ", ".join(
-                f"{{type: '{rt}', orientation: '{orientation}'}}" for rt in rel_types
-            )
-            query_setup_gds = (
-                f"CALL gds.graph.project("
-                f"'{self.graph_name}', "
-                f"'*', "
-                f"[{rel_projection}]"
-                f")"
-            )
+            with self.database.temp_graph(self.graph_name):
+                node_query = f"MATCH (n {self.database.SAME_DB_KG_()}) WHERE {self.database.NOT_DUMMY_()} RETURN id(n) AS id"
+            # df = self.get_triple_properties()
+            # rel_types = df["r.rel_type"].unique().tolist()
+            # rel_query = ", ".join(f"'{rt}'" for rt in rel_types)
+            rel_query = f"MATCH ()-[r]-() WHERE r.db = '{self.database.database_name}'"
+            query_setup_gds = f"""CALL gds.graph.project.cypher('{self.graph_name}',
+            "{node_query}",
+            "{rel_query} RETURN id(startNode(r)) AS source, id(endNode(r)) AS target, type(r) AS type")
+            """
             # Runs the selected community detection algorithm.
             if multi_level:
                 options = f"writeProperty: 'community_list', includeIntermediateCommunities: true"
@@ -403,7 +398,7 @@ class KnowledgeGraph:
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to run community detection") from e
 
-    
+
     # ------------------------------------------------------------------------
     # Verbalization Formats
     # ------------------------------------------------------------------------
