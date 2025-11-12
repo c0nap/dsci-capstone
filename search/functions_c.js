@@ -15,8 +15,8 @@ var searchData=
   ['post_5fstory_5fstatus_12',['post_story_status',['../namespacesrc_1_1main.html#abf489d90c061b6dc4645e9291093459e',1,'src::main']]],
   ['pre_5fcompute_5fsegments_13',['pre_compute_segments',['../classcomponents_1_1book__conversion_1_1ParagraphStreamTEI.html#a7174bd9e0835539d64382b48fe407eeb',1,'components::book_conversion::ParagraphStreamTEI']]],
   ['pre_5fsplit_5fchunks_14',['pre_split_chunks',['../classcomponents_1_1book__conversion_1_1Story.html#aed521260de22620b54b840100d104dc3',1,'components::book_conversion::Story']]],
-  ['print_5fnodes_15',['print_nodes',['../classcomponents_1_1fact__storage_1_1GraphConnector.html#ae52fff4df1a23fc6dd8227fef93886ab',1,'components::fact_storage::GraphConnector']]],
-  ['print_5ftriples_16',['print_triples',['../classcomponents_1_1fact__storage_1_1GraphConnector.html#afaeeb29f0775e789f7294855d827374f',1,'components::fact_storage::GraphConnector']]],
+  ['print_5fnodes_15',['print_nodes',['../classcomponents_1_1semantic__web_1_1KnowledgeGraph.html#ae52fff4df1a23fc6dd8227fef93886ab',1,'components::semantic_web::KnowledgeGraph']]],
+  ['print_5ftriples_16',['print_triples',['../classcomponents_1_1semantic__web_1_1KnowledgeGraph.html#afaeeb29f0775e789f7294855d827374f',1,'components::semantic_web::KnowledgeGraph']]],
   ['process_5fsingle_17',['process_single',['../namespacesrc_1_1main.html#a4fa977b996cafc6e20965beb036b73a8',1,'src::main']]],
   ['process_5ftask_18',['process_task',['../namespacesrc_1_1flask.html#abe9ecadab0072dbfb0097ff401799650',1,'src::flask']]],
   ['pytest_5faddoption_19',['pytest_addoption',['../namespacetests_1_1conftest.html#a06a8b50e3011cb2a190d839dc50f5d2a',1,'tests::conftest']]]

@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['paragraphstreamtei_0',['ParagraphStreamTEI',['../classcomponents_1_1book__conversion_1_1ParagraphStreamTEI.html',1,'components::book_conversion']]],
-  ['postgresconnector_1',['postgresConnector',['../classcomponents_1_1connectors_1_1postgresConnector.html',1,'components::connectors']]],
-  ['prf1metric_2',['PRF1Metric',['../classBlazorApp_1_1Models_1_1PRF1Metric.html',1,'BlazorApp::Models']]]
+  ['metrics_0',['Metrics',['../classcomponents_1_1metrics_1_1Metrics.html',1,'components::metrics']]],
+  ['metricscontroller_1',['MetricsController',['../classBlazorApp_1_1Controllers_1_1MetricsController.html',1,'BlazorApp::Controllers']]],
+  ['metricshub_2',['MetricsHub',['../classBlazorApp_1_1Hubs_1_1MetricsHub.html',1,'BlazorApp::Hubs']]],
+  ['mysqlconnector_3',['mysqlConnector',['../classcomponents_1_1connectors_1_1mysqlConnector.html',1,'components::connectors']]]
 ];

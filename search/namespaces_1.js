@@ -7,5 +7,6 @@ var searchData=
   ['components_3a_3adocument_5fstorage_4',['document_storage',['../namespacecomponents_1_1document__storage.html',1,'components']]],
   ['components_3a_3afact_5fstorage_5',['fact_storage',['../namespacecomponents_1_1fact__storage.html',1,'components']]],
   ['components_3a_3ametrics_6',['metrics',['../namespacecomponents_1_1metrics.html',1,'components']]],
-  ['components_3a_3atext_5fprocessing_7',['text_processing',['../namespacecomponents_1_1text__processing.html',1,'components']]]
+  ['components_3a_3asemantic_5fweb_7',['semantic_web',['../namespacecomponents_1_1semantic__web.html',1,'components']]],
+  ['components_3a_3atext_5fprocessing_8',['text_processing',['../namespacecomponents_1_1text__processing.html',1,'components']]]
 ];

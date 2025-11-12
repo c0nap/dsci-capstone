@@ -75,6 +75,7 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="classcomponents_1_1text__processing_1_1LLMConnector-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">LLMConnector Class Reference</div></div>
@@ -131,6 +132,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a9c2165f9b42bcf48b8003371ba5134f8" id="r_a9c2165f9b42bcf48b8003371ba5134f8"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#a9c2165f9b42bcf48b8003371ba5134f8">execute_file</a> (self, str filename)</td></tr>
 <tr class="memdesc:a9c2165f9b42bcf48b8003371ba5134f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run a single prompt from a file.  <br /></td></tr>
 <tr class="separator:a9c2165f9b42bcf48b8003371ba5134f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:ae1f4d34569124c1120ec5b0fa98f94eb" id="r_ae1f4d34569124c1120ec5b0fa98f94eb"><td class="memItemLeft" align="right" valign="top">List[Tuple[str, str, str]]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#ae1f4d34569124c1120ec5b0fa98f94eb">normalize_triples</a> (Any data)</td></tr>
+<tr class="memdesc:ae1f4d34569124c1120ec5b0fa98f94eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Normalize flexible LLM output into a list of clean (subject, relation, object) triples.  <br /></td></tr>
+<tr class="separator:ae1f4d34569124c1120ec5b0fa98f94eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -374,6 +381,52 @@ Public Attributes</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>Raw LLM response as a string. </dd></dl>
 
 <p>Reimplemented from <a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a9127708042e94d148b6d71f0b1a5418f">Connector</a>.</p>
+
+</div>
+</div>
+<a id="ae1f4d34569124c1120ec5b0fa98f94eb" name="ae1f4d34569124c1120ec5b0fa98f94eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae1f4d34569124c1120ec5b0fa98f94eb">&#9670;&#160;</a></span>normalize_triples()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> List[Tuple[str, str, str]] normalize_triples </td>
+          <td>(</td>
+          <td class="paramtype">Any&#160;</td>
+          <td class="paramname"><em>data</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Normalize flexible LLM output into a list of clean (subject, relation, object) triples. </p>
+<ul>
+<li>Accepts dicts, lists of dicts, tuples, or dicts-of-lists.</li>
+<li>Joins list values, trims, and sanitizes for Cypher safety.</li>
+<li>Enforces uppercase underscore-safe relation labels. <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">data</td><td>Raw LLM output to normalize. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>List of sanitized (s, r, o) triples ready for insertion. </dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">ValueError</td><td>If input format cannot be parsed. </td></tr>
+  </table>
+  </dd>
+</dl>
+</li>
+</ul>
 
 </div>
 </div>
