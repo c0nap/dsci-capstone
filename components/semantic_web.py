@@ -400,6 +400,12 @@ class KnowledgeGraph:
             REMOVE n.communityLevel, n.community_level
             SET n.level_id = CASE WHEN n.community_list IS NOT NULL THEN size(n.community_list) - 1 ELSE 0 END
             """)
+            # Clean up GDS-generated metadata: remove all GDS artifacts
+            self.database.execute_query("""
+            MATCH (n)
+            WHERE n.communityLevel IS NOT NULL
+            REMOVE n.communityLevel
+            """)
     
             Log.success(Log.kg + Log.gr_rag, f"Community detection ({method}) complete.", self.database.verbose)
         except Exception as e:

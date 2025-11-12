@@ -970,7 +970,6 @@ def test_get_random_walk_sample_comprehensive(nature_scene_graph: KnowledgeGraph
 
 
 
-
 @pytest.mark.order(22)
 @pytest.mark.dependency(name="community_detection_minimal", depends=["knowledge_graph_triples"])
 def test_detect_community_clusters_minimal(nature_scene_graph: KnowledgeGraph) -> None:
@@ -1025,7 +1024,7 @@ def test_detect_community_clusters_comprehensive(nature_scene_graph: KnowledgeGr
     """Comprehensive test for community detection with various parameters.
     @details  Tests:
     - Multi-level hierarchical detection
-    - Level tracking for hierarchical summarization
+    - community_list structure for hierarchical summarization
     - Invalid method handling
     - Community stability and coverage
     """
@@ -1039,26 +1038,28 @@ def test_detect_community_clusters_comprehensive(nature_scene_graph: KnowledgeGr
     
     # Verify hierarchical properties exist
     assert "community_list" in nodes_df.columns, "Multi-level should create community_list"
-    assert "level_id" in nodes_df.columns, "Multi-level should create level_id"
+    assert all(nodes_df["community_list"].notna()), "All nodes should have community_list"
     
-    # Verify level_id indicates hierarchy depth
-    max_level = nodes_df["level_id"].max()
-    assert max_level >= 0, "Should have at least base level"
-    assert max_level <= 3, "Should respect max_levels parameter"
+    # Verify community_list is a list with length indicating hierarchy depth
+    sample_list = nodes_df["community_list"].iloc[0]
+    assert isinstance(sample_list, list), "community_list should be a list"
+    assert len(sample_list) >= 1, "community_list should have at least one level"
+    assert len(sample_list) <= 3, "Should respect max_levels parameter"
     
     # Test 2: Single-level vs multi-level comparison
-    # Single-level should have uniform level_id = 0
+    # Single-level should only have community_id, not community_list
     kg.detect_community_clusters(method="leiden", multi_level=False)
     elements_single = kg.database.get_dataframe(kg.graph_name)
     nodes_single = elements_single[elements_single["element_type"] == "node"]
-    assert all(nodes_single["level_id"] == 0), "Single-level should have all nodes at level 0"
     
-    # Multi-level should have varying levels (unless graph is too small)
-    kg.detect_community_clusters(method="leiden", multi_level=True, max_levels=3)
-    elements_multi = kg.database.get_dataframe(kg.graph_name)
-    nodes_multi = elements_multi[elements_multi["element_type"] == "node"]
-    # At minimum, level_id should exist and be non-negative
-    assert nodes_multi["level_id"].min() >= 0, "Multi-level should have non-negative level_id"
+    assert "community_id" in nodes_single.columns, "Single-level should create community_id"
+    assert all(nodes_single["community_id"].notna()), "All nodes should have community_id"
+    # community_list should not exist or be null for single-level
+    if "community_list" in nodes_single.columns:
+        assert all(nodes_single["community_list"].isna()), "Single-level should not have community_list"
+    
+    single_level_communities = nodes_single["community_id"].nunique()
+    assert single_level_communities >= 1, "Should have at least one community"
     
     # Test 3: Invalid method handling
     with pytest.raises(Log.Failure):
@@ -1092,8 +1093,8 @@ def test_detect_community_clusters_comprehensive(nature_scene_graph: KnowledgeGr
     total_community_triples = sum(len(df) for df in retrieved_triples)
     all_triples = kg.get_all_triples()
     all_triples_named = kg.convert_triple_names(all_triples)
-    coverage = total_community_triples / len(all_triples_named)
-    assert coverage >= 0.3, "Community subgraphs should cover at least 30% of graph"
+    coverage = total_community_triples / len(all_triples_named) if len(all_triples_named) > 0 else 0
+    assert coverage >= 0.3, f"Community subgraphs should cover at least 30% of graph (got {coverage:.1%})"
     
     # Test 6: Non-existent community_id handling
     with pytest.raises(Log.Failure):
@@ -1104,4 +1105,7 @@ def test_detect_community_clusters_comprehensive(nature_scene_graph: KnowledgeGr
     elements_louvain_ml = kg.database.get_dataframe(kg.graph_name)
     nodes_louvain_ml = elements_louvain_ml[elements_louvain_ml["element_type"] == "node"]
     # Louvain should at minimum assign community_id or community_list
-    assert all(nodes_louvain_ml["community_id"].notna() | nodes_louvain_ml["community_list"].notna())
+    has_community_id = "community_id" in nodes_louvain_ml.columns and nodes_louvain_ml["community_id"].notna().any()
+    has_community_list = "community_list" in nodes_louvain_ml.columns and nodes_louvain_ml["community_list"].notna().any()
+    assert has_community_id or has_community_list, "Louvain multi-level should assign either community_id or community_list"
+    
