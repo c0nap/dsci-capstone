@@ -84,49 +84,60 @@ class KnowledgeGraph:
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to pivot triple properties") from e
 
-    def convert_to_names(self, df_ids: DataFrame, df_lookup: Optional[DataFrame] = None) -> DataFrame:
-        """Maps a DataFrame containing element ID columns (subject_id, relation_id, object_id) to human-readable names.
+    def triples_to_names(self, df_ids: DataFrame, df_lookup: Optional[DataFrame] = None) -> DataFrame:
+        """Maps a DataFrame containing element ID columns to human-readable names.
         @note
-        - Requires that nodes and relationships still exist in the graph database; otherwise must specify df_lookup.
-        @param df_ids  DataFrame with columns: subject_id, relation_id, object_id.
-        @param df_lookup  DataFrame fetched from @ref components.fact_storage.GraphConnector.get_dataframe with columns: element_id, name, and rel_type.
-        @return  DataFrame with columns: subject, relation, object.
+        - Requires the provided nodes to still exist in the graph database; otherwise must specify df_lookup.
+        @param df_ids  DataFrame with added columns: subject_id, relation_id, object_id.
+        @param df_lookup  Optional DataFrame fetched from @ref components.fact_storage.GraphConnector.get_dataframe with required columns: element_id, elemenet_type, name, and rel_type.
+        @return  DataFrame with added columns: subject, relation, object.
+        @raises Log.Failure  If mapping fails or required IDs are missing.
+        """
+        df_ids = self.find_element_names(df_ids, ["subject", "object"], ["subject_id", "object_id"],
+            "node", "name", df_lookup)
+        df_ids = self.find_element_names(df_ids, ["relation"], ["relation_id"],
+            "relationship", "rel_type", df_lookup)
+        return df_ids
+
+    def find_element_names(self, df_ids: DataFrame, name_columns: List[str], id_columns: List[str], 
+        element_type: str, name_property: str,
+        df_lookup: Optional[DataFrame] = None) -> DataFrame:
+        """Helper function which maps element IDs to human-readable names.
+        @note
+        - Requires the provided nodes or edges to still exist in the graph database; otherwise must specify df_lookup.
+        @param df_ids  DataFrame with required columns: <id_columns>.
+        @param name_columns  Required list of column names to create.
+        @param id_columns  Required list of columns containing element IDs.
+        @param element_type  Whether to match nodes or relationships. Value must be "node" or "relationship".
+        @param name_property  Required element property from <df_lookup> to use as the display name.
+        @param df_lookup  Optional DataFrame fetched from @ref components.fact_storage.GraphConnector.get_dataframe with required columns: element_id, elemenet_type, and <name_property>.
+        @return  DataFrame with added columns: <name_columns>.
         @raises Log.Failure  If mapping fails or required IDs are missing.
         """
         try:
             if df_ids is None:
                 return None
             if df_ids.empty:  # Ensure the DataFrame has correct columns even if no data. For legacy compatibility
-                return DataFrame(columns=["subject", "relation", "object"])
+                return DataFrame(columns=name_columns)
     
             # Use provided lookup DataFrame if given, otherwise query the connector
-            elements_df = df_lookup if df_lookup is not None else self.database.get_dataframe(self.graph_name)
-            if elements_df is None or elements_df.empty:
+            df_lookup = df_lookup if df_lookup is not None else self.database.get_dataframe(self.graph_name)
+            if df_lookup is None or df_lookup.empty:
                 raise Log.Failure(Log.kg + Log.gr_rag, Log.bad_triples(self.graph_name))
     
             # Build lookup dictionaries for efficiency. Can now use df.map(dict)
-            node_map = (
-                elements_df[elements_df["element_type"] == "node"]
-                .set_index("element_id")["name"]
+            id_to_name_map = (
+                df_lookup[df_lookup["element_type"] == element_type]
+                .set_index("element_id")[name_property]
                 .to_dict()
             )
-            rel_map = (
-                elements_df[elements_df["element_type"] == "relationship"]
-                .set_index("element_id")["rel_type"]
-                .to_dict()
-            )
-    
-            # Map IDs to readable names
-            df_named = df_ids.assign(
-                subject=df_ids["subject_id"].map(node_map),
-                relation=df_ids["relation_id"].map(rel_map),
-                object=df_ids["object_id"].map(node_map)
-            )
-            # Drop ID columns and reorder
-            df_named = df_named.drop(columns=["subject_id", "relation_id", "object_id"], errors="ignore")[
-                ["subject", "relation", "object"]
-            ]
+            # Map IDs to readable names dynamically
+            df_named = df_ids.copy()
+            for name_col, id_col in zip(name_columns, id_columns):
+                df_named[name_col] = df_named[id_col].map(id_to_name_map)
 
+            # Reorder columns
+            df_named = df_named[name_columns]
             return df_named
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to convert triple names") from e
