@@ -336,7 +336,7 @@ class KnowledgeGraph:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve community subgraph") from e
 
     def detect_community_clusters(self) -> None:
-        """Run community detection on the graph as describe by GraphRAG paper.
+        """Run community detection on the graph as described by the GraphRAG paper.
         @details
         - Assigns a `community_id` property to all nodes.
         - Partitions the graph's nodes into topic-coherent communities.
@@ -344,9 +344,42 @@ class KnowledgeGraph:
         the approach assigns each node a `community_id` property, and builds (optionally) a hierarchy of
         community levels (larger communities containing sub-communities) for summarization at different granularities.
         - Afterwards, you can call `get_community_subgraph()` to extract each community’s triples for summarization.
-        @throws Log.Failure  If the graph has not been constructed or loaded, or if the community detection algorithm fails.
-        """
-        pass
+        @param method  The community detection algorithm to run. Options: "leiden" (default) or "louvain".
+        @throws Log.Failure  If GDS is unavailable or any query fails."""
+        try:
+            method = method.lower().strip()
+            if method not in {"leiden", "louvain"}:
+                raise Log.Failure(Log.kg + Log.gr_rag, f"Unsupported community detection method: {method}")
+    
+            # --- Query templates ---
+            # Creates an in-memory projection of the current graph.
+            # Note: we pretend the graph is UNDIRECTED, and GraphRAG expects this.
+            query_setup_gds = f"""
+            CALL gds.graph.project(
+                '{self.graph_name}',
+                '*',
+                {{ defaultRelationshipProjection: {{ orientation: 'UNDIRECTED' }} }}
+            )
+            """
+            # Runs the selected community detection algorithm.
+            query_detect_communities = f"""
+            CALL gds.{method}.write(
+                '{self.graph_name}',
+                {{ writeProperty: 'community_id' }}
+            )
+            """
+            # Cleans up the temporary projection.
+            query_drop_gds = f"CALL gds.graph.drop('{graph_name}')"
+    
+            # --- Execute sequentially ---
+            self.database.execute_query(query_setup_gds)
+            self.database.execute_query(query_detect_communities)
+            self.database.execute_query(query_drop_gds)
+    
+            Log.success(Log.kg + Log.gr_rag, f"Community detection ({method}) complete.", self.database.verbose)
+        except Exception as e:
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to run community detection") from e
+
     
     # ------------------------------------------------------------------------
     # Verbalization Formats
