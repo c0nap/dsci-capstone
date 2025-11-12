@@ -394,7 +394,7 @@ class KnowledgeGraph:
             self.database.execute_query("""
             MATCH (n)
             REMOVE n.communityLevel, n.community_level
-            SET n.level_id = CASE WHEN exists(n.community_list) THEN size(n.community_list) - 1 ELSE 0 END
+            SET n.level_id = CASE WHEN n.community_list IS NOT NULL THEN size(n.community_list) - 1 ELSE 0 END
             """)
     
             Log.success(Log.kg + Log.gr_rag, f"Community detection ({method}) complete.", self.database.verbose)
