@@ -35,22 +35,19 @@ class KnowledgeGraph:
         if not relation or not subject or not object_:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Invalid triple: ({subject})-[:{relation}]->({object_})")
 
-        # Temporarily switch to this graph's context for the operation
-        with self.database.temp_graph(self.graph_name):
-            # Merge subject/object and connect via relation
-            query = f"""
-            MERGE (s {{name: '{subject}', db: '{self.database.database_name}', kg: '{self.graph_name}'}})
-            MERGE (o {{name: '{object_}', db: '{self.database.database_name}', kg: '{self.graph_name}'}})
-            MERGE (s)-[r:{relation}]->(o)
-            RETURN s, r, o
-            """
-
-            try:
-                df = self.database.execute_query(query, _filter_results=False)
-                if df is not None:
-                    Log.success(Log.kg + Log.gr_rag, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
-            except Exception as e:
-                raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
+        # Merge subject/object and connect via relation
+        query = f"""
+        MERGE (s {{name: '{subject}', kg: '{self.graph_name}'}})
+        MERGE (o {{name: '{object_}', kg: '{self.graph_name}'}})
+        MERGE (s)-[r:{relation}]->(o)
+        RETURN s, r, o
+        """
+        try:
+            df = self.database.execute_query(query)
+            if df is not None:
+                Log.success(Log.kg + Log.gr_rag, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+        except Exception as e:
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
     
     def get_triple_properties(self) -> Optional[DataFrame]:
         """Pivot the graph elements DataFrame to expose node and relationship properties as columns.
@@ -359,13 +356,21 @@ class KnowledgeGraph:
             # --- Query templates ---
             # Creates an in-memory projection of the current graph.
             # Note: we pretend the graph is UNDIRECTED, and GraphRAG expects this.
-            query_setup_gds = f"""
-            CALL gds.graph.project(
-                '{self.graph_name}',
-                '*',
-                {{ defaultRelationshipProjection: {{ orientation: '{orientation}' }} }}
+            r = self.database.execute_query(f"MATCH ()-[r:PART_OF]-() RETURN count(r)")
+            print(r.to_string())
+            df = self.get_triple_properties()
+            print(df.to_string())
+            rel_types = df["r.rel_type"].unique().tolist()
+            rel_projection = ", ".join(
+                f"{{type: '{rt}', orientation: '{orientation}'}}" for rt in rel_types
             )
-            """
+            query_setup_gds = (
+                f"CALL gds.graph.project("
+                f"'{self.graph_name}', "
+                f"'*', "
+                f"[{rel_projection}]"
+                f")"
+            )
             # Runs the selected community detection algorithm.
             if multi_level:
                 options = f"writeProperty: 'community_list', includeIntermediateCommunities: true"
