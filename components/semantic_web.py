@@ -335,16 +335,21 @@ class KnowledgeGraph:
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve community subgraph") from e
 
-    def detect_community_clusters(self) -> None:
+    def detect_community_clusters(self, method: str = "leiden", multi_level: bool = False,
+        resolution: float = 1.0, max_levels: int = 10, orientation: str = "UNDIRECTED") -> None:
         """Run community detection on the graph as described by the GraphRAG paper.
         @details
-        - Assigns a `community_id` property to all nodes.
+        - Assigns a `community_id` property to all nodes, and optionally `level_id`.
         - Partitions the graph's nodes into topic-coherent communities.
-        Typical algorithms include Leiden (recommended) or Louvain. For weighted undirected graphs
-        the approach assigns each node a `community_id` property, and builds (optionally) a hierarchy of
-        community levels (larger communities containing sub-communities) for summarization at different granularities.
         - Afterwards, you can call `get_community_subgraph()` to extract each community’s triples for summarization.
+        Clustering Methods
+        - Leiden (recommended) - improvement of Louvain ensuring well-connected, stable communities; supports multi-level hierarchy.
+        - Louvain - quickly groups nodes but may yield fragmented subcommunities.
         @param method  The community detection algorithm to run. Options: "leiden" (default) or "louvain".
+        @param multi_level  Whether to record hierarchical levels (`level_id`) for multi-scale summarization.
+        @param resolution  Controls granularity — higher = more/smaller communities (default: 1.0).
+        @param max_levels  Maximum hierarchy depth to compute (default: 10).
+        @param orientation  Graph projection direction, typically `''` for community detection.
         @throws Log.Failure  If GDS is unavailable or any query fails."""
         try:
             method = method.lower().strip()
@@ -358,23 +363,36 @@ class KnowledgeGraph:
             CALL gds.graph.project(
                 '{self.graph_name}',
                 '*',
-                {{ defaultRelationshipProjection: {{ orientation: 'UNDIRECTED' }} }}
+                {{ defaultRelationshipProjection: {{ orientation: '{orientation}' }} }}
             )
             """
             # Runs the selected community detection algorithm.
+            if multi_level:
+                options = f"writeProperty: 'community_list', includeIntermediateCommunities: true"
+                if method == "leiden":
+                    options += f", maxLevels: {max_levels}"
+            else:
+                options = f"writeProperty: 'community_id'"
             query_detect_communities = f"""
             CALL gds.{method}.write(
                 '{self.graph_name}',
-                {{ writeProperty: 'community_id' }}
+                {{ {options}, resolution: {resolution} }}
             )
             """
             # Cleans up the temporary projection.
-            query_drop_gds = f"CALL gds.graph.drop('{graph_name}')"
+            query_drop_gds = f"CALL gds.graph.drop('{self.graph_name}')"
     
             # --- Execute sequentially ---
             self.database.execute_query(query_setup_gds)
             self.database.execute_query(query_detect_communities)
             self.database.execute_query(query_drop_gds)
+    
+            # Clean up GDS-generated metadata: keep only community_id or community_list, remove everything else.
+            self.database.execute_query("""
+            MATCH (n)
+            REMOVE n.communityLevel, n.community_level
+            SET n.level_id = CASE WHEN exists(n.community_list) THEN size(n.community_list) - 1 ELSE 0 END
+            """)
     
             Log.success(Log.kg + Log.gr_rag, f"Community detection ({method}) complete.", self.database.verbose)
         except Exception as e:
