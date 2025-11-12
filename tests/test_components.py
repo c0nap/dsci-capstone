@@ -968,3 +968,140 @@ def test_get_random_walk_sample_comprehensive(nature_scene_graph: KnowledgeGraph
     # Should capture significant graph coverage with enough walks
     coverage_ratio = len(sample_exhaustive) / len(all_triples)
     assert coverage_ratio > 0.3  # At least 30% coverage with extensive walking
+
+
+
+
+
+
+
+@pytest.mark.order(22)
+@pytest.mark.dependency(name="community_detection_minimal", depends=["knowledge_graph_triples"])
+def test_detect_community_clusters_minimal(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test basic community detection functionality.
+    @details  Validates that detect_community_clusters assigns community_id properties
+    to nodes and that get_community_subgraph retrieves triples within a community.
+    Tests both Leiden and Louvain methods.
+    """
+    kg = nature_scene_graph
+    
+    # Run Leiden community detection (default, single-level)
+    kg.detect_community_clusters(method="leiden", multi_level=False)
+    
+    # Verify all nodes have community_id assigned
+    elements_df = kg.database.get_dataframe(kg.graph_name)
+    nodes_df = elements_df[elements_df["element_type"] == "node"]
+    assert all(nodes_df["community_id"].notna()), "Not all nodes have community_id assigned"
+    
+    # Check that we have multiple communities (graph has distinct clusters)
+    unique_communities = nodes_df["community_id"].unique()
+    assert len(unique_communities) >= 2, "Should detect multiple communities"
+    
+    # Get a community subgraph
+    first_community_id = str(unique_communities[0])
+    community_triples = kg.get_community_subgraph(first_community_id)
+    assert community_triples is not None
+    assert len(community_triples) > 0
+    assert list(community_triples.columns) == ["subject", "relation", "object"]
+    
+    # Verify all triples in community involve nodes from that community only
+    community_nodes = set(nodes_df[nodes_df["community_id"] == unique_communities[0]]["name"])
+    for _, row in community_triples.iterrows():
+        assert row["subject"] in community_nodes
+        assert row["object"] in community_nodes
+    
+    # Test Louvain method
+    kg.detect_community_clusters(method="louvain", multi_level=False)
+    
+    # Verify Louvain also assigns community_id
+    elements_df_louvain = kg.database.get_dataframe(kg.graph_name)
+    nodes_df_louvain = elements_df_louvain[elements_df_louvain["element_type"] == "node"]
+    assert all(nodes_df_louvain["community_id"].notna()), "Louvain should assign community_id"
+
+
+@pytest.mark.order(23)
+@pytest.mark.dependency(name="community_detection_comprehensive", depends=["community_detection_minimal"])
+def test_detect_community_clusters_comprehensive(nature_scene_graph: KnowledgeGraph) -> None:
+    """Comprehensive test for community detection with various parameters.
+    @details  Tests:
+    - Multi-level hierarchical detection
+    - Resolution parameter effects
+    - Level tracking for hierarchical summarization
+    - Invalid method handling
+    - Community stability and coverage
+    """
+    kg = nature_scene_graph
+    
+    # Test 1: Multi-level hierarchical detection
+    kg.detect_community_clusters(method="leiden", multi_level=True, max_levels=3)
+    
+    elements_df = kg.database.get_dataframe(kg.graph_name)
+    nodes_df = elements_df[elements_df["element_type"] == "node"]
+    
+    # Verify hierarchical properties exist
+    assert "community_list" in nodes_df.columns, "Multi-level should create community_list"
+    assert "level_id" in nodes_df.columns, "Multi-level should create level_id"
+    
+    # Verify level_id indicates hierarchy depth
+    max_level = nodes_df["level_id"].max()
+    assert max_level >= 0, "Should have at least base level"
+    assert max_level <= 3, "Should respect max_levels parameter"
+    
+    # Test 2: Resolution parameter effects on granularity
+    # Lower resolution = fewer, larger communities
+    kg.detect_community_clusters(method="leiden", resolution=0.5)
+    elements_low_res = kg.database.get_dataframe(kg.graph_name)
+    nodes_low_res = elements_low_res[elements_low_res["element_type"] == "node"]
+    communities_low = len(nodes_low_res["community_id"].unique())
+    
+    # Higher resolution = more, smaller communities
+    kg.detect_community_clusters(method="leiden", resolution=2.0)
+    elements_high_res = kg.database.get_dataframe(kg.graph_name)
+    nodes_high_res = elements_high_res[elements_high_res["element_type"] == "node"]
+    communities_high = len(nodes_high_res["community_id"].unique())
+    
+    # Generally, higher resolution should produce more communities
+    # (Not strictly guaranteed, but likely with our graph structure)
+    assert communities_high >= communities_low, "Higher resolution should produce more granular communities"
+    
+    # Test 3: Invalid method handling
+    with pytest.raises(Exception):  # Should raise Log.Failure
+        kg.detect_community_clusters(method="invalid_method")
+    
+    # Test 4: Community coverage (all nodes assigned)
+    kg.detect_community_clusters(method="leiden")
+    elements_df = kg.database.get_dataframe(kg.graph_name)
+    nodes_df = elements_df[elements_df["element_type"] == "node"]
+    
+    # Every node should belong to exactly one community
+    total_nodes = len(nodes_df)
+    assigned_nodes = nodes_df["community_id"].notna().sum()
+    assert assigned_nodes == total_nodes, "All nodes should be assigned to a community"
+    
+    # Test 5: Get multiple community subgraphs
+    unique_communities = nodes_df["community_id"].unique()
+    retrieved_triples = []
+    
+    for community_id in unique_communities:
+        community_triples = kg.get_community_subgraph(str(community_id))
+        assert community_triples is not None
+        assert len(community_triples) > 0
+        retrieved_triples.append(community_triples)
+    
+    # Union of all community subgraphs should cover most of the graph
+    # (Some cross-community edges may be excluded)
+    total_community_triples = sum(len(df) for df in retrieved_triples)
+    all_triples = kg.get_all_triples()
+    coverage = total_community_triples / len(all_triples)
+    assert coverage >= 0.5, "Community subgraphs should cover majority of graph"
+    
+    # Test 6: Non-existent community_id handling
+    with pytest.raises(Exception):  # Should raise Log.Failure
+        kg.get_community_subgraph("nonexistent_community_999")
+    
+    # Test 7: Louvain with multi-level (should work but may not produce hierarchy)
+    kg.detect_community_clusters(method="louvain", multi_level=True)
+    elements_louvain_ml = kg.database.get_dataframe(kg.graph_name)
+    nodes_louvain_ml = elements_louvain_ml[elements_louvain_ml["element_type"] == "node"]
+    # Louvain may or may not support full hierarchy - just verify it runs
+    assert all(nodes_louvain_ml["community_id"].notna() | nodes_louvain_ml["community_list"].notna())
