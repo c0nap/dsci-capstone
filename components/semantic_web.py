@@ -84,23 +84,26 @@ class KnowledgeGraph:
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to pivot triple properties") from e
 
-    def triples_to_names(self, df_ids: DataFrame, df_lookup: Optional[DataFrame] = None) -> DataFrame:
+    def triples_to_names(self, df_ids: DataFrame, drop_ids: bool = False, df_lookup: Optional[DataFrame] = None) -> DataFrame:
         """Maps a DataFrame containing element ID columns to human-readable names.
         @note
         - Requires the provided nodes to still exist in the graph database; otherwise must specify df_lookup.
         @param df_ids  DataFrame with added columns: subject_id, relation_id, object_id.
+        @param drop_ids  Whether to remove columns from results: subject_id, relation_id, object_id.
         @param df_lookup  Optional DataFrame fetched from @ref components.fact_storage.GraphConnector.get_dataframe with required columns: element_id, elemenet_type, name, and rel_type.
         @return  DataFrame with added columns: subject, relation, object.
         @raises Log.Failure  If mapping fails or required IDs are missing.
         """
         df_ids = self.find_element_names(df_ids, ["subject", "object"], ["subject_id", "object_id"],
-            "node", "name", df_lookup)
+            "node", "name", drop_ids, df_lookup)
         df_ids = self.find_element_names(df_ids, ["relation"], ["relation_id"],
-            "relationship", "rel_type", df_lookup)
-        return df_ids
+            "relationship", "rel_type", drop_ids, df_lookup)
+        # Keep minimum of 2 database queries, but must correct the column order.
+        name_cols_ordered = ["subject", "relation", "object"]
+        return df_ids[[col for col in df_ids.columns if col not in name_cols_ordered] + name_cols_ordered]
 
     def find_element_names(self, df_ids: DataFrame, name_columns: List[str], id_columns: List[str], 
-        element_type: str, name_property: str,
+        element_type: str, name_property: str, drop_ids: bool = False,
         df_lookup: Optional[DataFrame] = None) -> DataFrame:
         """Helper function which maps element IDs to human-readable names.
         @note
@@ -110,6 +113,7 @@ class KnowledgeGraph:
         @param id_columns  Required list of columns containing element IDs.
         @param element_type  Whether to match nodes or relationships. Value must be "node" or "relationship".
         @param name_property  Required element property from <df_lookup> to use as the display name.
+        @param drop_ids  Whether to remove <id_columns> from results.
         @param df_lookup  Optional DataFrame fetched from @ref components.fact_storage.GraphConnector.get_dataframe with required columns: element_id, elemenet_type, and <name_property>.
         @return  DataFrame with added columns: <name_columns>.
         @raises Log.Failure  If mapping fails or required IDs are missing.
@@ -118,9 +122,29 @@ class KnowledgeGraph:
             if df_ids is None:
                 return None
             if df_ids.empty:  # Ensure the DataFrame has correct columns even if no data. For legacy compatibility
-                return DataFrame(columns=name_columns)
-    
-            # Use provided lookup DataFrame if given, otherwise query the connector
+                out_cols = [col for col in df_ids.columns if not (drop_ids and col in id_columns)] + name_columns
+                return DataFrame(columns=out_cols)
+
+            if len(name_columns) != len(id_columns):
+                raise Log.Failure(Log.kg, f"name_columns (size {len(name_columns)}) and id_columns (size {len(id_columns)}) must have the same length.")
+
+            # --- Filter out non-existent columns in df_ids ---
+            valid_cols = set(df_ids.columns)
+            filtered_pairs = [
+                (name_col, id_col)
+                for name_col, id_col in zip(name_columns, id_columns)
+                if id_col in valid_cols
+            ]
+            # If no valid columns are left, return the original DataFrame
+            if not filtered_pairs:
+                return df_ids 
+            # Re-assign the filtered lists
+            name_columns, id_columns = zip(*filtered_pairs)
+            name_columns = list(name_columns)
+            id_columns = list(id_columns)
+
+
+            # Search in provided DataFrame if given, otherwise query the connector
             df_lookup = df_lookup if df_lookup is not None else self.database.get_dataframe(self.graph_name)
             if df_lookup is None or df_lookup.empty:
                 raise Log.Failure(Log.kg + Log.gr_rag, Log.bad_triples(self.graph_name))
@@ -136,9 +160,9 @@ class KnowledgeGraph:
             for name_col, id_col in zip(name_columns, id_columns):
                 df_named[name_col] = df_named[id_col].map(id_to_name_map)
 
-            # Reorder columns
-            df_named = df_named[name_columns]
-            return df_named
+            cols_to_keep = [col for col in df_ids.columns if not (drop_ids and col in id_columns)]
+            ordered_cols = cols_to_keep + name_columns
+            return df_named[ordered_cols]
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to convert triple names") from e
 
