@@ -361,11 +361,12 @@ def output_single(session):
 
     # basic linear verbalization of triples (concatenate)
     edge_count_df = session.main_graph.get_edge_counts(top_n=3)
+    edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name")
     print("\nMost relevant nodes:")
     print(edge_count_df)
 
     triples_df = session.main_graph.get_all_triples()
-    triples_df = session.main_graph.convert_to_names(triples_df)
+    triples_df = session.main_graph.triples_to_names(triples_df)
     triples_string = ""
     for _, row in edge_count_df.iterrows():
         node_name = row.get("node_name")
@@ -594,10 +595,12 @@ def pipeline_3(session, triples):
 
     # basic linear verbalization of triples (concatenate)
     edge_count_df = session.main_graph.get_edge_counts(top_n=3)
+    edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name")
     print("\nMost relevant nodes:")
     print(edge_count_df)
 
     triples_df = session.main_graph.get_all_triples()
+    triples_df = session.main_graph.triples_to_names(triples_df)
     triples_string = ""
     for _, row in edge_count_df.iterrows():
         node_name = row.get("node_name")
