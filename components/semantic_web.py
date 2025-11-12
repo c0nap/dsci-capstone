@@ -397,16 +397,24 @@ class KnowledgeGraph:
             # Clean up GDS-generated metadata: keep only community_id or community_list, remove everything else.
             self.database.execute_query("""
             MATCH (n)
-            REMOVE n.communityLevel, n.community_level
-            SET n.level_id = CASE WHEN n.community_list IS NOT NULL THEN size(n.community_list) - 1 ELSE 0 END
-            """)
-            # Clean up GDS-generated metadata: remove all GDS artifacts
-            self.database.execute_query("""
-            MATCH (n)
             WHERE n.communityLevel IS NOT NULL
             REMOVE n.communityLevel
             """)
-    
+
+            # Clear the property we're NOT using in this mode
+            if multi_level:
+                self.database.execute_query("""
+                MATCH (n)
+                WHERE n.community_id IS NOT NULL
+                REMOVE n.community_id
+                """)
+            else:
+                self.database.execute_query("""
+                MATCH (n)
+                WHERE n.community_list IS NOT NULL
+                REMOVE n.community_list
+                """)
+        
             Log.success(Log.kg + Log.gr_rag, f"Community detection ({method}) complete.", self.database.verbose)
         except Exception as e:
             raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to run community detection") from e
