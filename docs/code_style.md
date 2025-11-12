@@ -199,7 +199,12 @@ When adding new features to a class, it is helpful to take things in stages:
 
 ## Agents
 
-Vibe coding was not used for this project, but 
+Vibe coding was not used in this project.
+
+This decision was based on our desire to preserve this capstone project both as a demonstration of software engineering proficiency and a personal learning experience.
+
+Anecdotally, the AI-assisted workflow employed here may have doubled both productivity and personal comprehension. On the other hand, agentic coding feels like it halves how much is learned in order to achieve its massive reduction in development time and developer overhead, making it more suitable for products you wish would "just exist" via any means necessary.
+
 
 ## Integration
 
