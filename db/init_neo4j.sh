@@ -16,17 +16,29 @@ NEO4J_HTTP_PORT=$4
 MAX_RETRIES=4
 RETRY_DELAY=5
 
-# --- SET INITIAL PASSWORD ---
+# --- SET INITIAL SETTINGS ---
 echo "$ECHO_PREFIX Setting Neo4j initial password..."
 neo4j-admin dbms set-initial-password "$NEO4J_PASSWORD"
-
-# --- START NEO4J SERVER IN BACKGROUND ---
-# Start the main Neo4j server process in the background so cypher-shell has a server to connect to.
-echo "$ECHO_PREFIX Starting Neo4j server in background..."
 # Docker Compose settings will not propagate since Neo4j is no longer the primary process
 echo "server.bolt.listen_address=0.0.0.0:$NEO4J_PORT" >> /var/lib/neo4j/conf/neo4j.conf
 echo "server.http.listen_address=0.0.0.0:$NEO4J_HTTP_PORT" >> /var/lib/neo4j/conf/neo4j.conf
 
+
+# --- INSTALL PLUGINS ---
+echo "$ECHO_PREFIX Installing Neo4j plugins..."
+PLUGIN_DIR=/var/lib/neo4j/plugins
+echo "$ECHO_PREFIX      Downloading GDS..."
+wget -q -O "$PLUGIN_DIR/neo4j-graph-data-science-2.22.0.jar" \
+  "https://github.com/neo4j/graph-data-science/releases/download/2.22.0/neo4j-graph-data-science-2.22.0.jar"
+echo "$ECHO_PREFIX      Downloading n10s..."
+wget -q -O "$PLUGIN_DIR/neosemantics-5.26.0.jar" \
+  "https://github.com/neo4j-labs/neosemantics/releases/download/5.26.0/neosemantics-5.26.0.jar"
+echo "$ECHO_PREFIX Plugin installation complete."
+
+
+# --- START NEO4J SERVER IN BACKGROUND ---
+# Start the main Neo4j server process in the background so cypher-shell has a server to connect to.
+echo "$ECHO_PREFIX Starting Neo4j server in background..."
 neo4j console &
 NEO4J_PID=$!
 

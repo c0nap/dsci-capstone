@@ -131,12 +131,12 @@ services:
       default:     # attach to our docker network
         aliases:   # does not replace service_name
           - databases_service
-    image: neo4j:5
+    image: neo4j:2025.09
     volumes:
       - neo4j_data:/data
       - ./db/init_neo4j.sh:/init_neo4j.sh
     environment:
-      - NEO4J_dbms_connector_http_listen__address=0.0.0.0:7474
+      - NEO4J_dbms_connector_http_listen__address=0.0.0.0:7474  # Init script manually writes this
     ports:
       - "0.0.0.0:${NEO4J_HTTP_PORT}:${NEO4J_HTTP_PORT}"   # HTTP web UI  - http://localhost:7474  - graph viewer
       - "0.0.0.0:${NEO4J_PORT}:${NEO4J_PORT}"   # Bolt protocol for queries

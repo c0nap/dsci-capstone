@@ -1,34 +1,34 @@
 (env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python-dev
-[+] Building 3.3s (20/20) FINISHED                                                               docker:default
+[+] Building 3.4s (20/20) FINISHED                                                               docker:default
  => [internal] load build definition from Dockerfile.python                                                0.0s
  => => transferring dockerfile: 1.29kB                                                                     0.0s
- => [internal] load metadata for docker.io/library/python:3.12-slim                                        0.4s
- => [internal] load .dockerignore                                                                          0.1s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                        0.2s
+ => [internal] load .dockerignore                                                                          0.0s
  => => transferring context: 79B                                                                           0.0s
  => [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8  0.0s
  => => resolve docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c2  0.0s
- => [internal] load build context                                                                          0.6s
- => => transferring context: 9.73MB                                                                        0.6s
+ => [internal] load build context                                                                          0.5s
+ => => transferring context: 9.69MB                                                                        0.5s
  => CACHED [ 2/15] WORKDIR /pipeline                                                                       0.0s
  => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential m  0.0s
  => CACHED [ 4/15] COPY req/requirements.txt requirements.txt                                              0.0s
  => CACHED [ 5/15] RUN pip install --no-cache-dir -r requirements.txt                                      0.0s
- => CACHED [ 6/15] COPY src/ src/                                                                          0.0s
- => CACHED [ 7/15] COPY tests/ tests/                                                                      0.0s
- => CACHED [ 8/15] COPY db/ db/                                                                            0.0s
+ => [ 6/15] COPY src/ src/                                                                                 0.1s
+ => [ 7/15] COPY tests/ tests/                                                                             0.1s
+ => [ 8/15] COPY db/ db/                                                                                   0.1s
  => [ 9/15] COPY components/ components/                                                                   0.1s
  => [10/15] COPY datasets/ datasets/                                                                       0.1s
  => [11/15] COPY .env .env                                                                                 0.1s
- => [12/15] COPY Makefile .                                                                                0.0s
- => [13/15] RUN make env-docker                                                                            0.6s
+ => [12/15] COPY Makefile .                                                                                0.1s
+ => [13/15] RUN make env-docker                                                                            0.5s
  => [14/15] RUN mv .env.docker .env                                                                        0.4s
- => [15/15] COPY pyproject.toml .                                                                          0.0s
- => exporting to image                                                                                     0.2s
+ => [15/15] COPY pyproject.toml .                                                                          0.1s
+ => exporting to image                                                                                     0.3s
  => => exporting layers                                                                                    0.2s
- => => writing image sha256:c77160f4178db3c8bbe9fa86aa3cc358b9599a5c95f91ed78cf25440c8aad9ae               0.0s
+ => => writing image sha256:9dc52400e2c4f84b1f583253b13b6192822fd90ec065f0523f374cafc5e885aa               0.0s
  => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                          0.0s
 container-python
-218a7870629d3bf2762d6c9c628360f55dc2a26080fe9dc98555563977a409fb
+70c93cf28d156973daf337e5369dfb8bac80a5e15c2d13adcc1c53b00d66a794
 Network 'capstone_default' already exists; continue...
 Deleted old chunks...
  * Serving Flask app 'main'
@@ -39,9 +39,9 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://172.17.0.5:5054
 Press CTRL+C to quit
 [STATUS] Story 1: preprocessing -> in-progress
-127.0.0.1 - - [10/Nov/2025 23:16:12] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [12/Nov/2025 21:40:32] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> in-progress
-127.0.0.1 - - [10/Nov/2025 23:16:12] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [12/Nov/2025 21:40:32] "POST /status/story HTTP/1.1" 200 -
 
 ==================================================
 Processing: ./datasets/examples/trilogy-wishes-2.epub
@@ -49,270 +49,206 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 === STORY SUMMARY ===
 Total chunks: 254
 [STATUS] Story 1: preprocessing -> completed
-127.0.0.1 - - [10/Nov/2025 23:16:13] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [12/Nov/2025 21:40:35] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> completed
-127.0.0.1 - - [10/Nov/2025 23:16:13] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [12/Nov/2025 21:40:35] "POST /status/story HTTP/1.1" 200 -
 
 Chunk details:
-  index: Chunk(len=1453, book=2, chapter=7, story=1, lines=[819,844], story%=11.747, chapter%=24.116)
+  index: Chunk(len=1499, book=2, chapter=16, story=1, lines=[5530,5556], story%=86.472, chapter%=20.237)
 
-‘Because there are donkeys there,’ said she.
-‘Not in November, silly,’ said Cyril; and the discussion got warmer and warmer, and still nothing was settled.
-‘I vote we let the Phoenix decide,’ said Robert, at last. So they stroked it till it woke. ‘We want to go somewhere abroad,’ they said, ‘and we can’t make up our minds where.’
-‘Let the carpet make up ITS mind, if it has one,’ said the Phoenix.
-‘Just say you wish to go abroad.’
-So they did; and the next moment the world seemed to spin upside down, and when it was right way up again and they were ungiddy enough to look about them, they were out of doors.
-Out of doors—this is a feeble way to express where they were. They were out of—out of the earth, or off it. In fact, they were floating steadily, safely, splendidly, in the crisp clear air, with the pale bright blue of the sky above them, and far down below the pale bright sun-diamonded waves of the sea. The carpet had stiffened itself somehow, so that it was square and firm like a raft, and it steered itself so beautifully and kept on its way so flat and fearless that no one was at all afraid of tumbling off. In front of them lay land.
-‘The coast of France,’ said the Phoenix, waking up and pointing with its wing. ‘Where do you wish to go? I should always keep one wish, of course—for emergencies—otherwise you may get into an emergency from which you can’t emerge at all.’
-But the children were far too deeply interested to listen.
-    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-7_p.24116]
+‘Look here,’ said Anthea; ‘I really have an idea. This isn’t like a common carpet. It’s very magic indeed. Don’t you think, if we put Tatcho on it, and then gave it a rest, the magic part of it might grow, like hair is supposed to do?’
+‘It might,’ said Robert; ‘but I should think paraffin would do as well—at any rate as far as the smell goes, and that seems to be the great thing about Tatcho.’
+But with all its faults Anthea’s idea was something to do, and they did it.
+It was Cyril who fetched the Tatcho bottle from father’s washhand-stand. But the bottle had not much in it.
+‘We mustn’t take it all,’ Jane said, ‘in case father’s hair began to come off suddenly. If he hadn’t anything to put on it, it might all drop off before Eliza had time to get round to the chemist’s for another bottle. It would be dreadful to have a bald father, and it would all be our fault.’
+‘And wigs are very expensive, I believe,’ said Anthea. ‘Look here, leave enough in the bottle to wet father’s head all over with in case any emergency emerges—and let’s make up with paraffin. I expect it’s the smell that does the good really—and the smell’s exactly the same.’
+So a small teaspoonful of the Tatcho was put on the edges of the worst darn in the carpet and rubbed carefully into the roots of the hairs of it, and all the parts that there was not enough Tatcho for had paraffin rubbed into them with a piece of flannel. Then the flannel was burned. It made a gay flame, which delighted the Phoenix and the Lamb.
+    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-16_p.20237]
 
 NLP output:
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
-('notable work', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
-('notable work', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Milton', 'Milton', 'author')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('I vote we let the Phoenix decide', 'participant', 'Robert')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('Phoenix', 'product or material produced', 'carpet')
-('London', 'capital of', 'England')
-('England', 'capital', 'London')
-('the world seemed to spin upside down', 'opposite of', 'right way up')
-('right way up', 'opposite of', 'the world seemed to spin upside down')
-('Out of doors', 'instance of', 'expression')
-('out of—out of the earth', 'different from', 'off it')
-('off it', 'different from', 'out of—out of the earth')
-('sea', 'opposite of', 'sky')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('Land', 'instance of', 'land')
-('coast', 'country', 'France')
-('Where do you wish to go', 'instance of', 'wish')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
-('notable work', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Milton', 'Milton', 'author')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('Henry Wadsworth Longfellow', 'notable work', 'The Merry Wives of Windsor')
-('The Merry Wives of Windsor', 'author', 'Henry Wadsworth Longfellow')
+('Anthea', 'child', 'Anthea')
+('Anthea', 'mother', 'Anthea')
+('carpet', 'different from', 'common')
+('magic', 'said to be the same as', 'magic')
+('magic', 'said to be the same as', 'magic')
+('Tatcho', 'instance of', 'magic')
+('Tatcho', 'has part', 'paraffin')
+('Anthea', 'notable work', 'Anthea’s idea')
+('Anthea’s idea', 'author', 'Anthea')
+('Cyril', 'father', 'father')
+('father', 'child', 'Cyril')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Cymbeline', 'author')
+('William Shakespeare', 'Cymbeline', 'author')
+('Jane', 'father', 'father')
+('father', 'child', 'Jane')
+('Eliza', 'occupation', 'chemist’s')
+('father', 'child', 'child')
+('child', 'father', 'father')
+('Wig', 'subclass of', 'wig')
+('paraffin', 'use', 'make up')
+('smell', 'has effect', 'good')
+('good', 'has cause', 'smell')
+('worst darn', 'subclass of', 'carpet')
+('burned', 'product or material produced', 'flannel')
+('Phoenix', 'sibling', 'Lamb')
+('Lamb', 'sibling', 'Phoenix')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
-('notable work', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
-('notable work', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Milton', 'Milton', 'author')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('I vote we let the Phoenix decide', 'participant', 'Robert')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('Phoenix', 'product or material produced', 'carpet')
-('London', 'capital of', 'England')
-('England', 'capital', 'London')
-('the world seemed to spin upside down', 'opposite of', 'right way up')
-('right way up', 'opposite of', 'the world seemed to spin upside down')
-('Out of doors', 'instance of', 'expression')
-('out of—out of the earth', 'different from', 'off it')
-('off it', 'different from', 'out of—out of the earth')
-('sea', 'opposite of', 'sky')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'Nineteen Eighty-Four', 'notable work')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('George Orwell', 'Nineteen Eighty-Four', 'author')
-('Land', 'instance of', 'land')
-('coast', 'country', 'France')
-('Where do you wish to go', 'instance of', 'wish')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
-('notable work', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Milton', 'Milton', 'author')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('Henry Wadsworth Longfellow', 'notable work', 'The Merry Wives of Windsor')
-('The Merry Wives of Windsor', 'author', 'Henry Wadsworth Longfellow')
+('Anthea', 'child', 'Anthea')
+('Anthea', 'mother', 'Anthea')
+('carpet', 'different from', 'common')
+('magic', 'said to be the same as', 'magic')
+('magic', 'said to be the same as', 'magic')
+('Tatcho', 'instance of', 'magic')
+('Tatcho', 'has part', 'paraffin')
+('Anthea', 'notable work', 'Anthea’s idea')
+('Anthea’s idea', 'author', 'Anthea')
+('Cyril', 'father', 'father')
+('father', 'child', 'Cyril')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'Cymbeline', 'notable work')
+('William Shakespeare', 'Cymbeline', 'author')
+('William Shakespeare', 'Cymbeline', 'author')
+('Jane', 'father', 'father')
+('father', 'child', 'Jane')
+('Eliza', 'occupation', 'chemist’s')
+('father', 'child', 'child')
+('child', 'father', 'father')
+('Wig', 'subclass of', 'wig')
+('paraffin', 'use', 'make up')
+('smell', 'has effect', 'good')
+('good', 'has cause', 'smell')
+('worst darn', 'subclass of', 'carpet')
+('burned', 'product or material produced', 'flannel')
+('Phoenix', 'sibling', 'Lamb')
+('Lamb', 'sibling', 'Phoenix')
 
 And here is the original text:
-‘Because there are donkeys there,’ said she.
-‘Not in November, silly,’ said Cyril; and the discussion got warmer and warmer, and still nothing was settled.
-‘I vote we let the Phoenix decide,’ said Robert, at last. So they stroked it till it woke. ‘We want to go somewhere abroad,’ they said, ‘and we can’t make up our minds where.’
-‘Let the carpet make up ITS mind, if it has one,’ said the Phoenix.
-‘Just say you wish to go abroad.’
-So they did; and the next moment the world seemed to spin upside down, and when it was right way up again and they were ungiddy enough to look about them, they were out of doors.
-Out of doors—this is a feeble way to express where they were. They were out of—out of the earth, or off it. In fact, they were floating steadily, safely, splendidly, in the crisp clear air, with the pale bright blue of the sky above them, and far down below the pale bright sun-diamonded waves of the sea. The carpet had stiffened itself somehow, so that it was square and firm like a raft, and it steered itself so beautifully and kept on its way so flat and fearless that no one was at all afraid of tumbling off. In front of them lay land.
-‘The coast of France,’ said the Phoenix, waking up and pointing with its wing. ‘Where do you wish to go? I should always keep one wish, of course—for emergencies—otherwise you may get into an emergency from which you can’t emerge at all.’
-But the children were far too deeply interested to listen.
+‘Look here,’ said Anthea; ‘I really have an idea. This isn’t like a common carpet. It’s very magic indeed. Don’t you think, if we put Tatcho on it, and then gave it a rest, the magic part of it might grow, like hair is supposed to do?’
+‘It might,’ said Robert; ‘but I should think paraffin would do as well—at any rate as far as the smell goes, and that seems to be the great thing about Tatcho.’
+But with all its faults Anthea’s idea was something to do, and they did it.
+It was Cyril who fetched the Tatcho bottle from father’s washhand-stand. But the bottle had not much in it.
+‘We mustn’t take it all,’ Jane said, ‘in case father’s hair began to come off suddenly. If he hadn’t anything to put on it, it might all drop off before Eliza had time to get round to the chemist’s for another bottle. It would be dreadful to have a bald father, and it would all be our fault.’
+‘And wigs are very expensive, I believe,’ said Anthea. ‘Look here, leave enough in the bottle to wet father’s head all over with in case any emergency emerges—and let’s make up with paraffin. I expect it’s the smell that does the good really—and the smell’s exactly the same.’
+So a small teaspoonful of the Tatcho was put on the edges of the worst darn in the carpet and rubbed carefully into the roots of the hairs of it, and all the parts that there was not enough Tatcho for had paraffin rubbed into them with a piece of flannel. Then the flannel was burned. It made a gay flame, which delighted the Phoenix and the Lamb.
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s":"Robert","r":"said","o":"I vote we let the Phoenix decide"},
-  {"s":"The Phoenix","r":"said","o":"Let the carpet make up ITS mind, if it has one"},
-  {"s":"Robert","r":"stated","o":"We want to go somewhere abroad"},
-  {"s":"They","r":"stroked","o":"the Phoenix till it woke"},
-  {"s":"They","r":"replied","o":"Just say you wish to go abroad"},
-  {"s":"The world","r":"spun","o":"upside down"},
-  {"s":"The world","r":"returned to","o":"right way up"},
-  {"s":"They","r":"arrived","o":"out of doors"},
-  {"s":"They","r":"were","o":"out of the earth"},
-  {"s":"They","r":"floated","o":"steadily in the crisp clear air"},
-  {"s":"The sky","r":"was","o":"pale bright blue above them"},
-  {"s":"The sea","r":"had","o":"pale bright sun-diamonded waves"},
-  {"s":"The carpet","r":"stiffened","o":"itself; it became square and firm like a raft"},
-  {"s":"The carpet","r":"steered","o":"itself beautifully"},
-  {"s":"The carpet","r":"kept","o":"its way flat and fearless"},
-  {"s":"They","r":"were not","o":"afraid of tumbling off"},
-  {"s":"In front of them","r":"lay","o":"land"},
-  {"s":"The Phoenix","r":"said","o":"The coast of France"},
-  {"s":"The Phoenix","r":"woke up and pointed","o":"with its wing at the coast of France"},
-  {"s":"The Phoenix","r":"asked","o":"Where do you wish to go?"},
-  {"s":"The Phoenix","r":"said","o":"I should always keep one wish, for emergencies"},
-  {"s":"The coast of France","r":"was","o":"in front of them"},
-  {"s":"The children","r":"were","o":"too deeply interested to listen"},
-  {"s":"They","r":"set off","o":"to go abroad"}
+  {"s":"carpet","r":"different from","o":"common"},
+  {"s":"Tatcho","r":"applied to","o":"carpet"},
+  {"s":"Cyril","r":"fetched","o":"Tatcho bottle"},
+  {"s":"Tatcho bottle","r":"from","o":"father’s washhand-stand"},
+  {"s":"Jane","r":"said","o":"we mustn’t take it all"},
+  {"s":"Eliza","r":"went to","o":"chemist’s for another bottle"},
+  {"s":"paraffin","r":"use","o":"make up"},
+  {"s":"smell","r":"has effect","o":"good"},
+  {"s":"good","r":"has cause","o":"smell"},
+  {"s":"William Shakespeare","r":"notable work","o":"Cymbeline"},
+  {"s":"William Shakespeare","r":"Cymbeline","o":"author"},
+  {"s":"Eliza","r":"occupation","o":"chemist’s"},
+  {"s":"carpet","r":"has part","o":"worst darn"},
+  {"s":"flannel","r":"burned","o":"flame"},
+  {"s":"flame","r":"delighted","o":"Phoenix and Lamb"},
+  {"s":"Tatcho","r":"causes","o":"hair growth"},
+  {"s":"Anthea","r":"expressed","o":"idea to treat hair with Tatcho"}
 ]
 
 ==================================================
 
 
 Valid JSON
-[STATUS] Chunk story-1_book-2_chapter-7_p.24116: relation_extraction -> in-progress
-127.0.0.1 - - [10/Nov/2025 23:19:44] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-7_p.24116: llm_inference -> in-progress
-127.0.0.1 - - [10/Nov/2025 23:19:44] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-7_p.24116: relation_extraction -> completed
-127.0.0.1 - - [10/Nov/2025 23:19:44] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-7_p.24116: llm_inference -> completed
-127.0.0.1 - - [10/Nov/2025 23:19:44] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-7_p.24116: graph_verbalization -> in-progress
-127.0.0.1 - - [10/Nov/2025 23:19:44] "POST /status/chunk HTTP/1.1" 200 -
-Robert said I vote we let the Phoenix decide
-The Phoenix said Let the carpet make up ITS mind, if it has one
-Robert stated We want to go somewhere abroad
-They stroked the Phoenix till it woke
-They replied Just say you wish to go abroad
-The world spun upside down
-The world returned to right way up
-They arrived out of doors
-They were out of the earth
-They floated steadily in the crisp clear air
-The sky was pale bright blue above them
-The sea had pale bright sun-diamonded waves
-The carpet stiffened itself; it became square and firm like a raft
-The carpet steered itself beautifully
-The carpet kept its way flat and fearless
-They were not afraid of tumbling off
-In front of them lay land
-The Phoenix said The coast of France
-The Phoenix woke up and pointed with its wing at the coast of France
-The Phoenix asked Where do you wish to go?
-The Phoenix said I should always keep one wish, for emergencies
-The coast of France was in front of them
-The children were too deeply interested to listen
-They set off to go abroad
+[STATUS] Chunk story-1_book-2_chapter-16_p.20237: relation_extraction -> in-progress
+127.0.0.1 - - [12/Nov/2025 21:44:06] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-16_p.20237: llm_inference -> in-progress
+127.0.0.1 - - [12/Nov/2025 21:44:06] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-16_p.20237: relation_extraction -> completed
+127.0.0.1 - - [12/Nov/2025 21:44:06] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-16_p.20237: llm_inference -> completed
+127.0.0.1 - - [12/Nov/2025 21:44:06] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-16_p.20237: graph_verbalization -> in-progress
+127.0.0.1 - - [12/Nov/2025 21:44:06] "POST /status/chunk HTTP/1.1" 200 -
+carpet different from common
+Tatcho applied to carpet
+Cyril fetched Tatcho bottle
+Tatcho bottle from father’s washhand-stand
+Jane said we mustn’t take it all
+Eliza went to chemist’s for another bottle
+paraffin use make up
+smell has effect good
+good has cause smell
+William Shakespeare notable work Cymbeline
+William Shakespeare Cymbeline author
+Eliza occupation chemist’s
+carpet has part worst darn
+flannel burned flame
+flame delighted Phoenix and Lamb
+Tatcho causes hair growth
+Anthea expressed idea to treat hair with Tatcho
 
 Most relevant nodes:
-     node_name  edge_count
-0         They           7
-1  The Phoenix           5
-2      Phoenix           5
+  node_name  edge_count
+0    carpet           3
+1     smell           2
+2    Tatcho           2
 
 Triples which best represent the graph:
-They WERE_NOT afraid of tumbling off
-They STROKED the Phoenix till it woke
-They REPLIED Just say you wish to go abroad
-They ARRIVED out of doors
-They WERE out of the earth
-They FLOATED steadily in the crisp clear air
-They SET_OFF to go abroad
-The Phoenix SAID Let the carpet make up ITS mind_ if it has one
-The Phoenix SAID The coast of France
-The Phoenix WOKE_UP_AND_POINTED with its wing at the coast of France
-The Phoenix ASKED Where do you wish to go
-The Phoenix SAID I should always keep one wish_ for emergencies
-Phoenix SAYS Hush
-Phoenix SAYS Don_t trample on its feelings just because it_s only a carpet
-Phoenix EXPLAINS write your wish on a paper and pin it on the carpet
-Phoenix SAYS It may take it some time to collect the beautiful and delightful things
-Phoenix SAYS I should wash up_I mean wash down
+carpet HAS_PART worst darn
+carpet DIFFERENT_FROM common
+smell HAS_EFFECT good
+Tatcho CAUSES hair growth
+Tatcho APPLIED_TO carpet
 
-[STATUS] Chunk story-1_book-2_chapter-7_p.24116: graph_verbalization -> completed
-127.0.0.1 - - [10/Nov/2025 23:19:47] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-16_p.20237: graph_verbalization -> completed
+127.0.0.1 - - [12/Nov/2025 21:44:08] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Story 1: summarization -> in-progress
-127.0.0.1 - - [10/Nov/2025 23:19:47] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-7_p.24116: summarization -> in-progress
-127.0.0.1 - - [10/Nov/2025 23:19:47] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [12/Nov/2025 21:44:08] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-16_p.20237: summarization -> in-progress
+127.0.0.1 - - [12/Nov/2025 21:44:08] "POST /status/chunk HTTP/1.1" 200 -
 
 Generated summary:
-A group of children awakens a magical phoenix and a sentient carpet. Fearless, they decide to go abroad, lift off, and float through the crisp air toward the coast of France. The phoenix asks where they wish to go, and directs them to write their wish on a paper and pin it to the carpet, which will gather beautiful things for the journey and may take some time. The carpet should be treated with kindness, and the phoenix lets it decide its path. They depart outdoors to begin their voyage toward France.
-    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-7_p.24116]
+The carpet has a part described as 'worst darn' and is different from the common type. The smell has a good effect. Tatcho causes hair growth and is applied to the carpet.
+    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-16_p.20237]
 [STATUS] Story 1: summarization -> completed
-127.0.0.1 - - [10/Nov/2025 23:20:05] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-7_p.24116: summarization -> completed
-127.0.0.1 - - [10/Nov/2025 23:20:05] "POST /status/chunk HTTP/1.1" 200 -
-[ASSIGNED] chunk 'story-1_book-2_chapter-7_p.24116' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
-[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.24116, task=questeval, status=started
-127.0.0.1 - - [10/Nov/2025 23:20:05] "POST /process_story HTTP/1.1" 200 -
-Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
-172.18.0.6 - - [10/Nov/2025 23:20:05] "POST /callback HTTP/1.1" 200 -
-[ASSIGNED] chunk 'story-1_book-2_chapter-7_p.24116' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [10/Nov/2025 23:20:05] "POST /process_story HTTP/1.1" 200 -
+127.0.0.1 - - [12/Nov/2025 21:44:19] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-16_p.20237: summarization -> completed
+127.0.0.1 - - [12/Nov/2025 21:44:19] "POST /status/chunk HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-16_p.20237' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [12/Nov/2025 21:44:19] "POST /process_story HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-16_p.20237, task=questeval, status=startedTriggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
+
+172.18.0.6 - - [12/Nov/2025 21:44:19] "POST /callback HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-16_p.20237' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [12/Nov/2025 21:44:19] "POST /process_story HTTP/1.1" 200 -
 Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}
 Initial processing complete. Server listening for additional requests from Blazor...
 Press Ctrl+C to stop.
-[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.24116, task=bookscore, status=started
-172.18.0.7 - - [10/Nov/2025 23:20:05] "POST /callback HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.24116, task=bookscore, status=completed
+[CALLBACK] chunk_id=story-1_book-2_chapter-16_p.20237, task=bookscore, status=started
+172.18.0.7 - - [12/Nov/2025 21:44:19] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-16_p.20237, task=bookscore, status=completed
 [STORY COMPLETE] All chunks completed metric_bookscore for story 1
-172.18.0.7 - - [10/Nov/2025 23:20:18] "POST /callback HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-7_p.24116, task=questeval, status=completed
+172.18.0.7 - - [12/Nov/2025 21:44:28] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-16_p.20237, task=questeval, status=completed
 [STORY COMPLETE] All chunks completed metric_questeval for story 1
-Downloading builder script: 6.27kB [00:00, 2.12MB/s]
+Downloading builder script: 6.27kB [00:00, 4.25MB/s]
 Downloading builder script: 7.95kB [00:00, 18.3MB/s]
 Some weights of RobertaModel were not initialized from the model checkpoint at roberta-large and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'A group of children awakens a magical phoenix and a sentient carpet. Fearless, they decide to go abroad, lift off, and float through the crisp air toward the coast of France. The phoenix asks where they wish to go, and directs them to write their wish on a paper and pin it to the carpet, which will gather beautiful things for the journey and may take some time. The carpet should be treated with kindness, and the phoenix lets it decide its path. They depart outdoors to begin their voyage toward France.', 'goldSummaryText': '‘Because there are donkeys there,’ said she.\n‘Not in November, silly,’ said Cyril; and the discussion got warmer and warmer, and still nothing was settled.\n‘I vote we let the Phoenix decide,’ said Robert, at last. So they stroked it till it woke. ‘We want to go somewhere abroad,’ they said, ‘and we can’t make up our minds where.’\n‘Let the carpet make up ITS mind, if it has one,’ said the Phoenix.\n‘Just say you wish to go abroad.’\nSo they did; and the next moment the world seemed to spin upside down, and when it was right way up again and they were ungiddy enough to look about them, they were out of doors.\nOut of doors—this is a feeble way to express where they were. They were out of—out of the earth, or off it. In fa', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8450875282287598, 'recall': 0.8166887164115906, 'f1Score': 0.8306454420089722}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.3027239699273936}, {'name': 'ROUGE-1', 'value': 0.32340425531914896}, {'name': 'ROUGE-2', 'value': 0.07725321888412016}, {'name': 'ROUGE-L', 'value': 0.16170212765957448}, {'name': 'ROUGE-Lsum', 'value': 0.28085106382978725}]}, 'qaResults': []}
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': "The carpet has a part described as 'worst darn' and is different from the common type. The smell has a good effect. Tatcho causes hair growth and is applied to the carpet.", 'goldSummaryText': '‘Look here,’ said Anthea; ‘I really have an idea. This isn’t like a common carpet. It’s very magic indeed. Don’t you think, if we put Tatcho on it, and then gave it a rest, the magic part of it might grow, like hair is supposed to do?’\n‘It might,’ said Robert; ‘but I should think paraffin would do as well—at any rate as far as the smell goes, and that seems to be the great thing about Tatcho.’\nBut with all its faults Anthea’s idea was something to do, and they did it.\nIt was Cyril who fetched the Tatcho bottle from father’s washhand-stand. But the bottle had not much in it.\n‘We mustn’t take it all,’ Jane said, ‘in case father’s hair began to come off suddenly. If he hadn’t anything to put on it, it might all drop off before Eliza had time ', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8633345365524292, 'recall': 0.7987340688705444, 'f1Score': 0.8297789096832275}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.3423340832052486}, {'name': 'ROUGE-1', 'value': 0.19251336898395724}, {'name': 'ROUGE-2', 'value': 0.01081081081081081}, {'name': 'ROUGE-L', 'value': 0.10695187165775401}, {'name': 'ROUGE-Lsum', 'value': 0.1497326203208556}]}, 'qaResults': []}
 
 Output sent to web app.
 [PIPELINE FINALIZED] Story 1 fully processed
-172.18.0.6 - - [10/Nov/2025 23:25:38] "POST /callback HTTP/1.1" 200 -
-INFO:werkzeug:172.18.0.6 - - [10/Nov/2025 23:25:38] "POST /callback HTTP/1.1" 200 -
+172.18.0.6 - - [12/Nov/2025 21:48:35] "POST /callback HTTP/1.1" 200 -
+INFO:werkzeug:172.18.0.6 - - [12/Nov/2025 21:48:35] "POST /callback HTTP/1.1" 200 -
 ^Cmake[2]: *** [Makefile:77: docker-start] Interrupt
 make[1]: *** [Makefile:89: docker-python] Interrupt
 make: *** [Makefile:124: docker-python-dev] Interrupt
@@ -325,17 +261,17 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:5002
  * Running on http://172.17.0.4:5002
 Press CTRL+C to quit
-[QUEUED] chunk 'story-1_book-2_chapter-7_p.24116' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-172.18.0.8 - - [10/Nov/2025 23:20:05] "POST /tasks/queue HTTP/1.1" 202 -
-FINISHED: chunk ID: story-1_book-2_chapter-7_p.24116, result:
-{'value': 0.0, 'annotations': {'A group of children awakens a magical phoenix and a sentient carpet.': {'questions': 'What are the names of the children? How did they awaken the phoenix and the carpet? What is the significance of the phoenix and the carpet in the story?', 'types': ['entity omission']}, 'Fearless, they decide to go abroad, lift off, and float through the crisp air toward the coast of France.': {'questions': 'How do the children lift off? What is the mechanism or magic that allows them to float through the air?', 'types': ['event omission', 'causal omission']}, 'The phoenix asks where they wish to go, and directs them to write their wish on a paper and pin it to the carpet, which will gather beautiful things for the journey and may take some time.': {'questions': "What kind of beautiful things will the carpet gather? Why does it take some time? What happens if they don't treat the carpet with kindness?", 'types': ['entity omission', 'causal omission']}, 'The carpet should be treated with kindness, and the phoenix lets it decide its path.': {'questions': 'Why does the carpet need to be treated with kindness? What does it mean for the phoenix to let the carpet decide its path? How does this affect the journey?', 'types': ['entity omission', 'causal omission']}, 'They depart outdoors to begin their voyage toward France.': {'questions': 'Why are they departing outdoors? Is there a specific reason for choosing this location? What preparations did they make before departing?', 'types': ['entity omission', 'event omission']}}, 'model_used': 'openai-model_gpt-4o-mini'}
+[QUEUED] chunk 'story-1_book-2_chapter-16_p.20237' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+172.18.0.8 - - [12/Nov/2025 21:44:19] "POST /tasks/queue HTTP/1.1" 202 -
+FINISHED: chunk ID: story-1_book-2_chapter-16_p.20237, result:
+{'value': 0.0, 'annotations': {"The carpet has a part described as 'worst darn' and is different from the common type.": {'questions': "What does 'worst darn' refer to? How is the carpet different from the common type? What is the significance of this detail?", 'types': ['entity omission', 'causal omission']}, 'The smell has a good effect.': {'questions': 'What is the source of the smell? How does it have a good effect? What is the context of the smell in relation to the carpet?', 'types': ['entity omission', 'causal omission']}, 'Tatcho causes hair growth and is applied to the carpet.': {'questions': 'What is Tatcho? How does applying it to the carpet relate to hair growth? Why is it being applied to the carpet in the first place?', 'types': ['entity omission', 'causal omission']}}, 'model_used': 'openai-model_gpt-4o-mini'}
 (env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-qeval
-Downloading: 6.81kB [00:00, 8.59MB/s]
+Downloading: 6.81kB [00:00, 10.2MB/s]
 WARNING:root:Downloading language model for the spaCy model.
 DEPRECATION: https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl#egg=en_core_web_sm==3.0.0 contains an egg fragment with a non-PEP 508 name. pip 25.1 will enforce this behaviour change. A possible replacement is to use the req @ url syntax, and remove the egg fragment. Discussion can be found at https://github.com/pypa/pip/issues/13157
 Collecting en-core-web-sm==3.0.0
   Downloading https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl (13.7 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 35.3 MB/s eta 0:00:00
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 28.7 MB/s eta 0:00:00
 Requirement already satisfied: spacy<3.1.0,>=3.0.0 in /usr/local/lib/python3.8/site-packages (from en-core-web-sm==3.0.0) (3.0.6)
 Requirement already satisfied: spacy-legacy<3.1.0,>=3.0.4 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.0.12)
 Requirement already satisfied: murmurhash<1.1.0,>=0.28.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.0.13)
@@ -381,11 +317,11 @@ You can now load the package via spacy.load('en_core_web_sm')
    Use a production WSGI server instead.
  * Debug mode: off
 INFO:werkzeug: * Running on http://0.0.0.0:5001/ (Press CTRL+C to quit)
-[QUEUED] chunk 'story-1_book-2_chapter-7_p.24116' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-INFO:werkzeug:172.18.0.8 - - [10/Nov/2025 23:20:05] "POST /tasks/queue HTTP/1.1" 202 -
-Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias', 'cls.seq_relationship.weight']
+[QUEUED] chunk 'story-1_book-2_chapter-16_p.20237' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+INFO:werkzeug:172.18.0.8 - - [12/Nov/2025 21:44:19] "POST /tasks/queue HTTP/1.1" 202 -
+Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.seq_relationship.weight', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.bias', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.bias', 'cls.predictions.bias']
 - This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
 - This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-FINISHED: chunk ID: story-1_book-2_chapter-7_p.24116, result:
-{'value': 0.3027239699273936, 'has_reference': False}
+FINISHED: chunk ID: story-1_book-2_chapter-16_p.20237, result:
+{'value': 0.3423340832052486, 'has_reference': False}
 Failed to notify boss: HTTPConnectionPool(host='python_service', port=5054): Read timed out. (read timeout=5)

@@ -329,10 +329,10 @@ def graph_triple_files(session):
             obj = triple["o"]
 
             print(subj, rel, obj)
-            session.graph_db.add_triple(subj, rel, obj)
+            session.main_graph.add_triple(subj, rel, obj)
 
     print(f"\n{'='*50}")
-    session.graph_db.print_triples(max_col_width=20)
+    session.main_graph.print_triples(max_col_width=20)
 
 
 response_files = ["./datasets/triples/chunk-160_story-1.txt"]
@@ -357,14 +357,16 @@ def output_single(session):
         rel = triple["r"]
         obj = triple["o"]
         print(subj, rel, obj)
-        session.graph_db.add_triple(subj, rel, obj)
+        session.main_graph.add_triple(subj, rel, obj)
 
     # basic linear verbalization of triples (concatenate)
-    edge_count_df = session.graph_db.get_edge_counts(top_n=3)
+    edge_count_df = session.main_graph.get_edge_counts(top_n=3)
+    edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
     print("\nMost relevant nodes:")
     print(edge_count_df)
 
-    triples_df = session.graph_db.get_all_triples()
+    triples_df = session.main_graph.get_all_triples()
+    triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
     triples_string = ""
     for _, row in edge_count_df.iterrows():
         node_name = row.get("node_name")
@@ -589,14 +591,16 @@ def pipeline_3(session, triples):
         rel = triple["r"]
         obj = triple["o"]
         print(subj, rel, obj)
-        session.graph_db.add_triple(subj, rel, obj)
+        session.main_graph.add_triple(subj, rel, obj)
 
     # basic linear verbalization of triples (concatenate)
-    edge_count_df = session.graph_db.get_edge_counts(top_n=3)
+    edge_count_df = session.main_graph.get_edge_counts(top_n=3)
+    edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
     print("\nMost relevant nodes:")
     print(edge_count_df)
 
-    triples_df = session.graph_db.get_all_triples()
+    triples_df = session.main_graph.get_all_triples()
+    triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
     triples_string = ""
     for _, row in edge_count_df.iterrows():
         node_name = row.get("node_name")

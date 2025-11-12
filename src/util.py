@@ -202,6 +202,10 @@ class Log:
 
     get_unique = "UNIQUE: "
 
+    kg = "TRIPLES: "
+    gr_rag = "RAG: "
+    msg_bad_triples = lambda graph_name: f"No triples found for graph {graph_name}"
+
 
 def all_none(*args):
     """Checks if all provided args are None."""
