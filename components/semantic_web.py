@@ -327,10 +327,11 @@ class KnowledgeGraph:
             ]
             if triples_df.empty:
                 Log.warn(Log.kg + Log.gr_rag, f"No triples found for community_id {community_id}")
-                return triples_df
+                # Return empty DataFrame with correct schema
+                return DataFrame(columns=["subject_id", "relation_id", "object_id"])
 
-            triples_df = triples_df[["n1.name", "r.rel_type", "n2.name"]].rename(
-                columns={"n1.name": "subject", "r.rel_type": "relation", "n2.name": "object"}
+            triples_df = triples_df[["n1.element_id", "r.element_id", "n2.element_id"]].rename(
+                columns={"n1.element_id": "subject_id", "r.element_id": "relation_id", "n2.element_id": "object_id"}
             )
             return triples_df
         except Exception as e:
