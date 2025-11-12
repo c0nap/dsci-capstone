@@ -304,7 +304,7 @@ class KnowledgeGraph:
 
 
     
-    def get_community_subgraph(self, community_id: str) -> DataFrame:
+    def get_community_subgraph(self, community_id: int) -> DataFrame:
         """Return all triples belonging to a specific GraphRAG community.
         @details
         - Communities are densely connected subgraphs detected via clustering algorithms.
