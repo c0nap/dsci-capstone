@@ -174,12 +174,34 @@ The updated code documentation can be found at the URL [c0nap.github.io/dsci-cap
 
 # Role of Generative AI
 
+## Development
+
 OpenAI - GPT-5 and GPT-4o
 Gemini - 2.5 Flash
 Claude - Sonnet 4.5
 
 
-## Integrate Usage via API Calls
+
+## Testing
+
+LLMs saved a lot of time when we were creating PyTests for all the moving parts of this application. These tasks are usually monotonous and do not provide much potential for learning, so LLMs are a good fit here.
+
+When adding new features to a class, it is helpful to take things in stages:
+
+1. Figure out the intended behavior of the class. Discuss which features are desired, standard for the domain, or already available using an external import.
+2. Set limits on code generation by drafting docstrings and function signatures first. This allows feedback and clarification, and helps with understanding how things will fit together. Group related methods into sections and use similar naming conventions.
+3. Choose one function to generate first, and verify code style. For example, type hints, docstring format, and error handling / defensive None-checks.
+4. Always generate a minimal PyTest first for basic functionality, noting a preference for no edge cases yet.
+5. Save time by generating several function bodies and their corresponding minimal tests in a single prompt. If you create comprehensive versions using this approach, make sure to evaluate whether a comprehensive version is actually needed, otherwise the LLM will bloat the test with obviously unnecessary asserts, adding nothing new or useful.
+6. When several methods perform similar tasks, use a PyTest fixture to load the same data each time. Our database connector tests rely on SQL, JSON, or Cypher query files. This worked out well, but finding and opening separate files made copy / paste operations more time-consuming than a hard-coded query string inside a fixture. The file-reading functionality does not need to be tested 10+ times.
+7. Use a distinct theme for the generated input data to make it more memorable for you and for the LLM. For example, we use a Scene graph, Social graph, and Event graph, rarely doubling-up with data fixtures. These examples provide a baseline for final intended usage; they essentially present a visualization to make comprehension and planning more seamless.
+
+
+## Agents
+
+Vibe coding was not used for this project, but 
+
+## Integration
 
 LLMs also play a vital role in our text-processing pipeline.
 
