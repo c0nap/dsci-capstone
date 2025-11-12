@@ -16,12 +16,6 @@ NEO4J_HTTP_PORT=$4
 MAX_RETRIES=4
 RETRY_DELAY=5
 
-# --- Generate official plugin manifest if not already present ---
-if [ -n "$NEO4J_PLUGINS" ]; then
-    echo "$ECHO_PREFIX Detected NEO4J_PLUGINS; generating manifest..."
-    /startup/docker-entrypoint.sh neo4j console --version >/dev/null 2>&1 || true
-fi
-
 # --- SET INITIAL SETTINGS ---
 echo "$ECHO_PREFIX Setting Neo4j initial password..."
 neo4j-admin dbms set-initial-password "$NEO4J_PASSWORD"
@@ -30,73 +24,16 @@ echo "server.bolt.listen_address=0.0.0.0:$NEO4J_PORT" >> /var/lib/neo4j/conf/neo
 echo "server.http.listen_address=0.0.0.0:$NEO4J_HTTP_PORT" >> /var/lib/neo4j/conf/neo4j.conf
 
 
-
-# --- INSTALL PLUGINS FROM /startup/neo4j-plugins.json ---
+# --- INSTALL PLUGINS ---
 echo "$ECHO_PREFIX Installing Neo4j plugins..."
-mkdir -p /var/lib/neo4j/plugins
 PLUGIN_DIR=/var/lib/neo4j/plugins
-
-PLUGIN_MANIFEST="/startup/neo4j-plugins.json"
-if [ ! -f "$PLUGIN_MANIFEST" ]; then
-    echo "$ECHO_PREFIX No plugin manifest found — skipping plugin install."
-else
-    # Extract plugin names (skip property keys)
-    grep -oE '"[A-Za-z0-9._-]+": *\{' "$PLUGIN_MANIFEST" | \
-    cut -d'"' -f2 | while IFS= read -r plugin; do
-        [ "$plugin" = "properties" ] && continue
-        echo "$ECHO_PREFIX Processing plugin: $plugin"
-
-        versions_url=$(grep -A1 "\"$plugin\"" "$PLUGIN_MANIFEST" | grep '"versions"' | sed 's/.*"versions": *"//; s/".*//')
-        location=$(grep -A1 "\"$plugin\"" "$PLUGIN_MANIFEST" | grep '"location"' | sed 's/.*"location": *"//; s/".*//')
-
-        download_url=""
-        if [ -n "$versions_url" ]; then
-            echo "$ECHO_PREFIX      Fetching versions from $versions_url"
-            download_url=$(wget -q -O - "$versions_url" | grep -Eo 'https[^"]+\.(jar|zip)' | head -n 1)
-        fi
-
-        if [ -n "$download_url" ]; then
-            echo "$ECHO_PREFIX      Downloading $plugin from $download_url"
-            fname=$(basename "$download_url")
-            wget -q -L --content-disposition "$download_url" -O "$PLUGIN_DIR/$fname"
-            case "$fname" in
-                *.zip) unzip -qo "$PLUGIN_DIR/$fname" -d $PLUGIN_DIR ;;
-            esac
-        else
-            echo "$ECHO_PREFIX      WARNING: No download info for $plugin — skipping."
-            continue
-        fi
-
-        # Append plugin-specific config lines
-        grep '"properties"' -A10 "$PLUGIN_MANIFEST" | awk -v p="$plugin" '
-            $0 ~ "\""p"\"" {inblock=1; next}
-            inblock && /\}/ {inblock=0}
-            inblock && /": *"/ {
-                gsub(/[",]/,"")
-                split($0,a,":")
-                print a[1]"="a[2]
-            }' | while IFS= read -r prop; do
-                key=$(printf '%s' "$prop" | cut -d'=' -f1)
-
-                # Filter for supported config keys (Community Edition safe)
-                case "$key" in
-                    dbms.security.procedures.unrestricted|dbms.security.procedures.allowlist|server.unmanaged_extension_classes)
-                        if [ -n "$key" ] && ! grep -q "^$key=" /var/lib/neo4j/conf/neo4j.conf 2>/dev/null; then
-                            echo "$prop" >> /var/lib/neo4j/conf/neo4j.conf
-                            echo "$ECHO_PREFIX      Added config: $prop"
-                        fi
-                        ;;
-                    *)
-                        # Unsupported key — silently skip
-                        ;;
-                esac
-            done
-    done
-fi
-
+echo "$ECHO_PREFIX      Downloading GDS..."
+wget -q -O "$PLUGIN_DIR/neo4j-graph-data-science-2.13.2.jar" \
+  "https://github.com/neo4j/graph-data-science/releases/download/2.13.2/neo4j-graph-data-science-2.13.2.jar"
+echo "$ECHO_PREFIX      Downloading n10s..."
+wget -q -O "$PLUGIN_DIR/neosemantics-5.26.0.jar" \
+  "https://github.com/neo4j-labs/neosemantics/releases/download/5.26.0/neosemantics-5.26.0.jar"
 echo "$ECHO_PREFIX Plugin installation complete."
-
-
 
 
 # --- START NEO4J SERVER IN BACKGROUND ---
