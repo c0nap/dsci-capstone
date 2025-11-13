@@ -126,7 +126,7 @@ class GraphConnector(DatabaseConnector):
         Log.success(Log.gr_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
-    def check_connection(self, log_source: str, raise_error: bool) -> bool:
+    def check_connection(self, log_source: str, raise_error: bool = True) -> bool:
         """Minimal connection test to determine if our connection string is valid.
         @details  Connect to Neo4j executing a query: db.cypher_query()
         @param log_source  The Log class prefix indicating which method is performing the check.
@@ -136,7 +136,7 @@ class GraphConnector(DatabaseConnector):
         try:
             # Automatically connected, just try a basic query
             db.cypher_query("RETURN 1")
-        except Exception:  # These errors are usually nasty, so dont print the original.
+        except Exception:  # These errors are usually long, so dont print the original.
             if not raise_error:
                 return False
             raise Log.Failure(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None

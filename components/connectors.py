@@ -406,7 +406,7 @@ class RelationalConnector(DatabaseConnector):
         Log.success(Log.rel_db, Log.msg_db_connect(self.database_name), self.verbose)
         return True
 
-    def check_connection(self, log_source: str, raise_error: bool) -> bool:
+    def check_connection(self, log_source: str, raise_error: bool = True) -> bool:
         """Minimal connection test to determine if our connection string is valid.
         @details  Connect to our relational database using SQLAlchemy's engine.begin()
         @param log_source  The Log class prefix indicating which method is performing the check.
@@ -418,7 +418,7 @@ class RelationalConnector(DatabaseConnector):
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
                 connection.execute(text("SELECT 1"))
-        except Exception:  # These errors are usually nasty, so dont print the original.
+        except Exception:  # These errors are usually long, so dont print the original.
             if not raise_error:
                 return False
             raise Log.Failure(Log.rel_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
