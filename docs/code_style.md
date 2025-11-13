@@ -304,4 +304,32 @@ Planned usage (TODO):
 
 # Error Handling and Logging Design
 
+The provided logging class in `src/util.py` writes success and warning messages to the console in addition to defining custom error classes.
+
+We use a `Failure` base exception, which defines a **prefix** and a **message body** to match the style of the other custom logs in our application. The prefix is printed in a different color than the body.
+
+This design ensures consistency across subsystems — each error message clearly shows its origin (_e.g._, `GRAPH_DB: TEST_CONN: Failed to connect to Neo4j using address 'neo4j_service:7687'`), while still preserving Python’s native stack trace for debugging when needed.
+
+The goal is not to hide errors but to **contextualize them**, providing a readable, layered indicator of where the failure occurred.
+
+This is done to balance 3 different unsuitable approaches to exception handling:
+1. **Catch built-in exceptions** - Research or test every library used, and . Relies on developers never changing these exception classes.
+2. **Specific micro-exceptions** - Defines a custom error class for every case: MongoSyntaxFailure, PostgresSyntaxFailure, MongoConnectionFailure, PostgresConnectionFailure. In a typical project this may be sufficient, but we interact with many different databases.
+3. **Broadly scoped try-except blocks**
+
+
+The **Builder Pattern** is used fo
+
+The centralized design ensures quick fixes to all usages of that prefix. For example, if we decide "GRAPH_DB:" is too long for a prefix, we can change it to "GRAPH" or "GR_DB" while keeping diffs contained to the Log class only.
+
+keeps the thrown code concise.
+
+Prefix is a conceptual traceback. If done improperly, it duplicates the built-in traceback - but a robust implementation will chains prefixes only when doing so would clarify two different usages. For example, "DOCS_DB: TEST_CONN: " should be separate from "REL_DB: TEST_CONN: "
+
+tells you exactly what happened without reading the full message
+
+## Sub-Errors To Consolidate 
+
+
+
 
