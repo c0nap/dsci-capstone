@@ -80,17 +80,16 @@ class GraphConnector(DatabaseConnector):
                 raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
 
             try:  # Create nodes, insert dummy data, and use get_dataframe
-                with self.temp_graph("test_graph"):
+                tmp_kg = "test_graph"
+                with self.temp_graph(tmp_kg):
                     query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                     self.execute_query(query, _filter_results=False)
                     query = f"""CREATE (n1:TestPerson {{kg: '{self._graph_name}', name: 'Alice', age: 30}})
                                 CREATE (n2:TestPerson {{kg: '{self._graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
                     self.execute_query(query, _filter_results=False)
                     df = self.get_dataframe(self._graph_name)
-                    #### TODO: remove once error handling is fixed
-                    # check_values will raise, so this never became an issue until now
                     if df is None:
-                        raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, "DataFrame fetched from graph 'test_graph' is None")
+                        raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, Log.msg_none_df("graph", {tmp_kg}))
                     check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error=True)
                     query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                     self.execute_query(query, _filter_results=False)
@@ -98,7 +97,7 @@ class GraphConnector(DatabaseConnector):
                 raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
 
             try:  # Test create/drop functionality with tmp database
-                tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
+                tmp_db = "test_ops"  # Do not use context manager: interferes with traceback
                 working_database = self.database_name
                 if self.database_exists(tmp_db):
                     self.drop_database(tmp_db)

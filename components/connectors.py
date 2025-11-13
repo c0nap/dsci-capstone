@@ -370,16 +370,15 @@ class RelationalConnector(DatabaseConnector):
                         f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');"
                     )
                     df = self.get_dataframe(f"{tmp_table}")
-                    ### TODO
                     if df is None:
-                        return False
+                        raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_df, Log.msg_none_df("table", tmp_table))
                     check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
                     self.execute_query(f"DROP TABLE {tmp_table};")
                 except Exception as e:
                     raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
     
                 try:  # Test create/drop functionality with tmp database
-                    tmp_db = f"test_conn"  # Do not use context manager: interferes with traceback
+                    tmp_db = f"test_ops"  # Do not use context manager: interferes with traceback
                     working_database = str(self.database_name)
                     if self.database_exists(tmp_db):
                         self.drop_database(tmp_db)

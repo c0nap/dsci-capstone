@@ -225,6 +225,8 @@ class Log:
 
     get_unique = "UNIQUE: "
 
+    msg_none_df = lambda collection_type, collection_name:  f"Unable to fetch DataFrame from {collection_type} '{collection_name}' - None"
+
     kg = "TRIPLES: "
     sub_gr = "SUBGRAPH: "
     gr_rag = "RAG: "

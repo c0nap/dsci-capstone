@@ -83,16 +83,15 @@ class DocumentConnector(DatabaseConnector):
                         db.drop_collection(tmp_collection)
                     db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
                     df = self.get_dataframe(tmp_collection)
-                    ### TODO
                     if df is None:
-                        return False
+                        raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_df, Log.msg_none_df("collection", tmp_collection))
                     check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error=True)
                     db.drop_collection(tmp_collection)
                 except Exception as e:
                     raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
     
                 try:  # Test create/drop functionality with tmp database
-                    tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
+                    tmp_db = "test_ops"  # Do not use context manager: interferes with traceback
                     working_database = self.database_name
                     if self.database_exists(tmp_db):
                         self.drop_database(tmp_db)
