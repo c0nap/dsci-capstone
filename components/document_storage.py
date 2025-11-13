@@ -56,67 +56,72 @@ class DocumentConnector(DatabaseConnector):
         @return  Whether the connection test was successful.
         @throws Log.Failure  If raise_error is True and the connection test fails to complete.
         """
-        # Check if connection string is valid
-        if self.check_connection(Log.test_ops, raise_error) == False:
-            return False
-
-        with mongo_handle(host=self.connection_string, alias="test_conn") as db:
-            try:  # Run universal test queries - some require admin
-                result = db.command({"ping": 1})
-                if check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
-                    return False
-                status = db.command({"serverStatus": 1})
-                if check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
-                    return False
-                databases = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
-                if check_values([isinstance(databases, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
-                    return False
-            except Exception as e:
-                if not raise_error:
-                    return False
-                raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
-
-            try:  # Display useful information on existing databases
-                databases = db.client.list_database_names()
-                Log.success(Log.doc_db, Log.msg_result(databases), self.verbose)
-            except Exception as e:
-                if not raise_error:
-                    return False
-                raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
-
-            try:  # Create a collection, insert dummy data, and use get_dataframe
-                tmp_collection = "test_collection"
-                if tmp_collection in db.list_collection_names():
+        try:
+            # Check if connection string is valid
+            if self.check_connection(Log.test_ops, raise_error) == False:
+                return False
+    
+            with mongo_handle(host=self.connection_string, alias="test_conn") as db:
+                try:  # Run universal test queries - some require admin
+                    result = db.command({"ping": 1})
+                    if check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
+                        return False
+                    status = db.command({"serverStatus": 1})
+                    if check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
+                        return False
+                    databases = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
+                    if check_values([isinstance(databases, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
+                        return False
+                except Exception as e:
+                    if not raise_error:
+                        return False
+                    raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
+    
+                try:  # Display useful information on existing databases
+                    databases = db.client.list_database_names()
+                    Log.success(Log.doc_db, Log.msg_result(databases), self.verbose)
+                except Exception as e:
+                    if not raise_error:
+                        return False
+                    raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
+    
+                try:  # Create a collection, insert dummy data, and use get_dataframe
+                    tmp_collection = "test_collection"
+                    if tmp_collection in db.list_collection_names():
+                        db.drop_collection(tmp_collection)
+                    db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
+                    df = self.get_dataframe(tmp_collection)
+                    if df is None:
+                        return False
+                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
                     db.drop_collection(tmp_collection)
-                db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
-                df = self.get_dataframe(tmp_collection)
-                if df is None:
-                    return False
-                check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
-                db.drop_collection(tmp_collection)
-            except Exception as e:
-                if not raise_error:
-                    return False
-                raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
-
-            try:  # Test create/drop functionality with tmp database
-                tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
-                working_database = self.database_name
-                if self.database_exists(tmp_db):
+                except Exception as e:
+                    if not raise_error:
+                        return False
+                    raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
+    
+                try:  # Test create/drop functionality with tmp database
+                    tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
+                    working_database = self.database_name
+                    if self.database_exists(tmp_db):
+                        self.drop_database(tmp_db)
+                    self.create_database(tmp_db)
+                    self.change_database(tmp_db)
+                    self.execute_query('{"ping": 1}')
+                    self.change_database(working_database)
                     self.drop_database(tmp_db)
-                self.create_database(tmp_db)
-                self.change_database(tmp_db)
-                self.execute_query('{"ping": 1}')
-                self.change_database(working_database)
-                self.drop_database(tmp_db)
-            except Exception as e:
-                if not raise_error:
-                    return False
-                raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
-
-        # Finish with no errors = connection test successful
-        Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
-        return True
+                except Exception as e:
+                    if not raise_error:
+                        return False
+                    raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
+    
+            # Finish with no errors = connection test successful
+            Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
+            return True
+        except Exception as e:
+            if not raise_error:
+                return False
+            raise  # Preserve original error
 
     def check_connection(self, log_source: str, raise_error: bool = True) -> bool:
         """Minimal connection test to determine if our connection string is valid.
@@ -128,12 +133,12 @@ class DocumentConnector(DatabaseConnector):
         try:
             with mongo_handle(host=self.connection_string, alias="check_conn") as db:
                 db.command({"ping": 1})
+            Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
+            return True
         except Exception:  # These errors are usually long, so dont print the original.
             if not raise_error:
                 return False
             raise Log.Failure(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
-        Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
-        return True
 
     def get_unmanaged_handle(self):
         """Expose the low-level PyMongo handle for external use.

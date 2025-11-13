@@ -57,74 +57,81 @@ class GraphConnector(DatabaseConnector):
         @return  Whether the connection test was successful.
         @throws Log.Failure  If raise_error is True and the connection test fails to complete.
         """
-        # Check if connection string is valid
-        if self.check_connection(Log.test_ops, raise_error) == False:
-            return False
+        try:
+            # Check if connection string is valid
+            if self.check_connection(Log.test_ops, raise_error) == False:
+                return False
 
-        try:  # Run universal test queries
-            result, _ = db.cypher_query("RETURN 1")
-            if check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error) == False:
-                return False
-            result = self.execute_query("RETURN 'TWO'", _filter_results=False)
-            if check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.gr_db, raise_error) == False:
-                return False
-            result = self.execute_query("RETURN 5, 6", _filter_results=False)
-            if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
-                return False
-        except Exception as e:
-            if not raise_error:
-                return False
-            raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
-
-        try:  # Display useful information on existing databases
-            databases = self.get_unique(key="db")
-            Log.success(Log.gr_db, Log.msg_result(databases), self.verbose)
-            graphs = self.get_unique(key="kg")
-            Log.success(Log.gr_db, Log.msg_result(graphs), self.verbose)
-        except Exception as e:
-            if not raise_error:
-                return False
-            raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
-
-        try:  # Create nodes, insert dummy data, and use get_dataframe
-            with self.temp_graph("test_graph"):
-                query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
-                self.execute_query(query, _filter_results=False)
-                query = f"""CREATE (n1:TestPerson {{kg: '{self._graph_name}', name: 'Alice', age: 30}})
-                            CREATE (n2:TestPerson {{kg: '{self._graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
-                self.execute_query(query, _filter_results=False)
-                df = self.get_dataframe(self._graph_name)
-                #### TODO: remove once error handling is fixed
-                # check_values will raise, so this never became an issue until now
-                if df is None:
-                    raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, "DataFrame fetched from graph 'test_graph' is None")
-                if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
+            try:  # Run universal test queries
+                result, _ = db.cypher_query("RETURN 1")
+                if check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error) == False:
                     return False
-                query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
-                self.execute_query(query, _filter_results=False)
-        except Exception as e:
-            if not raise_error:
-                return False
-            raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
+                result = self.execute_query("RETURN 'TWO'", _filter_results=False)
+                if check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.gr_db, raise_error) == False:
+                    return False
+                result = self.execute_query("RETURN 5, 6", _filter_results=False)
+                if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
+                    return False
+            except Exception as e:
+                if not raise_error:
+                    return False
+                raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
 
-        try:  # Test create/drop functionality with tmp database
-            tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
-            working_database = self.database_name
-            if self.database_exists(tmp_db):
+            try:  # Display useful information on existing databases
+                databases = self.get_unique(key="db")
+                Log.success(Log.gr_db, Log.msg_result(databases), self.verbose)
+                graphs = self.get_unique(key="kg")
+                Log.success(Log.gr_db, Log.msg_result(graphs), self.verbose)
+            except Exception as e:
+                if not raise_error:
+                    return False
+                raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
+
+            try:  # Create nodes, insert dummy data, and use get_dataframe
+                with self.temp_graph("test_graph"):
+                    query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
+                    self.execute_query(query, _filter_results=False)
+                    query = f"""CREATE (n1:TestPerson {{kg: '{self._graph_name}', name: 'Alice', age: 30}})
+                                CREATE (n2:TestPerson {{kg: '{self._graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
+                    self.execute_query(query, _filter_results=False)
+                    df = self.get_dataframe(self._graph_name)
+                    #### TODO: remove once error handling is fixed
+                    # check_values will raise, so this never became an issue until now
+                    if df is None:
+                        raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, "DataFrame fetched from graph 'test_graph' is None")
+                    if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
+                        return False
+                    query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
+                    self.execute_query(query, _filter_results=False)
+            except Exception as e:
+                if not raise_error:
+                    return False
+                raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
+
+            try:  # Test create/drop functionality with tmp database
+                tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
+                working_database = self.database_name
+                if self.database_exists(tmp_db):
+                    self.drop_database(tmp_db)
+                self.create_database(tmp_db)
+                self.change_database(tmp_db)
+                self.execute_query("RETURN 1")
+                self.change_database(working_database)
                 self.drop_database(tmp_db)
-            self.create_database(tmp_db)
-            self.change_database(tmp_db)
-            self.execute_query("RETURN 1")
-            self.change_database(working_database)
-            self.drop_database(tmp_db)
+            except Exception as e:
+                if not raise_error:
+                    return False
+                raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
+            
+            # Finish with no errors = connection test successful
+            Log.success(Log.gr_db, Log.msg_db_connect(self.database_name), self.verbose)
+            return True
         except Exception as e:
             if not raise_error:
                 return False
-            raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
+            raise  # Preserve original error
 
-        # Finish with no errors = connection test successful
-        Log.success(Log.gr_db, Log.msg_db_connect(self.database_name), self.verbose)
-        return True
+        
 
     def check_connection(self, log_source: str, raise_error: bool = True) -> bool:
         """Minimal connection test to determine if our connection string is valid.
@@ -136,12 +143,12 @@ class GraphConnector(DatabaseConnector):
         try:
             # Automatically connected, just try a basic query
             db.cypher_query("RETURN 1")
+            Log.success(Log.gr_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
+            return True
         except Exception:  # These errors are usually long, so dont print the original.
             if not raise_error:
                 return False
             raise Log.Failure(Log.gr_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
-        Log.success(Log.gr_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
-        return True
 
     def execute_query(self, query: str, _filter_results: bool = True) -> Optional[DataFrame]:
         """Send a single Cypher query to Neo4j.
