@@ -34,7 +34,7 @@ class KnowledgeGraph:
         subject = re.sub(r"[^A-Za-z0-9_ ]", "_", subject).strip("_ ")
         object_ = re.sub(r"[^A-Za-z0-9_ ]", "_", object_).strip("_ ")
         if not relation or not subject or not object_:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Invalid triple: ({subject})-[:{relation}]->({object_})")
+            raise Log.Failure(Log.kg, f"Invalid triple: ({subject})-[:{relation}]->({object_})")
 
         # Merge subject/object and connect via relation
         query = f"""
@@ -46,9 +46,8 @@ class KnowledgeGraph:
         try:
             df = self.database.execute_query(query)
             if df is not None:
-                Log.success(Log.kg + Log.gr_rag, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
-        except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
+                Log.success(Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+            raise Log.Failure(Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
 
     def get_triple_properties(self) -> Optional[DataFrame]:
         """Pivot the graph elements DataFrame to expose node and relationship properties as columns.
@@ -62,7 +61,7 @@ class KnowledgeGraph:
         try:
             elements_df = self.database.get_dataframe(self.graph_name)
             if elements_df is None or elements_df.empty:
-                raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
+                raise Log.Failure(Log.kg, Log.msg_bad_triples(self.graph_name))
 
             # Split nodes and relationships
             nodes = elements_df[elements_df["element_type"] == "node"].drop(columns=["element_type", "db", "kg"], errors="ignore")
@@ -80,7 +79,7 @@ class KnowledgeGraph:
             triples_df = triples_df.drop(columns=["r.start_node_id", "r.end_node_id"], errors="ignore")
             return triples_df
         except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to pivot triple properties") from e
+            raise Log.Failure(Log.kg, f"Failed to pivot triple properties") from e
 
     def triples_to_names(self, df_ids: DataFrame, drop_ids: bool = False, df_lookup: Optional[DataFrame] = None) -> DataFrame:
         """Maps a DataFrame containing element ID columns to human-readable names.
@@ -147,7 +146,7 @@ class KnowledgeGraph:
             # Search in provided DataFrame if given, otherwise query the connector
             df_lookup = df_lookup if df_lookup is not None else self.database.get_dataframe(self.graph_name)
             if df_lookup is None or df_lookup.empty:
-                raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
+                raise Log.Failure(Log.kg, Log.msg_bad_triples(self.graph_name))
 
             # Build lookup dictionaries for efficiency. Can now use df.map(dict)
             id_to_name_map = df_lookup[df_lookup["element_type"] == element_type].set_index("element_id")[name_property].to_dict()
@@ -160,7 +159,7 @@ class KnowledgeGraph:
             ordered_cols = cols_to_keep + name_columns
             return df_named[ordered_cols]
         except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to convert triple names") from e
+            raise Log.Failure(Log.kg, f"Failed to convert triple names") from e
 
     def print_nodes(self, max_rows: int = 20, max_col_width: int = 50) -> None:
         """Print all nodes and edges in the current pseudo-database with row/column formatting."""
@@ -198,17 +197,17 @@ class KnowledgeGraph:
             cols = ["subject_id", "relation_id", "object_id"]
 
             if triples_df is None or triples_df.empty:
-                Log.success(Log.kg + Log.gr_rag, "Found 0 triples in graph.", self.verbose)
+                Log.success(Log.kg, "Found 0 triples in graph.", self.verbose)
                 return DataFrame(columns=cols)
 
             # Extract and rename columns
             triples_df = triples_df[["n1.element_id", "r.element_id", "n2.element_id"]].rename(
                 columns={"n1.element_id": "subject_id", "r.element_id": "relation_id", "n2.element_id": "object_id"}
             )
-            Log.success(Log.kg + Log.gr_rag, f"Found {len(triples_df)} triples in graph.", self.verbose)
+            Log.success(Log.kg, f"Found {len(triples_df)} triples in graph.", self.verbose)
             return triples_df
         except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve triples") from e
+            raise Log.Failure(Log.kg, f"Failed to retrieve triples") from e
 
     def get_subgraph_by_nodes(self, node_ids: List[str]) -> DataFrame:
         """Return all triples where subject or object is in the specified node list.
@@ -219,15 +218,15 @@ class KnowledgeGraph:
         try:
             triples_df = self.get_all_triples()
             if triples_df is None or triples_df.empty:
-                raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
+                raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
 
             # Filter triples where either endpoint is in node_ids
             sub_df = triples_df[triples_df["subject_id"].isin(node_ids) | triples_df["object_id"].isin(node_ids)].reset_index(drop=True)
 
-            Log.success(Log.kg + Log.gr_rag, f"Found {len(sub_df)} triples for given nodes.", self.verbose)
+            Log.success(Log.kg + Log.sub_gr, f"Found {len(sub_df)} triples for given nodes.", self.verbose)
             return sub_df
         except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to get subgraph by nodes") from e
+            raise Log.Failure(Log.kg + Log.sub_gr, f"Failed to get subgraph by nodes") from e
 
     def get_neighborhood(self, node_id: str, depth: int = 1) -> DataFrame:
         """Get k-hop neighborhood around a central node.
@@ -241,7 +240,7 @@ class KnowledgeGraph:
         try:
             triples_df = self.get_all_triples()
             if triples_df is None or triples_df.empty:
-                raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
+                raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
 
             current = {node_id}
             visited = set()
@@ -258,10 +257,10 @@ class KnowledgeGraph:
 
             result_df = DataFrame() if not all_edges else concat(all_edges, ignore_index=True).drop_duplicates()
 
-            Log.success(Log.kg + Log.gr_rag, f"Found {len(result_df)} triples in {depth}-hop neighborhood.", self.verbose)
+            Log.success(Log.kg + Log.sub_gr, f"Found {len(result_df)} triples in {depth}-hop neighborhood.", self.verbose)
             return result_df
         except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to get neighborhood") from e
+            raise Log.Failure(Log.kg + Log.sub_gr, f"Failed to get neighborhood") from e
 
     def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
         """Sample subgraph using directed random walk traversal starting from specified nodes.
@@ -279,7 +278,7 @@ class KnowledgeGraph:
 
             triples_df = self.get_all_triples()
             if triples_df is None or triples_df.empty:
-                raise Log.Failure(Log.kg + Log.gr_rag, f"No triples available in graph {self.graph_name}")
+                raise Log.Failure(Log.kg + Log.sub_gr, f"No triples available in graph {self.graph_name}")
 
             # Build directed adjacency: subject -> [rows where subject_id == subject]
             adjacency: Dict[str, List[Any]] = {}
@@ -288,7 +287,7 @@ class KnowledgeGraph:
                 adjacency.setdefault(s, []).append(row)
 
             if not adjacency:
-                raise Log.Failure(Log.kg + Log.gr_rag, f"Graph has no directed edges")
+                raise Log.Failure(Log.kg + Log.sub_gr, f"Graph has no directed edges")
 
             sampled_edges = []
             valid_starts = [n for n in start_nodes if n in adjacency] or list(adjacency.keys())
@@ -304,18 +303,18 @@ class KnowledgeGraph:
                     current = edge["object_id"]  # move along directed edge
 
             if not sampled_edges:
-                raise Log.Failure(Log.kg + Log.gr_rag, f"No triples visited during random walk")
+                raise Log.Failure(Log.kg + Log.sub_gr, f"No triples visited during random walk")
 
             result_df = DataFrame(sampled_edges)[["subject_id", "relation_id", "object_id"]].drop_duplicates().reset_index(drop=True)
 
             Log.success(
-                Log.kg + Log.gr_rag,
+                Log.kg + Log.sub_gr,
                 f"Directed random-walk sampled {len(result_df)} triples ({num_walks} walks × length {walk_length}).",
                 self.verbose,
             )
             return result_df
         except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to perform directed random walk sample") from e
+            raise Log.Failure(Log.kg + Log.sub_gr, f"Failed to perform directed random walk sample") from e
 
     def get_community_subgraph(self, community_id: int) -> DataFrame:
         """Return all triples belonging to a specific GraphRAG community.
@@ -507,7 +506,7 @@ class KnowledgeGraph:
         """
         df = self.database.get_dataframe(self.graph_name)
         if df is None or df.empty:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to fetch edge_counts DataFrame.")
+            raise Log.Failure(Log.kg, f"Failed to fetch edge_counts DataFrame.")
 
         # Filter to nodes only
         df_nodes = df[df["element_type"] == "node"].copy()
@@ -528,7 +527,7 @@ class KnowledgeGraph:
         result_df = result_df.rename(columns={"element_id": "node_id"})
         result_df = result_df.sort_values("edge_count", ascending=False).head(top_n)
 
-        Log.success(Log.kg + Log.gr_rag, f"Found top-{top_n} most popular nodes.", self.verbose)
+        Log.success(Log.kg, f"Found top-{top_n} most popular nodes.", self.verbose)
         return result_df
 
     def get_node_context(self, node_id: str, include_neighbors: bool = True) -> str:
