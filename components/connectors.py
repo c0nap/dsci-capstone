@@ -425,27 +425,29 @@ class RelationalConnector(DatabaseConnector):
         @throws Log.Failure  If the query fails to execute."""
         self.check_connection(Log.run_q, raise_error=True)
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
-        result = super().execute_query(query)
+        dfs = super().execute_query(query)
         if not self._is_single_query(query):
-            return result
+            return dfs
         # Derived classes MUST implement single-query execution.
         try:
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
-                result = connection.execute(text(query))
+                cursor = connection.execute(text(query))
+                rows = cursor.fetchall()
+                cols = cursor.keys()
+                # Cursor will close when we leave scope
         except Exception as e:
             raise Log.Failure(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
         Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
 
         returns_data = self._returns_data(query)
-        parsable_to_df = self._parsable_to_df(result)
+        parsable_to_df = self._parsable_to_df((rows, columns))
         if not returns_data or not parsable_to_df:
             return None
 
         try:  # RelationalConnector doesn't need a helper function like the others,
-            # so we need to catch errors here instead.
-            df = DataFrame(result.fetchall(), columns=result.keys())
-            # Fetchall will consume the cursor AND raise - cannot fully verify if results are parsable.
+            # but this means we need to catch errors here instead.
+            df = DataFrame(rows, columns=columns)
         except Exception as e:
             raise Log.Failure(Log.rel_db + Log.run_q, Log.msg_bad_df_parse(query)) from e
         Log.success(Log.rel_db + Log.run_q, Log.msg_good_df_parse(df)) 
@@ -485,16 +487,14 @@ class RelationalConnector(DatabaseConnector):
           - DDL/DML (CREATE, INSERT, UPDATE, etc.) produce no rows and only rowcount/status.
         @param result  The result of a SQL, Cypher, or JSON query.
         @return  Whether the object is parsable to DataFrame."""
-        if not hasattr(result, "returns_rows") or not result.returns_rows:
+        rows, columns = result
+        if not columns:  # Must have column names
             return False
-        # Ensure columns list is non-empty
-        keys: List[str] = getattr(result, "keys", lambda: [])()
-        if not keys:
-            return False
-        # Ensure the result is still open (fetchable)
-        if hasattr(result, "closed") and result.closed:
-            return False
-        return True
+        if not rows:  # No rows = valid (empty result set)
+            return True
+        # Rows must be a tuple or dict type
+        first = rows[0]
+        return isinstance(first, (tuple, dict))
 
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.
