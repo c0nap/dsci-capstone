@@ -58,31 +58,23 @@ class DocumentConnector(DatabaseConnector):
         """
         try:
             # Check if connection string is valid
-            if self.check_connection(Log.test_ops, raise_error) == False:
-                return False
+            self.check_connection(Log.test_ops, raise_error=True)
     
             with mongo_handle(host=self.connection_string, alias="test_conn") as db:
                 try:  # Run universal test queries - some require admin
                     result = db.command({"ping": 1})
-                    if check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
-                        return False
+                    check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error=True)
                     status = db.command({"serverStatus": 1})
-                    if check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
-                        return False
+                    check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error=True)
                     databases = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
-                    if check_values([isinstance(databases, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
-                        return False
+                    check_values([isinstance(databases, list)], [True], self.verbose, Log.doc_db, raise_error=True)
                 except Exception as e:
-                    if not raise_error:
-                        return False
                     raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
     
                 try:  # Display useful information on existing databases
                     databases = db.client.list_database_names()
                     Log.success(Log.doc_db, Log.msg_result(databases), self.verbose)
                 except Exception as e:
-                    if not raise_error:
-                        return False
                     raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
     
                 try:  # Create a collection, insert dummy data, and use get_dataframe
@@ -91,13 +83,12 @@ class DocumentConnector(DatabaseConnector):
                         db.drop_collection(tmp_collection)
                     db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
                     df = self.get_dataframe(tmp_collection)
+                    ### TODO
                     if df is None:
                         return False
-                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
+                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error=True)
                     db.drop_collection(tmp_collection)
                 except Exception as e:
-                    if not raise_error:
-                        return False
                     raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
     
                 try:  # Test create/drop functionality with tmp database
@@ -111,8 +102,6 @@ class DocumentConnector(DatabaseConnector):
                     self.change_database(working_database)
                     self.drop_database(tmp_db)
                 except Exception as e:
-                    if not raise_error:
-                        return False
                     raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
     
             # Finish with no errors = connection test successful

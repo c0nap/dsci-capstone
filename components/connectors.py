@@ -339,37 +339,28 @@ class RelationalConnector(DatabaseConnector):
         """
         try:
             # Check if connection string is valid
-            if self.check_connection(Log.test_ops, raise_error) == False:
-                return False
+            self.check_connection(Log.test_ops, raise_error=True)
     
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
                 try:  # Run universal test queries
                     result = connection.execute(text("SELECT 1")).fetchone()
-                    if check_values([result[0]], [1], self.verbose, Log.rel_db, raise_error) == False:
-                        return False
+                    check_values([result[0]], [1], self.verbose, Log.rel_db, raise_error=True)
                     result = self.execute_query("SELECT 'TWO';")
-                    if check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.rel_db, raise_error) == False:
-                        return False
+                    check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.rel_db, raise_error=True)
                     results = self.execute_combined("SELECT 3; SELECT 4;")
-                    if check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], self.verbose, Log.rel_db, raise_error) == False:
-                        return False
+                    check_values([results[0].iloc[0, 0], results[1].iloc[0, 0]], [3, 4], self.verbose, Log.rel_db, raise_error=True)
                     result = self.execute_query("SELECT 5, 6;")
-                    if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error) == False:
-                        return False
+                    check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error=True)
                 except Exception as e:
-                    if not raise_error:
-                        return False
                     raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
     
                 try:  # Display useful information on existing databases
                     db_name = self.execute_query(self._specific_queries[0])
-                    check_values([db_name.iloc[0, 0]], [self.database_name], self.verbose, Log.rel_db, raise_error)
+                    check_values([db_name.iloc[0, 0]], [self.database_name], self.verbose, Log.rel_db, raise_error=True)
                     databases = self.execute_query(self._specific_queries[1])
                     Log.success(Log.rel_db, Log.msg_result(databases), self.verbose)
                 except Exception as e:
-                    if not raise_error:
-                        return False
                     raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
     
                 try:  # Create a table, insert dummy data, and use get_dataframe
@@ -379,13 +370,12 @@ class RelationalConnector(DatabaseConnector):
                         f"CREATE TABLE {tmp_table} (id INT PRIMARY KEY, name VARCHAR(255)); INSERT INTO {tmp_table} (id, name) VALUES (1, 'Alice');"
                     )
                     df = self.get_dataframe(f"{tmp_table}")
+                    ### TODO
                     if df is None:
                         return False
                     check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.rel_db, raise_error)
                     self.execute_query(f"DROP TABLE {tmp_table};")
                 except Exception as e:
-                    if not raise_error:
-                        return False
                     raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
     
                 try:  # Test create/drop functionality with tmp database
@@ -399,8 +389,6 @@ class RelationalConnector(DatabaseConnector):
                     self.change_database(working_database)
                     self.drop_database(tmp_db)
                 except Exception as e:
-                    if not raise_error:
-                        return False
                     raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
     
             # Finish with no errors = connection test successful

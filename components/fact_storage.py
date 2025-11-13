@@ -59,22 +59,16 @@ class GraphConnector(DatabaseConnector):
         """
         try:
             # Check if connection string is valid
-            if self.check_connection(Log.test_ops, raise_error) == False:
-                return False
+            self.check_connection(Log.test_ops, raise_error=True)
 
             try:  # Run universal test queries
                 result, _ = db.cypher_query("RETURN 1")
-                if check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error) == False:
-                    return False
+                check_values([result[0][0]], [1], self.verbose, Log.gr_db, raise_error=True)
                 result = self.execute_query("RETURN 'TWO'", _filter_results=False)
-                if check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.gr_db, raise_error) == False:
-                    return False
+                check_values([result.iloc[0, 0]], ["TWO"], self.verbose, Log.gr_db, raise_error=True)
                 result = self.execute_query("RETURN 5, 6", _filter_results=False)
-                if check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.gr_db, raise_error) == False:
-                    return False
+                check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.gr_db, raise_error=True)
             except Exception as e:
-                if not raise_error:
-                    return False
                 raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
 
             try:  # Display useful information on existing databases
@@ -83,8 +77,6 @@ class GraphConnector(DatabaseConnector):
                 graphs = self.get_unique(key="kg")
                 Log.success(Log.gr_db, Log.msg_result(graphs), self.verbose)
             except Exception as e:
-                if not raise_error:
-                    return False
                 raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
 
             try:  # Create nodes, insert dummy data, and use get_dataframe
@@ -99,13 +91,10 @@ class GraphConnector(DatabaseConnector):
                     # check_values will raise, so this never became an issue until now
                     if df is None:
                         raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, "DataFrame fetched from graph 'test_graph' is None")
-                    if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
-                        return False
+                    check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error=True)
                     query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
                     self.execute_query(query, _filter_results=False)
             except Exception as e:
-                if not raise_error:
-                    return False
                 raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
 
             try:  # Test create/drop functionality with tmp database
@@ -119,8 +108,6 @@ class GraphConnector(DatabaseConnector):
                 self.change_database(working_database)
                 self.drop_database(tmp_db)
             except Exception as e:
-                if not raise_error:
-                    return False
                 raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
             
             # Finish with no errors = connection test successful
