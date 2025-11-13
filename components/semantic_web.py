@@ -28,8 +28,8 @@ class KnowledgeGraph:
         @note  LLM output should be pre-normalized using @ref components.text_processing.LLMConnector.normalize_triples.
         @throws Log.Failure  If the triple cannot be added to our graph database.
         """
-
-        # Normalize already-cleaned inputs for Cypher safety
+        
+        # Normalize already-cleaned inputs for extra Cypher safety
         relation = re.sub(r"[^A-Za-z0-9_]", "_", relation).upper().strip("_")
         subject = re.sub(r"[^A-Za-z0-9_ ]", "_", subject).strip("_ ")
         object_ = re.sub(r"[^A-Za-z0-9_ ]", "_", object_).strip("_ ")
@@ -42,11 +42,12 @@ class KnowledgeGraph:
         MERGE (o {{name: '{object_}', kg: '{self.graph_name}'}})
         MERGE (s)-[r:{relation}]->(o)
         RETURN s, r, o
-        """  # NOTE: this query has a DIRECTED relationship!
+        """  # NOTE: this query has a DIRECTED relationship! And in error messages
         try:
             df = self.database.execute_query(query)
             if df is not None:
                 Log.success(Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+        except Exception as e:
             raise Log.Failure(Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
 
     def get_all_triples(self) -> DataFrame:

@@ -348,3 +348,38 @@ By contrast, our prefix-based `Failure` model:
 In short, the `Failure` system captures the *clarity* of domain-specific messages without the maintenance overhead of a full exception hierarchy or the clutter of broad try/except usage.
 
 Additionally, sub-errors like `BadAddressFailure` are used to consolidate — hiding long, complicated tracebacks when the issue is fixable with something simple on our end, such as forgetting to start the databases before running the tests.
+
+
+## Example
+
+In `components.semantic_web.py`, the KnowledgeGraph class has an `add_triple` method. This helper function wraps a call to GraphConnector.execute_query as seen in the below pseudo-code.
+
+```python
+def add_triple(self, subject: str, relation: str, object_: str) -> None:
+    # 1. Validate inputs for query safety
+    cleaned_subject = ..., cleaned_relation = ..., cleaned_object = ...,
+    # Raise early if unrecoverable.
+    if not cleaned_subject or not cleaned_relation or not cleaned_object:
+        raise Log.Failure(Log.kg, f"Invalid triple: {...}")
+
+    # 2. Run a query on the graph database
+    query = ...
+    # Keep the try-block minimal to reduce nesting.
+    try: 
+        df = self.database.execute_query(query)
+    # Print a human-readable error message; execute_query prints the complicated query.
+    except Exception as e:
+        raise Log.Failure(Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
+    # After completion, print an optional success message to show the data was added.
+    if df is not None:
+        Log.success(Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+```
+
+## Verbosity Management
+
+The `Session` singleton class consolidates references to all components, propagating the value of its `verbose` flag to during instantiation of each. Components pass `self.verbose` to the Log class when they call success() or warn().
+
+This approach reduces code nesting by removing the need for conditional checks like `if self.verbose: Log.success()`, leading to cleaner and more compact functions.
+
+See the Makefile section of our [Docker Guide](docs/docker_setup.md) for an explanation of command-line flags to disable success / warning messages entirely, or to remove colors from our console logs (`make docker-python VERBY=0 COLORS=0` or `pytest . --log-success --no-log-colors`).
+
