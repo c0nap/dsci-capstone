@@ -237,9 +237,9 @@ We consulted with various sizes and configuration of LLM models during developme
 
 - Tries to build the full context behind a prompt. Asks for more clarification than other models, and not ideal when the question can be misinterpreted.
 
-- When using Chrome, easily accessible via Google Search in the URL bar.
-
 - Great at being critical for code reviews. Fewer assumptions about your personality and implicit requests from the prompt's writing style. Suggests general-purpose best practices otherwise dismissed for irrelevancy.
+
+- When using Chrome, easily accessible via Google Search in the URL bar.
 
 ### Prompting Tips
 
@@ -249,6 +249,16 @@ We consulted with various sizes and configuration of LLM models during developme
 4. LLMs will struggle if a tool has limited online documentation.
 5. Learn to recognize a quiet-quitting loop early. Signs: repetitive output, lack of direction, wants to change something major, frequent bugs like syntax, forgetting earlier requirements.
 6. Break a silent loop: provide more context, change the task temporarily, approach it from a different angle, reset context with a new chat window, or try a different LLM provider.
+
+### Shared Limitations
+
+- **Copy / Paste:** All LLM providers are limited by their very basic chatbot interfaces; the user spends time formatting the prompt text instead of just pasting the relevant code context. The GitHub integration is what makes Claude so helpful for developers.
+- **Tab Management:** A typical PR has 1 or 2 main chat windows, but there are also 5-10 throwaway chats which act as checkpoints and reminders for future PRs. Not to mention the typical GitHub open PR / issue pages, deployment dashboards, and project planning boards. This lack of organization could be addressed with a standalone application instead of relying on the web browser.
+- **Discarded Chats:** Conversations are never repurposed, and just continue to build up and bloat the UI. Starting a new chat and repeating the context is always easier than finding a closed conversation.
+- **Repetitive Prompts:** Many prompts have a consistent structure, but there is no framework to store or reuse them. Users are encouraged to find new ways to avoid the constant typing (_e.g._ few-stroke keywords like `be concise` / `explain that` / `minimal changes`, or omitting an explanation in favor of sending more code context) instead of building up a solid reusable approach.
+- **Code Indentation:** When not using a dedicated IDE, the generated code never lines up with existing lines automatically, and must be manually shifted.
+- **Style Mismatch:** Code changes are not isolated to just a few lines; the entire function is regenerated with interspersed modifications by default. This makes it more difficult to follow the reasoning behind individual fixes, promoting a hands-off "just let the chatbot handle it" approach.
+- **Quiet Quitting:** The LLM ususally fails to recognize when it lacks sufficient information to answer the problem, proposing the "final revision that will 100% work this time" instead of stepping back to add more debug statements or to clarify version numbers. ChatGPT is most impacted by this, while Claude does in fact ask for clarification at times.
 
 ## Agents
 
