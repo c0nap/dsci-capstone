@@ -49,6 +49,28 @@ class KnowledgeGraph:
                 Log.success(Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
             raise Log.Failure(Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
 
+    def get_all_triples(self) -> DataFrame:
+        """Return all triples in the specified graph as a pandas DataFrame.
+        @return  Returns (subject, relation, object) columns only.
+        @throws Log.Failure  If the query fails to retrieve or process the DataFrame.
+        """
+        try:
+            triples_df = self.get_triple_properties()
+            cols = ["subject_id", "relation_id", "object_id"]
+
+            if triples_df is None or triples_df.empty:
+                Log.success(Log.kg, "Found 0 triples in graph.", self.verbose)
+                return DataFrame(columns=cols)
+
+            # Extract and rename columns
+            triples_df = triples_df[["n1.element_id", "r.element_id", "n2.element_id"]].rename(
+                columns={"n1.element_id": "subject_id", "r.element_id": "relation_id", "n2.element_id": "object_id"}
+            )
+            Log.success(Log.kg, f"Found {len(triples_df)} triples in graph.", self.verbose)
+            return triples_df
+        except Exception as e:
+            raise Log.Failure(Log.kg, f"Failed to retrieve triples") from e
+
     def get_triple_properties(self) -> Optional[DataFrame]:
         """Pivot the graph elements DataFrame to expose node and relationship properties as columns.
         @details
@@ -161,53 +183,9 @@ class KnowledgeGraph:
         except Exception as e:
             raise Log.Failure(Log.kg, f"Failed to convert triple names") from e
 
-    def print_nodes(self, max_rows: int = 20, max_col_width: int = 50) -> None:
-        """Print all nodes and edges in the current pseudo-database with row/column formatting."""
-        nodes_df = self.database.get_dataframe(self.graph_name)
-        if nodes_df is None:
-            return
-
-        # Set pandas display options only within scope
-        with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
-            print(f"Graph nodes ({len(nodes_df)} total):")
-            print(nodes_df)
-
-    def print_triples(self, max_rows: int = 20, max_col_width: int = 50) -> None:
-        """Print all nodes and edges in the current pseudo-database with row/column formatting."""
-        triples_df = self.get_all_triples()
-        if triples_df is None:
-            return
-
-        # Set pandas display options only within scope
-        with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
-            print(f"Graph triples ({len(triples_df)} total):")
-            print(triples_df)
-
     # ------------------------------------------------------------------------
     # Subgraph Selection
     # ------------------------------------------------------------------------
-
-    def get_all_triples(self) -> DataFrame:
-        """Return all triples in the specified graph as a pandas DataFrame.
-        @return  Returns (subject, relation, object) columns only.
-        @throws Log.Failure  If the query fails to retrieve or process the DataFrame.
-        """
-        try:
-            triples_df = self.get_triple_properties()
-            cols = ["subject_id", "relation_id", "object_id"]
-
-            if triples_df is None or triples_df.empty:
-                Log.success(Log.kg, "Found 0 triples in graph.", self.verbose)
-                return DataFrame(columns=cols)
-
-            # Extract and rename columns
-            triples_df = triples_df[["n1.element_id", "r.element_id", "n2.element_id"]].rename(
-                columns={"n1.element_id": "subject_id", "r.element_id": "relation_id", "n2.element_id": "object_id"}
-            )
-            Log.success(Log.kg, f"Found {len(triples_df)} triples in graph.", self.verbose)
-            return triples_df
-        except Exception as e:
-            raise Log.Failure(Log.kg, f"Failed to retrieve triples") from e
 
     def get_subgraph_by_nodes(self, node_ids: List[str]) -> DataFrame:
         """Return all triples where subject or object is in the specified node list.
@@ -549,3 +527,25 @@ class KnowledgeGraph:
         @return  DataFrame with columns: relation_type, count, example_triple
         """
         pass
+
+    def print_nodes(self, max_rows: int = 20, max_col_width: int = 50) -> None:
+        """Print all nodes and edges in the current pseudo-database with row/column formatting."""
+        nodes_df = self.database.get_dataframe(self.graph_name)
+        if nodes_df is None:
+            return
+
+        # Set pandas display options only within scope
+        with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
+            print(f"Graph nodes ({len(nodes_df)} total):")
+            print(nodes_df)
+
+    def print_triples(self, max_rows: int = 20, max_col_width: int = 50) -> None:
+        """Print all nodes and edges in the current pseudo-database with row/column formatting."""
+        triples_df = self.get_all_triples()
+        if triples_df is None:
+            return
+
+        # Set pandas display options only within scope
+        with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
+            print(f"Graph triples ({len(triples_df)} total):")
+            print(triples_df)
