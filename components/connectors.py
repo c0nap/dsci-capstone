@@ -433,19 +433,24 @@ class RelationalConnector(DatabaseConnector):
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
                 result = connection.execute(text(query))
-
-                returns_data = self._returns_data(query)
-                parsable_to_df = self._parsable_to_df(result)
-                if returns_data and parsable_to_df:
-                    # Fetchall will consume the cursor - we check everything beforehand
-                    df = DataFrame(result.fetchall(), columns=result.keys())
-                    Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
-                    return df
-                else:
-                    Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
-                    return None
         except Exception as e:
             raise Log.Failure(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
+        Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
+
+        returns_data = self._returns_data(query)
+        parsable_to_df = self._parsable_to_df(result)
+        if not returns_data or not parsable_to_df:
+            return None
+
+        try:  # RelationalConnector doesn't need a helper function like the others,
+            # so we need to catch errors here instead.
+            df = DataFrame(result.fetchall(), columns=result.keys())
+            # Fetchall will consume the cursor AND raise - cannot fully verify if results are parsable.
+        except Exception as e:
+            raise Log.Failure(Log.rel_db + Log.run_q, Log.msg_bad_df_parse(query)) from e
+        Log.success(Log.rel_db + Log.run_q, Log.msg_good_df_parse(df)) 
+        return df
+
 
     def _split_combined(self, multi_query: str) -> List[str]:
         """Divides a string into non-divisible SQL queries using `sqlparse`.

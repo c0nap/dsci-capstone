@@ -210,6 +210,9 @@ class Log:
     msg_good_exec_qr = lambda query, results: f"Executed successfully:\n'{query}'\n{Log.msg_result(results)}"
     msg_bad_exec_q = lambda query: f"Failed to execute query:\n'{query}'"
 
+    msg_good_df_parse = lambda df: Log.msg_result(df)
+    msg_bad_df_parse = lambda query: f"Failed to convert query result to DataFrame:\n'{query}'"
+
     kg = "KG: "
     pytest_db = "PYTEST (DB): "
 
