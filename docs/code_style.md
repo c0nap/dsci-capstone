@@ -235,8 +235,12 @@ Has a tendency to become stuck in a silent loop. Not enough information to answe
 
 ### Prompting Tips
 
-1. More code context corresponds to better output.
-2. 
+1. More code context up front usually corresponds to better output.
+2. Always provide version numbers.
+3. Inspect the target repository manually, and paste the relevant code. 
+4. LLMs will struggle if a tool has limited online documentation.
+5. Learn to recognize a quiet-quitting loop early. Signs: repetitive output, lack of direction, wants to change something major, frequent bugs like syntax, forgetting earlier requirements.
+6. Break a silent loop: provide more context, change the task temporarily, approach it from a different angle, reset context with a new chat window, or try a different LLM provider.
 
 ## Agents
 
@@ -244,7 +248,7 @@ Vibe coding was not used in this project.
 
 This decision was based on our desire to preserve this capstone project both as a demonstration of software engineering proficiency and a personal learning experience.
 
-Anecdotally, the AI-assisted workflow employed here may have doubled both productivity and personal comprehension. On the other hand, agentic coding feels like it halves how much is learned in order to achieve its massive reduction in development time and developer overhead, making it more suitable for products you wish would "just exist" via any means necessary.
+Anecdotally, the AI-assisted workflow employed here may have doubled both productivity and personal comprehension. On the other hand, agentic coding feels like it halves how much is learned in order to achieve its massive 10x reduction in development time and developer overhead, making it more suitable for products you wish would "just exist" via any means necessary.
 
 ## Testing
 
