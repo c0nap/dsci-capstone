@@ -226,6 +226,7 @@ class Log:
     get_unique = "UNIQUE: "
 
     kg = "TRIPLES: "
+    sub_gr = "SUBGRAPH: "
     gr_rag = "RAG: "
     msg_bad_triples = lambda graph_name: f"No triples found for graph {graph_name}"
 

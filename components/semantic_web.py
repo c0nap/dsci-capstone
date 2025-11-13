@@ -214,7 +214,7 @@ class KnowledgeGraph:
             if neighbors.empty:
                 break
             all_edges.append(neighbors)
-            visited_nodes |= current
+            visited_nodes |= new_nodes
             new_nodes = set(neighbors["subject_id"]).union(neighbors["object_id"]) - visited_nodes
 
         # Clean the filtered triples DataFrame
