@@ -199,11 +199,13 @@ We consulted with various sizes and configuration of LLM models during developme
 
 #### Key Points
 
-Great for quick questions, like syntax. Replaces the traditional Google Search debugging method which relied on Reddit forums and Stack Overflow posts.
+- Great for quick questions, like syntax or best practices. Replaces the traditional Google Search debugging method which relied on Reddit forums and Stack Overflow posts.
 
-Usage limits feel very generous, and model seamlessly downgrades when reached, which often goes unnoticed.
+- Can easily understand garbled sentences to an extent above and beyond basic typo detection.
 
-Has a tendency to become stuck in a silent loop. Not enough information to answer the question given the user's constraints, but never recognizes this or asks for clarification.
+- Usage limits feel very generous, and model seamlessly downgrades when reached, which often goes unnoticed.
+
+- Has a tendency to become stuck in a silent "quiet quitting" loop. Not enough information to answer the question given the user's constraints, but never recognizes this or asks for clarification.
 
 ### Claude
 
@@ -231,7 +233,13 @@ Has a tendency to become stuck in a silent loop. Not enough information to answe
 
 #### Key Points
 
-- 
+- Strong ability to identify the cause of difficult bugs, even when ChatGPT and the strongest Claude models continue to fail.
+
+- Tries to build the full context behind a prompt. Asks for more clarification than other models, and not ideal when the question can be misinterpreted.
+
+- When using Chrome, easily accessible via Google Search in the URL bar.
+
+- Great at being critical for code reviews. Fewer assumptions about your personality and implicit requests from the prompt's writing style. Suggests general-purpose best practices otherwise dismissed for irrelevancy.
 
 ### Prompting Tips
 
