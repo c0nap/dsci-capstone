@@ -289,24 +289,21 @@ class KnowledgeGraph:
         @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame or community detection has not been run.
         """
-        try:
-            triples_df = self.get_triple_properties()
-            if triples_df is None:
-                raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
+        triples_df = self.get_triple_properties()
+        if triples_df is None:
+            raise Log.Failure(Log.kg + Log.gr_rag, Log.msg_bad_triples(self.graph_name))
 
-            # Only nodes are tagged. Include triples where both nodes match community ID.
-            triples_df = triples_df[(triples_df["n1.community_id"] == community_id) & (triples_df["n2.community_id"] == community_id)]
-            if triples_df.empty:
-                Log.warn(Log.kg + Log.gr_rag, f"No triples found for community_id {community_id}")
-                # Return empty DataFrame with correct schema
-                return DataFrame(columns=["subject_id", "relation_id", "object_id"])
+        # Only nodes are tagged. Include triples where both nodes match community ID.
+        triples_df = triples_df[(triples_df["n1.community_id"] == community_id) & (triples_df["n2.community_id"] == community_id)]
+        if triples_df.empty:
+            Log.warn(Log.kg + Log.gr_rag, f"No triples found for community_id {community_id}")
+            # Return empty DataFrame with correct schema
+            return DataFrame(columns=["subject_id", "relation_id", "object_id"])
 
-            triples_df = triples_df[["n1.element_id", "r.element_id", "n2.element_id"]].rename(
-                columns={"n1.element_id": "subject_id", "r.element_id": "relation_id", "n2.element_id": "object_id"}
-            )
-            return triples_df
-        except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to retrieve community subgraph") from e
+        triples_df = triples_df[["n1.element_id", "r.element_id", "n2.element_id"]].rename(
+            columns={"n1.element_id": "subject_id", "r.element_id": "relation_id", "n2.element_id": "object_id"}
+        )
+        return triples_df
 
     def detect_community_clusters(self, method: str = "leiden", multi_level: bool = False, max_levels: int = 10) -> None:
         """Run community detection on the graph as described by the GraphRAG paper.
@@ -321,80 +318,67 @@ class KnowledgeGraph:
         @param multi_level  Whether to record hierarchical levels (`level_id`) for multi-scale summarization.
         @param max_levels  Maximum hierarchy depth to compute (default: 10).
         @throws Log.Failure  If GDS is unavailable or any query fails."""
-        try:
-            method = method.lower().strip()
-            if method not in {"leiden", "louvain"}:
-                raise Log.Failure(Log.kg + Log.gr_rag, f"Unsupported community detection method: {method}")
+        method = method.lower().strip()
+        if method not in {"leiden", "louvain"}:
+            raise Log.Failure(Log.kg + Log.gr_rag, f"Unsupported community detection method: {method}")
 
-            # Creates an in-memory projection using native projection with property filters
-            query_setup_gds = f"""
-            CALL gds.graph.project(
-                '{self.graph_name}',
-                '*',
-                {{
-                    ALL: {{
-                        type: '*',
-                        orientation: 'UNDIRECTED'
-                    }}
+        # --- Build GDS queries ---
+        # 1. Creates an in-memory projection of the graph
+        query_setup_gds = f"""
+        CALL gds.graph.project(
+            '{self.graph_name}',
+            '*',
+            {{
+                ALL: {{
+                    type: '*',
+                    orientation: 'UNDIRECTED'
                 }}
-            ) YIELD graphName, nodeCount, relationshipCount
-            """
+            }}
+        ) YIELD graphName, nodeCount, relationshipCount
+        """
+        # 2. Runs the selected community detection algorithm.
+        if multi_level:
+            options = f"writeProperty: 'community_list', includeIntermediateCommunities: true"
+            if method == "leiden":
+                options += f", maxLevels: {max_levels}"
+        else:
+            options = f"writeProperty: 'community_id'"
+        query_detect_communities = f"""
+        CALL gds.{method}.write(
+            '{self.graph_name}',
+            {{ {options} }}
+        )
+        """
+        # 3. Cleans up the temporary projection.
+        query_drop_gds = f"CALL gds.graph.drop('{self.graph_name}') YIELD graphName"
 
-            # Runs the selected community detection algorithm.
-            if multi_level:
-                options = f"writeProperty: 'community_list', includeIntermediateCommunities: true"
-                if method == "leiden":
-                    options += f", maxLevels: {max_levels}"
-            else:
-                options = f"writeProperty: 'community_id'"
-            query_detect_communities = f"""
-            CALL gds.{method}.write(
-                '{self.graph_name}',
-                {{ {options} }}
-            )
-            """
-            # Cleans up the temporary projection.
-            query_drop_gds = f"CALL gds.graph.drop('{self.graph_name}') YIELD graphName"
-
-            # --- Execute sequentially ---
-            try:  # Drop any existing projection (in case of previous failure)
-                self.database.execute_query(query_drop_gds)
-            except:
-                pass  # Graph didn't exist, that's fine
-            self.database.execute_query(query_setup_gds)
-            self.database.execute_query(query_detect_communities)
+        # --- Execute sequentially ---
+        try:  # Drop any existing projection (in case of previous failure)
             self.database.execute_query(query_drop_gds)
+        except:
+            pass  # Graph didn't exist, that's fine
+        self.database.execute_query(query_setup_gds)
+        self.database.execute_query(query_detect_communities)
+        self.database.execute_query(query_drop_gds)
 
-            # Clean up GDS-generated metadata: keep only community_id or community_list, remove everything else.
-            self.database.execute_query(
-            """
-            MATCH (n)
+        # --- Clean up GDS-generated metadata ---
+        # 1. Keep only community_id or community_list, remove everything else.
+        query_rm_props = """MATCH (n)
             WHERE n.communityLevel IS NOT NULL
-            REMOVE n.communityLevel
-            """
-            )
-
-            # Clear the property we're NOT using in this mode
-            if multi_level:
-                self.database.execute_query(
-                """
-                MATCH (n)
+            REMOVE n.communityLevel"""
+        # 2. Remove the property we're NOT using in this mode
+        if multi_level:
+            query_rm_other = """MATCH (n)
                 WHERE n.community_id IS NOT NULL
-                REMOVE n.community_id
-                """
-                )
-            else:
-                self.database.execute_query(
-                """
-                MATCH (n)
-                WHERE n.community_list IS NOT NULL
-                REMOVE n.community_list
-                """
-                )
+                REMOVE n.community_id"""
+        else:
+            query_rm_other = """MATCH (n)
+            WHERE n.community_list IS NOT NULL
+            REMOVE n.community_list"""
+        self.database.execute_query(query_rm_props)
+        self.database.execute_query(query_rm_other)
 
-            Log.success(Log.kg + Log.gr_rag, f"Community detection ({method}) complete.", self.database.verbose)
-        except Exception as e:
-            raise Log.Failure(Log.kg + Log.gr_rag, f"Failed to run community detection") from e
+        Log.success(Log.kg + Log.gr_rag, f"Community detection ({method}) complete.", self.database.verbose)
 
     # ------------------------------------------------------------------------
     # Verbalization Formats
