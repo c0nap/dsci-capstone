@@ -306,30 +306,45 @@ Planned usage (TODO):
 
 The provided logging class in `src/util.py` writes success and warning messages to the console in addition to defining custom error classes.
 
+## Custom Exception Design
+
 We use a `Failure` base exception, which defines a **prefix** and a **message body** to match the style of the other custom logs in our application. The prefix is printed in a different color than the body.
 
-This design ensures consistency across subsystems — each error message clearly shows its origin (_e.g._, `GRAPH_DB: TEST_CONN: Failed to connect to Neo4j using address 'neo4j_service:7687'`), while still preserving Python’s native stack trace for debugging when needed.
+The **Builder Pattern** is used for constructing these exceptions dynamically, letting developers add context incrementally without defining a new class for each error type.
 
-The goal is not to hide errors but to **contextualize them**, providing a readable, layered indicator of where the failure occurred.
 
-This is done to balance 3 different unsuitable approaches to exception handling:
-1. **Catch built-in exceptions** - Research or test every library used, and . Relies on developers never changing these exception classes.
+#### Rationalle
+
+- This design ensures consistency across subsystems. Each error message clearly shows its origin (_e.g._ `GRAPH_DB: TEST_CONN: Failed to connect to Neo4j using address 'neo4j_service:7687'`), while still preserving Python’s native stack trace for debugging when needed.
+
+- The Builder pattern keeps the thrown code concise, allowing developers to express context in a single line rather than constructing verbose error hierarchies.
+
+- This prefix format tells you exactly what happened without reading the full message, striking a balance between readability and detail.
+
+- The centralized design ensures quick fixes to all usages of that prefix. For example, if we decide "GRAPH_DB" is too long for a prefix, we can change it to "GRAPH" or "GR_DB" while keeping diffs contained to the Log class only.
+
+- The goal is not to hide errors but to **contextualize them**, providing a readable, layered indicator of where the failure occurred.
+
+- Prefix is a conceptual traceback. If done improperly, it duplicates the built-in traceback — but a robust implementation only chains prefixes when it clarifies two distinct contexts. For example, `"DOCS_DB: TEST_CONN:"` should remain distinct from `"REL_DB: TEST_CONN:"`.
+
+## Alternatives
+
+Our design balances 3 different unsuitable approaches to exception handling:
+1. **Catch built-in exceptions** - Research or test every library used, and hard-code except-blocks for each type.
 2. **Specific micro-exceptions** - Defines a custom error class for every case: MongoSyntaxFailure, PostgresSyntaxFailure, MongoConnectionFailure, PostgresConnectionFailure. In a typical project this may be sufficient, but we interact with many different databases.
 3. **Broadly scoped try-except blocks**
 
+Each of these approaches has drawbacks:
+1. **Built-in Exceptions** tightly couple code to third-party libraries, relying on our developers to know their internals and update handling logic when APIs change.
+2. **Micro-Exceptions** scale poorly; you end up maintaining dozens of nearly identical subclasses and constructors just to preserve consistent formatting.
+3. **Broad Try-Eexcept** quickly become noise: they catch too much, duplicate context, and bury the root cause several layers deep in logs.
 
-The **Builder Pattern** is used fo
+By contrast, our prefix-based `Failure` model:
+- Centralizes all formatting and coloring in one class.
+- Allows semantic, human-readable context (`GRAPH_DB: TEST_CONN:`) instead of raw technical traces.
+- Eliminates exception-type bloat.
+- Keeps logs visually consistent and easy to parse across multiple database connectors.
 
-The centralized design ensures quick fixes to all usages of that prefix. For example, if we decide "GRAPH_DB:" is too long for a prefix, we can change it to "GRAPH" or "GR_DB" while keeping diffs contained to the Log class only.
+In short, the `Failure` system captures the *clarity* of domain-specific messages without the maintenance overhead of a full exception hierarchy or the clutter of broad try/except usage.
 
-keeps the thrown code concise.
-
-Prefix is a conceptual traceback. If done improperly, it duplicates the built-in traceback - but a robust implementation will chains prefixes only when doing so would clarify two different usages. For example, "DOCS_DB: TEST_CONN: " should be separate from "REL_DB: TEST_CONN: "
-
-tells you exactly what happened without reading the full message
-
-## Sub-Errors To Consolidate 
-
-
-
-
+Additionally, sub-errors like `BadAddressFailure` are used to consolidate — hiding long, complicated tracebacks when the issue is fixable with something simple on our end, such as forgetting to start the databases before running the tests.
