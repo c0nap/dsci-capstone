@@ -1,6 +1,7 @@
 from components.fact_storage import GraphConnector
 from pandas import concat, DataFrame, option_context
 import re
+import random
 from src.util import Log
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -216,7 +217,7 @@ class KnowledgeGraph:
             visited_nodes |= current
             new_nodes = set(neighbors["subject_id"]).union(neighbors["object_id"]) - visited_nodes
 
-        # Clean the triples DataFrame
+        # Clean the filtered triples DataFrame
         if not all_edges:
             return DataFrame()
         result_df = concat(all_edges, ignore_index=True).drop_duplicates()
@@ -235,48 +236,47 @@ class KnowledgeGraph:
         @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
-        try:
-            import random
+        triples_df = self.get_all_triples()
+        if triples_df is None or triples_df.empty:
+            raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
+        
+        # Find adjacent nodes where 'subject_id' in [start_nodes]
+        # 1. Initialize with all outgoing edges
+        rows_outgoing: Dict[str, List[Any]] = {}
+        for _, row in triples_df.iterrows():
+            subject_id = row["subject_id"]
+            rows_outgoing.setdefault(subject_id, []).append(row)
+        if not rows_outgoing:
+            return DataFrame()
+        # 2. Filter out disconnected nodes (no outgoing edges)
+        valid_starts = [n for n in start_nodes if n in rows_outgoing]
+        # 3. Any node in the graph can be used if start_nodes has no valid outgoing edges.
+        if not valid_starts:
+            valid_starts = list(rows_outgoing.keys())
 
-            triples_df = self.get_all_triples()
-            if triples_df is None or triples_df.empty:
-                raise Log.Failure(Log.kg + Log.sub_gr, f"No triples available in graph {self.graph_name}")
+        sampled_edges = []
+        for _ in range(num_walks):
+            # Choose random start
+            current = random.choice(valid_starts)
+            for _ in range(walk_length):
+                neighbors = rows_outgoing.get(current, [])
+                if not neighbors:
+                    break  # dead end
+                edge = random.choice(neighbors)  # Choose random edge from this node
+                sampled_edges.append(edge)
+                current = edge["object_id"]  # move along directed edge
 
-            # Build directed adjacency: subject -> [rows where subject_id == subject]
-            adjacency: Dict[str, List[Any]] = {}
-            for _, row in triples_df.iterrows():
-                s = row["subject_id"]
-                adjacency.setdefault(s, []).append(row)
+        # Clean the filtered triples DataFrame
+        if not sampled_edges:
+            return DataFrame()
+        result_df = DataFrame(sampled_edges)[["subject_id", "relation_id", "object_id"]].drop_duplicates().reset_index(drop=True)
 
-            if not adjacency:
-                raise Log.Failure(Log.kg + Log.sub_gr, f"Graph has no directed edges")
-
-            sampled_edges = []
-            valid_starts = [n for n in start_nodes if n in adjacency] or list(adjacency.keys())
-
-            for _ in range(num_walks):
-                current = random.choice(valid_starts)
-                for _ in range(walk_length):
-                    neighbors = adjacency.get(current, [])
-                    if not neighbors:
-                        break  # dead end
-                    edge = random.choice(neighbors)
-                    sampled_edges.append(edge)
-                    current = edge["object_id"]  # move along directed edge
-
-            if not sampled_edges:
-                raise Log.Failure(Log.kg + Log.sub_gr, f"No triples visited during random walk")
-
-            result_df = DataFrame(sampled_edges)[["subject_id", "relation_id", "object_id"]].drop_duplicates().reset_index(drop=True)
-
-            Log.success(
-                Log.kg + Log.sub_gr,
-                f"Directed random-walk sampled {len(result_df)} triples ({num_walks} walks × length {walk_length}).",
-                self.verbose,
-            )
-            return result_df
-        except Exception as e:
-            raise Log.Failure(Log.kg + Log.sub_gr, f"Failed to perform directed random walk sample") from e
+        Log.success(
+            Log.kg + Log.sub_gr,
+            f"The directed random-walk sampled {len(result_df)} triples ({num_walks} walks × length {walk_length}).",
+            self.verbose,
+        )
+        return result_df
 
     def get_community_subgraph(self, community_id: int) -> DataFrame:
         """Return all triples belonging to a specific GraphRAG community.
