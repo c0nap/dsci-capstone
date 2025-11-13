@@ -193,16 +193,58 @@ We consulted with various sizes and configuration of LLM models during developme
 
 ### ChatGPT
 
-OpenAI - GPT-5 and GPT-4o - Plus (free 1-month trial)
+- **Company:** OpenAI
+- **Models Used:** GPT-5, GPT-4o
+- **Pricing Plan:** Plus (1-month trial) / Free
 
+#### Key Points
+
+Great for quick questions, like syntax. Replaces the traditional Google Search debugging method which relied on Reddit forums and Stack Overflow posts.
+
+Usage limits feel very generous, and model seamlessly downgrades when reached, which often goes unnoticed.
+
+Has a tendency to become stuck in a silent loop. Not enough information to answer the question given the user's constraints, but never recognizes this or asks for clarification.
 
 ### Claude
 
-Claude - Sonnet 4.5 - Pro ($20 for November)
+- **Company:** Anthropic
+- **Models Used:** Sonnet 4.5
+- **Pricing Plan:** Pro ($20 for November)
+
+#### Key Points
+
+- Excellent integration for coding. Can link repository to automatically download code.
+
+- Has a cleaner UI with extra formatting. Code blocks are rendered in the prompt window, which helps to avoid repetitively typing triple-backticks.
+
+- The secondary "code artifacts" screen bloats the UI. Sometimes a single-line fix will get silently applied to the middle of a 300-line document.
+
+- Tends to overachieve with code generation by adding defensive checks and unrequested structural changes. This is not ideal for a project where the intent is to understand all code being written.
+
+- Has a strict cutoff when usage limits are reached. These are reached very quickly on the free plan, and only slightly relaxed on pro.
 
 ### Gemini
 
-Gemini - 2.5 Flash - Pro (free student subscription)
+- **Company:** Google
+- **Models Used:** 2.5 Flash
+- **Pricing Plan:** Pro (free student subscription)
+
+#### Key Points
+
+- 
+
+### Prompting Tips
+
+1. More code context corresponds to better output.
+2. 
+
+## Agents
+
+Vibe coding was not used in this project.
+
+This decision was based on our desire to preserve this capstone project both as a demonstration of software engineering proficiency and a personal learning experience.
+
+Anecdotally, the AI-assisted workflow employed here may have doubled both productivity and personal comprehension. On the other hand, agentic coding feels like it halves how much is learned in order to achieve its massive reduction in development time and developer overhead, making it more suitable for products you wish would "just exist" via any means necessary.
 
 ## Testing
 
@@ -217,15 +259,6 @@ When adding new features to a class, it is helpful to take things in stages:
 5. Save time by generating several function bodies and their corresponding minimal tests in a single prompt. If you create comprehensive versions using this approach, make sure to evaluate whether a comprehensive version is actually needed, otherwise the LLM will bloat the test with obviously unnecessary asserts, adding nothing new or useful.
 6. When several methods perform similar tasks, use a PyTest fixture to load the same data each time. Our database connector tests rely on SQL, JSON, or Cypher query files. This worked out well, but finding and opening separate files made copy / paste operations more time-consuming than a hard-coded query string inside a fixture. The file-reading functionality does not need to be tested 10+ times.
 7. Use a distinct theme for the generated input data to make it more memorable for you and for the LLM. For example, we use a Scene graph, Social graph, and Event graph, rarely doubling-up with data fixtures. These examples provide a baseline for final intended usage; they essentially present a visualization to make comprehension and planning more seamless.
-
-
-## Agents
-
-Vibe coding was not used in this project.
-
-This decision was based on our desire to preserve this capstone project both as a demonstration of software engineering proficiency and a personal learning experience.
-
-Anecdotally, the AI-assisted workflow employed here may have doubled both productivity and personal comprehension. On the other hand, agentic coding feels like it halves how much is learned in order to achieve its massive reduction in development time and developer overhead, making it more suitable for products you wish would "just exist" via any means necessary.
 
 
 ## Integration
