@@ -28,7 +28,7 @@ class KnowledgeGraph:
         @note  LLM output should be pre-normalized using @ref components.text_processing.LLMConnector.normalize_triples.
         @throws Log.Failure  If the triple cannot be added to our graph database.
         """
-        
+
         # Normalize already-cleaned inputs for extra Cypher safety
         relation = re.sub(r"[^A-Za-z0-9_]", "_", relation).upper().strip("_")
         subject = re.sub(r"[^A-Za-z0-9_ ]", "_", subject).strip("_ ")
@@ -55,22 +55,19 @@ class KnowledgeGraph:
         @return  Returns (subject, relation, object) columns only.
         @throws Log.Failure  If the query fails to retrieve or process the DataFrame.
         """
-        try:
-            triples_df = self.get_triple_properties()
-            cols = ["subject_id", "relation_id", "object_id"]
+        triples_df = self.get_triple_properties()
+        cols = ["subject_id", "relation_id", "object_id"]
 
-            if triples_df is None or triples_df.empty:
-                Log.success(Log.kg, "Found 0 triples in graph.", self.verbose)
-                return DataFrame(columns=cols)
-
-            # Extract and rename columns
-            triples_df = triples_df[["n1.element_id", "r.element_id", "n2.element_id"]].rename(
-                columns={"n1.element_id": "subject_id", "r.element_id": "relation_id", "n2.element_id": "object_id"}
-            )
-            Log.success(Log.kg, f"Found {len(triples_df)} triples in graph.", self.verbose)
-            return triples_df
-        except Exception as e:
-            raise Log.Failure(Log.kg, f"Failed to retrieve triples") from e
+        if triples_df is None or triples_df.empty:
+            Log.success(Log.kg, "Found 0 triples in graph.", self.verbose)
+            return DataFrame(columns=cols)
+        
+        # Extract and rename columns
+        triples_df = triples_df[["n1.element_id", "r.element_id", "n2.element_id"]].rename(
+            columns={"n1.element_id": "subject_id", "r.element_id": "relation_id", "n2.element_id": "object_id"}
+        )
+        Log.success(Log.kg, f"Found {len(triples_df)} triples in graph.", self.verbose)
+        return triples_df
 
     def get_triple_properties(self) -> Optional[DataFrame]:
         """Pivot the graph elements DataFrame to expose node and relationship properties as columns.
@@ -81,28 +78,23 @@ class KnowledgeGraph:
         @return  DataFrame where each row represents one triple (n1, r, n2).
         @throws Log.Failure  If the elements DataFrame cannot be loaded or pivoting fails.
         """
-        try:
-            elements_df = self.database.get_dataframe(self.graph_name)
-            if elements_df is None or elements_df.empty:
-                raise Log.Failure(Log.kg, Log.msg_bad_triples(self.graph_name))
+        elements_df = self.database.get_dataframe(self.graph_name)
+        if elements_df is None or elements_df.empty:
+            raise Log.Failure(Log.kg, Log.msg_bad_triples(self.graph_name))
 
-            # Split nodes and relationships
-            nodes = elements_df[elements_df["element_type"] == "node"].drop(columns=["element_type", "db", "kg"], errors="ignore")
-            rels = (
-                elements_df[elements_df["element_type"] == "relationship"]
-                .drop(columns=["element_type", "db", "kg"], errors="ignore")
-                .add_prefix("r.")
-            )
-
-            # Join relationship to its start (n1) and end (n2) nodes
-            triples_df = rels.merge(nodes.add_prefix("n1."), left_on="r.start_node_id", right_on="n1.element_id").merge(
-                nodes.add_prefix("n2."), left_on="r.end_node_id", right_on="n2.element_id"
-            )
-
-            triples_df = triples_df.drop(columns=["r.start_node_id", "r.end_node_id"], errors="ignore")
-            return triples_df
-        except Exception as e:
-            raise Log.Failure(Log.kg, f"Failed to pivot triple properties") from e
+        # Split nodes and relationships
+        nodes = elements_df[elements_df["element_type"] == "node"].drop(columns=["element_type", "db", "kg"], errors="ignore")
+        rels = (
+            elements_df[elements_df["element_type"] == "relationship"]
+            .drop(columns=["element_type", "db", "kg"], errors="ignore")
+            .add_prefix("r.")
+        )
+        # Join relationship to its start (n1) and end (n2) nodes
+        triples_df = rels.merge(nodes.add_prefix("n1."), left_on="r.start_node_id", right_on="n1.element_id").merge(
+            nodes.add_prefix("n2."), left_on="r.end_node_id", right_on="n2.element_id"
+        )
+        triples_df = triples_df.drop(columns=["r.start_node_id", "r.end_node_id"], errors="ignore")
+        return triples_df
 
     def triples_to_names(self, df_ids: DataFrame, drop_ids: bool = False, df_lookup: Optional[DataFrame] = None) -> DataFrame:
         """Maps a DataFrame containing element ID columns to human-readable names.
