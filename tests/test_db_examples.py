@@ -28,7 +28,7 @@ def load_examples_relational(relational_db: RelationalConnector) -> Generator[No
 
 
 @pytest.mark.order(7)
-@pytest.mark.dependency(name="rel_example_1", depends=["rel_minimal", "rel_comprehensive"])
+@pytest.mark.dependency(name="rel_example_1", depends=["rel_minimal", "rel_comprehensive"], scope="session")
 def test_sql_example_1(relational_db: RelationalConnector, load_examples_relational: Generator[None, None, None]) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -42,7 +42,7 @@ def test_sql_example_1(relational_db: RelationalConnector, load_examples_relatio
 
 
 @pytest.mark.order(8)
-@pytest.mark.dependency(name="rel_example_2", depends=["rel_minimal", "rel_comprehensive"])
+@pytest.mark.dependency(name="rel_example_2", depends=["rel_minimal", "rel_comprehensive"], scope="session")
 def test_sql_example_2(relational_db: RelationalConnector, load_examples_relational: Generator[None, None, None]) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -56,7 +56,7 @@ def test_sql_example_2(relational_db: RelationalConnector, load_examples_relatio
 
 
 @pytest.mark.order(9)
-@pytest.mark.dependency(name="docs_example_1", depends=["docs_minimal", "docs_comprehensive"])
+@pytest.mark.dependency(name="docs_example_1", depends=["docs_minimal", "docs_comprehensive"], scope="session")
 def test_mongo_example_1(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -71,7 +71,7 @@ def test_mongo_example_1(docs_db: DocumentConnector) -> None:
 
 
 @pytest.mark.order(10)
-@pytest.mark.dependency(name="docs_example_2", depends=["docs_minimal", "docs_comprehensive"])
+@pytest.mark.dependency(name="docs_example_2", depends=["docs_minimal", "docs_comprehensive"], scope="session")
 def test_mongo_example_2(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -86,7 +86,7 @@ def test_mongo_example_2(docs_db: DocumentConnector) -> None:
 
 
 @pytest.mark.order(11)
-@pytest.mark.dependency(name="docs_example_3", depends=["docs_minimal", "docs_comprehensive"])
+@pytest.mark.dependency(name="docs_example_3", depends=["docs_minimal", "docs_comprehensive"], scope="session")
 def test_mongo_example_3(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -104,7 +104,7 @@ def test_mongo_example_3(docs_db: DocumentConnector) -> None:
 
 
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="graph_example_1", depends=["graph_minimal", "graph_comprehensive"])
+@pytest.mark.dependency(name="graph_example_1", depends=["graph_minimal", "graph_comprehensive"], scope="session")
 def test_cypher_example_1(graph_db: GraphConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
@@ -124,7 +124,7 @@ def test_cypher_example_1(graph_db: GraphConnector) -> None:
 
 
 @pytest.mark.order(13)
-@pytest.mark.dependency(name="graph_example_2", depends=["graph_minimal", "graph_comprehensive"])
+@pytest.mark.dependency(name="graph_example_2", depends=["graph_minimal", "graph_comprehensive"], scope="session")
 def test_cypher_example_2(graph_db: GraphConnector) -> None:
     """Test social network graph with relationships and mixed query patterns.
     @details  Validates comment parsing, semicolon splitting, CREATE/MERGE/MATCH,
@@ -184,7 +184,7 @@ def test_cypher_example_2(graph_db: GraphConnector) -> None:
 
 
 @pytest.mark.order(14)
-@pytest.mark.dependency(name="graph_example_3", depends=["graph_minimal", "graph_comprehensive"])
+@pytest.mark.dependency(name="graph_example_3", depends=["graph_minimal", "graph_comprehensive"], scope="session")
 def test_cypher_example_3(graph_db: GraphConnector) -> None:
     """Test scene and dialogue graphs with proper isolation.
     @details  Validates kg property isolation using a scene graph (spatial relationships)
@@ -305,7 +305,7 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
 
 
 @pytest.mark.order(15)
-@pytest.mark.dependency(name="graph_example_4", depends=["graph_minimal", "graph_comprehensive"])
+@pytest.mark.dependency(name="graph_example_4", depends=["graph_minimal", "graph_comprehensive"], scope="session")
 def test_cypher_example_4(graph_db: GraphConnector) -> None:
     """Test event graph with property mutations and multi-hop traversal.
     @details  Validates MERGE property updates (2-wave assignment), relationship chains
