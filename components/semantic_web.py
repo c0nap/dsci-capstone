@@ -135,46 +135,41 @@ class KnowledgeGraph:
         @return  DataFrame with added columns: *name_columns*.
         @throws Log.Failure  If mapping fails or required IDs are missing.
         """
-        try:
-            if df_ids is None:
-                return None
-            if df_ids.empty:  # Ensure the DataFrame has correct columns even if no data. For legacy compatibility
-                out_cols = [col for col in df_ids.columns if not (drop_ids and col in id_columns)] + name_columns
-                return DataFrame(columns=out_cols)
+        if df_ids is None:
+            return None
+        if df_ids.empty:  # Ensure the DataFrame has correct columns even if no data. For legacy compatibility
+            out_cols = [col for col in df_ids.columns if not (drop_ids and col in id_columns)] + name_columns
+            return DataFrame(columns=out_cols)
+        if len(name_columns) != len(id_columns):
+            raise Log.Failure(
+                Log.kg, f"name_columns (size {len(name_columns)}) and id_columns (size {len(id_columns)}) must have the same length."
+            )
+        
+        # Filter out non-existent columns
+        valid_cols = set(df_ids.columns)
+        filtered_pairs = [(name_col, id_col) for name_col, id_col in zip(name_columns, id_columns) if id_col in valid_cols]
+        if not filtered_pairs:  # If no valid columns are left, return the original DataFrame
+            return df_ids
+        # Re-assign the filtered column lists
+        name_columns, id_columns = map(list, zip(*filtered_pairs))
+        name_columns = list(name_columns)
+        id_columns = list(id_columns)
 
-            if len(name_columns) != len(id_columns):
-                raise Log.Failure(
-                    Log.kg, f"name_columns (size {len(name_columns)}) and id_columns (size {len(id_columns)}) must have the same length."
-                )
+        # Use provided DataFrame if given, otherwise query the connector
+        df_lookup = df_lookup if df_lookup is not None else self.database.get_dataframe(self.graph_name)
+        if df_lookup is None or df_lookup.empty:
+            raise Log.Failure(Log.kg, Log.msg_bad_triples(self.graph_name))
 
-            # --- Filter out non-existent columns in df_ids ---
-            valid_cols = set(df_ids.columns)
-            filtered_pairs = [(name_col, id_col) for name_col, id_col in zip(name_columns, id_columns) if id_col in valid_cols]
-            # If no valid columns are left, return the original DataFrame
-            if not filtered_pairs:
-                return df_ids
-            # Re-assign the filtered lists
-            name_columns, id_columns = map(list, zip(*filtered_pairs))
-            name_columns = list(name_columns)
-            id_columns = list(id_columns)
+        # Build ID-to-name dictionary for lookup efficiency
+        id_map = df_lookup[df_lookup["element_type"] == element_type].set_index("element_id")[name_property].to_dict()
+        df_named = df_ids.copy()
+        for name_col, id_col in zip(name_columns, id_columns):
+            df_named[name_col] = df_named[id_col].map(id_map)
 
-            # Search in provided DataFrame if given, otherwise query the connector
-            df_lookup = df_lookup if df_lookup is not None else self.database.get_dataframe(self.graph_name)
-            if df_lookup is None or df_lookup.empty:
-                raise Log.Failure(Log.kg, Log.msg_bad_triples(self.graph_name))
-
-            # Build lookup dictionaries for efficiency. Can now use df.map(dict)
-            id_to_name_map = df_lookup[df_lookup["element_type"] == element_type].set_index("element_id")[name_property].to_dict()
-            # Map IDs to readable names dynamically
-            df_named = df_ids.copy()
-            for name_col, id_col in zip(name_columns, id_columns):
-                df_named[name_col] = df_named[id_col].map(id_to_name_map)
-
-            cols_to_keep = [col for col in df_ids.columns if not (drop_ids and col in id_columns)]
-            ordered_cols = cols_to_keep + name_columns
-            return df_named[ordered_cols]
-        except Exception as e:
-            raise Log.Failure(Log.kg, f"Failed to convert triple names") from e
+        # Reorder columns, and optionally drop ID columns
+        cols_to_keep = [col for col in df_ids.columns if not (drop_ids and col in id_columns)]
+        ordered_cols = cols_to_keep + name_columns
+        return df_named[ordered_cols]
 
     # ------------------------------------------------------------------------
     # Subgraph Selection
@@ -186,18 +181,15 @@ class KnowledgeGraph:
         @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
-        try:
-            triples_df = self.get_all_triples()
-            if triples_df is None or triples_df.empty:
-                raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
+        triples_df = self.get_all_triples()
+        if triples_df is None or triples_df.empty:
+            raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
+        
+        # Filter triples where either endpoint is in node_ids
+        sub_df = triples_df[triples_df["subject_id"].isin(node_ids) | triples_df["object_id"].isin(node_ids)].reset_index(drop=True)
 
-            # Filter triples where either endpoint is in node_ids
-            sub_df = triples_df[triples_df["subject_id"].isin(node_ids) | triples_df["object_id"].isin(node_ids)].reset_index(drop=True)
-
-            Log.success(Log.kg + Log.sub_gr, f"Found {len(sub_df)} triples for given nodes.", self.verbose)
-            return sub_df
-        except Exception as e:
-            raise Log.Failure(Log.kg + Log.sub_gr, f"Failed to get subgraph by nodes") from e
+        Log.success(Log.kg + Log.sub_gr, f"Found {len(sub_df)} triples for given nodes.", self.verbose)
+        return sub_df
 
     def get_neighborhood(self, node_id: str, depth: int = 1) -> DataFrame:
         """Get k-hop neighborhood around a central node.
@@ -208,31 +200,30 @@ class KnowledgeGraph:
         @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
-        try:
-            triples_df = self.get_all_triples()
-            if triples_df is None or triples_df.empty:
-                raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
+        triples_df = self.get_all_triples()
+        if triples_df is None or triples_df.empty:
+            raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
 
-            current = {node_id}
-            visited = set()
-            all_edges = []
+        new_nodes = {node_id}
+        visited_nodes = set()
+        all_edges = []
+        # Perform k-hop expansion
+        for _ in range(depth):
+            neighbors = triples_df[triples_df["subject_id"].isin(new_nodes) | triples_df["object_id"].isin(new_nodes)]
+            if neighbors.empty:
+                break
+            all_edges.append(neighbors)
+            visited_nodes |= current
+            new_nodes = set(neighbors["subject_id"]).union(neighbors["object_id"]) - visited_nodes
 
-            # Perform k-hop expansion
-            for _ in range(depth):
-                neighbors = triples_df[triples_df["subject_id"].isin(current) | triples_df["object_id"].isin(current)]
-                if neighbors.empty:
-                    break
-                all_edges.append(neighbors)
-                visited |= current
-                current = set(neighbors["subject_id"]).union(neighbors["object_id"]) - visited
+        # Clean the triples DataFrame
+        if not all_edges:
+            return DataFrame()
+        result_df = concat(all_edges, ignore_index=True).drop_duplicates()
 
-            result_df = DataFrame() if not all_edges else concat(all_edges, ignore_index=True).drop_duplicates()
-
-            Log.success(Log.kg + Log.sub_gr, f"Found {len(result_df)} triples in {depth}-hop neighborhood.", self.verbose)
-            return result_df
-        except Exception as e:
-            raise Log.Failure(Log.kg + Log.sub_gr, f"Failed to get neighborhood") from e
-
+        Log.success(Log.kg + Log.sub_gr, f"Found {len(result_df)} triples in {depth}-hop neighborhood.", self.verbose)
+        return result_df
+        
     def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
         """Sample subgraph using directed random walk traversal starting from specified nodes.
         @details
