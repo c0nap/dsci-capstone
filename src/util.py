@@ -173,8 +173,8 @@ class Log:
     msg_bad_coll = lambda name: f"Collection '{name}' not found"
     msg_bad_graph = lambda name: f"Graph '{name}' not found"
 
-    test_conn = "CONNECTION TEST: "
-    test_basic = "BASIC: "
+    test_ops = "OPERATE: "
+    test_basic = "CONNECT: "
     test_info = "DB INFO: "
     test_df = "GET DF: "
     test_tmp_db = "CREATE DB: "
@@ -270,7 +270,7 @@ def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = [], sort_colum
 
 
 def check_values(results: List[Any], expected: List[Any], verbose: bool, log_source: str, raise_error: bool) -> bool:
-    """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_connection
+    """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_operations
     @param results  A list of observed values from the database.
     @param expected  A list of correct values to compare against.
     @param verbose  Whether to print success messages.

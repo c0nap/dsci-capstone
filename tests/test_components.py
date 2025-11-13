@@ -66,13 +66,13 @@ def test_db_graph_minimal(graph_db: GraphConnector) -> None:
 
 
 # ------------------------------------------------------------------------------
-# BUILT-IN DATABASE TESTS: Run test_connection() for comprehensive usage tests.
+# BUILT-IN DATABASE TESTS: Run test_operations() for comprehensive usage tests.
 # ------------------------------------------------------------------------------
 @pytest.mark.order(4)
 @pytest.mark.dependency(name="rel_comprehensive", depends=["rel_minimal"])
 def test_db_relational_comprehensive(relational_db: RelationalConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    operational = relational_db.test_connection(raise_error=True)
+    operational = relational_db.test_operations(raise_error=True)
     assert operational
 
 
@@ -80,7 +80,7 @@ def test_db_relational_comprehensive(relational_db: RelationalConnector) -> None
 @pytest.mark.dependency(name="docs_comprehensive", depends=["docs_minimal"])
 def test_db_docs_comprehensive(docs_db: DocumentConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    operational = docs_db.test_connection(raise_error=True)
+    operational = docs_db.test_operations(raise_error=True)
     assert operational
 
 
@@ -88,7 +88,7 @@ def test_db_docs_comprehensive(docs_db: DocumentConnector) -> None:
 @pytest.mark.dependency(name="graph_comprehensive", depends=["graph_minimal"])
 def test_db_graph_comprehensive(graph_db: GraphConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
-    operational = graph_db.test_connection(raise_error=True)
+    operational = graph_db.test_operations(raise_error=True)
     assert operational
 
 

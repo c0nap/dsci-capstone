@@ -22,7 +22,7 @@ class Connector(ABC):
         Derived classes should implement:
         - __init__
         - @ref components.connectors.Connector.configure
-        - @ref components.connectors.Connector.test_connection
+        - @ref components.connectors.Connector.test_operations
         - @ref components.connectors.Connector.execute_query
         - @ref components.connectors.Connector.execute_file
     """
@@ -35,7 +35,7 @@ class Connector(ABC):
         pass
 
     @abstractmethod
-    def test_connection(self, raise_error: bool = True) -> bool:
+    def test_operations(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
@@ -73,7 +73,7 @@ class DatabaseConnector(Connector):
     @details
         Derived classes should implement:
         - @ref components.connectors.DatabaseConnector.__init__
-        - @ref components.connectors.DatabaseConnector.test_connection
+        - @ref components.connectors.DatabaseConnector.test_operations
         - @ref components.connectors.DatabaseConnector.execute_query
         - @ref components.connectors.DatabaseConnector._split_combined
         - @ref components.connectors.DatabaseConnector.get_dataframe
@@ -330,7 +330,7 @@ class RelationalConnector(DatabaseConnector):
         self.database_name = new_database
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
 
-    def test_connection(self, raise_error: bool = True) -> bool:
+    def test_operations(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
@@ -338,7 +338,7 @@ class RelationalConnector(DatabaseConnector):
         @throws Log.Failure  If raise_error is True and the connection test fails to complete.
         """
         # Check if connection string is valid
-        if self.check_connection(Log.test_conn, raise_error) == False:
+        if self.check_connection(Log.test_ops, raise_error) == False:
             return False
 
         engine = create_engine(self.connection_string, poolclass=NullPool)
@@ -359,7 +359,7 @@ class RelationalConnector(DatabaseConnector):
             except Exception as e:
                 if not raise_error:
                     return False
-                raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
+                raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
 
             try:  # Display useful information on existing databases
                 db_name = self.execute_query(self._specific_queries[0])
@@ -369,7 +369,7 @@ class RelationalConnector(DatabaseConnector):
             except Exception as e:
                 if not raise_error:
                     return False
-                raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
+                raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
 
             try:  # Create a table, insert dummy data, and use get_dataframe
                 tmp_table = "test_table"
@@ -385,7 +385,7 @@ class RelationalConnector(DatabaseConnector):
             except Exception as e:
                 if not raise_error:
                     return False
-                raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
+                raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
 
             try:  # Test create/drop functionality with tmp database
                 tmp_db = f"test_conn"  # Do not use context manager: interferes with traceback
@@ -400,7 +400,7 @@ class RelationalConnector(DatabaseConnector):
             except Exception as e:
                 if not raise_error:
                     return False
-                raise Log.Failure(Log.rel_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
+                raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
 
         # Finish with no errors = connection test successful
         Log.success(Log.rel_db, Log.msg_db_connect(self.database_name), self.verbose)

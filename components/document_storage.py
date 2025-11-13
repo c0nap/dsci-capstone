@@ -49,7 +49,7 @@ class DocumentConnector(DatabaseConnector):
         @note  PyMongo requires a lookup location for user permissions, and MongoEngine will show warnings if 'uuidRepresentation' is not set."""
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
 
-    def test_connection(self, raise_error: bool = True) -> bool:
+    def test_operations(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the MongoDB database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
@@ -57,7 +57,7 @@ class DocumentConnector(DatabaseConnector):
         @throws Log.Failure  If raise_error is True and the connection test fails to complete.
         """
         # Check if connection string is valid
-        if self.check_connection(Log.test_conn, raise_error) == False:
+        if self.check_connection(Log.test_ops, raise_error) == False:
             return False
 
         with mongo_handle(host=self.connection_string, alias="test_conn") as db:
@@ -74,7 +74,7 @@ class DocumentConnector(DatabaseConnector):
             except Exception as e:
                 if not raise_error:
                     return False
-                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
+                raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
 
             try:  # Display useful information on existing databases
                 databases = db.client.list_database_names()
@@ -82,7 +82,7 @@ class DocumentConnector(DatabaseConnector):
             except Exception as e:
                 if not raise_error:
                     return False
-                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
+                raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
 
             try:  # Create a collection, insert dummy data, and use get_dataframe
                 tmp_collection = "test_collection"
@@ -97,7 +97,7 @@ class DocumentConnector(DatabaseConnector):
             except Exception as e:
                 if not raise_error:
                     return False
-                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
+                raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
 
             try:  # Test create/drop functionality with tmp database
                 tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
@@ -112,7 +112,7 @@ class DocumentConnector(DatabaseConnector):
             except Exception as e:
                 if not raise_error:
                     return False
-                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
+                raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
 
         # Finish with no errors = connection test successful
         Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
@@ -415,7 +415,7 @@ def mongo_handle(host: str, alias: str) -> MongoHandle:
         with mongo_handle(host=self.connection_string, alias="create_db") as db:
             (your code here...)
     This will disconnect all connections on the alias once finished.
-    Helpful when test_connection wants to call execute_query, but continue using its existing db handle after execute_query disconnects.
+    Helpful when test_operations wants to call execute_query, but continue using its existing db handle after execute_query disconnects.
     """
     mongoengine.connect(host=host, alias=alias)
     db = mongoengine.get_db(alias=alias)

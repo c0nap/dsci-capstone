@@ -268,9 +268,9 @@ This decision was based on our desire to preserve this capstone project both as 
 
 Anecdotally, the AI-assisted workflow employed here may have doubled both productivity and personal comprehension. On the other hand, agentic coding feels like it halves how much is learned in order to achieve its massive 10x reduction in development time and developer overhead, making it more suitable for products you wish would "just exist" via any means necessary.
 
-## Testing
+## Test-Driven Design (TDD)
 
-LLMs saved a lot of time when we were creating PyTests for all the moving parts of this application. These tasks are usually monotonous and do not provide much potential for learning, so LLMs are a good fit here.
+LLMs saved a lot of time by creating PyTests for all the moving parts of this application. These tasks are usually monotonous and do not provide much potential for personal improvement, so LLMs are a good fit here.
 
 When adding new features to a class, it is helpful to take things in stages:
 

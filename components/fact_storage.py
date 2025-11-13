@@ -50,7 +50,7 @@ class GraphConnector(DatabaseConnector):
         finally:
             self._graph_name = old
 
-    def test_connection(self, raise_error: bool = True) -> bool:
+    def test_operations(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the Neo4j database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
@@ -58,7 +58,7 @@ class GraphConnector(DatabaseConnector):
         @throws Log.Failure  If raise_error is True and the connection test fails to complete.
         """
         # Check if connection string is valid
-        if self.check_connection(Log.test_conn, raise_error) == False:
+        if self.check_connection(Log.test_ops, raise_error) == False:
             return False
 
         try:  # Run universal test queries
@@ -74,7 +74,7 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             if not raise_error:
                 return False
-            raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
+            raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
 
         try:  # Display useful information on existing databases
             databases = self.get_unique(key="db")
@@ -84,7 +84,7 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             if not raise_error:
                 return False
-            raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
+            raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
 
         try:  # Create nodes, insert dummy data, and use get_dataframe
             with self.temp_graph("test_graph"):
@@ -97,7 +97,7 @@ class GraphConnector(DatabaseConnector):
                 #### TODO: remove once error handling is fixed
                 # check_values will raise, so this never became an issue until now
                 if df is None:
-                    raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_df, "DataFrame fetched from graph 'test_graph' is None")
+                    raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, "DataFrame fetched from graph 'test_graph' is None")
                 if check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error) == False:
                     return False
                 query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
@@ -105,7 +105,7 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             if not raise_error:
                 return False
-            raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
+            raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
 
         try:  # Test create/drop functionality with tmp database
             tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
@@ -120,7 +120,7 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             if not raise_error:
                 return False
-            raise Log.Failure(Log.gr_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
+            raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
 
         # Finish with no errors = connection test successful
         Log.success(Log.gr_db, Log.msg_db_connect(self.database_name), self.verbose)
