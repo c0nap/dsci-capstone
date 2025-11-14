@@ -284,7 +284,7 @@ class DocumentConnector(DatabaseConnector):
         - Excludes pure status/meta responses like {'ok': 1}.
         @param result  The result of a JSON query.
         @return  Whether the object is parsable to DataFrame."""
-        # TODO: docs_to_df less defensive now?
+
         # Cursor / batch results
         if isinstance(result, dict):
             if "cursor" in result:
@@ -595,6 +595,7 @@ def _sanitize_document(doc: Dict[str, Any], type_registry: Dict[str, Set[Type[An
     return sanitized
 
 
+
 def _docs_to_df(docs: List[Dict[str, Any]], merge_unspecified: bool = True) -> DataFrame:
     """Convert raw MongoDB documents to a Pandas DataFrame.
     @details  Handles schema inconsistencies by:
@@ -631,8 +632,7 @@ def _docs_to_df(docs: List[Dict[str, Any]], merge_unspecified: bool = True) -> D
                                 nested_schema[key][nested_key] = set()
                             nested_schema[key][nested_key].add(type(nested_val))
 
-    # Second pass: sanitize with type-aware column mapping
-    type_registry: Dict[str, Set[Type[Any]]] = {}
+    # Second pass: sanitize with type-aware nested column mapping
     sanitized_docs: List[Dict[str, Any]] = []
 
     for doc in docs:
@@ -645,12 +645,6 @@ def _docs_to_df(docs: List[Dict[str, Any]], merge_unspecified: bool = True) -> D
                 except Exception as e:
                     raise Log.Failure(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str")) from e
             else:
-                # Track the original type
-                original_type = type(value)
-                if key not in type_registry:
-                    type_registry[key] = set()
-                type_registry[key].add(original_type)
-
                 # Wrap values with type-aware nested column mapping
                 if value is None:
                     sanitized[key] = []
