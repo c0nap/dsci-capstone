@@ -172,7 +172,7 @@ class DocumentConnector(DatabaseConnector):
         Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
 
         returns_data = self._returns_data(query)
-        parsable_to_df = self._parsable_to_df((rows, cols))  # checks 'cursor', 'firstBatch'
+        parsable_to_df = self._parsable_to_df(results)  # checks 'cursor', 'firstBatch'
         if not returns_data or not parsable_to_df:
             return None
 
@@ -284,7 +284,7 @@ class DocumentConnector(DatabaseConnector):
         - Excludes pure status/meta responses like {'ok': 1}.
         @param result  The result of a JSON query.
         @return  Whether the object is parsable to DataFrame."""
-        # TODO: docs_to_df ?
+        # TODO: docs_to_df less defensive now?
         # Cursor / batch results
         if isinstance(result, dict):
             if "cursor" in result:
