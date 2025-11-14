@@ -632,38 +632,16 @@ def _docs_to_df(docs: List[Dict[str, Any]], merge_unspecified: bool = True) -> D
                                 nested_schema[key][nested_key] = set()
                             nested_schema[key][nested_key].add(type(nested_val))
 
-    # Second pass: sanitize with type-aware nested column mapping
-    sanitized_docs: List[Dict[str, Any]] = []
+    # Second pass: sanitize documents
+    type_registry: Dict[str, Set[Type[Any]]] = {}
+    sanitized_docs = [_sanitize_document(doc, type_registry) for doc in docs]
 
-    for doc in docs:
-        sanitized: Dict[str, Any] = {}
-        for key, value in doc.items():
-            # Convert ObjectId to string
-            if key == "_id":
-                try:
-                    sanitized[key] = [str(value)]
-                except Exception as e:
-                    raise Log.Failure(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str")) from e
-            else:
-                # Wrap values with type-aware nested column mapping
-                if value is None:
-                    sanitized[key] = []
-                elif isinstance(value, list):
-                    # If field has nested schema and list contains primitives, wrap in dicts
-                    if key in nested_schema and value and not isinstance(value[0], dict):
-                        target_key = _find_compatible_nested_key(type(value[0]), nested_schema.get(key, {}), merge_unspecified)
-                        sanitized[key] = [{target_key: item} for item in value]
-                    else:
-                        sanitized[key] = value if value else []
-                else:
-                    # Single value: wrap in list, check for nested column mapping
-                    if key in nested_schema and not isinstance(value, dict):
-                        target_key = _find_compatible_nested_key(type(value), nested_schema.get(key, {}), merge_unspecified)
-                        sanitized[key] = [{target_key: value}]
-                    else:
-                        sanitized[key] = [value]
-
-        sanitized_docs.append(sanitized)
+    # Third pass: wrap primitives into nested structure when schema requires it
+    for sanitized in sanitized_docs:
+        for key, value in list(sanitized.items()):
+            if key in nested_schema and isinstance(value, list) and value and not isinstance(value[0], dict):
+                target_key = _find_compatible_nested_key(type(value[0]), nested_schema[key], merge_unspecified)
+                sanitized[key] = [{target_key: item} for item in value]
 
     # Create DataFrame and flatten
     df = DataFrame(sanitized_docs)
