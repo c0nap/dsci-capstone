@@ -259,7 +259,7 @@ class GraphConnector(DatabaseConnector):
         # Structural success only — semantic validation handled by _tuples_to_df and filter_to_db
         return True
 
-    def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
+    def get_dataframe(self, name: str, columns: List[str] = []) -> DataFrame:
         """Automatically generate and run a query for the specified Knowledge Graph collection.
         @details
             - Fetches all nodes and relationships belonging to the active database + graph name.
@@ -268,7 +268,7 @@ class GraphConnector(DatabaseConnector):
             - Does not explode lists or nested values.
         @param name  The name of an existing graph or subgraph.
         @param columns  A list of column names to keep.
-        @return  DataFrame containing the requested data, or None.
+        @return  Sorted DataFrame containing the requested data.
         @throws Log.Failure  If we fail to create the requested DataFrame for any reason.
         """
         self.check_connection(Log.get_df, raise_error=True)
@@ -304,7 +304,7 @@ class GraphConnector(DatabaseConnector):
 
         # If not found, warn but do not fail
         Log.warn(Log.gr_db + Log.get_df, Log.msg_bad_graph(name), self.verbose)
-        return None
+        return DataFrame()
 
     def get_unique(self, key: str) -> List[str]:
         """Retrieve all unique values for a specified node property.

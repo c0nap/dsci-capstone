@@ -314,11 +314,11 @@ class DocumentConnector(DatabaseConnector):
         # Anything else is not tabular
         return False
 
-    def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
+    def get_dataframe(self, name: str, columns: List[str] = []) -> DataFrame:
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.
         @param columns  A list of column names to keep.
-        @return  DataFrame containing the requested data, or None
+        @return  Sorted DataFrame containing the requested data
         @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
         # Re-use the logic from execute_query
@@ -332,7 +332,7 @@ class DocumentConnector(DatabaseConnector):
             return df
         # If not found, warn but do not fail
         Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
-        return None
+        return DataFrame()
 
     def create_database(self, database_name: str) -> None:
         """Use the current database connection to create a sibling database in this engine.
