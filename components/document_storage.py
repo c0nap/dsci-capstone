@@ -192,7 +192,7 @@ class DocumentConnector(DatabaseConnector):
 
         # Convert document list to DataFrame if any docs exist
         df = _docs_to_df(docs)
-        if df is None or df.empty:
+        if df is None or df.empty:  # Defensive check - should be handled already
             return None
         Log.success(Log.doc_db + Log.run_q, Log.msg_good_df_parse(df), self.verbose)
         return df
@@ -325,14 +325,17 @@ class DocumentConnector(DatabaseConnector):
         query = {"find": name, "filter": {}}
         df = self.execute_query(json.dumps(query))
 
-        if df is not None and not df.empty:
-            df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
-            df = df[columns] if columns else df
-            Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
-            return df
-        # If not found, warn but do not fail
-        Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
-        return DataFrame()
+        if df is None or df.empty:
+            # If not found, warn but do not fail
+            Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
+            return DataFrame()
+
+        # Sort DataFrame and drop unrequested columns
+        df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
+        df = df[columns] if columns else df
+        Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
+        return df
+        
 
     def create_database(self, database_name: str) -> None:
         """Use the current database connection to create a sibling database in this engine.

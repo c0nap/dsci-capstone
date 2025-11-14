@@ -170,7 +170,7 @@ class GraphConnector(DatabaseConnector):
 
         # Convert to DataFrame
         df = _tuples_to_df(tuples, meta)
-        if df is None or df.empty:
+        if df is None or df.empty:  # Defensive check - should be handled already
             return None
 
         # Return nodes from the current database ONLY, despite what the query wants.
@@ -274,11 +274,11 @@ class GraphConnector(DatabaseConnector):
         """
         self.check_connection(Log.get_df, raise_error=True)
 
+        # Create query to fetch nodes AND relationships in this graph and DB
         with self.temp_graph(name):
-            # Fetch both nodes and relationships belonging to this graph and DB
-            # 1. Get all nodes in this graph.
-            # 2. Get all relationships STARTING in this graph.
-            # 3. Get all relationships ENDING in this graph.
+            # MATCH #1. Get all nodes in this graph.
+            # MATCH #2. Get all relationships STARTING in this graph.
+            # MATCH #3. Get all relationships ENDING in this graph.
             # UNION automatically handles duplicates, and we only RETURN n or r, never m.
             query = f"""
             MATCH (n {self.SAME_DB_KG_()})
@@ -293,19 +293,22 @@ class GraphConnector(DatabaseConnector):
             WHERE {self.NOT_DUMMY_('m')}
             RETURN r AS element
             """
-            df = self.execute_query(query)
-        if df is not None and not df.empty:
-            df = _normalize_elements(df)
+        df = self.execute_query(query)
+        if df is None or df.empty:
+            # If not found, warn but do not fail
+            Log.warn(Log.gr_db + Log.get_df, Log.msg_bad_graph(name), self.verbose)
+            return DataFrame()
 
-        if df is not None and not df.empty:
-            df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'element_id', 'element_type', 'labels'], sort_columns=columns)
-            df = df[columns] if columns else df
-            Log.success(Log.gr_db + Log.get_df, Log.msg_good_graph(name, df), self.verbose)
-            return df
+        # Expand all properties as columns; fill missing with None
+        df = _normalize_elements(df)
 
-        # If not found, warn but do not fail
-        Log.warn(Log.gr_db + Log.get_df, Log.msg_bad_graph(name), self.verbose)
-        return DataFrame()
+        # Sort DataFrame and drop unrequested columns
+        df = df_natural_sorted(df, ignored_columns=['db', 'kg', 'element_id', 'element_type', 'labels'], sort_columns=columns)
+        df = df[columns] if columns else df
+        Log.success(Log.gr_db + Log.get_df, Log.msg_good_graph(name, df), self.verbose)
+        return df
+
+        
 
     def get_unique(self, key: str) -> List[str]:
         """Retrieve all unique values for a specified node property.
