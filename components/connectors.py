@@ -433,27 +433,9 @@ class RelationalConnector(DatabaseConnector):
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
                 cursor = connection.execute(text(query))
-                rows = cursor.fetchall()
-                cols = cursor.keys()
-                # Cursor will close when we leave scope
-                print()
-                print(query)
-                print(f"cols type: {type(cols)}")
-                print(f"cols value: {cols}")
-                print(f"bool(cols): {bool(cols)}")
-                print(f"not cols: {not cols}")
-                print(f"list(cols): {list(cols)}")
-                print(f"rows type: {type(rows)}")
-                print(f"rows value: {rows}")
-                print(f"bool(rows): {bool(rows)}")
-                print(f"not rows: {not rows}")
-                print(f"len(rows): {len(rows)}")
-                if rows:
-                    print(f"first row type: {type(rows[0])}")
-                    print(f"first row value: {rows[0]}")
-                    print(f"isinstance tuple: {isinstance(rows[0], tuple)}")
-                    print(f"isinstance dict: {isinstance(rows[0], dict)}")
-                print()
+                # Cursor will close when we leave scope, but will raise on fetchall()
+                cols = cursor.keys() if cursor.returns_rows else []
+                rows = cursor.fetchall() if cursor.returns_rows else []
         except Exception as e:
             raise Log.Failure(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
         Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
@@ -512,7 +494,7 @@ class RelationalConnector(DatabaseConnector):
             return True
         # Rows must be a tuple or dict type
         first = rows[0]
-        return isinstance(first, (tuple, dict, Row))
+        return isinstance(first, Row)
 
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.

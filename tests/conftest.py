@@ -31,20 +31,8 @@ def session(request):
 def relational_db(session: Session) -> RelationalConnector:
     """Fixture to get relational database connection."""
     _relational_db = session.relational_db
-    print(_relational_db.database_name)
-
-    # In your test or fixture
-    result = _relational_db.execute_query("SELECT datname FROM pg_database;")
-    print(f"Result: {result}")
-
-    # Try the manual query
-    result = _relational_db.execute_query("SELECT 1 as test;")
-    print(f"Simple query: {result}")
-    
     if _relational_db.database_exists("pytest"):
     	_relational_db.drop_database("pytest")
-    else:
-        print("NOT EXISTS")
     with _relational_db.temp_database("pytest"):
         yield _relational_db
 
