@@ -16,11 +16,11 @@ from typing import Generator, List, Optional
 def load_examples_relational(relational_db: RelationalConnector) -> Generator[None, None, None]:
     """Fixture to create relational tables using engine-specific syntax."""
     if relational_db.db_type == "MYSQL":
-        _test_query_file(relational_db, "./tests/examples-db/rel_postgres_schema.sql", ["sql"])
+        _exec_query_file(relational_db, "./tests/examples-db/rel_postgres_schema.sql", ["sql"])
         yield
         relational_db.execute_query("DROP TABLE EntityName; DROP TABLE ExampleEAV;")
     elif relational_db.db_type == "POSTGRES":
-        _test_query_file(relational_db, "./tests/examples-db/rel_postgres_schema.sql", ["sql"])
+        _exec_query_file(relational_db, "./tests/examples-db/rel_postgres_schema.sql", ["sql"])
         yield
         relational_db.execute_query("DROP TABLE entityname; DROP TABLE exampleeav;")
     else:
@@ -34,9 +34,8 @@ def test_sql_example_1(relational_db: RelationalConnector, load_examples_relatio
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected.
     @note  Uses a table-creation fixture to load / unload schema."""
-    _test_query_file(relational_db, "./tests/examples-db/relational_df1.sql", valid_files=["sql"])
+    _exec_query_file(relational_db, "./tests/examples-db/relational_df1.sql", valid_files=["sql"])
     df = relational_db.get_dataframe("EntityName")
-    assert df is not None
     assert not df.empty
     assert df.loc[1, 'name'] == 'Fluffy'
 
@@ -48,9 +47,8 @@ def test_sql_example_2(relational_db: RelationalConnector, load_examples_relatio
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected.
     @note  Uses a table-creation fixture to load / unload schema."""
-    _test_query_file(relational_db, "./tests/examples-db/relational_df2.sql", valid_files=["sql"])
+    _exec_query_file(relational_db, "./tests/examples-db/relational_df2.sql", valid_files=["sql"])
     df = relational_db.get_dataframe("ExampleEAV", ["entity", "attribute", "value"])
-    assert df is not None
     assert not df.empty
     assert df.iloc[-1]['value'] == 'Timber'
 
@@ -61,9 +59,8 @@ def test_mongo_example_1(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected."""
-    _test_query_file(docs_db, "./tests/examples-db/document_df1.mongo", valid_files=["json", "mongo"])
+    _exec_query_file(docs_db, "./tests/examples-db/document_df1.mongo", valid_files=["json", "mongo"])
     df = docs_db.get_dataframe("books")
-    assert df is not None
     assert not df.empty
     assert df.loc[0, 'title'] == 'Wuthering Heights'
     assert df.iloc[-1]['chapters.pages'] == 22
@@ -76,9 +73,8 @@ def test_mongo_example_2(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected."""
-    _test_query_file(docs_db, "./tests/examples-db/document_df2.json", valid_files=["json", "mongo"])
+    _exec_query_file(docs_db, "./tests/examples-db/document_df2.json", valid_files=["json", "mongo"])
     df = docs_db.get_dataframe("qa_exam")
-    assert df is not None
     assert not df.empty
     assert df.iloc[0]['answer'] == 'Paul Atreides'
     assert any((df['gold_answer'] == 'The Fremen') & (df['is_correct'] == False))
@@ -91,9 +87,9 @@ def test_mongo_example_3(docs_db: DocumentConnector) -> None:
     """Run queries contained within test files.
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected."""
-    _test_query_file(docs_db, "./tests/examples-db/document_df3.mongo", valid_files=["json", "mongo"])
+    _exec_query_file(docs_db, "./tests/examples-db/document_df3.mongo", valid_files=["json", "mongo"])
     df = docs_db.get_dataframe("potions")
-    assert df is not None
+    assert not df.empty
     assert df.loc[4, 'potion_name'] == 'Elixir of Wisdom'
     assert "effects.description" in df.columns
     assert any((df['potion_name'] == 'Invisibility Draught') & (df['effects.description'] == 'Silent movement'))
@@ -110,9 +106,9 @@ def test_cypher_example_1(graph_db: GraphConnector) -> None:
     @details  Internal errors are handled by the class itself, and ruled out earlier.
     Here we just assert that the received results DataFrame matches what we expected."""
     graph_db.drop_graph("pets")
-    _test_query_file(graph_db, "./tests/examples-db/graph_df1.cql", valid_files=["cql", "cypher"])
+    _exec_query_file(graph_db, "./tests/examples-db/graph_df1.cql", valid_files=["cql", "cypher"])
     df = graph_db.get_dataframe("pets")
-    assert df is not None
+    assert not df.empty
     assert "element_id" in df.columns and "element_type" in df.columns
     assert "db" in df.columns and "kg" in df.columns
     assert len(df) == 5
@@ -130,11 +126,11 @@ def test_cypher_example_2(graph_db: GraphConnector) -> None:
     @details  Validates comment parsing, semicolon splitting, CREATE/MERGE/MATCH,
     relationships with properties, and TAG_NODES_ with/without RETURN."""
     graph_db.drop_graph("social")
-    _test_query_file(graph_db, "./tests/examples-db/graph_df2.cypher", valid_files=["cql", "cypher"])
+    _exec_query_file(graph_db, "./tests/examples-db/graph_df2.cypher", valid_files=["cql", "cypher"])
 
     # Verify nodes were created correctly
     df = graph_db.get_dataframe("social")
-    assert df is not None
+    assert not df.empty
     df_nodes = df[df["element_type"] == "node"]
     assert len(df_nodes) == 5  # Alice, Bob, Charlie, Dave, Frank
     assert "element_id" in df_nodes.columns and "labels" in df_nodes.columns
@@ -198,12 +194,12 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
         except:
             pass
 
-    _test_query_file(graph_db, "./tests/examples-db/graph_df3.cql", valid_files=["cql", "cypher"])
+    _exec_query_file(graph_db, "./tests/examples-db/graph_df3.cql", valid_files=["cql", "cypher"])
 
     # Test Graph 1: Scene graph with spatial relationships
     with graph_db.temp_graph("scene"):
         df_scene = graph_db.get_dataframe("scene")
-        assert df_scene is not None
+        assert not df_scene.empty
         df_scene_nodes = df_scene[df_scene["element_type"] == "node"]
         assert len(df_scene_nodes) == 5  # Employee, Manager, Sofa, Table, Lamp
         assert any(df_scene_nodes['name'] == 'Employee')
@@ -240,7 +236,7 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
     # Test Graph 2: Dialogue graph
     with graph_db.temp_graph("dialogue"):
         df_dialogue = graph_db.get_dataframe("dialogue")
-        assert df_dialogue is not None
+        assert not df_dialogue.empty
         df_dialogue_nodes = df_dialogue[df_dialogue["element_type"] == "node"]
         assert len(df_dialogue_nodes) == 6  # 3 Dialogue + 3 DialogueRef nodes
 
@@ -271,7 +267,7 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
     # Verify graph isolation: scene and dialogue should be separate despite cross-graph query
     df_scene = graph_db.get_dataframe("scene")
     df_dialogue = graph_db.get_dataframe("dialogue")
-    assert df_scene is not None and df_dialogue is not None
+    assert not df_scene.empty and not df_dialogue.empty
 
     # Extract nodes only for comparison
     df_scene_nodes = df_scene[df_scene["element_type"] == "node"]
@@ -312,11 +308,11 @@ def test_cypher_example_4(graph_db: GraphConnector) -> None:
     in DAG structure, consistent rel_type with varied properties, and multi-hop path queries.
     Tests that properties added via SET after initial CREATE are properly stored."""
     graph_db.drop_graph("events")
-    _test_query_file(graph_db, "./tests/examples-db/graph_df4.cypher", valid_files=["cql", "cypher"])
+    _exec_query_file(graph_db, "./tests/examples-db/graph_df4.cypher", valid_files=["cql", "cypher"])
 
     # Verify all event nodes were created with correct types
     df = graph_db.get_dataframe("events")
-    assert df is not None
+    assert not df.empty
     df_nodes = df[df["element_type"] == "node"]
     assert len(df_nodes) == 7  # 7 event nodes
     assert "element_id" in df_nodes.columns and "labels" in df_nodes.columns
@@ -417,7 +413,7 @@ def test_cypher_example_4(graph_db: GraphConnector) -> None:
 # ------------------------------------------------------------------------------
 # FILE TEST WRAPPERS: Reuse the logic to test multiple files within a single test.
 # ------------------------------------------------------------------------------
-def _test_query_file(db_fixture: DatabaseConnector, filename: str, valid_files: List[str]) -> None:
+def _exec_query_file(db_fixture: DatabaseConnector, filename: str, valid_files: List[str]) -> None:
     """Run queries from a local file through the database.
     @param db_fixture  Fixture corresponding to the current session's database.
     @param filename  The name of a query file (for example ./tests/example1.sql).

@@ -59,7 +59,7 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
 
     # Verify nodes were created (should be 3 unique: Alice, Bob, Charlie)
     df = graph_db.get_dataframe("social_kg")
-    assert df is not None
+    assert not df.empty
     df_nodes = df[df["element_type"] == "node"]
     assert len(df_nodes) == 3
 
@@ -171,6 +171,7 @@ def test_get_subgraph_by_nodes(nature_scene_graph: KnowledgeGraph) -> None:
 
     # Get the full graph to find specific node IDs
     elements_df = kg.database.get_dataframe(kg.graph_name)
+    assert not elements_df.empty
     nodes_df = elements_df[elements_df["element_type"] == "node"]
 
     # Find Kid1 and Swings node IDs
@@ -200,7 +201,7 @@ def test_get_subgraph_by_nodes(nature_scene_graph: KnowledgeGraph) -> None:
 
 
 @pytest.mark.order(18)
-@pytest.mark.dependency(name="neighborhood", depends=["knowledge_graph_triples"], scope="session")
+@pytest.mark.dependency(name="neighborhood_minimal", depends=["knowledge_graph_triples"], scope="session")
 def test_get_neighborhood(nature_scene_graph: KnowledgeGraph) -> None:
     """Test k-hop neighborhood expansion around a central node.
     @details  Validates that get_neighborhood correctly finds all triples within
@@ -210,7 +211,9 @@ def test_get_neighborhood(nature_scene_graph: KnowledgeGraph) -> None:
 
     # Get node IDs
     elements_df = kg.database.get_dataframe(kg.graph_name)
+    assert not elements_df.empty
     nodes_df = elements_df[elements_df["element_type"] == "node"]
+    assert not nodes_df.empty
     playground_id = nodes_df[nodes_df["name"] == "Playground"]["element_id"].iloc[0]
 
     # Test 1-hop neighborhood
@@ -239,7 +242,7 @@ def test_get_neighborhood(nature_scene_graph: KnowledgeGraph) -> None:
 
 
 @pytest.mark.order(19)
-@pytest.mark.dependency(name="random_walk_sample", depends=["knowledge_graph_triples"], scope="session")
+@pytest.mark.dependency(name="random_walk_minimal", depends=["knowledge_graph_triples"], scope="session")
 def test_get_random_walk_sample(nature_scene_graph: KnowledgeGraph) -> None:
     """Test random walk sampling starting from specified nodes.
     @details  Validates that get_random_walk_sample generates a representative
@@ -249,7 +252,9 @@ def test_get_random_walk_sample(nature_scene_graph: KnowledgeGraph) -> None:
 
     # Get node IDs
     elements_df = kg.database.get_dataframe(kg.graph_name)
+    assert not elements_df.empty
     nodes_df = elements_df[elements_df["element_type"] == "node"]
+    assert not nodes_df.empty
     kid1_id = nodes_df[nodes_df["name"] == "Kid1"]["element_id"].iloc[0]
 
     # Perform random walk with length 3
@@ -282,7 +287,7 @@ def test_get_random_walk_sample(nature_scene_graph: KnowledgeGraph) -> None:
 
 
 @pytest.mark.order(20)
-@pytest.mark.dependency(name="neighborhood_comprehensive", depends=["neighborhood"], scope="session")
+@pytest.mark.dependency(name="neighborhood_comprehensive", depends=["neighborhood_minimal"], scope="session")
 def test_get_neighborhood_comprehensive(nature_scene_graph: KnowledgeGraph) -> None:
     """Comprehensive test for k-hop neighborhood expansion.
     @details  Tests edge cases and advanced features:
@@ -346,7 +351,7 @@ def test_get_neighborhood_comprehensive(nature_scene_graph: KnowledgeGraph) -> N
 
 
 @pytest.mark.order(21)
-@pytest.mark.dependency(name="random_walk_comprehensive", depends=["random_walk_sample"], scope="session")
+@pytest.mark.dependency(name="random_walk_comprehensive", depends=["random_walk_minimal"], scope="session")
 def test_get_random_walk_sample_comprehensive(nature_scene_graph: KnowledgeGraph) -> None:
     """Comprehensive test for random walk sampling.
     @details  Tests edge cases and advanced features:
@@ -435,7 +440,9 @@ def test_detect_community_clusters_minimal(nature_scene_graph: KnowledgeGraph) -
 
     # Verify all nodes have community_id assigned
     elements_df = kg.database.get_dataframe(kg.graph_name)
+    assert not elements_df.empty
     nodes_df = elements_df[elements_df["element_type"] == "node"]
+    assert not nodes_df.empty
     assert all(nodes_df["community_id"].notna()), "Not all nodes have community_id assigned"
 
     # Check that we have multiple communities (graph has distinct clusters)
