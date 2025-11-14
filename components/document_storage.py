@@ -191,10 +191,10 @@ class DocumentConnector(DatabaseConnector):
             docs = results
 
         # Convert document list to DataFrame if any docs exist
-        returns_data = self._returns_data(query)
-        df = _docs_to_df(docs) if returns_data else None
-        if not df is None and not df.empty:
-            Log.success(Log.doc_db + Log.run_q, Log.msg_good_df_parse(df), self.verbose)
+        df = _docs_to_df(docs)
+        if df is None or df.empty:
+            return None
+        Log.success(Log.doc_db + Log.run_q, Log.msg_good_df_parse(df), self.verbose)
         return df
 
     def _split_combined(self, multi_query: str) -> list[str]:

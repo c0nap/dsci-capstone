@@ -152,27 +152,31 @@ class GraphConnector(DatabaseConnector):
         # Send query to NeoModel
         try:
             tuples, meta = db.cypher_query(query)
-            # Re-tag nodes and edges with self.database_name using a second query.
-            # Must also re-fetch from Neo4j to ensure our copy is tagged with 'db'
-            q = query.lower()
-            if "create" in q or "merge" in q:
-                self._execute_retag_db()
-                tuples, meta = self._fetch_latest(tuples)
-
-            returns_data = self._returns_data(query)
-            parsable_to_df = self._parsable_to_df((tuples, meta))
-            df = _tuples_to_df(tuples, meta) if returns_data and parsable_to_df else None
-            if df is None or df.empty:
-                Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
-                return None
-            else:
-                # Return nodes from the current database ONLY, despite what the query wants.
-                if _filter_results:
-                    df = _filter_to_db(df, self.database_name)
-                Log.success(Log.gr_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
-                return df
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
+
+        returns_data = self._returns_data(query)
+        parsable_to_df = self._parsable_to_df((tuples, meta))
+        if not returns_data or not parsable_to_df:
+            return None
+
+        # Re-tag nodes and edges with self.database_name using a second query.
+        # Must also re-fetch from Neo4j to ensure our copy is tagged with 'db'
+        q = query.lower()
+        if "create" in q or "merge" in q:
+            self._execute_retag_db()
+            tuples, meta = self._fetch_latest(tuples)
+
+        # Convert to DataFrame
+        df = _tuples_to_df(tuples, meta)
+        if df is None or df.empty:
+            return None
+
+        # Return nodes from the current database ONLY, despite what the query wants.
+        if _filter_results:
+            df = _filter_to_db(df, self.database_name)
+        Log.success(Log.gr_db + Log.run_q, Log.msg_good_df_parse(df), self.verbose)
+        return df
 
     def _split_combined(self, multi_query: str) -> List[str]:
         """Divides a string into non-divisible CQL queries, ignoring comments.

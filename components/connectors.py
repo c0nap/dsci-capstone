@@ -451,8 +451,9 @@ class RelationalConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.rel_db + Log.run_q, Log.msg_bad_df_parse(query)) from e
         
-        if not df is None and not df.empty:
-            Log.success(Log.rel_db + Log.run_q, Log.msg_good_df_parse(df), self.verbose)
+        if df is None or df.empty:
+            return None
+        Log.success(Log.rel_db + Log.run_q, Log.msg_good_df_parse(df), self.verbose)
         return df
 
 
