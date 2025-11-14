@@ -376,10 +376,7 @@ class DocumentConnector(DatabaseConnector):
         @param database_name  The name of a database to search for.
         @return  Whether the database is visible to this connector."""
         with mongo_handle(host=self.connection_string, alias="db_exists") as db:
-            # result = self.execute_query('{"dbstats": 1}')
-            # print(result)
             databases = db.client.list_database_names()
-        # print(databases)
         return database_name in databases
 
     def delete_dummy(self) -> None:

@@ -558,14 +558,9 @@ class RelationalConnector(DatabaseConnector):
         @param database_name  The name of a database to search for.
         @return  Whether the database is visible to this connector."""
         result = self.execute_query(self._specific_queries[1])
-        print(f"DEBUG result type: {type(result)}")
-        print(f"DEBUG result: {result}")
         if result is None:
             return False
-        print(f"DEBUG result.iloc[:, 0]: {result.iloc[:, 0]}")
         databases = result.iloc[:, 0].tolist()
-        print(f"DEBUG databases list: {databases}")
-        print(f"DEBUG checking for: {database_name}")
         return database_name in databases
 
 
