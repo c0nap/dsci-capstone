@@ -425,10 +425,10 @@ class RelationalConnector(DatabaseConnector):
         @throws Log.Failure  If the query fails to execute."""
         self.check_connection(Log.run_q, raise_error=True)
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
-        dfs = super().execute_query(query)
+        last_df = super().execute_query(query)
         if not self._is_single_query(query):
-            return dfs
-        # Derived classes MUST implement single-query execution.
+            return last_df
+        # Send query to SQLAlchemy
         try:
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
@@ -450,7 +450,9 @@ class RelationalConnector(DatabaseConnector):
             df = DataFrame(rows, columns=cols)
         except Exception as e:
             raise Log.Failure(Log.rel_db + Log.run_q, Log.msg_bad_df_parse(query)) from e
-        Log.success(Log.rel_db + Log.run_q, Log.msg_good_df_parse(df)) 
+        
+        if not df is None and not df.empty:
+            Log.success(Log.rel_db + Log.run_q, Log.msg_good_df_parse(df), self.verbose)
         return df
 
 

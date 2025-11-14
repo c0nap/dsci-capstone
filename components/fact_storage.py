@@ -140,16 +140,16 @@ class GraphConnector(DatabaseConnector):
         """Send a single Cypher query to Neo4j.
         @note  If a result is returned, it will be converted to a DataFrame.
         @param query  A single query to perform on the database.
-        @param _filter_results  If True, limit results to the current database. Needed for internal helper functions.
+        @param _filter_results  If True, limit results to the current database. Internal helper functions need unfiltered results.
         @return  DataFrame containing the result of the query, or None
         @throws Log.Failure  If the query fails to execute.
         """
         self.check_connection(Log.run_q, raise_error=True)
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
-        result = super().execute_query(query)
+        last_df = super().execute_query(query)
         if not self._is_single_query(query):
-            return result
-        # Derived classes MUST implement single-query execution.
+            return last_df
+        # Send query to NeoModel
         try:
             tuples, meta = db.cypher_query(query)
             # Re-tag nodes and edges with self.database_name using a second query.

@@ -146,51 +146,56 @@ class DocumentConnector(DatabaseConnector):
         """
         self.check_connection(Log.run_q, raise_error=True)
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
-        result = super().execute_query(query)
+        last_df = super().execute_query(query)
         if not self._is_single_query(query):
-            return result
-        # Derived classes MUST implement single-query execution.
+            return last_df
+
+        # Queries must be valid JSON
+        try:
+            json_cmd_doc = json.loads(query)
+        except json.JSONDecodeError:
+            Log.warn(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", query, "JSON command object"), self.verbose)
+            # Attempt to recover, then try again.
+            query = _sanitize_json(query)
+            try:  
+                json_cmd_doc = json.loads(query)
+            except json.JSONDecodeError:
+                raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_fail_parse("sanitized query", query, "JSON command object")) from None
+        
+        # Send query to PyMongo
         try:
             with mongo_handle(host=self.connection_string, alias="exec_q") as db:
-                # Queries must be valid JSON
-                try:
-                    json_cmd_doc = json.loads(query)
-                except json.JSONDecodeError:
-                    Log.warn(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", query, "JSON command object"), self.verbose)
-                    query = _sanitize_json(query)
-                    try:
-                        json_cmd_doc = json.loads(query)
-                    except json.JSONDecodeError:
-                        raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_fail_parse("sanitized query", query, "JSON command object"))
-
                 # Execute via PyMongo
                 results = db.command(json_cmd_doc)
-
-                # Mongo queries can return a dict or list
-                # Standardize everything to a list of documents
-                docs = []
-                if isinstance(results, dict):
-                    if "cursor" in results:
-                        docs = results["cursor"].get("firstBatch", [])
-                    elif "firstBatch" in results:
-                        docs = results["firstBatch"]
-                    else:
-                        # wrap single dict as list
-                        docs = [results]
-                elif isinstance(results, list):
-                    docs = results
-
-                # Convert document list to DataFrame if any docs exist
-                returns_data = self._returns_data(query)
-                df = _docs_to_df(docs) if returns_data else None
-                if df is None or df.empty:
-                    Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
-                    return None
-                else:
-                    Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
-                    return df
         except Exception as e:
             raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
+        Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
+
+        returns_data = self._returns_data(query)
+        parsable_to_df = self._parsable_to_df((rows, cols))  # checks 'cursor', 'firstBatch'
+        if not returns_data or not parsable_to_df:
+            return None
+
+        # Standardize everything to a list of documents
+        # Mongo queries can return a dict or list
+        docs = []
+        if isinstance(results, dict):
+            if "cursor" in results:
+                docs = results["cursor"].get("firstBatch", [])
+            elif "firstBatch" in results:
+                docs = results["firstBatch"]
+            else:
+                # wrap single dict as list
+                docs = [results]
+        elif isinstance(results, list):
+            docs = results
+
+        # Convert document list to DataFrame if any docs exist
+        returns_data = self._returns_data(query)
+        df = _docs_to_df(docs) if returns_data else None
+        if not df is None and not df.empty:
+            Log.success(Log.doc_db + Log.run_q, Log.msg_good_df_parse(df), self.verbose)
+        return df
 
     def _split_combined(self, multi_query: str) -> list[str]:
         """Divides a string into non-divisible MongoDB commands by splitting on semicolons at depth 0.
