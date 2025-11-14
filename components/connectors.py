@@ -8,7 +8,7 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.pool import NullPool
 from sqlparse import parse as sql_parse
 from src.util import check_values, df_natural_sorted, Log
-from typing import Any, Generator, List, Optional
+from typing import Any, Generator, List, Optional, Tuple
 
 
 # Read environment variables at compile time
@@ -480,12 +480,12 @@ class RelationalConnector(DatabaseConnector):
             return False
         return True  # Default to True - let downstream execution handle ambiguous cases
 
-    def _parsable_to_df(self, result: Any) -> bool:
+    def _parsable_to_df(self, result: Tuple[Any, Any]) -> bool:
         """Checks if the result of a SQL query is valid (i.e. can be converted to a Pandas DataFrame).
         @details
           - SQLAlchemy CursorResult exposes .returns_rows and .keys().
-          - DDL/DML (CREATE, INSERT, UPDATE, etc.) produce no rows and only rowcount/status.
-        @param result  The result of a SQL, Cypher, or JSON query.
+          - These must be fetched earlier, before the cursor is closed.
+        @param result  The tuple result (rows, columns) of a SQL, Cypher, or JSON query.
         @return  Whether the object is parsable to DataFrame."""
         rows, columns = result
         if not columns:  # Must have column names
