@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from dotenv import load_dotenv
 import os
 from pandas import DataFrame
-from sqlalchemy import create_engine, MetaData, select, Table, text
+from sqlalchemy import create_engine, MetaData, select, Table, text, Row
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.pool import NullPool
 from sqlparse import parse as sql_parse
@@ -436,18 +436,36 @@ class RelationalConnector(DatabaseConnector):
                 rows = cursor.fetchall()
                 cols = cursor.keys()
                 # Cursor will close when we leave scope
+                print()
+                print(query)
+                print(f"cols type: {type(cols)}")
+                print(f"cols value: {cols}")
+                print(f"bool(cols): {bool(cols)}")
+                print(f"not cols: {not cols}")
+                print(f"list(cols): {list(cols)}")
+                print(f"rows type: {type(rows)}")
+                print(f"rows value: {rows}")
+                print(f"bool(rows): {bool(rows)}")
+                print(f"not rows: {not rows}")
+                print(f"len(rows): {len(rows)}")
+                if rows:
+                    print(f"first row type: {type(rows[0])}")
+                    print(f"first row value: {rows[0]}")
+                    print(f"isinstance tuple: {isinstance(rows[0], tuple)}")
+                    print(f"isinstance dict: {isinstance(rows[0], dict)}")
+                print()
         except Exception as e:
             raise Log.Failure(Log.rel_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
         Log.success(Log.rel_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
 
         returns_data = self._returns_data(query)
-        parsable_to_df = self._parsable_to_df((rows, columns))
+        parsable_to_df = self._parsable_to_df((rows, cols))
         if not returns_data or not parsable_to_df:
             return None
 
         try:  # RelationalConnector doesn't need a helper function like the others,
             # but this means we need to catch errors here instead.
-            df = DataFrame(rows, columns=columns)
+            df = DataFrame(rows, columns=cols)
         except Exception as e:
             raise Log.Failure(Log.rel_db + Log.run_q, Log.msg_bad_df_parse(query)) from e
         Log.success(Log.rel_db + Log.run_q, Log.msg_good_df_parse(df)) 
@@ -494,7 +512,7 @@ class RelationalConnector(DatabaseConnector):
             return True
         # Rows must be a tuple or dict type
         first = rows[0]
-        return isinstance(first, (tuple, dict))
+        return isinstance(first, (tuple, dict, Row))
 
     def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
         """Automatically generate and run a query for the specified table using SQLAlchemy.
@@ -555,9 +573,14 @@ class RelationalConnector(DatabaseConnector):
         @param database_name  The name of a database to search for.
         @return  Whether the database is visible to this connector."""
         result = self.execute_query(self._specific_queries[1])
+        print(f"DEBUG result type: {type(result)}")
+        print(f"DEBUG result: {result}")
         if result is None:
             return False
+        print(f"DEBUG result.iloc[:, 0]: {result.iloc[:, 0]}")
         databases = result.iloc[:, 0].tolist()
+        print(f"DEBUG databases list: {databases}")
+        print(f"DEBUG checking for: {database_name}")
         return database_name in databases
 
 
