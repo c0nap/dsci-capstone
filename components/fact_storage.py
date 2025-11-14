@@ -155,17 +155,18 @@ class GraphConnector(DatabaseConnector):
         except Exception as e:
             raise Log.Failure(Log.gr_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
 
-        returns_data = self._returns_data(query)
-        parsable_to_df = self._parsable_to_df((tuples, meta))
-        if not returns_data or not parsable_to_df:
-            return None
-
         # Re-tag nodes and edges with self.database_name using a second query.
         # Must also re-fetch from Neo4j to ensure our copy is tagged with 'db'
         q = query.lower()
         if "create" in q or "merge" in q:
             self._execute_retag_db()
             tuples, meta = self._fetch_latest(tuples)
+
+        # Exit early if no usable data
+        returns_data = self._returns_data(query)
+        parsable_to_df = self._parsable_to_df((tuples, meta))
+        if not returns_data or not parsable_to_df:
+            return None
 
         # Convert to DataFrame
         df = _tuples_to_df(tuples, meta)
