@@ -266,7 +266,9 @@ Vibe coding was not used in this project.
 
 This decision was based on our desire to preserve this capstone project both as a demonstration of software engineering proficiency and a personal learning experience.
 
-Anecdotally, the AI-assisted workflow employed here may have doubled both productivity and personal comprehension. On the other hand, agentic coding feels like it halves how much is learned in order to achieve its massive 10x reduction in development time and developer overhead, making it more suitable for products you wish would "just exist" via any means necessary.
+Anecdotally, the AI-assisted workflow employed here may have doubled both productivity and personal comprehension compared to traditional Google searches.
+
+On the other hand, agentic coding feels like it halves how much is learned in order to achieve its massive 10x reduction in development time and developer overhead, making it more suitable for products you wish would "just exist" via any means necessary.
 
 ## Test-Driven Design (TDD)
 
