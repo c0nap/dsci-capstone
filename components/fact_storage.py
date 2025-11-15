@@ -108,7 +108,7 @@ class GraphConnector(DatabaseConnector):
                 self.drop_database(tmp_db)
             except Exception as e:
                 raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
-            
+
             # Finish with no errors = connection test successful
             Log.success(Log.gr_db, Log.msg_db_connect(self.database_name), self.verbose)
             return True
@@ -116,8 +116,6 @@ class GraphConnector(DatabaseConnector):
             if not raise_error:
                 return False
             raise  # Preserve original error
-
-        
 
     def check_connection(self, log_source: str, raise_error: bool = True) -> bool:
         """Minimal connection test to determine if our connection string is valid.
@@ -307,8 +305,6 @@ class GraphConnector(DatabaseConnector):
         df = df[columns] if columns else df
         Log.success(Log.gr_db + Log.get_df, Log.msg_good_graph(name, df), self.verbose)
         return df
-
-        
 
     def get_unique(self, key: str) -> List[str]:
         """Retrieve all unique values for a specified node property.

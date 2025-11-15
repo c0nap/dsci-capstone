@@ -59,7 +59,7 @@ class DocumentConnector(DatabaseConnector):
         try:
             # Check if connection string is valid
             self.check_connection(Log.test_ops, raise_error=True)
-    
+
             with mongo_handle(host=self.connection_string, alias="test_conn") as db:
                 try:  # Run universal test queries - some require admin
                     result = db.command({"ping": 1})
@@ -70,13 +70,13 @@ class DocumentConnector(DatabaseConnector):
                     check_values([isinstance(databases, list)], [True], self.verbose, Log.doc_db, raise_error=True)
                 except Exception as e:
                     raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
-    
+
                 try:  # Display useful information on existing databases
                     databases = db.client.list_database_names()
                     Log.success(Log.doc_db, Log.msg_result(databases), self.verbose)
                 except Exception as e:
                     raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
-    
+
                 try:  # Create a collection, insert dummy data, and use get_dataframe
                     tmp_collection = "test_collection"
                     if tmp_collection in db.list_collection_names():
@@ -89,7 +89,7 @@ class DocumentConnector(DatabaseConnector):
                     db.drop_collection(tmp_collection)
                 except Exception as e:
                     raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
-    
+
                 try:  # Test create/drop functionality with tmp database
                     tmp_db = "test_ops"  # Do not use context manager: interferes with traceback
                     working_database = self.database_name
@@ -102,7 +102,7 @@ class DocumentConnector(DatabaseConnector):
                     self.drop_database(tmp_db)
                 except Exception as e:
                     raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
-    
+
             # Finish with no errors = connection test successful
             Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
             return True
@@ -157,11 +157,11 @@ class DocumentConnector(DatabaseConnector):
             Log.warn(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", query, "JSON command object"), self.verbose)
             # Attempt to recover, then try again.
             query = _sanitize_json(query)
-            try:  
+            try:
                 json_cmd_doc = json.loads(query)
             except json.JSONDecodeError:
                 raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_fail_parse("sanitized query", query, "JSON command object")) from None
-        
+
         # Send query to PyMongo
         try:
             with mongo_handle(host=self.connection_string, alias="exec_q") as db:
@@ -335,7 +335,6 @@ class DocumentConnector(DatabaseConnector):
         df = df[columns] if columns else df
         Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
         return df
-        
 
     def create_database(self, database_name: str) -> None:
         """Use the current database connection to create a sibling database in this engine.
@@ -593,7 +592,6 @@ def _sanitize_document(doc: Dict[str, Any], type_registry: Dict[str, Set[Type[An
                 sanitized[key] = [value]
 
     return sanitized
-
 
 
 def _docs_to_df(docs: List[Dict[str, Any]], merge_unspecified: bool = True) -> DataFrame:

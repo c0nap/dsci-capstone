@@ -1,7 +1,7 @@
 from components.fact_storage import GraphConnector
 from pandas import concat, DataFrame, option_context
-import re
 import random
+import re
 from src.util import Log
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -62,7 +62,7 @@ class KnowledgeGraph:
         if triples_df is None or triples_df.empty:
             Log.success(Log.kg, "Found 0 triples in graph.", self.verbose)
             return DataFrame(columns=cols)
-        
+
         # Extract and rename columns
         triples_df = triples_df[["n1.element_id", "r.element_id", "n2.element_id"]].rename(
             columns={"n1.element_id": "subject_id", "r.element_id": "relation_id", "n2.element_id": "object_id"}
@@ -85,11 +85,7 @@ class KnowledgeGraph:
 
         # Split nodes and relationships
         nodes = elements_df[elements_df["element_type"] == "node"].drop(columns=["element_type", "db", "kg"], errors="ignore")
-        rels = (
-            elements_df[elements_df["element_type"] == "relationship"]
-            .drop(columns=["element_type", "db", "kg"], errors="ignore")
-            .add_prefix("r.")
-        )
+        rels = elements_df[elements_df["element_type"] == "relationship"].drop(columns=["element_type", "db", "kg"], errors="ignore").add_prefix("r.")
         # Join relationship to its start (n1) and end (n2) nodes
         triples_df = rels.merge(nodes.add_prefix("n1."), left_on="r.start_node_id", right_on="n1.element_id").merge(
             nodes.add_prefix("n2."), left_on="r.end_node_id", right_on="n2.element_id"
@@ -142,10 +138,8 @@ class KnowledgeGraph:
             out_cols = [col for col in df_ids.columns if not (drop_ids and col in id_columns)] + name_columns
             return DataFrame(columns=out_cols)
         if len(name_columns) != len(id_columns):
-            raise Log.Failure(
-                Log.kg, f"name_columns (size {len(name_columns)}) and id_columns (size {len(id_columns)}) must have the same length."
-            )
-        
+            raise Log.Failure(Log.kg, f"name_columns (size {len(name_columns)}) and id_columns (size {len(id_columns)}) must have the same length.")
+
         # Filter out non-existent columns
         valid_cols = set(df_ids.columns)
         filtered_pairs = [(name_col, id_col) for name_col, id_col in zip(name_columns, id_columns) if id_col in valid_cols]
@@ -185,7 +179,7 @@ class KnowledgeGraph:
         triples_df = self.get_all_triples()
         if triples_df is None or triples_df.empty:
             raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
-        
+
         # Filter triples where either endpoint is in node_ids
         sub_df = triples_df[triples_df["subject_id"].isin(node_ids) | triples_df["object_id"].isin(node_ids)].reset_index(drop=True)
 
@@ -224,7 +218,7 @@ class KnowledgeGraph:
 
         Log.success(Log.kg + Log.sub_gr, f"Found {len(result_df)} triples in {depth}-hop neighborhood.", self.verbose)
         return result_df
-        
+
     def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
         """Sample subgraph using directed random walk traversal starting from specified nodes.
         @details
@@ -239,7 +233,7 @@ class KnowledgeGraph:
         triples_df = self.get_all_triples()
         if triples_df is None or triples_df.empty:
             raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
-        
+
         # Find adjacent nodes where 'subject_id' in [start_nodes]
         # 1. Initialize with all outgoing edges
         rows_outgoing: Dict[str, List[Any]] = {}

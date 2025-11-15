@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from dotenv import load_dotenv
 import os
 from pandas import DataFrame
-from sqlalchemy import create_engine, MetaData, select, Table, text, Row
+from sqlalchemy import create_engine, MetaData, Row, select, Table, text
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.pool import NullPool
 from sqlparse import parse as sql_parse
@@ -340,7 +340,7 @@ class RelationalConnector(DatabaseConnector):
         try:
             # Check if connection string is valid
             self.check_connection(Log.test_ops, raise_error=True)
-    
+
             engine = create_engine(self.connection_string, poolclass=NullPool)
             with engine.begin() as connection:
                 try:  # Run universal test queries
@@ -354,7 +354,7 @@ class RelationalConnector(DatabaseConnector):
                     check_values([result.iloc[0, 0], result.iloc[0, 1]], [5, 6], self.verbose, Log.rel_db, raise_error=True)
                 except Exception as e:
                     raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
-    
+
                 try:  # Display useful information on existing databases
                     db_name = self.execute_query(self._specific_queries[0])
                     check_values([db_name.iloc[0, 0]], [self.database_name], self.verbose, Log.rel_db, raise_error=True)
@@ -362,7 +362,7 @@ class RelationalConnector(DatabaseConnector):
                     Log.success(Log.rel_db, Log.msg_result(databases), self.verbose)
                 except Exception as e:
                     raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
-    
+
                 try:  # Create a table, insert dummy data, and use get_dataframe
                     tmp_table = "test_table"
                     self.execute_query(f"DROP TABLE IF EXISTS {tmp_table} CASCADE;")
@@ -376,7 +376,7 @@ class RelationalConnector(DatabaseConnector):
                     self.execute_query(f"DROP TABLE {tmp_table};")
                 except Exception as e:
                     raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
-    
+
                 try:  # Test create/drop functionality with tmp database
                     tmp_db = f"test_ops"  # Do not use context manager: interferes with traceback
                     working_database = str(self.database_name)
@@ -389,7 +389,7 @@ class RelationalConnector(DatabaseConnector):
                     self.drop_database(tmp_db)
                 except Exception as e:
                     raise Log.Failure(Log.rel_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
-    
+
             # Finish with no errors = connection test successful
             Log.success(Log.rel_db, Log.msg_db_connect(self.database_name), self.verbose)
             return True
@@ -450,12 +450,11 @@ class RelationalConnector(DatabaseConnector):
             df = DataFrame(rows, columns=cols)
         except Exception as e:
             raise Log.Failure(Log.rel_db + Log.run_q, Log.msg_bad_df_parse(query)) from e
-        
+
         if df is None or df.empty:  # Defensive check - should be handled already
             return None
         Log.success(Log.rel_db + Log.run_q, Log.msg_good_df_parse(df), self.verbose)
         return df
-
 
     def _split_combined(self, multi_query: str) -> List[str]:
         """Divides a string into non-divisible SQL queries using `sqlparse`.
@@ -524,7 +523,6 @@ class RelationalConnector(DatabaseConnector):
         df = df[columns] if columns else df
         Log.success(Log.rel_db + Log.get_df, Log.msg_good_table(name, df), self.verbose)
         return df
-        
 
     def create_database(self, database_name: str) -> None:
         """Use the current database connection to create a sibling database in this engine.
