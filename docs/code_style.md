@@ -171,6 +171,18 @@ Once the `docs` branch contains `index.html`, you're ready to set up [GitHub Pag
 The updated code documentation can be found at the URL [c0nap.github.io/dsci-capstone](https://c0nap.github.io/dsci-capstone/).
 
 
+# Project Setup
+
+## Line Endings
+
+When you press the "Enter" key on your keyboard, Windows will typically insert two characters, i.e. `\r\n`. This is a backwards compatibility feature for very old systems. However, modern low-level UNIX systems only use `\n` to indicate newlines, and will interpret the `\r` as an unrecognized character.
+
+The Windows-style `CRLF` line endings are completely acceptable for Python code, but things can break when these files are copied over to Docker containers (which can have different system architectures). `LF` line endings will work on any system.
+
+We use `.gitattributes` to make sure GitHub never receives Windows-style `CRLF` line endings for critical files used by the database Docker containers. Namely, the secrets files `.env`, `.env.example`, and the initialization scripts `db/init-neo4j.sh` will usually lead to a `bin/sh` parsing error if `\r` is present.
+
+
+
 
 # Role of Generative AI
 
