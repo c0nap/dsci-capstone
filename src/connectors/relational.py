@@ -1,5 +1,3 @@
-from abc import ABC, abstractmethod
-from contextlib import contextmanager
 from dotenv import load_dotenv
 import os
 from pandas import DataFrame
@@ -8,25 +6,7 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.pool import NullPool
 from sqlparse import parse as sql_parse
 from src.util import check_values, df_natural_sorted, Log
-from typing import Any, Generator, List, Optional, Tuple
-
-
-# Read environment variables at compile time
-load_dotenv(".env")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+from typing import Any, List, Optional, Tuple
 
 
 class RelationalConnector(DatabaseConnector):
@@ -42,6 +22,7 @@ class RelationalConnector(DatabaseConnector):
         @param specific_queries  A list of helpful SQL queries.
         """
         super().__init__(verbose)
+        load_dotenv(".env")
         engine = os.environ["DB_ENGINE"]
         database = os.environ["DB_NAME"]
         super().configure(engine, database)

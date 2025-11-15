@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from neo4j.graph import Node, Relationship
 from neomodel import config, db
 import os
+from dotenv import load_dotenv
 from pandas import DataFrame, Series
 import re
 from src.util import check_values, df_natural_sorted, Log
@@ -21,6 +22,7 @@ class GraphConnector(DatabaseConnector):
         """Creates a new Neo4j connector.
         @param verbose  Whether to print success and failure messages."""
         super().__init__(verbose)
+        load_dotenv(".env")
         database = os.environ["DB_NAME"]
         super().configure("NEO4J", database)
         # Connect neomodel - URL never needs to change for Neo4j

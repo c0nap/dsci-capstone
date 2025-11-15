@@ -17,9 +17,6 @@ from typing import Any, Dict, Generator, List, Optional, Set, Type
 
 MongoHandle = Generator["Database[Any]", None, None]
 
-# Read environment variables at compile time
-load_dotenv(".env")
-
 
 class DocumentConnector(DatabaseConnector):
     """Connector for MongoDB (document database)
@@ -34,6 +31,7 @@ class DocumentConnector(DatabaseConnector):
         @param verbose  Whether to print debug messages.
         """
         super().__init__(verbose)
+        load_dotenv(".env")
         database = os.environ["DB_NAME"]
         super().configure("MONGO", database)
 
