@@ -501,4 +501,4 @@ def post_process_full_story(boss_port: int, story_id: int, task_type: str) -> re
     @param story_id Unique identifier for the story.
     @param task_type Worker name (questeval, bookscore).
     @return JSON response indicating success or failure."""
-    return requests.post(f'http://localhost:{BOSS_PORT}/process_story', json={'story_id': story_id, 'task_type': task_type})
+    return requests.post(f'http://localhost:{boss_port}/process_story', json={'story_id': story_id, 'task_type': task_type})
