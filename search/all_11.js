@@ -5,7 +5,7 @@ var searchData=
   ['recall_2',['Recall',['../classBlazorApp_1_1Models_1_1PRF1Metric.html#af0cf3edfbf299da8438f2f0c5591117b',1,'BlazorApp::Models::PRF1Metric']]],
   ['red_3',['RED',['../classsrc_1_1util_1_1Log.html#a8704a46f8fff0fbca493358c7768d0e3',1,'src::util::Log']]],
   ['rel_5fdb_4',['rel_db',['../classsrc_1_1util_1_1Log.html#ad7547310f036fedc40bdd10ad4a36ede',1,'src::util::Log']]],
-  ['relational_5fdb_5',['relational_db',['../classsrc_1_1setup_1_1Session.html#a1d35d1ef8dc6359e6b80f3d3f731d4d1',1,'src.setup.Session.relational_db'],['../namespacetests_1_1test__components.html#a4886d53c9e02639abd88df5cc9c34907',1,'tests.test_components.relational_db()']]],
+  ['relational_5fdb_5',['relational_db',['../classsrc_1_1setup_1_1Session.html#a1d35d1ef8dc6359e6b80f3d3f731d4d1',1,'src.setup.Session.relational_db'],['../namespacetests_1_1conftest.html#a4886d53c9e02639abd88df5cc9c34907',1,'tests.conftest.relational_db()']]],
   ['relationalconnector_6',['RelationalConnector',['../classcomponents_1_1connectors_1_1RelationalConnector.html',1,'components::connectors']]],
   ['relationextractor_7',['RelationExtractor',['../classcomponents_1_1text__processing_1_1RelationExtractor.html',1,'components::text_processing']]],
   ['required_8',['required',['../namespacesrc_1_1flask.html#ae81948490ddf54e80a22593640178350',1,'src::flask']]],

@@ -122,9 +122,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac400b9e087a481db9fd26111590c3462" id="r_ac400b9e087a481db9fd26111590c3462"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#ac400b9e087a481db9fd26111590c3462">configure</a> (self, str DB, str database_name)</td></tr>
 <tr class="memdesc:ac400b9e087a481db9fd26111590c3462"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read connection settings from the .env file.  <br /></td></tr>
 <tr class="separator:ac400b9e087a481db9fd26111590c3462"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38bf3225ac41f6eb15aaa7a77f5cc369" id="r_a38bf3225ac41f6eb15aaa7a77f5cc369"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a38bf3225ac41f6eb15aaa7a77f5cc369">test_connection</a> (self, bool raise_error=True)</td></tr>
-<tr class="memdesc:a38bf3225ac41f6eb15aaa7a77f5cc369"><td class="mdescLeft">&#160;</td><td class="mdescRight">Establish a basic connection to the database, and test full functionality.  <br /></td></tr>
-<tr class="separator:a38bf3225ac41f6eb15aaa7a77f5cc369"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc36b96a2225e9eec2119a96cb8051e2" id="r_afc36b96a2225e9eec2119a96cb8051e2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#afc36b96a2225e9eec2119a96cb8051e2">test_operations</a> (self, bool raise_error=True)</td></tr>
+<tr class="memdesc:afc36b96a2225e9eec2119a96cb8051e2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Establish a basic connection to the database, and test full functionality.  <br /></td></tr>
+<tr class="separator:afc36b96a2225e9eec2119a96cb8051e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8415e98b6c232b4c4202da6d14dd44ff" id="r_a8415e98b6c232b4c4202da6d14dd44ff"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a8415e98b6c232b4c4202da6d14dd44ff">check_connection</a> (self, str log_source, bool raise_error)</td></tr>
 <tr class="memdesc:a8415e98b6c232b4c4202da6d14dd44ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minimal connection test to determine if our connection string is valid.  <br /></td></tr>
 <tr class="separator:a8415e98b6c232b4c4202da6d14dd44ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,7 +141,7 @@ Public Member Functions</h2></td></tr>
 <p>Derived classes should implement:</p><ul>
 <li><b>init</b></li>
 <li><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#ac400b9e087a481db9fd26111590c3462">components.connectors.Connector.configure</a></li>
-<li><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a38bf3225ac41f6eb15aaa7a77f5cc369">components.connectors.Connector.test_connection</a></li>
+<li><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#afc36b96a2225e9eec2119a96cb8051e2">components.connectors.Connector.test_operations</a></li>
 <li><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a9127708042e94d148b6d71f0b1a5418f">components.connectors.Connector.execute_query</a></li>
 <li><a class="el" href="classcomponents_1_1connectors_1_1Connector.html#a88807ddf666a9030c93c663b271c7ebb">components.connectors.Connector.execute_file</a> </li>
 </ul>
@@ -194,7 +194,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="classcomponents_1_1connectors_1_1RelationalConnector.html#a8415e98b6c232b4c4202da6d14dd44ff">RelationalConnector</a>, <a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#a8415e98b6c232b4c4202da6d14dd44ff">DocumentConnector</a>, <a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#a8415e98b6c232b4c4202da6d14dd44ff">GraphConnector</a>, and <a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#a8415e98b6c232b4c4202da6d14dd44ff">LLMConnector</a>.</p>
+<p>Reimplemented in <a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#a8415e98b6c232b4c4202da6d14dd44ff">LLMConnector</a>, <a class="el" href="classcomponents_1_1connectors_1_1RelationalConnector.html#aba25c9e0be09d09d232ded0e8bd9fd9a">RelationalConnector</a>, <a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#aba25c9e0be09d09d232ded0e8bd9fd9a">DocumentConnector</a>, and <a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#aba25c9e0be09d09d232ded0e8bd9fd9a">GraphConnector</a>.</p>
 
 </div>
 </div>
@@ -321,14 +321,14 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a38bf3225ac41f6eb15aaa7a77f5cc369" name="a38bf3225ac41f6eb15aaa7a77f5cc369"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a38bf3225ac41f6eb15aaa7a77f5cc369">&#9670;&#160;</a></span>test_connection()</h2>
+<a id="afc36b96a2225e9eec2119a96cb8051e2" name="afc36b96a2225e9eec2119a96cb8051e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc36b96a2225e9eec2119a96cb8051e2">&#9670;&#160;</a></span>test_operations()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"> bool test_connection </td>
+          <td class="memname"> bool test_operations </td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname"><em>self</em>, </td>
@@ -362,7 +362,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#a4278bce7d48c257297600834c89ab633">LLMConnector</a>, <a class="el" href="classcomponents_1_1connectors_1_1RelationalConnector.html#a38bf3225ac41f6eb15aaa7a77f5cc369">RelationalConnector</a>, <a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#a38bf3225ac41f6eb15aaa7a77f5cc369">DocumentConnector</a>, and <a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#a38bf3225ac41f6eb15aaa7a77f5cc369">GraphConnector</a>.</p>
+<p>Reimplemented in <a class="el" href="classcomponents_1_1text__processing_1_1LLMConnector.html#afa3faa91c7f20e26d7137d4d3f3970f4">LLMConnector</a>, <a class="el" href="classcomponents_1_1connectors_1_1RelationalConnector.html#afc36b96a2225e9eec2119a96cb8051e2">RelationalConnector</a>, <a class="el" href="classcomponents_1_1document__storage_1_1DocumentConnector.html#afc36b96a2225e9eec2119a96cb8051e2">DocumentConnector</a>, and <a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html#afc36b96a2225e9eec2119a96cb8051e2">GraphConnector</a>.</p>
 
 </div>
 </div>

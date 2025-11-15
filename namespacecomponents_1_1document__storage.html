@@ -390,7 +390,7 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
-<p>Allows scoped access to the low-level PyMongo handle from MongoEngine. Usage: with mongo_handle(host=self.connection_string, alias="create_db") as db: (your code here...) This will disconnect all connections on the alias once finished. Helpful when test_connection wants to call execute_query, but continue using its existing db handle after execute_query disconnects. </p>
+<p>Allows scoped access to the low-level PyMongo handle from MongoEngine. Usage: with mongo_handle(host=self.connection_string, alias="create_db") as db: (your code here...) This will disconnect all connections on the alias once finished. Helpful when test_operations wants to call execute_query, but continue using its existing db handle after execute_query disconnects. </p>
 
 </div>
 </div>

@@ -80,14 +80,19 @@ $(function() {
   <div class="headertitle"><div class="title">Log.Failure Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>User-facing base class for custom error handling.  
+ <a href="classsrc_1_1util_1_1Log_1_1Failure.html#details">More...</a></p>
 <div class="dynheader">
 Inheritance diagram for Log.Failure:</div>
 <div class="dyncontent">
 <div class="center"><img src="classsrc_1_1util_1_1Log_1_1Failure__inherit__graph.png" border="0" usemap="#aLog_8Failure_inherit__map" alt="Inheritance graph"/></div>
 <map name="aLog_8Failure_inherit__map" id="aLog_8Failure_inherit__map">
-<area shape="rect" title=" " alt="" coords="13,79,105,104"/>
-<area shape="rect" title=" " alt="" coords="5,5,113,31"/>
-<area shape="poly" title=" " alt="" coords="62,44,62,79,57,79,57,44"/>
+<area shape="rect" title="User&#45;facing base class for custom error handling." alt="" coords="44,79,136,104"/>
+<area shape="rect" href="classsrc_1_1util_1_1Log_1_1BadAddressFailure.html" title="Raised when a database connection string or address is invalid." alt="" coords="5,152,175,177"/>
+<area shape="poly" title=" " alt="" coords="93,118,93,152,87,152,87,118"/>
+<area shape="rect" title=" " alt="" coords="36,5,144,31"/>
+<area shape="poly" title=" " alt="" coords="93,44,93,79,87,79,87,44"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <div class="dynheader">
@@ -95,7 +100,7 @@ Collaboration diagram for Log.Failure:</div>
 <div class="dyncontent">
 <div class="center"><img src="classsrc_1_1util_1_1Log_1_1Failure__coll__graph.png" border="0" usemap="#aLog_8Failure_coll__map" alt="Collaboration graph"/></div>
 <map name="aLog_8Failure_coll__map" id="aLog_8Failure_coll__map">
-<area shape="rect" title=" " alt="" coords="13,79,105,104"/>
+<area shape="rect" title="User&#45;facing base class for custom error handling." alt="" coords="13,79,105,104"/>
 <area shape="rect" title=" " alt="" coords="5,5,113,31"/>
 <area shape="poly" title=" " alt="" coords="62,44,62,79,57,79,57,44"/>
 </map>
@@ -115,7 +120,14 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a10a0f35066079abd150539d0d13dbf3e" id="r_a10a0f35066079abd150539d0d13dbf3e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log_1_1Failure.html#a10a0f35066079abd150539d0d13dbf3e">msg</a></td></tr>
 <tr class="separator:a10a0f35066079abd150539d0d13dbf3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>User-facing base class for custom error handling. </p>
+<ul>
+<li>Builder Pattern - User can combine and chain standard message strings from the Log class.</li>
+<li>Prefixes (e.g., "GRAPH DB:", "FILE IO:") are redundant with tracebacks but improve readability by highlighting the semantic source of the error - not just a line number.</li>
+<li>Enforces a consistent color scheme across all raised errors for quick scanning. </li>
+</ul>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="af48a5baa2997ee677e9eb011186258ba" name="af48a5baa2997ee677e9eb011186258ba"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af48a5baa2997ee677e9eb011186258ba">&#9670;&#160;</a></span>__init__()</h2>
 
@@ -147,6 +159,8 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Reimplemented in <a class="el" href="classsrc_1_1util_1_1Log_1_1BadAddressFailure.html#af997519c6d06a6f8226c91e505fb5a58">Log.BadAddressFailure</a>.</p>
 
 </div>
 </div>
