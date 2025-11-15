@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && git lfs install \
  && rm -rf /var/lib/apt/lists/*
 
-COPY req/questeval.txt .
+COPY deps/questeval.txt .
 RUN pip install --no-cache-dir -r questeval.txt
 
 
