@@ -142,4 +142,4 @@ RUN make env-docker
 RUN mv .env.docker .env
 
 # Supply task as command line flag to set worker behavior
-CMD ["python", "-m", "src.flask", "--task", "questeval"]
+CMD ["python", "-m", "src.worker", "--task", "questeval"]
