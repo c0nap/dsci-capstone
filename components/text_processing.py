@@ -86,7 +86,7 @@ class LLMConnector(Connector):
         self.model_name = os.environ["LLM_MODEL"]
         self.llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature)
 
-    def test_connection(self):
+    def test_operations(self):
         """Send a trivial prompt to verify LLM connectivity.
         @return  Whether the prompt executed successfully."""
         result = self.execute_full_query("You are a helpful assistant.", query)
