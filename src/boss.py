@@ -443,6 +443,37 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
     return app
 
 
+def create_boss_thread():
+	session = Session(verbose=False)
+	load_dotenv(".env")
+	DB_NAME = os.environ["DB_NAME"]
+	BOSS_PORT = int(os.environ["PYTHON_PORT"])
+	COLLECTION = os.environ["COLLECTION_NAME"]
+
+	# Drop old chunks
+	mongo_db = session.docs_db.get_unmanaged_handle()
+	collection = getattr(mongo_db, COLLECTION)
+	collection.drop()
+	print("Deleted old chunks...")
+
+	# old_main(session, COLLECTION)
+
+	# Load configuration
+	task_types = ["questeval", "bookscore"]
+	worker_urls = load_worker_config(task_types)
+	if not worker_urls:
+	    print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
+
+	# Create and run app
+	app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
+
+	# Start the Flask server in the background - disable hot-reaload on files changed
+	run_app = lambda: app.run(host="0.0.0.0", port=BOSS_PORT, use_reloader=False)
+	threading.Thread(target=run_app, daemon=True).start()
+
+	# Wait for boss to be ready
+	time.sleep(1)
+
 ##############################################################################################
 # Helpers to interact with the Flask boss thread.
 # Used to process our set of example books on pipeline start.

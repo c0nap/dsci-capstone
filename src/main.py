@@ -1,6 +1,6 @@
 from components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from components.metrics import Metrics
-from src.boss import 
+from src.boss import create_boss_thread, post_process_full_story, post_chunk_status, post_story_status
 import json
 import os
 import pandas as pd
@@ -689,38 +689,8 @@ def pipeline_5b(summary, book_title, book_id, chunk, gold_summary="", bookscore:
 
 ##############################################################################################
 
-
-load_dotenv(".env")
 if __name__ == "__main__":
-    session = Session(verbose=False)
-    load_dotenv(".env")
-    DB_NAME = os.environ["DB_NAME"]
-    BOSS_PORT = int(os.environ["PYTHON_PORT"])
-    COLLECTION = os.environ["COLLECTION_NAME"]
-
-    # Drop old chunks
-    mongo_db = session.docs_db.get_unmanaged_handle()
-    collection = getattr(mongo_db, COLLECTION)
-    collection.drop()
-    print("Deleted old chunks...")
-
-    # old_main(session, COLLECTION)
-
-    # Load configuration
-    task_types = ["questeval", "bookscore"]
-    worker_urls = load_worker_config(task_types)
-    if not worker_urls:
-        print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
-
-    # Create and run app
-    app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
-
-    # Start the Flask server in the background - disable hot-reaload on files changed
-    run_app = lambda: app.run(host="0.0.0.0", port=BOSS_PORT, use_reloader=False)
-    threading.Thread(target=run_app, daemon=True).start()
-
-    # Wait for boss to be ready
-    time.sleep(1)
+    create_boss_thread()
 
     # TODO - PIPELINE HERE
     story_id = 1
