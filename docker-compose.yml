@@ -83,7 +83,7 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql   # named volume for persistent DB data
-      - ./db-init/init_mysql.sh:/docker-entrypoint-initdb.d/init_mysql.sh:ro  # bind mount for init script
+      - ./docker/db-init/init_mysql.sh:/docker-entrypoint-initdb.d/init_mysql.sh:ro  # bind mount for init script
     ports:
       - "${MYSQL_PORT}:${MYSQL_PORT}"
 
@@ -101,7 +101,7 @@ services:
       - POSTGRES_DB=${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data   # named volume for persistent DB data
-      - ./db-init/init_postgres.sh:/docker-entrypoint-initdb.d/init_postgres.sh:ro  # bind mount for init script
+      - ./docker/db-init/init_postgres.sh:/docker-entrypoint-initdb.d/init_postgres.sh:ro  # bind mount for init script
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
 
@@ -119,7 +119,7 @@ services:
       - MONGO_INITDB_DATABASE=${DB_NAME}
     volumes:
       - mongo_data:/data/db   # named volume for persistent DB data
-      - ./db-init/init_mongo.sh:/docker-entrypoint-initdb.d/init_mongo.sh:ro  # bind mount for init script
+      - ./docker/db-init/init_mongo.sh:/docker-entrypoint-initdb.d/init_mongo.sh:ro  # bind mount for init script
     ports:
       - "${MONGO_PORT}:${MONGO_PORT}"
     command: ["--quiet"]   # clean docker logs, but still very messy / unreadable
@@ -134,7 +134,7 @@ services:
     image: neo4j:2025.09
     volumes:
       - neo4j_data:/data
-      - ./db-init/init_neo4j.sh:/init_neo4j.sh
+      - ./docker/db-init/init_neo4j.sh:/init_neo4j.sh
     environment:
       - NEO4J_dbms_connector_http_listen__address=0.0.0.0:7474  # Init script manually writes this
     ports:
