@@ -6,6 +6,8 @@ import os
 import pandas as pd
 import random
 import traceback
+from src.setup import Session
+from dotenv import load_dotenv
 
 
 def convert_single():
@@ -690,7 +692,13 @@ def pipeline_5b(summary, book_title, book_id, chunk, gold_summary="", bookscore:
 ##############################################################################################
 
 if __name__ == "__main__":
-    create_boss_thread()
+    # TODO: handle this better - half env parsing is here, half is in boss.py
+    session = Session(verbose=False)
+    load_dotenv(".env")
+    DB_NAME = os.environ["DB_NAME"]
+    BOSS_PORT = int(os.environ["PYTHON_PORT"])
+    COLLECTION = os.environ["COLLECTION_NAME"]
+    create_boss_thread(session, DB_NAME, BOSS_PORT, COLLECTION)
 
     # TODO - PIPELINE HERE
     story_id = 1

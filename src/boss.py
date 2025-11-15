@@ -443,13 +443,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
     return app
 
 
-def create_boss_thread():
-	session = Session(verbose=False)
-	load_dotenv(".env")
-	DB_NAME = os.environ["DB_NAME"]
-	BOSS_PORT = int(os.environ["PYTHON_PORT"])
-	COLLECTION = os.environ["COLLECTION_NAME"]
-
+def create_boss_thread(session: Session, DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
 	# Drop old chunks
 	mongo_db = session.docs_db.get_unmanaged_handle()
 	collection = getattr(mongo_db, COLLECTION)
