@@ -1,10 +1,3 @@
-from dotenv import load_dotenv
-import os
-
-# Read environment variables at runtime
-load_dotenv(".env")
-
-
 from components.connectors import Connector
 from langchain_core.prompts import (
     ChatPromptTemplate,
@@ -13,6 +6,9 @@ from langchain_core.prompts import (
 )
 from langchain_openai import ChatOpenAI
 from typing import Any, List, Tuple
+from dotenv import load_dotenv
+import os
+import re
 
 
 class LLMConnector(Connector):
@@ -29,6 +25,8 @@ class LLMConnector(Connector):
     ):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
+        # Read environment variables at runtime
+		load_dotenv(".env")
         self.model_name = None
         self.temperature = temperature
         self.system_prompt = system_prompt
