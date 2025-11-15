@@ -73,18 +73,6 @@ class Log:
         else:
             print(text)
 
-    class Failure(RuntimeError):
-        def __init__(self, prefix: str = "ERROR", msg: str = ""):
-            self.prefix = prefix
-            self.msg = msg if msg else Log.msg_unknown_error
-            super().__init__(self.__str__())
-
-        def __str__(self):
-            if Log.USE_COLORS:
-                return f"{Log.FAILURE_COLOR}{self.prefix}{Log.MSG_COLOR}{self.msg}{Log.WHITE}"
-            else:
-                return f"{self.prefix}{self.msg}"
-
     @staticmethod
     def success_legacy(msg: str = "") -> None:
         """A legacy success message begins with a Green Plus.
@@ -98,6 +86,41 @@ class Log:
         @param msg  The message to print."""
         if msg != "":
             Log.fail(prefix="X", msg=f" - - {msg}", raise_error=False)
+
+    # --------- Custom Exceptions ---------
+    class Failure(RuntimeError):
+        """User-facing base class for custom error handling.
+        @details
+        - Builder Pattern - User can combine and chain standard message strings from the Log class.
+        - Prefixes (e.g., "GRAPH DB:", "FILE IO:") are redundant with tracebacks but improve
+          readability by highlighting the semantic source of the error - not just a line number.
+        - Enforces a consistent color scheme across all raised errors for quick scanning.
+        """
+
+        def __init__(self, prefix: str = "ERROR", msg: str = ""):
+            self.prefix = prefix
+            self.msg = msg if msg else Log.msg_unknown_error
+            super().__init__(self.__str__())
+
+        def __str__(self):
+            if Log.USE_COLORS:
+                return f"{Log.FAILURE_COLOR}{self.prefix}{Log.MSG_COLOR}{self.msg}{Log.WHITE}"
+            else:
+                return f"{self.prefix}{self.msg}"
+
+    class BadAddressFailure(Failure):
+        """Raised when a database connection string or address is invalid.
+        @details
+        - We support 4+ database engines and 2 endpoint frameworks (Blazor & Flask),
+          each of which has a different error type when unable to connect.
+        - To avoid flooding the console with these, this error should not be chained.
+        - Usage: raise BadAddressFailure(source_prefix, connection_string) from None"""
+
+        def __init__(self, source_prefix: str, connection_string: str):
+            prefix = f"{source_prefix}{Log.bad_addr}"
+            msg = Log.msg_bad_addr(connection_string)
+            super().__init__(prefix=prefix, msg=msg)
+
 
     # --------- Builder Pattern ---------
     # Compose your own standardized error messages depending on the context
@@ -150,8 +173,8 @@ class Log:
     msg_bad_coll = lambda name: f"Collection '{name}' not found"
     msg_bad_graph = lambda name: f"Graph '{name}' not found"
 
-    test_conn = "CONNECTION TEST: "
-    test_basic = "BASIC: "
+    test_ops = "OPERATE: "
+    test_basic = "CONNECT: "
     test_info = "DB INFO: "
     test_df = "GET DF: "
     test_tmp_db = "CREATE DB: "
@@ -187,6 +210,9 @@ class Log:
     msg_good_exec_qr = lambda query, results: f"Executed successfully:\n'{query}'\n{Log.msg_result(results)}"
     msg_bad_exec_q = lambda query: f"Failed to execute query:\n'{query}'"
 
+    msg_good_df_parse = lambda df: Log.msg_result(df)
+    msg_bad_df_parse = lambda query: f"Failed to convert query result to DataFrame:\n'{query}'"
+
     kg = "KG: "
     pytest_db = "PYTEST (DB): "
 
@@ -202,7 +228,10 @@ class Log:
 
     get_unique = "UNIQUE: "
 
+    msg_none_df = lambda collection_type, collection_name:  f"Unable to fetch DataFrame from {collection_type} '{collection_name}' - None"
+
     kg = "TRIPLES: "
+    sub_gr = "SUBGRAPH: "
     gr_rag = "RAG: "
     msg_bad_triples = lambda graph_name: f"No triples found for graph {graph_name}"
 
@@ -247,7 +276,7 @@ def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = [], sort_colum
 
 
 def check_values(results: List[Any], expected: List[Any], verbose: bool, log_source: str, raise_error: bool) -> bool:
-    """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_connection
+    """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_operations
     @param results  A list of observed values from the database.
     @param expected  A list of correct values to compare against.
     @param verbose  Whether to print success messages.

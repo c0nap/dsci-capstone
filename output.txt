@@ -1,34 +1,34 @@
 (env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python-dev
-[+] Building 3.4s (20/20) FINISHED                                                               docker:default
- => [internal] load build definition from Dockerfile.python                                                0.0s
- => => transferring dockerfile: 1.29kB                                                                     0.0s
- => [internal] load metadata for docker.io/library/python:3.12-slim                                        0.2s
- => [internal] load .dockerignore                                                                          0.0s
- => => transferring context: 79B                                                                           0.0s
- => [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8  0.0s
- => => resolve docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c2  0.0s
- => [internal] load build context                                                                          0.5s
- => => transferring context: 9.69MB                                                                        0.5s
- => CACHED [ 2/15] WORKDIR /pipeline                                                                       0.0s
- => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential m  0.0s
- => CACHED [ 4/15] COPY req/requirements.txt requirements.txt                                              0.0s
- => CACHED [ 5/15] RUN pip install --no-cache-dir -r requirements.txt                                      0.0s
- => [ 6/15] COPY src/ src/                                                                                 0.1s
- => [ 7/15] COPY tests/ tests/                                                                             0.1s
- => [ 8/15] COPY db/ db/                                                                                   0.1s
- => [ 9/15] COPY components/ components/                                                                   0.1s
- => [10/15] COPY datasets/ datasets/                                                                       0.1s
- => [11/15] COPY .env .env                                                                                 0.1s
- => [12/15] COPY Makefile .                                                                                0.1s
- => [13/15] RUN make env-docker                                                                            0.5s
- => [14/15] RUN mv .env.docker .env                                                                        0.4s
- => [15/15] COPY pyproject.toml .                                                                          0.1s
- => exporting to image                                                                                     0.3s
- => => exporting layers                                                                                    0.2s
- => => writing image sha256:9dc52400e2c4f84b1f583253b13b6192822fd90ec065f0523f374cafc5e885aa               0.0s
- => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                          0.0s
+[+] Building 2.7s (20/20) FINISHED                                                                       docker:default
+ => [internal] load build definition from Dockerfile.python                                                        0.0s
+ => => transferring dockerfile: 1.29kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.2s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 79B                                                                                   0.0s
+ => [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c205e18d  0.0s
+ => => resolve docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c205e18d98  0.0s
+ => [internal] load build context                                                                                  0.3s
+ => => transferring context: 154.94kB                                                                              0.3s
+ => CACHED [ 2/15] WORKDIR /pipeline                                                                               0.0s
+ => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make pand  0.0s
+ => CACHED [ 4/15] COPY req/requirements.txt requirements.txt                                                      0.0s
+ => CACHED [ 5/15] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
+ => CACHED [ 6/15] COPY src/ src/                                                                                  0.0s
+ => CACHED [ 7/15] COPY tests/ tests/                                                                              0.0s
+ => CACHED [ 8/15] COPY db/ db/                                                                                    0.0s
+ => [ 9/15] COPY components/ components/                                                                           0.1s
+ => [10/15] COPY datasets/ datasets/                                                                               0.1s
+ => [11/15] COPY .env .env                                                                                         0.0s
+ => [12/15] COPY Makefile .                                                                                        0.0s
+ => [13/15] RUN make env-docker                                                                                    0.5s
+ => [14/15] RUN mv .env.docker .env                                                                                0.3s
+ => [15/15] COPY pyproject.toml .                                                                                  0.1s
+ => exporting to image                                                                                             0.2s
+ => => exporting layers                                                                                            0.1s
+ => => writing image sha256:68e7b81327aa7ffebc10ca22de08acae62b2f5676950be2c943f8da13b914b6b                       0.0s
+ => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                                  0.0s
 container-python
-70c93cf28d156973daf337e5369dfb8bac80a5e15c2d13adcc1c53b00d66a794
+0b5d85dea16ea0c226d3ca7a52f404bfecee243b5c8615f3f96909558a8b3327
 Network 'capstone_default' already exists; continue...
 Deleted old chunks...
  * Serving Flask app 'main'
@@ -39,9 +39,9 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://172.17.0.5:5054
 Press CTRL+C to quit
 [STATUS] Story 1: preprocessing -> in-progress
-127.0.0.1 - - [12/Nov/2025 21:40:32] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2025 15:04:31] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> in-progress
-127.0.0.1 - - [12/Nov/2025 21:40:32] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2025 15:04:31] "POST /status/story HTTP/1.1" 200 -
 
 ==================================================
 Processing: ./datasets/examples/trilogy-wishes-2.epub
@@ -49,206 +49,260 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 === STORY SUMMARY ===
 Total chunks: 254
 [STATUS] Story 1: preprocessing -> completed
-127.0.0.1 - - [12/Nov/2025 21:40:35] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2025 15:04:33] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> completed
-127.0.0.1 - - [12/Nov/2025 21:40:35] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2025 15:04:33] "POST /status/story HTTP/1.1" 200 -
 
 Chunk details:
-  index: Chunk(len=1499, book=2, chapter=16, story=1, lines=[5530,5556], story%=86.472, chapter%=20.237)
+  index: Chunk(len=1441, book=2, chapter=14, story=1, lines=[4744,4772], story%=74.504, chapter%=60.033)
 
-‘Look here,’ said Anthea; ‘I really have an idea. This isn’t like a common carpet. It’s very magic indeed. Don’t you think, if we put Tatcho on it, and then gave it a rest, the magic part of it might grow, like hair is supposed to do?’
-‘It might,’ said Robert; ‘but I should think paraffin would do as well—at any rate as far as the smell goes, and that seems to be the great thing about Tatcho.’
-But with all its faults Anthea’s idea was something to do, and they did it.
-It was Cyril who fetched the Tatcho bottle from father’s washhand-stand. But the bottle had not much in it.
-‘We mustn’t take it all,’ Jane said, ‘in case father’s hair began to come off suddenly. If he hadn’t anything to put on it, it might all drop off before Eliza had time to get round to the chemist’s for another bottle. It would be dreadful to have a bald father, and it would all be our fault.’
-‘And wigs are very expensive, I believe,’ said Anthea. ‘Look here, leave enough in the bottle to wet father’s head all over with in case any emergency emerges—and let’s make up with paraffin. I expect it’s the smell that does the good really—and the smell’s exactly the same.’
-So a small teaspoonful of the Tatcho was put on the edges of the worst darn in the carpet and rubbed carefully into the roots of the hairs of it, and all the parts that there was not enough Tatcho for had paraffin rubbed into them with a piece of flannel. Then the flannel was burned. It made a gay flame, which delighted the Phoenix and the Lamb.
-    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-16_p.20237]
+It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—
+‘Well, stow it, will you?’
+And the boots went heavily away, along the passage and up some sounding stone stairs.
+‘Now then,’ whispered Anthea.
+‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.
+‘On the carpet,’ said Jane, truly.
+‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’
+‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’
+‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’
+‘Well, then,’ Cyril went on, ignoring this appeal to his brother, ‘just try to believe what we tell you and act accordingly. It can’t do you any HARM, you know,’ he went on in hoarse whispered earnestness. ‘You can’t be very much worse off than you are now, you know. But if you’ll just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?’
+‘I’d like to go to Boolong,’ was the instant reply of the burglar. ‘I’ve always wanted to go on that there trip, but I’ve never ‘ad the ready at the right time of the year.’
+‘Boolong is a town like London,’ said Cyril, well meaning, but inaccurate, ‘how could you get a living there?’
+The burglar scratched his head in deep doubt.
+    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-14_p.60033]
 
 NLP output:
-('Anthea', 'child', 'Anthea')
-('Anthea', 'mother', 'Anthea')
-('carpet', 'different from', 'common')
-('magic', 'said to be the same as', 'magic')
-('magic', 'said to be the same as', 'magic')
-('Tatcho', 'instance of', 'magic')
-('Tatcho', 'has part', 'paraffin')
-('Anthea', 'notable work', 'Anthea’s idea')
-('Anthea’s idea', 'author', 'Anthea')
-('Cyril', 'father', 'father')
-('father', 'child', 'Cyril')
+('2008 Summer Olympics', 'point in time', '2008')
+('boots', 'different from', 'voice')
+('voice', 'different from', 'boots')
+('Yes', 'instance of', 'Yes!')
+('No', 'instance of', 'No!')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
 ('William Shakespeare', 'notable work', 'Cymbeline')
 ('Cymbeline', 'Cymbeline', 'notable work')
 ('William Shakespeare', 'Cymbeline', 'author')
 ('William Shakespeare', 'Cymbeline', 'author')
-('Jane', 'father', 'father')
-('father', 'child', 'Jane')
-('Eliza', 'occupation', 'chemist’s')
-('father', 'child', 'child')
-('child', 'father', 'father')
-('Wig', 'subclass of', 'wig')
-('paraffin', 'use', 'make up')
-('smell', 'has effect', 'good')
-('good', 'has cause', 'smell')
-('worst darn', 'subclass of', 'carpet')
-('burned', 'product or material produced', 'flannel')
-('Phoenix', 'sibling', 'Lamb')
-('Lamb', 'sibling', 'Phoenix')
+('Now then,’ whispered Anthea', 'characters', 'Anthea')
+('Anthea', 'present in work', 'Now then,’ whispered Anthea')
+('How the blue Moses did you get in?', 'characters', 'Moses')
+('Moses', 'present in work', 'How the blue Moses did you get in?')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('On the carpet', 'cast member', 'Jane')
+('Stow that', 'participant', 'burglar')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Milton', 'Milton', 'author')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('Cyril', 'owner of', 'nursery')
+('nursery', 'owned by', 'Cyril')
+('John F. Kennedy', 'significant event', 'assassinated')
+('assassinated', 'facet of', 'John F. Kennedy')
+('Cyril', 'sibling', 'his brother')
+('his brother', 'sibling', 'Cyril')
+('HARM', 'has effect', 'fever')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
+('Boolong', 'located in the administrative territorial entity', 'Boolong')
+('World Rugby League', 'sport', 'Rugby League')
+('Rugby League', 'organizer', 'World Rugby League')
+('Boolong', 'located in the administrative territorial entity', 'London')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('Anthea', 'child', 'Anthea')
-('Anthea', 'mother', 'Anthea')
-('carpet', 'different from', 'common')
-('magic', 'said to be the same as', 'magic')
-('magic', 'said to be the same as', 'magic')
-('Tatcho', 'instance of', 'magic')
-('Tatcho', 'has part', 'paraffin')
-('Anthea', 'notable work', 'Anthea’s idea')
-('Anthea’s idea', 'author', 'Anthea')
-('Cyril', 'father', 'father')
-('father', 'child', 'Cyril')
+('2008 Summer Olympics', 'point in time', '2008')
+('boots', 'different from', 'voice')
+('voice', 'different from', 'boots')
+('Yes', 'instance of', 'Yes!')
+('No', 'instance of', 'No!')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
 ('William Shakespeare', 'notable work', 'Cymbeline')
 ('Cymbeline', 'Cymbeline', 'notable work')
 ('William Shakespeare', 'Cymbeline', 'author')
 ('William Shakespeare', 'Cymbeline', 'author')
-('Jane', 'father', 'father')
-('father', 'child', 'Jane')
-('Eliza', 'occupation', 'chemist’s')
-('father', 'child', 'child')
-('child', 'father', 'father')
-('Wig', 'subclass of', 'wig')
-('paraffin', 'use', 'make up')
-('smell', 'has effect', 'good')
-('good', 'has cause', 'smell')
-('worst darn', 'subclass of', 'carpet')
-('burned', 'product or material produced', 'flannel')
-('Phoenix', 'sibling', 'Lamb')
-('Lamb', 'sibling', 'Phoenix')
+('Now then,’ whispered Anthea', 'characters', 'Anthea')
+('Anthea', 'present in work', 'Now then,’ whispered Anthea')
+('How the blue Moses did you get in?', 'characters', 'Moses')
+('Moses', 'present in work', 'How the blue Moses did you get in?')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('On the carpet', 'cast member', 'Jane')
+('Stow that', 'participant', 'burglar')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Milton', 'Milton', 'author')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('Cyril', 'owner of', 'nursery')
+('nursery', 'owned by', 'Cyril')
+('John F. Kennedy', 'significant event', 'assassinated')
+('assassinated', 'facet of', 'John F. Kennedy')
+('Cyril', 'sibling', 'his brother')
+('his brother', 'sibling', 'Cyril')
+('HARM', 'has effect', 'fever')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('John F. Kennedy School of Government', 'part of', 'Harvard University')
+('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
+('Boolong', 'located in the administrative territorial entity', 'Boolong')
+('World Rugby League', 'sport', 'Rugby League')
+('Rugby League', 'organizer', 'World Rugby League')
+('Boolong', 'located in the administrative territorial entity', 'London')
+('George Orwell', 'notable work', 'Nineteen Eighty-Four')
+('Nineteen Eighty-Four', 'author', 'Orwell')
 
 And here is the original text:
-‘Look here,’ said Anthea; ‘I really have an idea. This isn’t like a common carpet. It’s very magic indeed. Don’t you think, if we put Tatcho on it, and then gave it a rest, the magic part of it might grow, like hair is supposed to do?’
-‘It might,’ said Robert; ‘but I should think paraffin would do as well—at any rate as far as the smell goes, and that seems to be the great thing about Tatcho.’
-But with all its faults Anthea’s idea was something to do, and they did it.
-It was Cyril who fetched the Tatcho bottle from father’s washhand-stand. But the bottle had not much in it.
-‘We mustn’t take it all,’ Jane said, ‘in case father’s hair began to come off suddenly. If he hadn’t anything to put on it, it might all drop off before Eliza had time to get round to the chemist’s for another bottle. It would be dreadful to have a bald father, and it would all be our fault.’
-‘And wigs are very expensive, I believe,’ said Anthea. ‘Look here, leave enough in the bottle to wet father’s head all over with in case any emergency emerges—and let’s make up with paraffin. I expect it’s the smell that does the good really—and the smell’s exactly the same.’
-So a small teaspoonful of the Tatcho was put on the edges of the worst darn in the carpet and rubbed carefully into the roots of the hairs of it, and all the parts that there was not enough Tatcho for had paraffin rubbed into them with a piece of flannel. Then the flannel was burned. It made a gay flame, which delighted the Phoenix and the Lamb.
+It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—
+‘Well, stow it, will you?’
+And the boots went heavily away, along the passage and up some sounding stone stairs.
+‘Now then,’ whispered Anthea.
+‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.
+‘On the carpet,’ said Jane, truly.
+‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’
+‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’
+‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’
+‘Well, then,’ Cyril went on, ignoring this appeal to his brother, ‘just try to believe what we tell you and act accordingly. It can’t do you any HARM, you know,’ he went on in hoarse whispered earnestness. ‘You can’t be very much worse off than you are now, you know. But if you’ll just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?’
+‘I’d like to go to Boolong,’ was the instant reply of the burglar. ‘I’ve always wanted to go on that there trip, but I’ve never ‘ad the ready at the right time of the year.’
+‘Boolong is a town like London,’ said Cyril, well meaning, but inaccurate, ‘how could you get a living there?’
+The burglar scratched his head in deep doubt.
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s":"carpet","r":"different from","o":"common"},
-  {"s":"Tatcho","r":"applied to","o":"carpet"},
-  {"s":"Cyril","r":"fetched","o":"Tatcho bottle"},
-  {"s":"Tatcho bottle","r":"from","o":"father’s washhand-stand"},
-  {"s":"Jane","r":"said","o":"we mustn’t take it all"},
-  {"s":"Eliza","r":"went to","o":"chemist’s for another bottle"},
-  {"s":"paraffin","r":"use","o":"make up"},
-  {"s":"smell","r":"has effect","o":"good"},
-  {"s":"good","r":"has cause","o":"smell"},
-  {"s":"William Shakespeare","r":"notable work","o":"Cymbeline"},
-  {"s":"William Shakespeare","r":"Cymbeline","o":"author"},
-  {"s":"Eliza","r":"occupation","o":"chemist’s"},
-  {"s":"carpet","r":"has part","o":"worst darn"},
-  {"s":"flannel","r":"burned","o":"flame"},
-  {"s":"flame","r":"delighted","o":"Phoenix and Lamb"},
-  {"s":"Tatcho","r":"causes","o":"hair growth"},
-  {"s":"Anthea","r":"expressed","o":"idea to treat hair with Tatcho"}
+  {"s": "Anthea", "r": "whispered", "o": "Now then"},
+  {"s": "burglar", "r": "asked", "o": "How the blue Moses did you get in?"},
+  {"s": "Jane", "r": "said", "o": "On the carpet"},
+  {"s": "burglar", "r": "said", "o": "Stow that"},
+  {"s": "Cyril", "r": "stated", "o": "You wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery"},
+  {"s": "burglar", "r": "replied", "o": "That I wouldn’t"},
+  {"s": "Cyril", "r": "said", "o": "Just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?"},
+  {"s": "burglar", "r": "replied", "o": "I’d like to go to Boolong"},
+  {"s": "Cyril", "r": "stated", "o": "Boolong is a town like London"},
+  {"s": "cow", "r": "found in", "o": "nursery"},
+  {"s": "cats", "r": "found in", "o": "nursery"},
+  {"s": "nursery", "r": "belongs to", "o": "Cyril and his family"},
+  {"s": "burglar", "r": "showed", "o": "deep doubt"},
+  {"s": "boots", "r": "moved", "o": "along the passage and up some sounding stone stairs"},
+  {"s": "boots", "r": "co-occurred with", "o": "voice"},
+  {"s": "voice", "r": "came in", "o": "scene"}
 ]
 
 ==================================================
 
 
 Valid JSON
-[STATUS] Chunk story-1_book-2_chapter-16_p.20237: relation_extraction -> in-progress
-127.0.0.1 - - [12/Nov/2025 21:44:06] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-16_p.20237: llm_inference -> in-progress
-127.0.0.1 - - [12/Nov/2025 21:44:06] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-16_p.20237: relation_extraction -> completed
-127.0.0.1 - - [12/Nov/2025 21:44:06] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-16_p.20237: llm_inference -> completed
-127.0.0.1 - - [12/Nov/2025 21:44:06] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-16_p.20237: graph_verbalization -> in-progress
-127.0.0.1 - - [12/Nov/2025 21:44:06] "POST /status/chunk HTTP/1.1" 200 -
-carpet different from common
-Tatcho applied to carpet
-Cyril fetched Tatcho bottle
-Tatcho bottle from father’s washhand-stand
-Jane said we mustn’t take it all
-Eliza went to chemist’s for another bottle
-paraffin use make up
-smell has effect good
-good has cause smell
-William Shakespeare notable work Cymbeline
-William Shakespeare Cymbeline author
-Eliza occupation chemist’s
-carpet has part worst darn
-flannel burned flame
-flame delighted Phoenix and Lamb
-Tatcho causes hair growth
-Anthea expressed idea to treat hair with Tatcho
+[STATUS] Chunk story-1_book-2_chapter-14_p.60033: relation_extraction -> in-progress
+127.0.0.1 - - [15/Nov/2025 15:08:01] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.60033: llm_inference -> in-progress
+127.0.0.1 - - [15/Nov/2025 15:08:01] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.60033: relation_extraction -> completed
+127.0.0.1 - - [15/Nov/2025 15:08:01] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.60033: llm_inference -> completed
+127.0.0.1 - - [15/Nov/2025 15:08:01] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.60033: graph_verbalization -> in-progress
+127.0.0.1 - - [15/Nov/2025 15:08:01] "POST /status/chunk HTTP/1.1" 200 -
+Anthea whispered Now then
+burglar asked How the blue Moses did you get in?
+Jane said On the carpet
+burglar said Stow that
+Cyril stated You wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery
+burglar replied That I wouldn’t
+Cyril said Just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?
+burglar replied I’d like to go to Boolong
+Cyril stated Boolong is a town like London
+cow found in nursery
+cats found in nursery
+nursery belongs to Cyril and his family
+burglar showed deep doubt
+boots moved along the passage and up some sounding stone stairs
+boots co-occurred with voice
+voice came in scene
 
 Most relevant nodes:
-  node_name  edge_count
-0    carpet           3
-1     smell           2
-2    Tatcho           2
+    edge_count node_name
+15           5   burglar
+2            3     Cyril
+19           3   nursery
 
 Triples which best represent the graph:
-carpet HAS_PART worst darn
-carpet DIFFERENT_FROM common
-smell HAS_EFFECT good
-Tatcho CAUSES hair growth
-Tatcho APPLIED_TO carpet
+burglar REPLIED That I wouldn_t
+burglar REPLIED I_d like to go to Boolong
+burglar SHOWED deep doubt
+burglar ASKED How the blue Moses did you get in
+burglar SAID Stow that
+Cyril SAID Just trust to us we_ll get you out of this right enough_ No one saw us come in_ The question is_ where would you like to go
+Cyril STATED Boolong is a town like London
+Cyril STATED You wouldn_t have believed any one if they_d told you beforehand about your finding a cow and all those cats in our nursery
+nursery BELONGS_TO Cyril and his family
 
-[STATUS] Chunk story-1_book-2_chapter-16_p.20237: graph_verbalization -> completed
-127.0.0.1 - - [12/Nov/2025 21:44:08] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.60033: graph_verbalization -> completed
+127.0.0.1 - - [15/Nov/2025 15:08:02] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Story 1: summarization -> in-progress
-127.0.0.1 - - [12/Nov/2025 21:44:08] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-16_p.20237: summarization -> in-progress
-127.0.0.1 - - [12/Nov/2025 21:44:08] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2025 15:08:02] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.60033: summarization -> in-progress
+127.0.0.1 - - [15/Nov/2025 15:08:02] "POST /status/chunk HTTP/1.1" 200 -
 
 Generated summary:
-The carpet has a part described as 'worst darn' and is different from the common type. The smell has a good effect. Tatcho causes hair growth and is applied to the carpet.
-    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-16_p.20237]
+The scene features a burglar who shows deep doubt and, expressing reluctance, asks to be taken to Boolong and how they got in. Cyril reassures him that they will get him out and that no one saw them come in, asking where the burglar would like to go. Cyril describes Boolong as a London-like town and notes that one wouldn’t have believed beforehand about finding a cow and several cats in their nursery. The nursery belongs to Cyril and his family.
+    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-14_p.60033]
 [STATUS] Story 1: summarization -> completed
-127.0.0.1 - - [12/Nov/2025 21:44:19] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-16_p.20237: summarization -> completed
-127.0.0.1 - - [12/Nov/2025 21:44:19] "POST /status/chunk HTTP/1.1" 200 -
-[ASSIGNED] chunk 'story-1_book-2_chapter-16_p.20237' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [12/Nov/2025 21:44:19] "POST /process_story HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-16_p.20237, task=questeval, status=startedTriggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
-
-172.18.0.6 - - [12/Nov/2025 21:44:19] "POST /callback HTTP/1.1" 200 -
-[ASSIGNED] chunk 'story-1_book-2_chapter-16_p.20237' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [12/Nov/2025 21:44:19] "POST /process_story HTTP/1.1" 200 -
+127.0.0.1 - - [15/Nov/2025 15:08:20] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.60033: summarization -> completed
+127.0.0.1 - - [15/Nov/2025 15:08:20] "POST /status/chunk HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-14_p.60033' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [15/Nov/2025 15:08:21] "POST /process_story HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.60033, task=questeval, status=started
+172.18.0.3 - - [15/Nov/2025 15:08:21] "POST /callback HTTP/1.1" 200 -
+Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
+[ASSIGNED] chunk 'story-1_book-2_chapter-14_p.60033' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [15/Nov/2025 15:08:21] "POST /process_story HTTP/1.1" 200 -
 Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}
 Initial processing complete. Server listening for additional requests from Blazor...
 Press Ctrl+C to stop.
-[CALLBACK] chunk_id=story-1_book-2_chapter-16_p.20237, task=bookscore, status=started
-172.18.0.7 - - [12/Nov/2025 21:44:19] "POST /callback HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-16_p.20237, task=bookscore, status=completed
+[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.60033, task=bookscore, status=started
+172.18.0.4 - - [15/Nov/2025 15:08:21] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.60033, task=bookscore, status=completed
 [STORY COMPLETE] All chunks completed metric_bookscore for story 1
-172.18.0.7 - - [12/Nov/2025 21:44:28] "POST /callback HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-16_p.20237, task=questeval, status=completed
+172.18.0.4 - - [15/Nov/2025 15:08:41] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.60033, task=questeval, status=completed
 [STORY COMPLETE] All chunks completed metric_questeval for story 1
-Downloading builder script: 6.27kB [00:00, 4.25MB/s]
-Downloading builder script: 7.95kB [00:00, 18.3MB/s]
+Downloading builder script: 6.14kB [00:00, 2.84MB/s]
+Downloading builder script: 7.95kB [00:00, 11.3MB/s]
 Some weights of RobertaModel were not initialized from the model checkpoint at roberta-large and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': "The carpet has a part described as 'worst darn' and is different from the common type. The smell has a good effect. Tatcho causes hair growth and is applied to the carpet.", 'goldSummaryText': '‘Look here,’ said Anthea; ‘I really have an idea. This isn’t like a common carpet. It’s very magic indeed. Don’t you think, if we put Tatcho on it, and then gave it a rest, the magic part of it might grow, like hair is supposed to do?’\n‘It might,’ said Robert; ‘but I should think paraffin would do as well—at any rate as far as the smell goes, and that seems to be the great thing about Tatcho.’\nBut with all its faults Anthea’s idea was something to do, and they did it.\nIt was Cyril who fetched the Tatcho bottle from father’s washhand-stand. But the bottle had not much in it.\n‘We mustn’t take it all,’ Jane said, ‘in case father’s hair began to come off suddenly. If he hadn’t anything to put on it, it might all drop off before Eliza had time ', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8633345365524292, 'recall': 0.7987340688705444, 'f1Score': 0.8297789096832275}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.3423340832052486}, {'name': 'ROUGE-1', 'value': 0.19251336898395724}, {'name': 'ROUGE-2', 'value': 0.01081081081081081}, {'name': 'ROUGE-L', 'value': 0.10695187165775401}, {'name': 'ROUGE-Lsum', 'value': 0.1497326203208556}]}, 'qaResults': []}
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'The scene features a burglar who shows deep doubt and, expressing reluctance, asks to be taken to Boolong and how they got in. Cyril reassures him that they will get him out and that no one saw them come in, asking where the burglar would like to go. Cyril describes Boolong as a London-like town and notes that one wouldn’t have believed beforehand about finding a cow and several cats in their nursery. The nursery belongs to Cyril and his family.', 'goldSummaryText': 'It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—\n‘Well, stow it, will you?’\nAnd the boots went heavily away, along the passage and up some sounding stone stairs.\n‘Now then,’ whispered Anthea.\n‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.\n‘On the carpet,’ said Jane, truly.\n‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’\n‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’\n‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’\n‘Well, then,’ Cyr', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8516950607299805, 'recall': 0.8130800724029541, 'f1Score': 0.8319397568702698}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.28196919446595764}, {'name': 'ROUGE-1', 'value': 0.3518518518518518}, {'name': 'ROUGE-2', 'value': 0.09345794392523366}, {'name': 'ROUGE-L', 'value': 0.23148148148148148}, {'name': 'ROUGE-Lsum', 'value': 0.2962962962962963}]}, 'qaResults': []}
 
 Output sent to web app.
 [PIPELINE FINALIZED] Story 1 fully processed
-172.18.0.6 - - [12/Nov/2025 21:48:35] "POST /callback HTTP/1.1" 200 -
-INFO:werkzeug:172.18.0.6 - - [12/Nov/2025 21:48:35] "POST /callback HTTP/1.1" 200 -
+172.18.0.3 - - [15/Nov/2025 15:11:45] "POST /callback HTTP/1.1" 200 -
+INFO:werkzeug:172.18.0.3 - - [15/Nov/2025 15:11:45] "POST /callback HTTP/1.1" 200 -
 ^Cmake[2]: *** [Makefile:77: docker-start] Interrupt
 make[1]: *** [Makefile:89: docker-python] Interrupt
 make: *** [Makefile:124: docker-python-dev] Interrupt
@@ -261,17 +315,17 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:5002
  * Running on http://172.17.0.4:5002
 Press CTRL+C to quit
-[QUEUED] chunk 'story-1_book-2_chapter-16_p.20237' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-172.18.0.8 - - [12/Nov/2025 21:44:19] "POST /tasks/queue HTTP/1.1" 202 -
-FINISHED: chunk ID: story-1_book-2_chapter-16_p.20237, result:
-{'value': 0.0, 'annotations': {"The carpet has a part described as 'worst darn' and is different from the common type.": {'questions': "What does 'worst darn' refer to? How is the carpet different from the common type? What is the significance of this detail?", 'types': ['entity omission', 'causal omission']}, 'The smell has a good effect.': {'questions': 'What is the source of the smell? How does it have a good effect? What is the context of the smell in relation to the carpet?', 'types': ['entity omission', 'causal omission']}, 'Tatcho causes hair growth and is applied to the carpet.': {'questions': 'What is Tatcho? How does applying it to the carpet relate to hair growth? Why is it being applied to the carpet in the first place?', 'types': ['entity omission', 'causal omission']}}, 'model_used': 'openai-model_gpt-4o-mini'}
+[QUEUED] chunk 'story-1_book-2_chapter-14_p.60033' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+172.18.0.8 - - [15/Nov/2025 15:08:21] "POST /tasks/queue HTTP/1.1" 202 -
+FINISHED: chunk ID: story-1_book-2_chapter-14_p.60033, result:
+{'value': 0.0, 'annotations': {'The scene features a burglar who shows deep doubt and, expressing reluctance, asks to be taken to Boolong and how they got in.': {'questions': 'Why is the burglar expressing doubt? What is the context of their situation? How did they get in?', 'types': ['event omission', 'causal omission']}, 'Cyril reassures him that they will get him out and that no one saw them come in, asking where the burglar would like to go.': {'questions': 'Why does Cyril need to reassure the burglar? What is the context of their situation? Where are they trying to go?', 'types': ['event omission', 'causal omission']}, 'Cyril describes Boolong as a London-like town and notes that one wouldn’t have believed beforehand about finding a cow and several cats in their nursery.': {'questions': 'What is the significance of the cow and several cats in the nursery? Why is this detail included? How does this relate to the main storyline?', 'types': ['salience', 'entity omission']}, 'The nursery belongs to Cyril and his family.': {'questions': 'What is the significance of the nursery in the story? How does it relate to the burglar and the overall plot?', 'types': ['entity omission', 'causal omission']}}, 'model_used': 'openai-model_gpt-4o-mini'}
 (env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-qeval
-Downloading: 6.81kB [00:00, 10.2MB/s]
+Downloading: 6.81kB [00:00, 9.64MB/s]
 WARNING:root:Downloading language model for the spaCy model.
 DEPRECATION: https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl#egg=en_core_web_sm==3.0.0 contains an egg fragment with a non-PEP 508 name. pip 25.1 will enforce this behaviour change. A possible replacement is to use the req @ url syntax, and remove the egg fragment. Discussion can be found at https://github.com/pypa/pip/issues/13157
 Collecting en-core-web-sm==3.0.0
   Downloading https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl (13.7 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 28.7 MB/s eta 0:00:00
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 24.9 MB/s eta 0:00:00
 Requirement already satisfied: spacy<3.1.0,>=3.0.0 in /usr/local/lib/python3.8/site-packages (from en-core-web-sm==3.0.0) (3.0.6)
 Requirement already satisfied: spacy-legacy<3.1.0,>=3.0.4 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.0.12)
 Requirement already satisfied: murmurhash<1.1.0,>=0.28.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.0.13)
@@ -317,11 +371,11 @@ You can now load the package via spacy.load('en_core_web_sm')
    Use a production WSGI server instead.
  * Debug mode: off
 INFO:werkzeug: * Running on http://0.0.0.0:5001/ (Press CTRL+C to quit)
-[QUEUED] chunk 'story-1_book-2_chapter-16_p.20237' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-INFO:werkzeug:172.18.0.8 - - [12/Nov/2025 21:44:19] "POST /tasks/queue HTTP/1.1" 202 -
-Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.seq_relationship.weight', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.bias', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.bias', 'cls.predictions.bias']
+[QUEUED] chunk 'story-1_book-2_chapter-14_p.60033' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+INFO:werkzeug:172.18.0.8 - - [15/Nov/2025 15:08:21] "POST /tasks/queue HTTP/1.1" 202 -
+Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.predictions.bias', 'cls.seq_relationship.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.bias', 'cls.predictions.decoder.weight']
 - This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
 - This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-FINISHED: chunk ID: story-1_book-2_chapter-16_p.20237, result:
-{'value': 0.3423340832052486, 'has_reference': False}
+FINISHED: chunk ID: story-1_book-2_chapter-14_p.60033, result:
+{'value': 0.28196919446595764, 'has_reference': False}
 Failed to notify boss: HTTPConnectionPool(host='python_service', port=5054): Read timed out. (read timeout=5)

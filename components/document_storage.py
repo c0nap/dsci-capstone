@@ -49,76 +49,69 @@ class DocumentConnector(DatabaseConnector):
         @note  PyMongo requires a lookup location for user permissions, and MongoEngine will show warnings if 'uuidRepresentation' is not set."""
         self.connection_string = f"{self.db_engine}://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}{self._auth_suffix}"
 
-    def test_connection(self, raise_error: bool = True) -> bool:
+    def test_operations(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the MongoDB database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the connection test was successful.
         @throws Log.Failure  If raise_error is True and the connection test fails to complete.
         """
-        # Check if connection string is valid
-        if self.check_connection(Log.test_conn, raise_error) == False:
-            return False
+        try:
+            # Check if connection string is valid
+            self.check_connection(Log.test_ops, raise_error=True)
 
-        with mongo_handle(host=self.connection_string, alias="test_conn") as db:
-            try:  # Run universal test queries - some require admin
-                result = db.command({"ping": 1})
-                if check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
-                    return False
-                status = db.command({"serverStatus": 1})
-                if check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error) == False:
-                    return False
-                databases = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
-                if check_values([isinstance(databases, list)], [True], self.verbose, Log.doc_db, raise_error) == False:
-                    return False
-            except Exception as e:
-                if not raise_error:
-                    return False
-                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_basic, Log.msg_unknown_error) from e
+            with mongo_handle(host=self.connection_string, alias="test_conn") as db:
+                try:  # Run universal test queries - some require admin
+                    result = db.command({"ping": 1})
+                    check_values([result.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error=True)
+                    status = db.command({"serverStatus": 1})
+                    check_values([status.get("ok")], [1.0], self.verbose, Log.doc_db, raise_error=True)
+                    databases = list(db.command({"listCollections": 1})["cursor"]["firstBatch"])
+                    check_values([isinstance(databases, list)], [True], self.verbose, Log.doc_db, raise_error=True)
+                except Exception as e:
+                    raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_basic, Log.msg_unknown_error) from e
 
-            try:  # Display useful information on existing databases
-                databases = db.client.list_database_names()
-                Log.success(Log.doc_db, Log.msg_result(databases), self.verbose)
-            except Exception as e:
-                if not raise_error:
-                    return False
-                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_info, Log.msg_unknown_error) from e
+                try:  # Display useful information on existing databases
+                    databases = db.client.list_database_names()
+                    Log.success(Log.doc_db, Log.msg_result(databases), self.verbose)
+                except Exception as e:
+                    raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_info, Log.msg_unknown_error) from e
 
-            try:  # Create a collection, insert dummy data, and use get_dataframe
-                tmp_collection = "test_collection"
-                if tmp_collection in db.list_collection_names():
+                try:  # Create a collection, insert dummy data, and use get_dataframe
+                    tmp_collection = "test_collection"
+                    if tmp_collection in db.list_collection_names():
+                        db.drop_collection(tmp_collection)
+                    db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
+                    df = self.get_dataframe(tmp_collection)
+                    if df is None:
+                        raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_df, Log.msg_none_df("collection", tmp_collection))
+                    check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error=True)
                     db.drop_collection(tmp_collection)
-                db[tmp_collection].insert_one({"id": 1, "name": "Alice"})
-                df = self.get_dataframe(tmp_collection)
-                if df is None:
-                    return False
-                check_values([df.at[0, 'name']], ['Alice'], self.verbose, Log.doc_db, raise_error)
-                db.drop_collection(tmp_collection)
-            except Exception as e:
-                if not raise_error:
-                    return False
-                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_df, Log.msg_unknown_error) from e
+                except Exception as e:
+                    raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
 
-            try:  # Test create/drop functionality with tmp database
-                tmp_db = "test_conn"  # Do not use context manager: interferes with traceback
-                working_database = self.database_name
-                if self.database_exists(tmp_db):
+                try:  # Test create/drop functionality with tmp database
+                    tmp_db = "test_ops"  # Do not use context manager: interferes with traceback
+                    working_database = self.database_name
+                    if self.database_exists(tmp_db):
+                        self.drop_database(tmp_db)
+                    self.create_database(tmp_db)
+                    self.change_database(tmp_db)
+                    self.execute_query('{"ping": 1}')
+                    self.change_database(working_database)
                     self.drop_database(tmp_db)
-                self.create_database(tmp_db)
-                self.change_database(tmp_db)
-                self.execute_query('{"ping": 1}')
-                self.change_database(working_database)
-                self.drop_database(tmp_db)
-            except Exception as e:
-                if not raise_error:
-                    return False
-                raise Log.Failure(Log.doc_db + Log.test_conn + Log.test_tmp_db, Log.msg_unknown_error) from e
+                except Exception as e:
+                    raise Log.Failure(Log.doc_db + Log.test_ops + Log.test_tmp_db, Log.msg_unknown_error) from e
 
-        # Finish with no errors = connection test successful
-        Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
-        return True
+            # Finish with no errors = connection test successful
+            Log.success(Log.doc_db, Log.msg_db_connect(self.database_name), self.verbose)
+            return True
+        except Exception as e:
+            if not raise_error:
+                return False
+            raise  # Preserve original error
 
-    def check_connection(self, log_source: str, raise_error: bool) -> bool:
+    def check_connection(self, log_source: str, raise_error: bool = True) -> bool:
         """Minimal connection test to determine if our connection string is valid.
         @details  Connect to MongoDB using MongoEnigine.connect()
         @param log_source  The Log class prefix indicating which method is performing the check.
@@ -128,12 +121,12 @@ class DocumentConnector(DatabaseConnector):
         try:
             with mongo_handle(host=self.connection_string, alias="check_conn") as db:
                 db.command({"ping": 1})
-        except Exception:  # These errors are usually nasty, so dont print the original.
+            Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
+            return True
+        except Exception:  # These errors are usually long, so dont print the original.
             if not raise_error:
                 return False
             raise Log.Failure(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
-        Log.success(Log.doc_db + log_source, Log.msg_db_connect(self.database_name), self.verbose)
-        return True
 
     def get_unmanaged_handle(self):
         """Expose the low-level PyMongo handle for external use.
@@ -153,51 +146,56 @@ class DocumentConnector(DatabaseConnector):
         """
         self.check_connection(Log.run_q, raise_error=True)
         # The base class will handle the multi-query case, so prevent a 2nd duplicate query
-        result = super().execute_query(query)
+        last_df = super().execute_query(query)
         if not self._is_single_query(query):
-            return result
-        # Derived classes MUST implement single-query execution.
+            return last_df
+
+        # Queries must be valid JSON
+        try:
+            json_cmd_doc = json.loads(query)
+        except json.JSONDecodeError:
+            Log.warn(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", query, "JSON command object"), self.verbose)
+            # Attempt to recover, then try again.
+            query = _sanitize_json(query)
+            try:
+                json_cmd_doc = json.loads(query)
+            except json.JSONDecodeError:
+                raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_fail_parse("sanitized query", query, "JSON command object")) from None
+
+        # Send query to PyMongo
         try:
             with mongo_handle(host=self.connection_string, alias="exec_q") as db:
-                # Queries must be valid JSON
-                try:
-                    json_cmd_doc = json.loads(query)
-                except json.JSONDecodeError:
-                    Log.warn(Log.doc_db + Log.run_q, Log.msg_fail_parse("query", query, "JSON command object"), self.verbose)
-                    query = _sanitize_json(query)
-                    try:
-                        json_cmd_doc = json.loads(query)
-                    except json.JSONDecodeError:
-                        raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_fail_parse("sanitized query", query, "JSON command object"))
-
                 # Execute via PyMongo
                 results = db.command(json_cmd_doc)
-
-                # Mongo queries can return a dict or list
-                # Standardize everything to a list of documents
-                docs = []
-                if isinstance(results, dict):
-                    if "cursor" in results:
-                        docs = results["cursor"].get("firstBatch", [])
-                    elif "firstBatch" in results:
-                        docs = results["firstBatch"]
-                    else:
-                        # wrap single dict as list
-                        docs = [results]
-                elif isinstance(results, list):
-                    docs = results
-
-                # Convert document list to DataFrame if any docs exist
-                returns_data = self._returns_data(query)
-                df = _docs_to_df(docs) if returns_data else None
-                if df is None or df.empty:
-                    Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
-                    return None
-                else:
-                    Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_qr(query, df), self.verbose)
-                    return df
         except Exception as e:
             raise Log.Failure(Log.doc_db + Log.run_q, Log.msg_bad_exec_q(query)) from e
+        Log.success(Log.doc_db + Log.run_q, Log.msg_good_exec_q(query), self.verbose)
+
+        returns_data = self._returns_data(query)
+        parsable_to_df = self._parsable_to_df(results)  # checks 'cursor', 'firstBatch'
+        if not returns_data or not parsable_to_df:
+            return None
+
+        # Standardize everything to a list of documents
+        # Mongo queries can return a dict or list
+        docs = []
+        if isinstance(results, dict):
+            if "cursor" in results:
+                docs = results["cursor"].get("firstBatch", [])
+            elif "firstBatch" in results:
+                docs = results["firstBatch"]
+            else:
+                # wrap single dict as list
+                docs = [results]
+        elif isinstance(results, list):
+            docs = results
+
+        # Convert document list to DataFrame if any docs exist
+        df = _docs_to_df(docs)
+        if df is None or df.empty:  # Defensive check - should be handled already
+            return None
+        Log.success(Log.doc_db + Log.run_q, Log.msg_good_df_parse(df), self.verbose)
+        return df
 
     def _split_combined(self, multi_query: str) -> list[str]:
         """Divides a string into non-divisible MongoDB commands by splitting on semicolons at depth 0.
@@ -286,7 +284,7 @@ class DocumentConnector(DatabaseConnector):
         - Excludes pure status/meta responses like {'ok': 1}.
         @param result  The result of a JSON query.
         @return  Whether the object is parsable to DataFrame."""
-        # TODO: docs_to_df ?
+
         # Cursor / batch results
         if isinstance(result, dict):
             if "cursor" in result:
@@ -316,25 +314,27 @@ class DocumentConnector(DatabaseConnector):
         # Anything else is not tabular
         return False
 
-    def get_dataframe(self, name: str, columns: List[str] = []) -> Optional[DataFrame]:
+    def get_dataframe(self, name: str, columns: List[str] = []) -> DataFrame:
         """Automatically generate and run a query for the specified collection.
         @param name  The name of an existing table or collection in the database.
         @param columns  A list of column names to keep.
-        @return  DataFrame containing the requested data, or None
+        @return  Sorted DataFrame containing the requested data
         @throws Log.Failure  If we fail to create the requested DataFrame for any reason."""
         self.check_connection(Log.get_df, raise_error=True)
         # Re-use the logic from execute_query
         query = {"find": name, "filter": {}}
         df = self.execute_query(json.dumps(query))
 
-        if df is not None and not df.empty:
-            df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
-            df = df[columns] if columns else df
-            Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
-            return df
-        # If not found, warn but do not fail
-        Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
-        return None
+        if df is None or df.empty:
+            # If not found, warn but do not fail
+            Log.warn(Log.doc_db + Log.get_df, Log.msg_bad_coll(name), self.verbose)
+            return DataFrame()
+
+        # Sort DataFrame and drop unrequested columns
+        df = df_natural_sorted(df, ignored_columns=['_id'], sort_columns=columns)
+        df = df[columns] if columns else df
+        Log.success(Log.doc_db + Log.get_df, Log.msg_good_coll(name, df), self.verbose)
+        return df
 
     def create_database(self, database_name: str) -> None:
         """Use the current database connection to create a sibling database in this engine.
@@ -378,10 +378,7 @@ class DocumentConnector(DatabaseConnector):
         @param database_name  The name of a database to search for.
         @return  Whether the database is visible to this connector."""
         with mongo_handle(host=self.connection_string, alias="db_exists") as db:
-            # result = self.execute_query('{"dbstats": 1}')
-            # print(result)
             databases = db.client.list_database_names()
-        # print(databases)
         return database_name in databases
 
     def delete_dummy(self) -> None:
@@ -415,7 +412,7 @@ def mongo_handle(host: str, alias: str) -> MongoHandle:
         with mongo_handle(host=self.connection_string, alias="create_db") as db:
             (your code here...)
     This will disconnect all connections on the alias once finished.
-    Helpful when test_connection wants to call execute_query, but continue using its existing db handle after execute_query disconnects.
+    Helpful when test_operations wants to call execute_query, but continue using its existing db handle after execute_query disconnects.
     """
     mongoengine.connect(host=host, alias=alias)
     db = mongoengine.get_db(alias=alias)
@@ -633,45 +630,16 @@ def _docs_to_df(docs: List[Dict[str, Any]], merge_unspecified: bool = True) -> D
                                 nested_schema[key][nested_key] = set()
                             nested_schema[key][nested_key].add(type(nested_val))
 
-    # Second pass: sanitize with type-aware column mapping
+    # Second pass: sanitize documents
     type_registry: Dict[str, Set[Type[Any]]] = {}
-    sanitized_docs: List[Dict[str, Any]] = []
+    sanitized_docs = [_sanitize_document(doc, type_registry) for doc in docs]
 
-    for doc in docs:
-        sanitized: Dict[str, Any] = {}
-        for key, value in doc.items():
-            # Convert ObjectId to string
-            if key == "_id":
-                try:
-                    sanitized[key] = [str(value)]
-                except Exception as e:
-                    raise Log.Failure(Log.doc_db + "SANITIZE: ", Log.msg_fail_parse("_id field", value, "str")) from e
-            else:
-                # Track the original type
-                original_type = type(value)
-                if key not in type_registry:
-                    type_registry[key] = set()
-                type_registry[key].add(original_type)
-
-                # Wrap values with type-aware nested column mapping
-                if value is None:
-                    sanitized[key] = []
-                elif isinstance(value, list):
-                    # If field has nested schema and list contains primitives, wrap in dicts
-                    if key in nested_schema and value and not isinstance(value[0], dict):
-                        target_key = _find_compatible_nested_key(type(value[0]), nested_schema.get(key, {}), merge_unspecified)
-                        sanitized[key] = [{target_key: item} for item in value]
-                    else:
-                        sanitized[key] = value if value else []
-                else:
-                    # Single value: wrap in list, check for nested column mapping
-                    if key in nested_schema and not isinstance(value, dict):
-                        target_key = _find_compatible_nested_key(type(value), nested_schema.get(key, {}), merge_unspecified)
-                        sanitized[key] = [{target_key: value}]
-                    else:
-                        sanitized[key] = [value]
-
-        sanitized_docs.append(sanitized)
+    # Third pass: wrap primitives into nested structure when schema requires it
+    for sanitized in sanitized_docs:
+        for key, value in list(sanitized.items()):
+            if key in nested_schema and isinstance(value, list) and value and not isinstance(value[0], dict):
+                target_key = _find_compatible_nested_key(type(value[0]), nested_schema[key], merge_unspecified)
+                sanitized[key] = [{target_key: item} for item in value]
 
     # Create DataFrame and flatten
     df = DataFrame(sanitized_docs)

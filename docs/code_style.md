@@ -7,7 +7,7 @@ Data Science Capstone - Patrick Conan
 Doxygen is an external tool which automatically generates code documentation. We include pre-generated docs in our `/docs/html` folder which can be viewed by opening `annotated.html` in your web browser.
 
 
-## Guidelines for Understanding Doxygen-Style Code
+# Guidelines for Understanding Doxygen-Style Code
 
 ### Project Notes
 
@@ -105,7 +105,7 @@ class DatabaseConnector:
 - Helper function names should be prefixed with an underscore _e.g._ `_parse_json`.
 
 
-## Manually Generating Documentation with Doxygen
+# Manually Generating Documentation with Doxygen
 
 These instructions are based on a [tutorial](https://www.woolseyworkshop.com/2020/06/25/documenting-python-programs-with-doxygen/) created by John Woolsey in 2020.
 
@@ -169,4 +169,208 @@ To manually dispatch this workflow during development, visit [GitHub Actions](ht
 Once the `docs` branch contains `index.html`, you're ready to set up [GitHub Pages](https://github.com/c0nap/dsci-capstone/settings/pages). This will create a new `github-pages` deployment based on the contents of `origin/docs`.
 
 The updated code documentation can be found at the URL [c0nap.github.io/dsci-capstone](https://c0nap.github.io/dsci-capstone/).
+
+
+
+# Role of Generative AI
+
+## Development
+
+We use code-generation tools like ChatGPT and Claude in this project. Their scope is limited to developer-in-the-loop (Copy / Paste) and spiked project-planning discussions.
+
+AI is uniquely helpful here due to the many moving parts in the pipeline, such as:
+- Metrics implemented from scientific literature
+- 4 messy datasets (Project Gutenberg, BookSum, NarrativeQA, LitBank)
+- 3 database wrappers for 4 engine types (Neo4j, MongoDB, PostgreSQL, MySQL)
+- 2 endpoint frameworks (Flask, Blazor) which also need database access
+- Interactive UI in Blazor
+- Optimized and scalable system architecture in Python
+- NLP tooling with local HuggingFace models and LangChain API calls
+- Deployment as container images (Docker, GitHub Actions)
+- Code quality tools (Doxygen, MyPy)
+
+We consulted with various sizes and configuration of LLM models during development, and each provider took a different role based on their individual strengths and weaknesses. These observations are noted below.
+
+### ChatGPT
+
+- **Company:** OpenAI
+- **Models Used:** GPT-5, GPT-4o
+- **Pricing Plan:** Plus (1-month trial) / Free
+
+#### Key Points
+
+- Great for quick questions, like syntax or best practices. Replaces the traditional Google Search debugging method which relied on Reddit forums and Stack Overflow posts.
+
+- Can easily understand garbled sentences to an extent above and beyond basic typo detection.
+
+- Usage limits feel very generous, and model seamlessly downgrades when reached, which often goes unnoticed.
+
+- Has a tendency to become stuck in a silent "quiet quitting" loop. Not enough information to answer the question given the user's constraints, but never recognizes this or asks for clarification.
+
+### Claude
+
+- **Company:** Anthropic
+- **Models Used:** Sonnet 4.5
+- **Pricing Plan:** Pro ($20 for November)
+
+#### Key Points
+
+- Excellent integration for coding. Can link repository to automatically download code.
+
+- Has a cleaner UI with extra formatting. Code blocks are rendered in the prompt window, which helps to avoid repetitively typing triple-backticks.
+
+- The secondary "code artifacts" screen bloats the UI. Sometimes a single-line fix will get silently applied to the middle of a 300-line document.
+
+- Tends to overachieve with code generation by adding defensive checks and unrequested structural changes. This is not ideal for a project where the intent is to understand all code being written.
+
+- Has a strict cutoff when usage limits are reached. These are reached very quickly on the free plan, and only slightly relaxed on pro.
+
+### Gemini
+
+- **Company:** Google
+- **Models Used:** 2.5 Flash
+- **Pricing Plan:** Pro (free student subscription)
+
+#### Key Points
+
+- Strong ability to identify the cause of difficult bugs, even when ChatGPT and the strongest Claude models continue to fail.
+
+- Tries to build the full context behind a prompt. Asks for more clarification than other models, and not ideal when the question can be misinterpreted.
+
+- Great at being critical for code reviews. Fewer assumptions about your personality and implicit requests from the prompt's writing style. Suggests general-purpose best practices otherwise dismissed for irrelevancy.
+
+- When using Chrome, easily accessible via Google Search in the URL bar.
+
+### Prompting Tips
+
+1. More code context up front usually corresponds to better output.
+2. Always provide version numbers.
+3. Inspect the target repository manually, and paste the relevant code. 
+4. LLMs will struggle if a tool has limited online documentation.
+5. Learn to recognize a quiet-quitting loop early. Signs: repetitive output, lack of direction, wants to change something major, frequent bugs like syntax, forgetting earlier requirements.
+6. Break a silent loop: provide more context, change the task temporarily, approach it from a different angle, reset context with a new chat window, or try a different LLM provider.
+
+### Shared Limitations
+
+- **Copy / Paste:** All LLM providers are limited by their very basic chatbot interfaces; the user spends time formatting the prompt text instead of just pasting the relevant code context. The GitHub integration is what makes Claude so helpful for developers.
+- **Tab Management:** A typical PR has 1 or 2 main chat windows, but there are also 5-10 throwaway chats which act as checkpoints and reminders for future PRs. Not to mention the typical GitHub open PR / issue pages, deployment dashboards, and project planning boards. This lack of organization could be addressed with a standalone application instead of relying on the web browser.
+- **Discarded Chats:** Conversations are never repurposed, and just continue to build up and bloat the UI. Starting a new chat and repeating the context is always easier than finding a closed conversation.
+- **Repetitive Prompts:** Many prompts have a consistent structure, but there is no framework to store or reuse them. Users are encouraged to find new ways to avoid the constant typing (_e.g._ few-stroke keywords like `be concise` / `explain that` / `minimal changes`, or omitting an explanation in favor of sending more code context) instead of building up a solid reusable approach.
+- **Code Indentation:** When not using a dedicated IDE, the generated code never lines up with existing lines automatically, and must be manually shifted.
+- **Style Mismatch:** Code changes are not isolated to just a few lines; the entire function is regenerated with interspersed modifications by default. This makes it more difficult to follow the reasoning behind individual fixes, promoting a hands-off "just let the chatbot handle it" approach.
+- **Quiet Quitting:** The LLM ususally fails to recognize when it lacks sufficient information to answer the problem, proposing the "final revision that will 100% work this time" instead of stepping back to add more debug statements or to clarify version numbers. ChatGPT is most impacted by this, while Claude does in fact ask for clarification at times.
+
+## Agents
+
+Vibe coding was not used in this project.
+
+This decision was based on our desire to preserve this capstone project both as a demonstration of software engineering proficiency and a personal learning experience.
+
+Anecdotally, the AI-assisted workflow employed here may have doubled both productivity and personal comprehension compared to traditional Google searches.
+
+On the other hand, agentic coding feels like it halves how much is learned in order to achieve its massive 10x reduction in development time and developer overhead, making it more suitable for products you wish would "just exist" via any means necessary.
+
+## Test-Driven Design (TDD)
+
+LLMs saved a lot of time by creating PyTests for all the moving parts of this application. These tasks are usually monotonous and do not provide much potential for personal improvement, so LLMs are a good fit here.
+
+When adding new features to a class, it is helpful to take things in stages:
+
+1. Figure out the intended behavior of the class. Discuss which features are desired, standard for the domain, or already available using an external import.
+2. Set limits on code generation by drafting docstrings and function signatures first. This allows feedback and clarification, and helps with understanding how things will fit together. Group related methods into sections and use similar naming conventions.
+3. Choose one function to generate first, and verify code style. For example, type hints, docstring format, and error handling / defensive None-checks.
+4. Always generate a minimal PyTest first for basic functionality, noting a preference for no edge cases yet.
+5. Save time by generating several function bodies and their corresponding minimal tests in a single prompt. If you create comprehensive versions using this approach, make sure to evaluate whether a comprehensive version is actually needed, otherwise the LLM will bloat the test with obviously unnecessary asserts, adding nothing new or useful.
+6. When several methods perform similar tasks, use a PyTest fixture to load the same data each time. Our database connector tests rely on SQL, JSON, or Cypher query files. This worked out well, but finding and opening separate files made copy / paste operations more time-consuming than a hard-coded query string inside a fixture. The file-reading functionality does not need to be tested 10+ times.
+7. Use a distinct theme for the generated input data to make it more memorable for you and for the LLM. For example, we use a Scene graph, Social graph, and Event graph, rarely doubling-up with data fixtures. These examples provide a baseline for final intended usage; they essentially present a visualization to make comprehension and planning more seamless.
+
+
+## Integration
+
+LLMs also play a vital role in our text-processing pipeline.
+
+Specific usage examples:
+- **Relation Extraction** - In the early stages of development, the REBEL model was used for NLP, but gave bad results since it was trained on Wikipedia articles and intended for WikiData or news article applications. We used `gpt-5-nano` to 
+- **BooookScore Metric** - The original paper implemented BookScore using many LLM prompts to judge summary coherence. Their work was designed for `gpt-4` - but in 2025 these legacy models are very expensive ($30 / 1M input - ended up as $0.80 per 1500-char chunk). We upgraded the model to `gpt-4o-mini` for testing, and `gpt-4o` for full production-level runs of the pipeline. However, the `gpt-5` models did not give reliable output, and the current code has no built-in stopping mechanism (we provide a 5-minute timeout instead).
+
+Planned usage (TODO):
+- Infer metaphors and other implicit triples
+- Sanity check for triples - filter down OpenIE
+- Structured data extraction (social relationships, events, dialogue attribution)
+
+## Limitations
+
+- As noted by the authors of BookScore, LLMs contain implicit knowledge about classical books - these full texts are in their training data. One way of getting around this is changing entity names, e.g. rename all instances of "Mary" to "Jane". Although some nuance may be lost in some situations, this is usually inconsequential. For example: `"What's your favorite food, Jane?" "Maple syrup, becuase it start with the letter 'M' just like 'Jane'!"`
+- Without official funding for this project, the role of LLMs must be minimized to keep costs within budget. Testing and development should use smaller models, and full runs with 100+ books use a $10 budget each.
+
+
+# Error Handling and Logging Design
+
+The provided logging class in `src/util.py` writes success and warning messages to the console in addition to defining custom error classes.
+
+## Custom Exception Design
+
+We use a `Failure` base exception, which defines a **prefix** and a **message body** to match the format of the other custom log types in our application. The prefix is printed in a different color than the body.
+
+The **Builder Pattern** is used for constructing these exceptions dynamically, letting developers add context incrementally without defining a new class for each error type.
+
+## Alternatives
+
+Our design balances 3 different unsuitable approaches to exception handling:
+1. **Catch built-in exceptions** - Research or test every library used, and hard-code except-blocks for each error type.
+2. **Specific micro-exceptions** - Defines a custom error class for every case: `MongoSyntaxFailure`, `PostgresSyntaxFailure`, `MongoConnectionFailure`, `PostgresConnectionFailure`.
+3. **Broadly scoped try-except blocks** - 
+
+Each of these approaches has drawbacks:
+1. **Built-in Exceptions** tightly couple code to third-party libraries, relying on our developers to know their internals and update handling logic when APIs change.
+2. **Micro-Exceptions** scale poorly; you end up maintaining dozens of nearly identical subclasses and constructors just to preserve consistent formatting.
+3. **Broad Try-Eexcept** quickly become noise: they catch too much, duplicate context, and bury the root cause several layers deep in logs.
+
+---
+
+## Rationalle
+
+In a typical project this may be sufficient, but we interact with many different databases.
+
+By contrast, our prefix-based `Failure` model:
+- **Centralizes** all formatting and coloring in one class, ensuring consistency across subsystems. This also makes fixes quick; for example, changing `"GRAPH_DB"` to `"GRAPH"` only requires modifying the Log class.
+- **Contextualizes errors** with semantic, human-readable prefixes (e.g., `GRAPH_DB: TEST_CONN:`), providing a readable, layered indicator of where the failure occurred. This prefix acts as a conceptual, concise traceback, striking a balance between readability and detail.
+- **Eliminates exception-type bloat** and maintenance overhead by capturing the *clarity* of domain-specific messages without a full exception hierarchy.
+- Keeps logs **visually consistent** and easy to parse across multiple database connectors. An example is: `GRAPH_DB: TEST_CONN: Failed to connect to Neo4j using address 'neo4j_service:7687'`.
+- Uses long try-excepts sparingly when the function is intended to fail (e.g. connection test) and be handled externally by the caller.
+- The **Builder pattern** keeps the thrown code concise, allowing developers to express context in a single line rather than constructing verbose error hierarchies.
+- Additionally, sub-errors like `BadAddressFailure` are used to **consolidate** — hiding long, complicated tracebacks when the issue is fixable with something simple on your end (like forgetting to start the databases before running the tests). When needed, Python’s native stack trace is still preserved for debugging.
+
+## Example
+
+In `components.semantic_web.py`, the KnowledgeGraph class has an `add_triple` method. This helper function wraps a call to GraphConnector.execute_query as seen in the below pseudo-code.
+
+```python
+def add_triple(self, subject: str, relation: str, object_: str) -> None:
+    # 1. Validate inputs for query safety
+    cleaned_subject = ..., cleaned_relation = ..., cleaned_object = ...,
+    # Raise early if unrecoverable.
+    if not cleaned_subject or not cleaned_relation or not cleaned_object:
+        raise Log.Failure(Log.kg, f"Invalid triple: {...}")
+
+    # 2. Run a query on the graph database
+    query = ...
+    # Keep the try-block minimal to reduce nesting.
+    try: 
+        df = self.database.execute_query(query)
+    # Print a human-readable error message; execute_query prints the complicated query.
+    except Exception as e:
+        raise Log.Failure(Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
+    # After completion, print an optional success message to show the data was added.
+    if df is not None:
+        Log.success(Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+```
+
+## Verbosity Management
+
+The `Session` singleton class consolidates references to all components, propagating the value of its `verbose` flag to during instantiation of each. Components pass `self.verbose` to the Log class when they call success() or warn().
+
+This approach reduces code nesting by removing the need for conditional checks like `if self.verbose: Log.success()`, leading to cleaner and more compact functions.
+
+See the Makefile section of our [Docker Guide](docs/docker_setup.md) for an explanation of command-line flags to disable success / warning messages entirely, or to remove colors from our console logs (`make docker-python VERBY=0 COLORS=0` or `pytest . --log-success --no-log-colors`).
 
