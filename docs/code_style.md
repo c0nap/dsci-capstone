@@ -181,7 +181,17 @@ The Windows-style `CRLF` line endings are completely acceptable for Python code,
 
 We use `.gitattributes` to make sure GitHub never receives Windows-style `CRLF` line endings for critical files used by the database Docker containers. Namely, the secrets files `.env`, `.env.example`, and the initialization scripts `db/init-neo4j.sh` will usually lead to a `bin/sh` parsing error if `\r` is present.
 
+### Diagnostic Commands
 
+1. Check what Git has stored (LF = `$`, CRLF = `^M$`):
+```bash
+git show HEAD:path/to/file.sh | cat -A
+```
+
+2. Check the working copy on disk (LF = `$`, CRLF = `\r$`):
+```bash
+sed -n 'l' path/to/file.sh | head
+```
 
 
 # Role of Generative AI
