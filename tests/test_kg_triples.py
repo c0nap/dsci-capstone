@@ -9,6 +9,7 @@ from src.util import Log
 
 
 
+@pytest.mark.kg
 @pytest.mark.order(16)
 @pytest.mark.dependency(name="knowledge_graph_triples", depends=["graph_minimal", "graph_comprehensive"], scope="session")
 def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
@@ -155,6 +156,7 @@ def nature_scene_graph(graph_db: GraphConnector) -> KnowledgeGraph:
     graph_db.drop_graph("nature_scene")
 
 
+@pytest.mark.kg
 @pytest.mark.order(17)
 @pytest.mark.dependency(name="subgraph_by_nodes", depends=["knowledge_graph_triples"], scope="session")
 def test_get_subgraph_by_nodes(nature_scene_graph: KnowledgeGraph) -> None:
@@ -200,6 +202,7 @@ def test_get_subgraph_by_nodes(nature_scene_graph: KnowledgeGraph) -> None:
         assert row["subject"] in ["Kid1", "Swings"] or row["object"] in ["Kid1", "Swings"]
 
 
+@pytest.mark.kg
 @pytest.mark.order(18)
 @pytest.mark.dependency(name="neighborhood_minimal", depends=["knowledge_graph_triples"], scope="session")
 def test_get_neighborhood(nature_scene_graph: KnowledgeGraph) -> None:
@@ -241,6 +244,7 @@ def test_get_neighborhood(nature_scene_graph: KnowledgeGraph) -> None:
     assert any(named_2hop["subject"] == "Kid1") or any(named_2hop["object"] == "Kid1")
 
 
+@pytest.mark.kg
 @pytest.mark.order(19)
 @pytest.mark.dependency(name="random_walk_minimal", depends=["knowledge_graph_triples"], scope="session")
 def test_get_random_walk_sample(nature_scene_graph: KnowledgeGraph) -> None:
@@ -286,6 +290,7 @@ def test_get_random_walk_sample(nature_scene_graph: KnowledgeGraph) -> None:
         assert match.any(), f"Sampled triple not found in graph: {row.to_dict()}"
 
 
+@pytest.mark.kg
 @pytest.mark.order(20)
 @pytest.mark.dependency(name="neighborhood_comprehensive", depends=["neighborhood_minimal"], scope="session")
 def test_get_neighborhood_comprehensive(nature_scene_graph: KnowledgeGraph) -> None:
@@ -350,6 +355,7 @@ def test_get_neighborhood_comprehensive(nature_scene_graph: KnowledgeGraph) -> N
     assert school_entities != playground_entities
 
 
+@pytest.mark.kg
 @pytest.mark.order(21)
 @pytest.mark.dependency(name="random_walk_comprehensive", depends=["random_walk_minimal"], scope="session")
 def test_get_random_walk_sample_comprehensive(nature_scene_graph: KnowledgeGraph) -> None:
@@ -425,6 +431,7 @@ def test_get_random_walk_sample_comprehensive(nature_scene_graph: KnowledgeGraph
     assert coverage_ratio > 0.1, "Extensive walking should cover at least 10% of graph"
 
 
+@pytest.mark.kg
 @pytest.mark.order(22)
 @pytest.mark.dependency(name="community_detection_minimal", depends=["knowledge_graph_triples"], scope="session")
 def test_detect_community_clusters_minimal(nature_scene_graph: KnowledgeGraph) -> None:
@@ -475,6 +482,7 @@ def test_detect_community_clusters_minimal(nature_scene_graph: KnowledgeGraph) -
     assert all(nodes_df_louvain["community_id"].notna()), "Louvain should assign community_id"
 
 
+@pytest.mark.kg
 @pytest.mark.order(23)
 @pytest.mark.dependency(name="community_detection_comprehensive", depends=["community_detection_minimal"], scope="session")
 def test_detect_community_clusters_comprehensive(nature_scene_graph: KnowledgeGraph) -> None:
