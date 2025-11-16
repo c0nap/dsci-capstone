@@ -190,3 +190,10 @@ Pre-compiled code diagrams can be accessed from `docs/html/annotated.html`. We d
 ### Design Justification
 
 An overview of our implementation decisions can be found on the [Design Patterns page](docs/implementation_design.md).
+
+
+## License
+This project is licensed under **CC BY-NC-ND 4.0**.  
+You may use the code for personal or research purposes only.  
+Commercial use and derivative works are not permitted.  
+See the full license in the [LICENSE](LICENSE) file.
