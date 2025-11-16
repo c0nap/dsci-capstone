@@ -1,8 +1,7 @@
-from components.connectors import RelationalConnector
-from components.document_storage import DocumentConnector
-from components.fact_storage import GraphConnector
-from components.semantic_web import KnowledgeGraph
-from src.util import all_none
+from src.connectors.relational import RelationalConnector
+from src.connectors.document import DocumentConnector
+from src.connectors.graph import GraphConnector
+from src.components.fact_storage import KnowledgeGraph
 from typing import Any
 
 
