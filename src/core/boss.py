@@ -2,14 +2,14 @@
 Manages task distribution to workers and tracks completion order."""
 
 from collections import defaultdict
-from components.document_storage import DocumentConnector
+from src.connectors.document import DocumentConnector
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, Response
 import os
 import pandas as pd
 from pymongo.database import Database
 import requests
-from src.setup import Session
+from src.core.context import session
 import threading
 import time
 from typing import Any, Dict, Generator, List, Optional, Tuple
@@ -443,14 +443,12 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
     return app
 
 
-def create_boss_thread(session: Session, DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
+def create_boss_thread(DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
 	# Drop old chunks
 	mongo_db = session.docs_db.get_unmanaged_handle()
 	collection = getattr(mongo_db, COLLECTION)
 	collection.drop()
 	print("Deleted old chunks...")
-
-	# old_main(session, COLLECTION)
 
 	# Load configuration
 	task_types = ["questeval", "bookscore"]
