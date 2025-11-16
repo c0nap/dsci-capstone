@@ -19,7 +19,7 @@ MongoHandle = Generator["Database[Any]", None, None]
 
 
 # TODO: reconcile duplicate with main.py
-def pipeline_5b(summary, book_title, book_id, chunk, gold_summary="", bookscore: float = None, questeval: float = None):
+def pipeline_5b(summary: str, book_title: str, book_id: str, chunk: str, gold_summary: str = "", bookscore: float = None, questeval: float = None) -> None:
     """Send metrics to Blazor
     - Compute basic metrics (ROUGE, BERTScore)
     - Wait for advanced metrics (QuestEval, BooookScore)

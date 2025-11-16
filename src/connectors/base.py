@@ -11,18 +11,10 @@ class Connector(ABC):
     @details
         Derived classes should implement:
         - __init__
-        - @ref components.connectors.Connector.configure
         - @ref components.connectors.Connector.test_operations
         - @ref components.connectors.Connector.execute_query
         - @ref components.connectors.Connector.execute_file
     """
-
-    @abstractmethod
-    def configure(self, DB: str, database_name: str) -> None:
-        """Read connection settings from the .env file.
-        @param DB  The prefix of fetched credentials.
-        @param database_name  The specific service to connect to."""
-        pass
 
     @abstractmethod
     def test_operations(self, raise_error: bool = True) -> bool:

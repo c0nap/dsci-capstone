@@ -27,10 +27,10 @@ class LLMConnector(Connector):
         @note  Model name is specified in the .env file."""
         # Read environment variables at runtime
         load_dotenv(".env")
-        self.model_name = None
-        self.temperature = temperature
-        self.system_prompt = system_prompt
-        self.llm = None
+        self.model_name: str = None
+        self.temperature: float = temperature
+        self.system_prompt: str = system_prompt
+        self.llm: ChatOpenAI = None
         self.configure()
 
     def configure(self) -> None:
@@ -75,7 +75,7 @@ class LLMConnector(Connector):
 
         formatted_prompt = prompt.format_prompt()  # <-- returns ChatPromptValue
         response = self.llm.invoke(formatted_prompt.to_messages())  # <-- to_messages() returns list of BaseMessage
-        return response.content
+        return str(response.content)
 
     def execute_query(self, query: str) -> str:
         """Send a single prompt through the connection and return raw LLM output.
@@ -83,7 +83,7 @@ class LLMConnector(Connector):
         @return Raw LLM response as a string."""
         return self.execute_full_query(self.system_prompt, query)
 
-    def execute_file(self, filename: str) -> str:
+    def execute_file(self, filename: str) -> str:  # type: ignore[override]
         """Run a single prompt from a file.
         @details  Reads the entire file as a single string and sends it to execute_query.
         @param filename  Path to the prompt file (.txt)

@@ -17,14 +17,14 @@ class RelationExtractor:
         self.max_tokens = max_tokens
         self.tuple_delim = "  "
 
-    def extract(self, text: str, parse_tuples: bool = False) -> List[Tuple[str, str, str]]:
+    def extract(self, text: str, parse_tuples: bool = False) -> List[Tuple[str, str, str] | str]:
         # Split into sentences: RE models generally output 1 relation per input.
         text = text.replace("\n", " ").strip()
         doc = self.nlp(text)
         sentences = [sent.text for sent in doc.sents]
 
         # Perform RE on each sentence individually
-        out = []
+        out: List[Tuple[str, str, str] | str] = []
         for sentence in sentences:
             inputs = self.tokenizer(
                 sentence,
@@ -38,7 +38,7 @@ class RelationExtractor:
                 parts = [str(element).strip() for element in decoded.split(self.tuple_delim)]
                 # group 3 at a time using zip
                 for subj, obj, rel in zip(parts[0::3], parts[1::3], parts[2::3]):
-                    out.append(tuple([subj, rel, obj]))
+                    out.append((subj, rel, obj))
             else:  # raw REBEL text: 'subj  obj  rel'
-                out.append(decoded)
+                out.append(str(decoded))
         return out
