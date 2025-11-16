@@ -1,37 +1,35 @@
 (env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python-dev
-[+] Building 2.7s (20/20) FINISHED                                                                       docker:default
- => [internal] load build definition from Dockerfile.python                                                        0.0s
- => => transferring dockerfile: 1.29kB                                                                             0.0s
- => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.2s
- => [internal] load .dockerignore                                                                                  0.0s
- => => transferring context: 79B                                                                                   0.0s
- => [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c205e18d  0.0s
+[+] Building 1.1s (18/18) FINISHED                                                                       docker:default
+ => [internal] load build definition from python.dockerfile                                                        0.0s
+ => => transferring dockerfile: 1.21kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.3s
+ => [internal] load .dockerignore                                                                                  0.1s
+ => => transferring context: 79B                                                                                   0.1s
+ => [internal] load build context                                                                                  0.6s
+ => => transferring context: 4.05kB                                                                                0.6s
+ => [ 1/13] FROM docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c205e18d  0.0s
  => => resolve docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c205e18d98  0.0s
- => [internal] load build context                                                                                  0.3s
- => => transferring context: 154.94kB                                                                              0.3s
- => CACHED [ 2/15] WORKDIR /pipeline                                                                               0.0s
- => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make pand  0.0s
- => CACHED [ 4/15] COPY req/requirements.txt requirements.txt                                                      0.0s
- => CACHED [ 5/15] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
- => CACHED [ 6/15] COPY src/ src/                                                                                  0.0s
- => CACHED [ 7/15] COPY tests/ tests/                                                                              0.0s
- => CACHED [ 8/15] COPY db/ db/                                                                                    0.0s
- => [ 9/15] COPY components/ components/                                                                           0.1s
- => [10/15] COPY datasets/ datasets/                                                                               0.1s
- => [11/15] COPY .env .env                                                                                         0.0s
- => [12/15] COPY Makefile .                                                                                        0.0s
- => [13/15] RUN make env-docker                                                                                    0.5s
- => [14/15] RUN mv .env.docker .env                                                                                0.3s
- => [15/15] COPY pyproject.toml .                                                                                  0.1s
- => exporting to image                                                                                             0.2s
- => => exporting layers                                                                                            0.1s
- => => writing image sha256:68e7b81327aa7ffebc10ca22de08acae62b2f5676950be2c943f8da13b914b6b                       0.0s
+ => CACHED [ 2/13] WORKDIR /pipeline                                                                               0.0s
+ => CACHED [ 3/13] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make pand  0.0s
+ => CACHED [ 4/13] COPY deps/requirements.txt .                                                                    0.0s
+ => CACHED [ 5/13] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
+ => CACHED [ 6/13] COPY src/ src/                                                                                  0.0s
+ => CACHED [ 7/13] COPY tests/ tests/                                                                              0.0s
+ => CACHED [ 8/13] COPY datasets/ datasets/                                                                        0.0s
+ => CACHED [ 9/13] COPY .env .env                                                                                  0.0s
+ => CACHED [10/13] COPY Makefile .                                                                                 0.0s
+ => CACHED [11/13] RUN make env-docker                                                                             0.0s
+ => CACHED [12/13] RUN mv .env.docker .env                                                                         0.0s
+ => CACHED [13/13] COPY pyproject.toml pytest.ini .                                                                0.0s
+ => exporting to image                                                                                             0.0s
+ => => exporting layers                                                                                            0.0s
+ => => writing image sha256:4a4b19f30bdcc7187d1cca1aca3ab8c237f8259d997c180928d67ff27892c5cc                       0.0s
  => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                                  0.0s
 container-python
-0b5d85dea16ea0c226d3ca7a52f404bfecee243b5c8615f3f96909558a8b3327
+13bf78a3f035bcbcc8028b5009219aa0191b8a37759b721df535a3f0036d1897
 Network 'capstone_default' already exists; continue...
 Deleted old chunks...
- * Serving Flask app 'main'
+ * Serving Flask app 'src.core.boss'
  * Debug mode: off
 WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
  * Running on all addresses (0.0.0.0)
@@ -39,9 +37,9 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://172.17.0.5:5054
 Press CTRL+C to quit
 [STATUS] Story 1: preprocessing -> in-progress
-127.0.0.1 - - [15/Nov/2025 15:04:31] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [16/Nov/2025 13:36:43] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> in-progress
-127.0.0.1 - - [15/Nov/2025 15:04:31] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [16/Nov/2025 13:36:43] "POST /status/story HTTP/1.1" 200 -
 
 ==================================================
 Processing: ./datasets/examples/trilogy-wishes-2.epub
@@ -49,283 +47,243 @@ Processing: ./datasets/examples/trilogy-wishes-2.epub
 === STORY SUMMARY ===
 Total chunks: 254
 [STATUS] Story 1: preprocessing -> completed
-127.0.0.1 - - [15/Nov/2025 15:04:33] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [16/Nov/2025 13:36:45] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> completed
-127.0.0.1 - - [15/Nov/2025 15:04:33] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [16/Nov/2025 13:36:45] "POST /status/story HTTP/1.1" 200 -
 
 Chunk details:
-  index: Chunk(len=1441, book=2, chapter=14, story=1, lines=[4744,4772], story%=74.504, chapter%=60.033)
+  index: Chunk(len=1450, book=2, chapter=12, story=1, lines=[3666,3688], story%=56.209, chapter%=32.590)
 
-It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—
-‘Well, stow it, will you?’
-And the boots went heavily away, along the passage and up some sounding stone stairs.
-‘Now then,’ whispered Anthea.
-‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.
-‘On the carpet,’ said Jane, truly.
-‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’
-‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’
-‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’
-‘Well, then,’ Cyril went on, ignoring this appeal to his brother, ‘just try to believe what we tell you and act accordingly. It can’t do you any HARM, you know,’ he went on in hoarse whispered earnestness. ‘You can’t be very much worse off than you are now, you know. But if you’ll just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?’
-‘I’d like to go to Boolong,’ was the instant reply of the burglar. ‘I’ve always wanted to go on that there trip, but I’ve never ‘ad the ready at the right time of the year.’
-‘Boolong is a town like London,’ said Cyril, well meaning, but inaccurate, ‘how could you get a living there?’
-The burglar scratched his head in deep doubt.
-    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-14_p.60033]
+I wonder whether you know how to light a fire? I don’t mean how to strike a match and set fire to the corners of the paper in a fire someone has laid ready, but how to lay and light a fire all by yourself. I will tell you how Anthea did it, and if ever you have to light one yourself you may remember how it is done. First, she raked out the ashes of the fire that had burned there a week ago—for Eliza had actually never done this, though she had had plenty of time. In doing this Anthea knocked her knuckle and made it bleed. Then she laid the largest and handsomest cinders in the bottom of the grate. Then she took a sheet of old newspaper (you ought never to light a fire with to-day’s newspaper—it will not burn well, and there are other reasons against it), and tore it into four quarters, and screwed each of these into a loose ball, and put them on the cinders; then she got a bundle of wood and broke the string, and stuck the sticks in so that their front ends rested on the bars, and the back ends on the back of the paper balls. In doing this she cut her finger slightly with the string, and when she broke it, two of the sticks jumped up and hit her on the cheek. Then she put more cinders and some bits of coal—no dust. She put most of that on her hands, but there seemed to be enough left for her face. Then she lighted the edges of the paper balls, and waited till she heard the fizz-crack-crack-fizz of the wood as it began to burn.
+    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-12_p.32590]
 
 NLP output:
-('2008 Summer Olympics', 'point in time', '2008')
-('boots', 'different from', 'voice')
-('voice', 'different from', 'boots')
-('Yes', 'instance of', 'Yes!')
-('No', 'instance of', 'No!')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'Cymbeline', 'notable work')
-('William Shakespeare', 'Cymbeline', 'author')
-('William Shakespeare', 'Cymbeline', 'author')
-('Now then,’ whispered Anthea', 'characters', 'Anthea')
-('Anthea', 'present in work', 'Now then,’ whispered Anthea')
-('How the blue Moses did you get in?', 'characters', 'Moses')
-('Moses', 'present in work', 'How the blue Moses did you get in?')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('On the carpet', 'cast member', 'Jane')
-('Stow that', 'participant', 'burglar')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
-('notable work', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Milton', 'Milton', 'author')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('Cyril', 'owner of', 'nursery')
-('nursery', 'owned by', 'Cyril')
-('John F. Kennedy', 'significant event', 'assassinated')
-('assassinated', 'facet of', 'John F. Kennedy')
-('Cyril', 'sibling', 'his brother')
-('his brother', 'sibling', 'Cyril')
-('HARM', 'has effect', 'fever')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('Boolong', 'located in the administrative territorial entity', 'Boolong')
-('World Rugby League', 'sport', 'Rugby League')
-('Rugby League', 'organizer', 'World Rugby League')
-('Boolong', 'located in the administrative territorial entity', 'London')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
+('fire', 'has part', 'light')
+('match', 'use', 'light a fire')
+('light a fire', 'uses', 'match')
+('Anthea', 'notable work', 'I will tell you how Anthea did it')
+('I will tell you how Anthea did it', 'author', 'Anthea')
+('the fire that had burned there a week ago', 'participant', 'Eliza')
+('Knuckle', 'has effect', 'bleed')
+('bleed', 'has cause', 'Knuckle')
+('cinders', 'part of', 'grate')
+('grate', 'has part', 'cinders')
+('newspaper', 'different from', 'newspaper balls')
+('newspaper balls', 'different from', 'newspaper')
+("The Emperor's New Clothes", 'author', 'William Shakespeare')
+('William Shakespeare', 'notable work', "The Emperor's New Clothes")
+('The Merchant of Venice', 'The Merchant of Venice', 'notable work')
+('coal', 'has part', 'cinders')
+('Hercule Poirot', 'notable work', 'The Merchant of Venice')
+('The Merchant of Venice', 'author', 'Hercule Poirot')
+('lighted', 'has effect', 'burn')
+('burn', 'has cause', 'lighted')
 
 
     LLM prompt:
 You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('2008 Summer Olympics', 'point in time', '2008')
-('boots', 'different from', 'voice')
-('voice', 'different from', 'boots')
-('Yes', 'instance of', 'Yes!')
-('No', 'instance of', 'No!')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'Cymbeline', 'notable work')
-('William Shakespeare', 'Cymbeline', 'author')
-('William Shakespeare', 'Cymbeline', 'author')
-('Now then,’ whispered Anthea', 'characters', 'Anthea')
-('Anthea', 'present in work', 'Now then,’ whispered Anthea')
-('How the blue Moses did you get in?', 'characters', 'Moses')
-('Moses', 'present in work', 'How the blue Moses did you get in?')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('On the carpet', 'cast member', 'Jane')
-('Stow that', 'participant', 'burglar')
-('John Milton', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('John Milton', 'Milton', 'author')
-('author', 'Paradise Lost', 'Milton')
-('notable work', 'notable work', 'Paradise Lost')
-('Paradise Lost', 'author', 'John Milton')
-('Milton', 'Milton', 'author')
-('Paradise Lost', 'Paradise Lost', 'notable work')
-('Cyril', 'owner of', 'nursery')
-('nursery', 'owned by', 'Cyril')
-('John F. Kennedy', 'significant event', 'assassinated')
-('assassinated', 'facet of', 'John F. Kennedy')
-('Cyril', 'sibling', 'his brother')
-('his brother', 'sibling', 'Cyril')
-('HARM', 'has effect', 'fever')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('William Shakespeare', 'notable work', 'Cymbeline')
-('Cymbeline', 'author', 'William Shakespeare')
-('John F. Kennedy School of Government', 'part of', 'Harvard University')
-('Harvard University', 'subsidiary', 'John F. Kennedy School of Government')
-('Boolong', 'located in the administrative territorial entity', 'Boolong')
-('World Rugby League', 'sport', 'Rugby League')
-('Rugby League', 'organizer', 'World Rugby League')
-('Boolong', 'located in the administrative territorial entity', 'London')
-('George Orwell', 'notable work', 'Nineteen Eighty-Four')
-('Nineteen Eighty-Four', 'author', 'Orwell')
+('fire', 'has part', 'light')
+('match', 'use', 'light a fire')
+('light a fire', 'uses', 'match')
+('Anthea', 'notable work', 'I will tell you how Anthea did it')
+('I will tell you how Anthea did it', 'author', 'Anthea')
+('the fire that had burned there a week ago', 'participant', 'Eliza')
+('Knuckle', 'has effect', 'bleed')
+('bleed', 'has cause', 'Knuckle')
+('cinders', 'part of', 'grate')
+('grate', 'has part', 'cinders')
+('newspaper', 'different from', 'newspaper balls')
+('newspaper balls', 'different from', 'newspaper')
+("The Emperor's New Clothes", 'author', 'William Shakespeare')
+('William Shakespeare', 'notable work', "The Emperor's New Clothes")
+('The Merchant of Venice', 'The Merchant of Venice', 'notable work')
+('coal', 'has part', 'cinders')
+('Hercule Poirot', 'notable work', 'The Merchant of Venice')
+('The Merchant of Venice', 'author', 'Hercule Poirot')
+('lighted', 'has effect', 'burn')
+('burn', 'has cause', 'lighted')
 
 And here is the original text:
-It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—
-‘Well, stow it, will you?’
-And the boots went heavily away, along the passage and up some sounding stone stairs.
-‘Now then,’ whispered Anthea.
-‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.
-‘On the carpet,’ said Jane, truly.
-‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’
-‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’
-‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’
-‘Well, then,’ Cyril went on, ignoring this appeal to his brother, ‘just try to believe what we tell you and act accordingly. It can’t do you any HARM, you know,’ he went on in hoarse whispered earnestness. ‘You can’t be very much worse off than you are now, you know. But if you’ll just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?’
-‘I’d like to go to Boolong,’ was the instant reply of the burglar. ‘I’ve always wanted to go on that there trip, but I’ve never ‘ad the ready at the right time of the year.’
-‘Boolong is a town like London,’ said Cyril, well meaning, but inaccurate, ‘how could you get a living there?’
-The burglar scratched his head in deep doubt.
+I wonder whether you know how to light a fire? I don’t mean how to strike a match and set fire to the corners of the paper in a fire someone has laid ready, but how to lay and light a fire all by yourself. I will tell you how Anthea did it, and if ever you have to light one yourself you may remember how it is done. First, she raked out the ashes of the fire that had burned there a week ago—for Eliza had actually never done this, though she had had plenty of time. In doing this Anthea knocked her knuckle and made it bleed. Then she laid the largest and handsomest cinders in the bottom of the grate. Then she took a sheet of old newspaper (you ought never to light a fire with to-day’s newspaper—it will not burn well, and there are other reasons against it), and tore it into four quarters, and screwed each of these into a loose ball, and put them on the cinders; then she got a bundle of wood and broke the string, and stuck the sticks in so that their front ends rested on the bars, and the back ends on the back of the paper balls. In doing this she cut her finger slightly with the string, and when she broke it, two of the sticks jumped up and hit her on the cheek. Then she put more cinders and some bits of coal—no dust. She put most of that on her hands, but there seemed to be enough left for her face. Then she lighted the edges of the paper balls, and waited till she heard the fizz-crack-crack-fizz of the wood as it began to burn.
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s": "Anthea", "r": "whispered", "o": "Now then"},
-  {"s": "burglar", "r": "asked", "o": "How the blue Moses did you get in?"},
-  {"s": "Jane", "r": "said", "o": "On the carpet"},
-  {"s": "burglar", "r": "said", "o": "Stow that"},
-  {"s": "Cyril", "r": "stated", "o": "You wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery"},
-  {"s": "burglar", "r": "replied", "o": "That I wouldn’t"},
-  {"s": "Cyril", "r": "said", "o": "Just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?"},
-  {"s": "burglar", "r": "replied", "o": "I’d like to go to Boolong"},
-  {"s": "Cyril", "r": "stated", "o": "Boolong is a town like London"},
-  {"s": "cow", "r": "found in", "o": "nursery"},
-  {"s": "cats", "r": "found in", "o": "nursery"},
-  {"s": "nursery", "r": "belongs to", "o": "Cyril and his family"},
-  {"s": "burglar", "r": "showed", "o": "deep doubt"},
-  {"s": "boots", "r": "moved", "o": "along the passage and up some sounding stone stairs"},
-  {"s": "boots", "r": "co-occurred with", "o": "voice"},
-  {"s": "voice", "r": "came in", "o": "scene"}
+  {"s":"Anthea","r":"performed","o":"lay and light a fire"},
+  {"s":"Anthea","r":"raked out","o":"ashes of the fire that had burned there a week ago"},
+  {"s":"Eliza","r":"had not done","o":"raking the ashes"},
+  {"s":"Anthea","r":"knocked","o":"her knuckle"},
+  {"s":"knuckle","r":"bled","o":"as a result of the knock"},
+  {"s":"Anthea","r":"laid","o":"the largest and handsomest cinders in the bottom of the grate"},
+  {"s":"paper balls","r":"made from","o":"old newspaper torn into four quarters and screwed into four loose balls"},
+  {"s":"Anthea","r":"placed","o":"paper balls on the cinders"},
+  {"s":"Anthea","r":"took","o":"a bundle of wood and broke the string"},
+  {"s":"wood","r":"rested on","o":"the bars (front ends) and on the back of the paper balls"},
+  {"s":"Anthea","r":"cut","o":"her finger slightly with the string"},
+  {"s":"sticks","r":"jumped","o":"up and hit her on the cheek"},
+  {"s":"Anthea","r":"added","o":"more cinders and some bits of coal"},
+  {"s":"Anthea","r":"put","o":"coal on her hands and some on her face"},
+  {"s":"Anthea","r":"lighted","o":"the edges of the paper balls"},
+  {"s":"Anthea","r":"heard","o":"the fizz-crack-crack-fizz of the wood as it began to burn"},
+  {"s":"fizz-crack-crack-fizz","r":"describes","o":"sound of burning wood"},
+  {"s":"newspaper","r":"warned","o":"not to light a fire with today’s newspaper"},
+  {"s":"Anthea","r":"avoided","o":"using today’s newspaper to light the fire"}
 ]
 
 ==================================================
 
 
 Valid JSON
-[STATUS] Chunk story-1_book-2_chapter-14_p.60033: relation_extraction -> in-progress
-127.0.0.1 - - [15/Nov/2025 15:08:01] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-14_p.60033: llm_inference -> in-progress
-127.0.0.1 - - [15/Nov/2025 15:08:01] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-14_p.60033: relation_extraction -> completed
-127.0.0.1 - - [15/Nov/2025 15:08:01] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-14_p.60033: llm_inference -> completed
-127.0.0.1 - - [15/Nov/2025 15:08:01] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-14_p.60033: graph_verbalization -> in-progress
-127.0.0.1 - - [15/Nov/2025 15:08:01] "POST /status/chunk HTTP/1.1" 200 -
-Anthea whispered Now then
-burglar asked How the blue Moses did you get in?
-Jane said On the carpet
-burglar said Stow that
-Cyril stated You wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery
-burglar replied That I wouldn’t
-Cyril said Just trust to us we’ll get you out of this right enough. No one saw us come in. The question is, where would you like to go?
-burglar replied I’d like to go to Boolong
-Cyril stated Boolong is a town like London
-cow found in nursery
-cats found in nursery
-nursery belongs to Cyril and his family
-burglar showed deep doubt
-boots moved along the passage and up some sounding stone stairs
-boots co-occurred with voice
-voice came in scene
+[STATUS] Chunk story-1_book-2_chapter-12_p.32590: relation_extraction -> in-progress
+127.0.0.1 - - [16/Nov/2025 13:39:00] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.32590: llm_inference -> in-progress
+127.0.0.1 - - [16/Nov/2025 13:39:00] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.32590: relation_extraction -> completed
+127.0.0.1 - - [16/Nov/2025 13:39:00] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.32590: llm_inference -> completed
+127.0.0.1 - - [16/Nov/2025 13:39:00] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.32590: graph_verbalization -> in-progress
+127.0.0.1 - - [16/Nov/2025 13:39:00] "POST /status/chunk HTTP/1.1" 200 -
+Anthea performed lay and light a fire
+Anthea raked out ashes of the fire that had burned there a week ago
+Eliza had not done raking the ashes
+Anthea knocked her knuckle
+knuckle bled as a result of the knock
+Anthea laid the largest and handsomest cinders in the bottom of the grate
+paper balls made from old newspaper torn into four quarters and screwed into four loose balls
+Anthea placed paper balls on the cinders
+Anthea took a bundle of wood and broke the string
+wood rested on the bars (front ends) and on the back of the paper balls
+Anthea cut her finger slightly with the string
+sticks jumped up and hit her on the cheek
+Anthea added more cinders and some bits of coal
+Anthea put coal on her hands and some on her face
+Anthea lighted the edges of the paper balls
+Anthea heard the fizz-crack-crack-fizz of the wood as it began to burn
+fizz-crack-crack-fizz describes sound of burning wood
+newspaper warned not to light a fire with today’s newspaper
+Anthea avoided using today’s newspaper to light the fire
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 41, offset: 98} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 22, offset: 421} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 22, offset: 79} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 41, offset: 440} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 22, offset: 250} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 41, offset: 269} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 41, offset: 98} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 22, offset: 421} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 22, offset: 79} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 41, offset: 440} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 22, offset: 250} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 41, offset: 269} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
 
 Most relevant nodes:
-    edge_count node_name
-15           5   burglar
-2            3     Cyril
-19           3   nursery
+   edge_count                              node_name
+0          12                                 Anthea
+1           1                                  Eliza
+2           1  a bundle of wood and broke the string
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 41, offset: 98} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 22, offset: 421} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 22, offset: 79} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 41, offset: 440} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 22, offset: 250} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 41, offset: 269} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 41, offset: 98} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 22, offset: 421} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 22, offset: 79} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 41, offset: 440} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 22, offset: 250} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 41, offset: 269} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 41, offset: 98} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 22, offset: 421} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 22, offset: 79} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 41, offset: 440} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 22, offset: 250} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 41, offset: 269} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
 
 Triples which best represent the graph:
-burglar REPLIED That I wouldn_t
-burglar REPLIED I_d like to go to Boolong
-burglar SHOWED deep doubt
-burglar ASKED How the blue Moses did you get in
-burglar SAID Stow that
-Cyril SAID Just trust to us we_ll get you out of this right enough_ No one saw us come in_ The question is_ where would you like to go
-Cyril STATED Boolong is a town like London
-Cyril STATED You wouldn_t have believed any one if they_d told you beforehand about your finding a cow and all those cats in our nursery
-nursery BELONGS_TO Cyril and his family
+Anthea PERFORMED lay and light a fire
+Anthea PLACED paper balls on the cinders
+Anthea TOOK a bundle of wood and broke the string
+Anthea CUT her finger slightly with the string
+Anthea ADDED more cinders and some bits of coal
+Anthea PUT coal on her hands and some on her face
+Anthea RAKED_OUT ashes of the fire that had burned there a week ago
+Anthea LIGHTED the edges of the paper balls
+Anthea HEARD the fizz_crack_crack_fizz of the wood as it began to burn
+Anthea AVOIDED using today_s newspaper to light the fire
+Anthea KNOCKED her knuckle
+Anthea LAID the largest and handsomest cinders in the bottom of the grate
+Eliza HAD_NOT_DONE raking the ashes
 
-[STATUS] Chunk story-1_book-2_chapter-14_p.60033: graph_verbalization -> completed
-127.0.0.1 - - [15/Nov/2025 15:08:02] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.32590: graph_verbalization -> completed
+127.0.0.1 - - [16/Nov/2025 13:39:04] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Story 1: summarization -> in-progress
-127.0.0.1 - - [15/Nov/2025 15:08:02] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-14_p.60033: summarization -> in-progress
-127.0.0.1 - - [15/Nov/2025 15:08:02] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [16/Nov/2025 13:39:04] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.32590: summarization -> in-progress
+127.0.0.1 - - [16/Nov/2025 13:39:04] "POST /status/chunk HTTP/1.1" 200 -
 
 Generated summary:
-The scene features a burglar who shows deep doubt and, expressing reluctance, asks to be taken to Boolong and how they got in. Cyril reassures him that they will get him out and that no one saw them come in, asking where the burglar would like to go. Cyril describes Boolong as a London-like town and notes that one wouldn’t have believed beforehand about finding a cow and several cats in their nursery. The nursery belongs to Cyril and his family.
-    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-14_p.60033]
+Anthea attempted to light a fire, laying paper balls on the cinders and bringing a bundle of wood after breaking its string. She cut her finger slightly and some coal got on her hands and face. She added more cinders and coal, raked out ashes from a fire burned there a week ago, and lit the edges of the paper balls as the wood began to fizz and crackle. She avoided using today’s newspaper to light the fire, and she knocked her knuckle. She laid the largest and handsomest cinders in the bottom of the grate. Eliza had not raked the ashes.
+    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-12_p.32590]
 [STATUS] Story 1: summarization -> completed
-127.0.0.1 - - [15/Nov/2025 15:08:20] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-14_p.60033: summarization -> completed
-127.0.0.1 - - [15/Nov/2025 15:08:20] "POST /status/chunk HTTP/1.1" 200 -
-[ASSIGNED] chunk 'story-1_book-2_chapter-14_p.60033' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [15/Nov/2025 15:08:21] "POST /process_story HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.60033, task=questeval, status=started
-172.18.0.3 - - [15/Nov/2025 15:08:21] "POST /callback HTTP/1.1" 200 -
-Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
-[ASSIGNED] chunk 'story-1_book-2_chapter-14_p.60033' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [15/Nov/2025 15:08:21] "POST /process_story HTTP/1.1" 200 -
+127.0.0.1 - - [16/Nov/2025 13:39:13] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.32590: summarization -> completed
+127.0.0.1 - - [16/Nov/2025 13:39:13] "POST /status/chunk HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.32590' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.32590, task=questeval, status=started
+
+127.0.0.1 - - [16/Nov/2025 13:39:13] "POST /process_story HTTP/1.1" 200 -
+Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}172.18.0.4 - - [16/Nov/2025 13:39:13] "POST /callback HTTP/1.1" 200 -
+
+[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.32590' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [16/Nov/2025 13:39:14] "POST /process_story HTTP/1.1" 200 -
 Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}
 Initial processing complete. Server listening for additional requests from Blazor...
 Press Ctrl+C to stop.
-[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.60033, task=bookscore, status=started
-172.18.0.4 - - [15/Nov/2025 15:08:21] "POST /callback HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.60033, task=bookscore, status=completed
+[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.32590, task=bookscore, status=started
+172.18.0.6 - - [16/Nov/2025 13:39:14] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.32590, task=bookscore, status=completed
 [STORY COMPLETE] All chunks completed metric_bookscore for story 1
-172.18.0.4 - - [15/Nov/2025 15:08:41] "POST /callback HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.60033, task=questeval, status=completed
+172.18.0.6 - - [16/Nov/2025 13:39:31] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.32590, task=questeval, status=completed
 [STORY COMPLETE] All chunks completed metric_questeval for story 1
-Downloading builder script: 6.14kB [00:00, 2.84MB/s]
-Downloading builder script: 7.95kB [00:00, 11.3MB/s]
+Downloading builder script: 6.14kB [00:00, 2.47MB/s]
+Downloading builder script: 7.95kB [00:00, 16.0MB/s]
 Some weights of RobertaModel were not initialized from the model checkpoint at roberta-large and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'The scene features a burglar who shows deep doubt and, expressing reluctance, asks to be taken to Boolong and how they got in. Cyril reassures him that they will get him out and that no one saw them come in, asking where the burglar would like to go. Cyril describes Boolong as a London-like town and notes that one wouldn’t have believed beforehand about finding a cow and several cats in their nursery. The nursery belongs to Cyril and his family.', 'goldSummaryText': 'It was an awful moment. Would the boots and the voice come in. Yes! No! The voice said—\n‘Well, stow it, will you?’\nAnd the boots went heavily away, along the passage and up some sounding stone stairs.\n‘Now then,’ whispered Anthea.\n‘How the blue Moses did you get in?’ asked the burglar, in a hoarse whisper of amazement.\n‘On the carpet,’ said Jane, truly.\n‘Stow that,’ said the burglar. ‘One on you I could ‘a’ swallowed, but four—AND a yellow fowl.’\n‘Look here,’ said Cyril, sternly, ‘you wouldn’t have believed any one if they’d told you beforehand about your finding a cow and all those cats in our nursery.’\n‘That I wouldn’t,’ said the burglar, with whispered fervour, ‘so help me Bob, I wouldn’t.’\n‘Well, then,’ Cyr', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8516950607299805, 'recall': 0.8130800724029541, 'f1Score': 0.8319397568702698}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.28196919446595764}, {'name': 'ROUGE-1', 'value': 0.3518518518518518}, {'name': 'ROUGE-2', 'value': 0.09345794392523366}, {'name': 'ROUGE-L', 'value': 0.23148148148148148}, {'name': 'ROUGE-Lsum', 'value': 0.2962962962962963}]}, 'qaResults': []}
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Anthea attempted to light a fire, laying paper balls on the cinders and bringing a bundle of wood after breaking its string. She cut her finger slightly and some coal got on her hands and face. She added more cinders and coal, raked out ashes from a fire burned there a week ago, and lit the edges of the paper balls as the wood began to fizz and crackle. She avoided using today’s newspaper to light the fire, and she knocked her knuckle. She laid the largest and handsomest cinders in the bottom of the grate. Eliza had not raked the ashes.', 'goldSummaryText': 'I wonder whether you know how to light a fire? I don’t mean how to strike a match and set fire to the corners of the paper in a fire someone has laid ready, but how to lay and light a fire all by yourself. I will tell you how Anthea did it, and if ever you have to light one yourself you may remember how it is done. First, she raked out the ashes of the fire that had burned there a week ago—for Eliza had actually never done this, though she had had plenty of time. In doing this Anthea knocked her knuckle and made it bleed. Then she laid the largest and handsomest cinders in the bottom of the grate. Then she took a sheet of old newspaper (you ought never to light a fire with to-day’s newspaper—it will not burn well, a', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8804895877838135, 'recall': 0.8546651601791382, 'f1Score': 0.86738520860672}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0.16666666666666663}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.18986892931206692}, {'name': 'ROUGE-1', 'value': 0.4330708661417323}, {'name': 'ROUGE-2', 'value': 0.2380952380952381}, {'name': 'ROUGE-L', 'value': 0.28346456692913385}, {'name': 'ROUGE-Lsum', 'value': 0.28346456692913385}]}, 'qaResults': []}
 
 Output sent to web app.
 [PIPELINE FINALIZED] Story 1 fully processed
-172.18.0.3 - - [15/Nov/2025 15:11:45] "POST /callback HTTP/1.1" 200 -
-INFO:werkzeug:172.18.0.3 - - [15/Nov/2025 15:11:45] "POST /callback HTTP/1.1" 200 -
+172.18.0.4 - - [16/Nov/2025 13:45:58] "POST /callback HTTP/1.1" 200 -
+INFO:werkzeug:172.18.0.4 - - [16/Nov/2025 13:45:58] "POST /callback HTTP/1.1" 200 -
 ^Cmake[2]: *** [Makefile:77: docker-start] Interrupt
 make[1]: *** [Makefile:89: docker-python] Interrupt
 make: *** [Makefile:124: docker-python-dev] Interrupt
 
 (env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-bscore
- * Serving Flask app 'flask'
+ * Serving Flask app 'worker'
  * Debug mode: off
 WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
  * Running on all addresses (0.0.0.0)
  * Running on http://127.0.0.1:5002
  * Running on http://172.17.0.4:5002
 Press CTRL+C to quit
-[QUEUED] chunk 'story-1_book-2_chapter-14_p.60033' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-172.18.0.8 - - [15/Nov/2025 15:08:21] "POST /tasks/queue HTTP/1.1" 202 -
-FINISHED: chunk ID: story-1_book-2_chapter-14_p.60033, result:
-{'value': 0.0, 'annotations': {'The scene features a burglar who shows deep doubt and, expressing reluctance, asks to be taken to Boolong and how they got in.': {'questions': 'Why is the burglar expressing doubt? What is the context of their situation? How did they get in?', 'types': ['event omission', 'causal omission']}, 'Cyril reassures him that they will get him out and that no one saw them come in, asking where the burglar would like to go.': {'questions': 'Why does Cyril need to reassure the burglar? What is the context of their situation? Where are they trying to go?', 'types': ['event omission', 'causal omission']}, 'Cyril describes Boolong as a London-like town and notes that one wouldn’t have believed beforehand about finding a cow and several cats in their nursery.': {'questions': 'What is the significance of the cow and several cats in the nursery? Why is this detail included? How does this relate to the main storyline?', 'types': ['salience', 'entity omission']}, 'The nursery belongs to Cyril and his family.': {'questions': 'What is the significance of the nursery in the story? How does it relate to the burglar and the overall plot?', 'types': ['entity omission', 'causal omission']}}, 'model_used': 'openai-model_gpt-4o-mini'}
+[QUEUED] chunk 'story-1_book-2_chapter-12_p.32590' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+172.18.0.8 - - [16/Nov/2025 13:39:14] "POST /tasks/queue HTTP/1.1" 202 -
+FINISHED: chunk ID: story-1_book-2_chapter-12_p.32590, result:
+{'value': 0.16666666666666663, 'annotations': {'Anthea attempted to light a fire, laying paper balls on the cinders and bringing a bundle of wood after breaking its string.': {'questions': 'What does "breaking its string" refer to? What is the significance of laying paper balls on the cinders?', 'types': ['entity omission', 'causal omission']}, 'She cut her finger slightly and some coal got on her hands and face.': {'questions': 'What caused her to cut her finger? How did the coal get on her hands and face? Is this detail significant to the main narrative?', 'types': ['entity omission', 'event omission', 'salience']}, 'She added more cinders and coal, raked out ashes from a fire burned there a week ago, and lit the edges of the paper balls as the wood began to fizz and crackle.': {'questions': None, 'types': None}, 'She avoided using today’s newspaper to light the fire, and she knocked her knuckle.': {'questions': 'Why did she avoid using today’s newspaper? What does knocking her knuckle signify in the context of the fire-making process?', 'types': ['causal omission', 'entity omission']}, 'She laid the largest and handsomest cinders in the bottom of the grate.': {'questions': 'What is the significance of the largest and handsomest cinders? Why is this detail included?', 'types': ['salience']}, 'Eliza had not raked the ashes.': {'questions': 'Who is Eliza? What is her relationship to Anthea? Why is it significant that she did not rake the ashes?', 'types': ['entity omission', 'causal omission']}}, 'model_used': 'openai-model_gpt-4o-mini'}
 (env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-qeval
-Downloading: 6.81kB [00:00, 9.64MB/s]
+Downloading: 6.81kB [00:00, 8.47MB/s]
 WARNING:root:Downloading language model for the spaCy model.
 DEPRECATION: https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl#egg=en_core_web_sm==3.0.0 contains an egg fragment with a non-PEP 508 name. pip 25.1 will enforce this behaviour change. A possible replacement is to use the req @ url syntax, and remove the egg fragment. Discussion can be found at https://github.com/pypa/pip/issues/13157
 Collecting en-core-web-sm==3.0.0
   Downloading https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl (13.7 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 24.9 MB/s eta 0:00:00
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 20.5 MB/s eta 0:00:00
 Requirement already satisfied: spacy<3.1.0,>=3.0.0 in /usr/local/lib/python3.8/site-packages (from en-core-web-sm==3.0.0) (3.0.6)
 Requirement already satisfied: spacy-legacy<3.1.0,>=3.0.4 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.0.12)
 Requirement already satisfied: murmurhash<1.1.0,>=0.28.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.0.13)
@@ -365,17 +323,17 @@ You can now load the package via spacy.load('en_core_web_sm')
 
 
 
- * Serving Flask app "flask" (lazy loading)
+ * Serving Flask app "worker" (lazy loading)
  * Environment: production
    WARNING: This is a development server. Do not use it in a production deployment.
    Use a production WSGI server instead.
  * Debug mode: off
 INFO:werkzeug: * Running on http://0.0.0.0:5001/ (Press CTRL+C to quit)
-[QUEUED] chunk 'story-1_book-2_chapter-14_p.60033' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-INFO:werkzeug:172.18.0.8 - - [15/Nov/2025 15:08:21] "POST /tasks/queue HTTP/1.1" 202 -
-Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.predictions.bias', 'cls.seq_relationship.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.bias', 'cls.predictions.decoder.weight']
+[QUEUED] chunk 'story-1_book-2_chapter-12_p.32590' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+INFO:werkzeug:172.18.0.8 - - [16/Nov/2025 13:39:13] "POST /tasks/queue HTTP/1.1" 202 -
+Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.seq_relationship.weight', 'cls.predictions.bias', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.dense.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.seq_relationship.bias', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.weight']
 - This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
 - This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-FINISHED: chunk ID: story-1_book-2_chapter-14_p.60033, result:
-{'value': 0.28196919446595764, 'has_reference': False}
+FINISHED: chunk ID: story-1_book-2_chapter-12_p.32590, result:
+{'value': 0.18986892931206692, 'has_reference': False}
 Failed to notify boss: HTTPConnectionPool(host='python_service', port=5054): Read timed out. (read timeout=5)
