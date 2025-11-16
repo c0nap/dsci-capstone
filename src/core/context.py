@@ -3,6 +3,7 @@ from components.document_storage import DocumentConnector
 from components.fact_storage import GraphConnector
 from components.semantic_web import KnowledgeGraph
 from src.util import all_none
+from typing import Any
 
 
 class Session:
@@ -45,8 +46,8 @@ class Session:
         # TODO: Split into scene graph, event graph, and social graph.
 
 
-# Global storage for the lazy singleton
-_session_instance = None
+## Global storage for the lazy singleton
+_session = None
 
 def get_session(*args: Any, **kwargs) -> Session:
     """Lazily creates a session on first call, otherwise returns the existing session.
@@ -54,10 +55,10 @@ def get_session(*args: Any, **kwargs) -> Session:
     @param *args  Positional arguments forwarded to Session().
     @param **kwargs  Keyword arguments forwarded to Session().
     @return  The global instance of the Session class."""
-    global _session_instance
-    if _session_instance is None:
-        _session_instance = Session(*args, **kwargs)
-    return _session_instance
+    global _session
+    if _session is None:
+        _session = Session(*args, **kwargs)
+    return _session
 
 @property
 def session() -> Session:
