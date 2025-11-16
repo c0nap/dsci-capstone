@@ -1,12 +1,8 @@
-from components.fact_storage import GraphConnector
-from components.semantic_web import KnowledgeGraph
+from src.connectors.graph import GraphConnector
+from src.components.fact_storage import KnowledgeGraph
 from pandas import DataFrame
 import pytest
 from src.util import Log
-
-# TODO: Move the following to a different test file
-
-
 
 
 @pytest.mark.kg

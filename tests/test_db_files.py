@@ -1,6 +1,7 @@
-from components.connectors import DatabaseConnector, RelationalConnector
-from components.document_storage import DocumentConnector
-from components.fact_storage import GraphConnector
+from src.core.base import DatabaseConnector
+from src.connectors.relational import RelationalConnector
+from src.connectors.document import DocumentConnector
+from src.connectors.graph import GraphConnector
 import os
 from pandas import DataFrame
 import pytest

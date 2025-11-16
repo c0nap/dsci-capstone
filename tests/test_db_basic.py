@@ -1,6 +1,6 @@
-from components.connectors import RelationalConnector
-from components.document_storage import DocumentConnector
-from components.fact_storage import GraphConnector
+from src.connectors.relational import RelationalConnector
+from src.connectors.document import DocumentConnector
+from src.connectors.graph import GraphConnector
 import pytest
 from src.util import Log
 

@@ -1,9 +1,9 @@
 import pytest
-from src.setup import Session
+from src.core.context import session
 from src.util import Log
-from components.connectors import RelationalConnector
-from components.document_storage import DocumentConnector
-from components.fact_storage import GraphConnector
+from src.connectors.relational import RelationalConnector
+from src.connectors.document import DocumentConnector
+from src.connectors.graph import GraphConnector
 
 
 # Command-line flags for pytest
@@ -21,7 +21,7 @@ def session(request):
     Log.USE_COLORS = request.config.getoption("--no-log-colors")
     _session = Session(verbose)
     yield _session
-    _session.reset()
+
 
 
 # ------------------------------------------------------------------------------
