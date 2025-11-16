@@ -1,4 +1,4 @@
-from src.core.base import DatabaseConnector
+from src.connectors.base import DatabaseConnector
 from src.connectors.relational import RelationalConnector
 from src.connectors.document import DocumentConnector
 from src.connectors.graph import GraphConnector

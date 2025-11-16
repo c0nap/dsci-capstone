@@ -1,5 +1,5 @@
 import pytest
-from src.core.context import session
+from src.core.context import get_session, Session
 from src.util import Log
 from src.connectors.relational import RelationalConnector
 from src.connectors.document import DocumentConnector
@@ -19,7 +19,8 @@ def session(request):
     # Parse control args
     verbose = request.config.getoption("--log-success")
     Log.USE_COLORS = request.config.getoption("--no-log-colors")
-    _session = Session(verbose)
+    _session = get_session()
+    _session.verbose = verbose
     yield _session
 
 

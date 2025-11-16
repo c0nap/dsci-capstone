@@ -2,7 +2,7 @@ from src.connectors.relational import RelationalConnector
 from src.connectors.document import DocumentConnector
 from src.connectors.graph import GraphConnector
 from src.components.fact_storage import KnowledgeGraph
-from typing import Any
+from typing import Any, Self
 
 
 class Session:
@@ -13,7 +13,7 @@ class Session:
     _instance = None
     _created = False
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> Session:
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         """Creates a new session at first access, otherwise returns the existing session.
         @param *args  Positional arguments forwarded to __init__().
         @param **kwargs  Keyword arguments forwarded to __init__().
