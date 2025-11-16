@@ -62,7 +62,6 @@ PY
 
 # Copy source code into the container (optional .dockerignore)
 COPY src/ src/
-COPY components/ components/
 COPY Makefile ./
 
 # Declare build args - whether to include .env or .env.dummy
@@ -75,4 +74,4 @@ RUN make env-docker
 RUN mv .env.docker .env
 
 # Supply task as command line flag to set worker behavior
-CMD ["python", "-m", "src.worker", "--task", "bookscore"]
+CMD ["python", "-m", "src.core.worker", "--task", "bookscore"]
