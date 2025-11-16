@@ -11,9 +11,9 @@ class Connector(ABC):
     @details
         Derived classes should implement:
         - __init__
-        - @ref components.connectors.Connector.test_operations
-        - @ref components.connectors.Connector.execute_query
-        - @ref components.connectors.Connector.execute_file
+        - @ref src.connectors.base.Connector.test_operations
+        - @ref src.connectors.base.Connector.execute_query
+        - @ref src.connectors.base.Connector.execute_file
     """
 
     @abstractmethod
@@ -54,21 +54,21 @@ class DatabaseConnector(Connector):
     """Abstract base class for database engine connectors.
     @details
         Derived classes should implement:
-        - @ref components.connectors.DatabaseConnector.__init__
-        - @ref components.connectors.DatabaseConnector.test_operations
-        - @ref components.connectors.DatabaseConnector.execute_query
-        - @ref components.connectors.DatabaseConnector._split_combined
-        - @ref components.connectors.DatabaseConnector.get_dataframe
-        - @ref components.connectors.DatabaseConnector.create_database
-        - @ref components.connectors.DatabaseConnector.drop_database
-        - @ref components.connectors.DatabaseConnector.change_database
-        - @ref components.connectors.DatabaseConnector.database_exists
+        - @ref src.connectors.base.DatabaseConnector.__init__
+        - @ref src.connectors.base.DatabaseConnector.test_operations
+        - @ref src.connectors.base.DatabaseConnector.execute_query
+        - @ref src.connectors.base.DatabaseConnector._split_combined
+        - @ref src.connectors.base.DatabaseConnector.get_dataframe
+        - @ref src.connectors.base.DatabaseConnector.create_database
+        - @ref src.connectors.base.DatabaseConnector.drop_database
+        - @ref src.connectors.base.DatabaseConnector.change_database
+        - @ref src.connectors.base.DatabaseConnector.database_exists
     """
 
     def __init__(self, verbose: bool = False) -> None:
         """Initialize the connector.
         @param verbose  Whether to print debug messages.
-        @note  Attributes will be set to None until @ref components.connectors.DatabaseConnector.configure() is called.
+        @note  Attributes will be set to None until @ref src.connectors.base.DatabaseConnector.configure() is called.
         """
         ## The common name for the type of database as observed in the .env prefixes (MYSQL, POSTGRES, MONGO, or NEO4J).
         self.db_type: Optional[str] = None

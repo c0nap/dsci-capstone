@@ -26,7 +26,7 @@ class KnowledgeGraph:
         @param subject  A string representing the entity performing an action.
         @param relation  A string describing the action.
         @param object_  A string representing the entity being acted upon.
-        @note  LLM output should be pre-normalized using @ref components.text_processing.LLMConnector.normalize_triples.
+        @note  LLM output should be pre-normalized using @ref src.connectors.llm.LLMConnector.normalize_triples.
         @throws Log.Failure  If the triple cannot be added to our graph database.
         """
 
@@ -99,7 +99,7 @@ class KnowledgeGraph:
         - Requires the provided nodes to still exist in the graph database; otherwise must specify df_lookup.
         @param df_ids  DataFrame with added columns: subject_id, relation_id, object_id.
         @param drop_ids  Whether to remove columns from results: subject_id, relation_id, object_id.
-        @param df_lookup  Optional DataFrame fetched from @ref components.fact_storage.GraphConnector.get_dataframe with required columns: element_id, elemenet_type, name, and rel_type.
+        @param df_lookup  Optional DataFrame fetched from @ref src.connectors.graph.GraphConnector.get_dataframe with required columns: element_id, elemenet_type, name, and rel_type.
         @return  DataFrame with added columns: subject, relation, object.
         @throws Log.Failure  If mapping fails or required IDs are missing.
         """
@@ -128,7 +128,7 @@ class KnowledgeGraph:
         @param element_type  Whether to match nodes or relationships. Value must be "node" or "relationship".
         @param name_property  Required element property from *df_lookup* to use as the display name.
         @param drop_ids  Whether to remove *id_columns* from results.
-        @param df_lookup  Optional DataFrame fetched from @ref components.fact_storage.GraphConnector.get_dataframe with required columns: element_id, elemenet_type, and *name_property*.
+        @param df_lookup  Optional DataFrame fetched from @ref src.connectors.graph.GraphConnector.get_dataframe with required columns: element_id, elemenet_type, and *name_property*.
         @return  DataFrame with added columns: *name_columns*.
         @throws Log.Failure  If mapping fails or required IDs are missing.
         """

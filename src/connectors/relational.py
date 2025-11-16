@@ -18,7 +18,7 @@ class RelationalConnector(DatabaseConnector):
     """
 
     def __init__(self, verbose: bool, specific_queries: List[str]) -> None:
-        """Creates a new database connector. Use @ref components.connectors.RelationalConnector.from_env instead (this is called by derived classes).
+        """Creates a new database connector. Use @ref src.connectors.relational.RelationalConnector.from_env instead (this is called by derived classes).
         @param verbose  Whether to print success and failure messages.
         @param specific_queries  A list of helpful SQL queries.
         """

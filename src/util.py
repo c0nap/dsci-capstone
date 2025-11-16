@@ -272,7 +272,7 @@ def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = [], sort_colum
 
 
 def check_values(results: List[Any], expected: List[Any], verbose: bool, log_source: str, raise_error: bool) -> bool:
-    """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_operations
+    """Safely compare two lists of values. Helper for @ref src.connectors.relational.RelationalConnector.test_operations
     @param results  A list of observed values from the database.
     @param expected  A list of correct values to compare against.
     @param verbose  Whether to print success messages.

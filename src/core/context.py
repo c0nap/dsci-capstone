@@ -71,7 +71,7 @@ def __getattr__(name: str) -> Any:
         - Regular imports (Session, get_session, etc.) bypass this entirely.
     @param name  The attribute name being accessed.
     @return  The session singleton if 'session' is requested.
-    @raises AttributeError  If an unknown/undefined attribute is requested."""
+    @throws AttributeError  If an unknown/undefined attribute is requested."""
     if name == "session":
         return get_session()
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

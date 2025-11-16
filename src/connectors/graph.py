@@ -328,7 +328,7 @@ class GraphConnector(DatabaseConnector):
 
     def create_database(self, database_name: str) -> None:
         """Create a fresh pseudo-database if it does not already exist.
-        @note  This change will apply to any new nodes created after @ref components.connectors.DatabaseConnector.change_database is called.
+        @note  This change will apply to any new nodes created after @ref src.connectors.base.DatabaseConnector.change_database is called.
         @param database_name  A database ID specifying the pseudo-database.
         @throws Log.Failure  If we fail to create the requested database for any reason."""
         self.check_connection(Log.create_db, raise_error=True)
@@ -595,7 +595,7 @@ def _tuples_to_df(tuples: List[Tuple[Any, ...]], meta: List[str]) -> DataFrame:
 def _normalize_elements(df: DataFrame) -> DataFrame:
     """Convert Neo4j query results (nodes and relationships) into a Pandas DataFrame.
     @details
-        - Accepts the DataFrame output of @ref components.fact_storage.GraphConnector.execute_query.
+        - Accepts the DataFrame output of @ref src.connectors.graph.GraphConnector.execute_query.
         - Explodes dict-cast elements from columns into rows, resulting in 1 node or relation per row.
         - Normalizes node and relation properties as columns. `element_id`, `element_type` are shared.
         - Node-only properties (e.g. labels) are None for relationships, and likewise for relations (e.g. start_node).

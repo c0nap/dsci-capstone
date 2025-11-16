@@ -13,7 +13,7 @@ import re
 
 class LLMConnector(Connector):
     """Connector for prompting and returning LLM output (raw text/JSON) via LangChain.
-    @note  The method @ref components.text_processing.LLMConnector.execute_query simplifies the prompt process.
+    @note  The method @ref src.connectors.llm.LLMConnector.execute_query simplifies the prompt process.
     """
 
     # TODO: we may want various models with different configurations
