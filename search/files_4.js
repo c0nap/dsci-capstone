@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['document_5fstorage_2epy_0',['document_storage.py',['../document__storage_8py.html',1,'']]]
+  ['document_2epy_0',['document.py',['../document_8py.html',1,'']]]
 ];

@@ -234,8 +234,8 @@ Static Public Attributes</h2></td></tr>
 <tr class="separator:a6377117e0c1a32a56f5479b85dc69515"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7f748a8d30bb20c4549ab2856027f899" id="r_a7f748a8d30bb20c4549ab2856027f899"><td class="memItemLeft" align="right" valign="top">f&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a7f748a8d30bb20c4549ab2856027f899">msg_success_managed_gr</a> = lambda managed, database_name&quot;Successfully {managed} graph '{database_name}'&quot;</td></tr>
 <tr class="separator:a7f748a8d30bb20c4549ab2856027f899"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae30c64e12a163bcf2f2bdca58b60f25" id="r_aae30c64e12a163bcf2f2bdca58b60f25"><td class="memItemLeft" align="right" valign="top">f&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#aae30c64e12a163bcf2f2bdca58b60f25">msg_fail_manage_gr</a> = lambda manage, database_name, connection_string&quot;Failed to {manage} graph '{database_name}' on connection {connection_string}&quot;</td></tr>
-<tr class="separator:aae30c64e12a163bcf2f2bdca58b60f25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cc53f3d047d2273a2984471e9e34f05" id="r_a6cc53f3d047d2273a2984471e9e34f05"><td class="memItemLeft" align="right" valign="top">tuple&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a6cc53f3d047d2273a2984471e9e34f05">msg_fail_manage_gr</a></td></tr>
+<tr class="separator:a6cc53f3d047d2273a2984471e9e34f05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8952ffc4850a6171d108da5af90f1fba" id="r_a8952ffc4850a6171d108da5af90f1fba"><td class="memItemLeft" align="right" valign="top">f&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a8952ffc4850a6171d108da5af90f1fba">msg_fail_parse</a> = lambda alias, bad_value, expected_type&quot;Could not convert {alias} with value {bad_value} to type {expected_type}&quot;</td></tr>
 <tr class="separator:a8952ffc4850a6171d108da5af90f1fba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bb20085158e06a7a5bfb93170ab677f" id="r_a8bb20085158e06a7a5bfb93170ab677f"><td class="memItemLeft" align="right" valign="top">tuple&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a8bb20085158e06a7a5bfb93170ab677f">msg_multiple_query</a></td></tr>
@@ -1327,8 +1327,8 @@ Static Public Attributes</h2></td></tr>
 </div><!-- fragment -->
 </div>
 </div>
-<a id="aae30c64e12a163bcf2f2bdca58b60f25" name="aae30c64e12a163bcf2f2bdca58b60f25"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aae30c64e12a163bcf2f2bdca58b60f25">&#9670;&#160;</a></span>msg_fail_manage_gr</h2>
+<a id="a6cc53f3d047d2273a2984471e9e34f05" name="a6cc53f3d047d2273a2984471e9e34f05"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6cc53f3d047d2273a2984471e9e34f05">&#9670;&#160;</a></span>msg_fail_manage_gr</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1337,7 +1337,7 @@ Static Public Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">f msg_fail_manage_gr = lambda manage, database_name, connection_string&quot;Failed to {manage} graph '{database_name}' on connection {connection_string}&quot;</td>
+          <td class="memname">tuple msg_fail_manage_gr</td>
         </tr>
       </table>
   </td>
@@ -1346,7 +1346,10 @@ Static Public Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-
+<b>Initial value:</b><div class="fragment"><div class="line">=  (</div>
+<div class="line">        <span class="keyword">lambda</span> manage, database_name, connection_string: f<span class="stringliteral">&quot;Failed to {manage} graph &#39;{database_name}&#39; on connection {connection_string}&quot;</span></div>
+<div class="line">    )</div>
+</div><!-- fragment -->
 </div>
 </div>
 <a id="a8952ffc4850a6171d108da5af90f1fba" name="a8952ffc4850a6171d108da5af90f1fba"></a>

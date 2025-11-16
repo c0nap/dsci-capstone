@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['databaseconnector_0',['DatabaseConnector',['../classcomponents_1_1connectors_1_1DatabaseConnector.html',1,'components::connectors']]],
-  ['documentconnector_1',['DocumentConnector',['../classcomponents_1_1document__storage_1_1DocumentConnector.html',1,'components::document_storage']]]
+  ['databaseconnector_0',['DatabaseConnector',['../classsrc_1_1connectors_1_1base_1_1DatabaseConnector.html',1,'src::connectors::base']]],
+  ['documentconnector_1',['DocumentConnector',['../classsrc_1_1connectors_1_1document_1_1DocumentConnector.html',1,'src::connectors::document']]]
 ];

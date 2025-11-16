@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Data Science Capstone Project: /home/runner/work/dsci-capstone/dsci-capstone/components/fact_storage.py File Reference</title>
+<title>Data Science Capstone Project: /home/runner/work/dsci-capstone/dsci-capstone/src/components/fact_storage.py File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -69,42 +69,31 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_409f97388efe006bc3438b95e9edef48.html">components</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="dir_3c4c7c1a85608ccd561c026bec818e51.html">components</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#namespaces">Namespaces</a> &#124;
-<a href="#func-members">Functions</a>  </div>
+<a href="#namespaces">Namespaces</a>  </div>
   <div class="headertitle"><div class="title">fact_storage.py File Reference</div></div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classcomponents_1_1fact__storage_1_1GraphConnector.html">GraphConnector</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connector for Neo4j (graph database).  <a href="classcomponents_1_1fact__storage_1_1GraphConnector.html#details">More...</a><br /></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html">KnowledgeGraph</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Manages a single graph within Neo4j.  <a href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
 Namespaces</h2></td></tr>
-<tr class="memitem:namespacecomponents" id="r_namespacecomponents"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents.html">components</a></td></tr>
+<tr class="memitem:namespacesrc" id="r_namespacesrc"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc.html">src</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:namespacecomponents_1_1fact__storage" id="r_namespacecomponents_1_1fact__storage"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1fact__storage.html">components.fact_storage</a></td></tr>
+<tr class="memitem:namespacesrc_1_1components" id="r_namespacesrc_1_1components"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components.html">src.components</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:ac87b3c203b389667210b3900ac3bc3a0" id="r_ac87b3c203b389667210b3900ac3bc3a0"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1fact__storage.html#ac87b3c203b389667210b3900ac3bc3a0">_filter_to_db</a> (DataFrame df, str database_name)</td></tr>
-<tr class="memdesc:ac87b3c203b389667210b3900ac3bc3a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Filter a DataFrame by database context.  <br /></td></tr>
-<tr class="separator:ac87b3c203b389667210b3900ac3bc3a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9902dd0b19abc88ec334ca3d3f765633" id="r_a9902dd0b19abc88ec334ca3d3f765633"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1fact__storage.html#a9902dd0b19abc88ec334ca3d3f765633">_tuples_to_df</a> (List[Tuple[Any,...]] tuples, List[str] meta)</td></tr>
-<tr class="memdesc:a9902dd0b19abc88ec334ca3d3f765633"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert Neo4j query results (nodes and relationships) into a Pandas DataFrame.  <br /></td></tr>
-<tr class="separator:a9902dd0b19abc88ec334ca3d3f765633"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a643146e1415bcdfdadb0bf8fb60938a4" id="r_a643146e1415bcdfdadb0bf8fb60938a4"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacecomponents_1_1fact__storage.html#a643146e1415bcdfdadb0bf8fb60938a4">_normalize_elements</a> (DataFrame df)</td></tr>
-<tr class="memdesc:a643146e1415bcdfdadb0bf8fb60938a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert Neo4j query results (nodes and relationships) into a Pandas DataFrame.  <br /></td></tr>
-<tr class="separator:a643146e1415bcdfdadb0bf8fb60938a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:namespacesrc_1_1components_1_1fact__storage" id="r_namespacesrc_1_1components_1_1fact__storage"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1fact__storage.html">src.components.fact_storage</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- start footer part -->

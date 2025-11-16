@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['relationalconnector_0',['RelationalConnector',['../classcomponents_1_1connectors_1_1RelationalConnector.html',1,'components::connectors']]],
-  ['relationextractor_1',['RelationExtractor',['../classcomponents_1_1text__processing_1_1RelationExtractor.html',1,'components::text_processing']]]
+  ['relationalconnector_0',['RelationalConnector',['../classsrc_1_1connectors_1_1relational_1_1RelationalConnector.html',1,'src::connectors::relational']]],
+  ['relationextractor_1',['RelationExtractor',['../classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html',1,'src::components::relation_extraction']]]
 ];

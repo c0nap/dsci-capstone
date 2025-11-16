@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['prf1metric_2ecs_0',['PRF1Metric.cs',['../PRF1Metric_8cs.html',1,'']]]
+  ['navmenu_2erazor_0',['NavMenu.razor',['../NavMenu_8razor.html',1,'']]]
 ];

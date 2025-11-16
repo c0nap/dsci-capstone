@@ -1,9 +1,0 @@
-<map id="StoryStreamAdapter" name="StoryStreamAdapter">
-<area shape="rect" id="Node000001" title=" " alt="" coords="55,79,210,104"/>
-<area shape="rect" id="Node000003" href="$classcomponents_1_1book__conversion_1_1BookStream.html" title=" " alt="" coords="5,152,108,177"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="112,115,71,154,67,150,109,111"/>
-<area shape="rect" id="Node000004" href="$classcomponents_1_1book__conversion_1_1ParagraphStreamTEI.html" title="Streams paragraphs from a TEI file as Chunk objects." alt="" coords="133,152,287,177"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="157,111,199,150,196,154,153,115"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="108,5,157,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="135,44,135,79,130,79,130,44"/>
-</map>

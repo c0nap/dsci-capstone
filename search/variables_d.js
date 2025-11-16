@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['nlp_0',['nlp',['../namespacecomponents_1_1book__conversion.html#ae4da58908fdf601e762be19c30d1e336',1,'components.book_conversion.nlp'],['../namespacecomponents_1_1text__processing.html#ae4da58908fdf601e762be19c30d1e336',1,'components.text_processing.nlp']]]
+  ['nlp_0',['nlp',['../classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#ae4da58908fdf601e762be19c30d1e336',1,'src.components.relation_extraction.RelationExtractor.nlp'],['../namespacesrc_1_1components_1_1book__conversion.html#ae4da58908fdf601e762be19c30d1e336',1,'src.components.book_conversion.nlp']]]
 ];
