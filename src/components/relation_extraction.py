@@ -6,10 +6,10 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 class RelationExtractor:
     def __init__(self, model_name="Babelscape/rebel-large", max_tokens=1024):
-    	self.nlp = spacy.blank("en")  # blank English model, no pipeline
-		self.sentencizer = self.nlp.add_pipe("sentencizer")
+        self.nlp = spacy.blank("en")  # blank English model, no pipeline
+        self.sentencizer = self.nlp.add_pipe("sentencizer")
         # Read environment variables at runtime
-		load_dotenv(".env")
+        load_dotenv(".env")
         os.environ["HF_HUB_TOKEN"] = os.environ["HF_HUB_TOKEN"]
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)

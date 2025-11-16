@@ -26,7 +26,7 @@ class LLMConnector(Connector):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
         # Read environment variables at runtime
-		load_dotenv(".env")
+        load_dotenv(".env")
         self.model_name = None
         self.temperature = temperature
         self.system_prompt = system_prompt
