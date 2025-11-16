@@ -7,7 +7,7 @@ end_of_line = lf
 charset = utf-8
 
 # Dockerfiles
-[docker/Dockerfile*]
+[*.dockerfile]
 end_of_line = lf
 
 # Env files
