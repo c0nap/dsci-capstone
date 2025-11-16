@@ -38,6 +38,7 @@ class RelationalConnector(DatabaseConnector):
         """Decides what type of relational connector to create using the .env file.
         @param verbose  Whether to print success and failure messages.
         @throws Log.Failure  If the .env file contains an invalid DB_ENGINE value."""
+        load_dotenv(".env")
         engine = os.environ["DB_ENGINE"]
         if engine == "MYSQL":
             return mysqlConnector(verbose)
