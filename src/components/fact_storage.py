@@ -1,4 +1,4 @@
-from components.fact_storage import GraphConnector
+from src.connectors.graph import GraphConnector
 from pandas import concat, DataFrame, option_context
 import random
 import re
