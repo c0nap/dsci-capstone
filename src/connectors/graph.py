@@ -1,4 +1,4 @@
-from components.connectors import DatabaseConnector
+from src.connectors.base import DatabaseConnector
 from contextlib import contextmanager
 from neo4j.graph import Node, Relationship
 from neomodel import config, db

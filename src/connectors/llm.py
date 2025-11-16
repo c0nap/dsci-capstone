@@ -1,4 +1,4 @@
-from components.connectors import Connector
+from src.connectors.base import Connector
 from langchain_core.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,

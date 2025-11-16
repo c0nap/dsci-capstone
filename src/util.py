@@ -236,10 +236,6 @@ class Log:
     msg_bad_triples = lambda graph_name: f"No triples found for graph {graph_name}"
 
 
-def all_none(*args):
-    """Checks if all provided args are None."""
-    return all(arg is None for arg in args)
-
 
 def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = [], sort_columns: List[str] = []) -> DataFrame:
     """Sort a DataFrame in natural order using only certain columns.
