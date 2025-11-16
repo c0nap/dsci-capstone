@@ -44,9 +44,9 @@ def get_session():
     return _session
 ```
 
-In this example, `global` assigns the local function-scoped variable to the module scope. The internal `_instance` variable of the Session class is assigned to the global `_session` variable.
+In this example, `global` elevates the local function-scoped variable to module scope. The internal `_instance` variable of the Session class is assigned to the global `_session` variable.
 
-**Advantage:** Loading happens at runtime, not collection-time.
+**Advantage:** Loading occurs at runtime, not at import / collection time.
 
 This is especially useful if the class is heavy (takes a long time to initialize) or error-prone.
 
