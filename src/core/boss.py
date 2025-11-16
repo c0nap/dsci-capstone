@@ -18,6 +18,19 @@ from typing import Any, Dict, Generator, List, Optional, Tuple
 MongoHandle = Generator["Database[Any]", None, None]
 
 
+# TODO: reconcile duplicate with main.py
+def pipeline_5b(summary, book_title, book_id, chunk, gold_summary="", bookscore: float = None, questeval: float = None):
+    """Send metrics to Blazor
+    - Compute basic metrics (ROUGE, BERTScore)
+    - Wait for advanced metrics (QuestEval, BooookScore)
+    - Post to Blazor metrics page"""
+    from src.components.metrics import Metrics
+
+    m = Metrics()
+    m.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
+    print("\nOutput sent to web app.")
+
+
 def load_worker_config(task_types: List[str]) -> Dict[str, str]:
     """Load worker service URLs from environment variables.
     @param task_types  List of valid task keys to use when searching the .env

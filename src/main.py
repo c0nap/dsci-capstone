@@ -216,7 +216,8 @@ def test_relation_extraction():
 
 def process_single():
     """Uses NLP and LLM to process an existing TEI file."""
-    from components.text_processing import LLMConnector, RelationExtractor
+    from src.connectors.llm import LLMConnector
+    from src.components.relation_extraction import RelationExtractor
 
     try:
         df = pd.read_csv("datasets/books.csv")
@@ -344,7 +345,7 @@ response_files = ["./datasets/triples/chunk-160_story-1.txt"]
 
 def output_single():
     """Generates a summary from triples stored in JSON, and posts data to Blazor."""
-    from components.text_processing import LLMConnector
+    from src.connectors.llm import LLMConnector
 
     json_path = triple_files[0]
     response_path = response_files[0]
@@ -529,7 +530,8 @@ def pipeline_2(collection_name, chunks, book_title):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
-    from components.text_processing import LLMConnector, RelationExtractor
+    from src.connectors.llm import LLMConnector
+    from src.components.relation_extraction import RelationExtractor
     import json
 
     re_rebel = "Babelscape/rebel-large"
@@ -621,7 +623,7 @@ def pipeline_3(triples):
 
 def pipeline_4(collection_name, triples_string, chunk_id):
     """Generate chunk summary"""
-    from components.text_processing import LLMConnector
+    from src.connectors.llm import LLMConnector
 
     # Prompt LLM to generate summary
     llm = LLMConnector(
@@ -647,23 +649,14 @@ def pipeline_4(collection_name, triples_string, chunk_id):
 def pipeline_5a(summary, book_title, book_id):
     """Send book info to Blazor
     - Post to Blazor metrics page"""
-    from components.metrics import Metrics
+    from src.components.metrics import Metrics
 
     m = Metrics()
     m.post_basic_output(book_id, book_title, summary)
     print("\nOutput sent to web app.")
 
-
-def pipeline_5b(summary, book_title, book_id, chunk, gold_summary="", bookscore: float = None, questeval: float = None):
-    """Send metrics to Blazor
-    - Compute basic metrics (ROUGE, BERTScore)
-    - Wait for advanced metrics (QuestEval, BooookScore)
-    - Post to Blazor metrics page"""
-    from components.metrics import Metrics
-
-    m = Metrics()
-    m.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
-    print("\nOutput sent to web app.")
+# TODO: reconcile duplicate with boss.py
+from src.core.boss import pipeline_5b
 
 
 
