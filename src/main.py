@@ -1,12 +1,12 @@
-from components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
-from components.metrics import Metrics
-from src.boss import create_boss_thread, post_process_full_story, post_chunk_status, post_story_status
+from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
+from src.components.metrics import Metrics
+from src.core.boss import create_boss_thread, post_process_full_story, post_chunk_status, post_story_status
 import json
 import os
 import pandas as pd
 import random
 import traceback
-from src.setup import Session
+from src.core.context import session
 from dotenv import load_dotenv
 import time
 
@@ -317,7 +317,7 @@ triple_files = [
 ]
 
 
-def graph_triple_files(session):
+def graph_triple_files():
     """Loads JSON into Neo4j to test the Blazor graph page."""
     for json_path in triple_files:
         print(f"\n{'='*50}")
@@ -342,7 +342,7 @@ def graph_triple_files(session):
 response_files = ["./datasets/triples/chunk-160_story-1.txt"]
 
 
-def output_single(session):
+def output_single():
     """Generates a summary from triples stored in JSON, and posts data to Blazor."""
     from components.text_processing import LLMConnector
 
@@ -436,24 +436,23 @@ def output_single(session):
 
 
 
-def full_pipeline(session, collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
+def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     chunks = pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id)
-    triples, chunk = pipeline_2(session, collection_name, chunks, book_title)
-    triples_string = pipeline_3(session, triples)
-    summary = pipeline_4(session, collection_name, triples_string, chunk.get_chunk_id())
+    triples, chunk = pipeline_2(collection_name, chunks, book_title)
+    triples_string = pipeline_3(triples)
+    summary = pipeline_4(collection_name, triples_string, chunk.get_chunk_id())
     pipeline_5a(summary, book_title, book_id)
 
 
-def old_main(session, collection_name):
+def old_main(collection_name):
     # convert_from_csv()
     # chunk_single()
     # process_single()
-    # graph_triple_files(session)
+    # graph_triple_files()
     # (Metrics()).post_example_results()
-    # output_single(session)
+    # output_single()
 
     full_pipeline(
-        session,
         collection_name,
         epub_path="./datasets/examples/trilogy-wishes-2.epub",
         book_chapters="""
@@ -526,7 +525,7 @@ def pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     return chunks
 
 
-def pipeline_2(session, collection_name, chunks, book_title):
+def pipeline_2(collection_name, chunks, book_title):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
@@ -585,7 +584,7 @@ def pipeline_2(session, collection_name, chunks, book_title):
     return triples, c
 
 
-def pipeline_3(session, triples):
+def pipeline_3(triples):
     """Generates a LLM summary using Neo4j triples.
     @details
         - Neo4j graph database
@@ -620,7 +619,7 @@ def pipeline_3(session, triples):
     return triples_string
 
 
-def pipeline_4(session, collection_name, triples_string, chunk_id):
+def pipeline_4(collection_name, triples_string, chunk_id):
     """Generate chunk summary"""
     from components.text_processing import LLMConnector
 
@@ -694,12 +693,11 @@ def pipeline_5b(summary, book_title, book_id, chunk, gold_summary="", bookscore:
 
 if __name__ == "__main__":
     # TODO: handle this better - half env parsing is here, half is in boss.py
-    session = Session(verbose=False)
     load_dotenv(".env")
     DB_NAME = os.environ["DB_NAME"]
     BOSS_PORT = int(os.environ["PYTHON_PORT"])
     COLLECTION = os.environ["COLLECTION_NAME"]
-    create_boss_thread(session, DB_NAME, BOSS_PORT, COLLECTION)
+    create_boss_thread(DB_NAME, BOSS_PORT, COLLECTION)
 
     # TODO - PIPELINE HERE
     story_id = 1
@@ -731,7 +729,7 @@ CHAPTER 12. THE END OF THE END\n
     post_story_status(BOSS_PORT, story_id, 'preprocessing', 'completed')
     post_story_status(BOSS_PORT, story_id, 'chunking', 'completed')
 
-    triples, chunk = pipeline_2(session, COLLECTION, chunks, book_title)
+    triples, chunk = pipeline_2(COLLECTION, chunks, book_title)
     chunk_id = chunk.get_chunk_id()
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'relation_extraction', 'in-progress')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'llm_inference', 'in-progress')
@@ -739,12 +737,12 @@ CHAPTER 12. THE END OF THE END\n
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'llm_inference', 'completed')
 
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'graph_verbalization', 'in-progress')
-    triples_string = pipeline_3(session, triples)
+    triples_string = pipeline_3(triples)
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'graph_verbalization', 'completed')
 
     post_story_status(BOSS_PORT, story_id, 'summarization', 'in-progress')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'in-progress')
-    summary = pipeline_4(session, COLLECTION, triples_string, chunk.get_chunk_id())
+    summary = pipeline_4(COLLECTION, triples_string, chunk.get_chunk_id())
     post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
     # pipeline_5 is moved to callback() to finalize asynchronously
