@@ -48,7 +48,7 @@ class Session:
 ## Global storage for the lazy singleton
 _session = None
 
-def get_session(*args: Any, **kwargs) -> Session:
+def get_session(*args: Any, **kwargs: Any) -> Session:
     """Lazily creates a session on first call, otherwise returns the existing session.
     @note  Will ignore any arguments passed after creation.
     @param *args  Positional arguments forwarded to Session().

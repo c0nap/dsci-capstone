@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 import os
 import spacy
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from typing import List, Tuple
 
 
 class RelationExtractor:
@@ -16,7 +17,7 @@ class RelationExtractor:
         self.max_tokens = max_tokens
         self.tuple_delim = "  "
 
-    def extract(self, text: str, parse_tuples: bool = False):
+    def extract(self, text: str, parse_tuples: bool = False) -> List[Tuple[str, str, str]]:
         # Split into sentences: RE models generally output 1 relation per input.
         text = text.replace("\n", " ").strip()
         doc = self.nlp(text)

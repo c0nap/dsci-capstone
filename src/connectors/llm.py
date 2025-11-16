@@ -22,7 +22,7 @@ class LLMConnector(Connector):
         self,
         temperature: float = 0,
         system_prompt: str = "You are a helpful assistant.",
-    ):
+    ) -> None:
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
         # Read environment variables at runtime
@@ -33,29 +33,32 @@ class LLMConnector(Connector):
         self.llm = None
         self.configure()
 
-    def configure(self):
+    def configure(self) -> None:
         """Initialize the LangChain LLM using environment credentials.
         @details
             Reads:
                 - OPENAI_API_KEY from .env for authentication
                 - LLM_MODEL and LLM_TEMPERATURE to override defaults"""
         self.model_name = os.environ["LLM_MODEL"]
-        self.llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature)
+        self.llm = ChatOpenAI(model=self.model_name, temperature=self.temperature)
 
-    def test_operations(self):
-        """Send a trivial prompt to verify LLM connectivity.
-        @return  Whether the prompt executed successfully."""
-        result = self.execute_full_query("You are a helpful assistant.", query)
+    def test_operations(self, raise_error: bool = True) -> bool:
+        """Establish a basic connection to the database, and test full functionality.
+        @details  Can be configured to fail silently, which enables retries or external handling.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the prompt executed successfully.
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
+        result = self.execute_full_query("You are a helpful assistant.", "ping")
         return result.strip() == "pong"
         # TODO
 
     def check_connection(self, log_source: str, raise_error: bool) -> bool:
-        """Minimal connection test to determine if our connection string is valid.
+        """Send a trivial prompt to verify LLM connectivity.
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
-        @return  Whether the connection test was successful.
+        @return  Whether the prompt executed successfully.
         @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
-        result = self.execute_full_query("You are a helpful assistant.", query)
+        result = self.execute_full_query("You are a helpful assistant.", "ping")
         return result.strip() == "pong"
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
