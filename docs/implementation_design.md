@@ -6,6 +6,19 @@ Data Science Capstone - Patrick Conan
 
 ## Session
 
+The session contains references to all pipeline components and databases. We can avoid reconstructing these objects by always using Session to access them. This also avoids reimplementing designs for similar components.
+
+For example, GraphConnector and RelationalConnector both act like singletons (only one instance is permitted). We can keep their code focused instead on their respective tasks by creating one Session instance containing references to exactly one of each.
+
+In this way the Session class handles singleton and dependency logic, creating **Separation of Concern** and contributing to cleaner, more understandable code.
+
+It can be used as follows:
+```python
+from src.core.context import session
+session.relational_db.execute_query("SELECT 1")
+session.main_graph.add_triple("Alice", "ownsItem", "Alice's glasses")
+```
+
 ### Singleton Design
 
 
@@ -18,11 +31,24 @@ if __name__ == "__main__":
     session = Session()
 ```
 
-We could refine this 
+We refine this by exposing a factory method `get_session()` to always fetch the single instance, or create it lazily on first access.
+```python
+_session = None
+
+def get_session():
+    global _session
+    if _session is None:
+        _session = Session()
+    return _session
+```
+
+In this example, `global` exposes the module-scoped variable to the local function scope.
+
+**Advantages:** 
 
 ### Property Access
 
-
+When using a factory method, 
 
 ### Why is reinitialization forbidden?
 
