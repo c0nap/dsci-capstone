@@ -1,0 +1,22 @@
+# top-level EditorConfig file
+root = true
+
+# Shell scripts
+[*.sh]
+end_of_line = lf
+charset = utf-8
+
+# Dockerfiles
+[*.dockerfile]
+end_of_line = lf
+
+# Env files
+[.env]
+end_of_line = lf
+
+[.env.example]
+end_of_line = lf
+
+# Makefile
+[Makefile]
+end_of_line = lf

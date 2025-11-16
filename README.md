@@ -34,26 +34,77 @@ If you need help installing your databases, follow the [database guides](docs/da
 ## Project Structure
 
 ```
-project/		 # Parent directory (optional).
-  ├── repository/
-  │   ├── src/              # Entry point for the data pipeline.
-  │   │   ├── main.py
-  │   │   ├── setup.py
-  │   │   └── util.py
-  │   ├── components/       # Wrapper classes to abstract low-level data processing.
-  │   │   ├── connectors.py
-  │   │   ├── text_processing.py
-  │   │   ├── fact_storage.py
-  │   │   └── semantic_web.py
-  │   ├── tests/            # Comprehensive tests for project components.
-  │   │   ├── test_components.py
-  │   │   └── (TODO: other tests)
-  │   ├── datasets/         # Empty directory for user-downloaded or auto-downloaded datasets.
-  │   ├── requirements.txt  # List of required Python packages for easier installation.
-  │   └── .env.example      # Stores credentials and configuration (must be renamed to .env).
-  └── venv/ 	 # Python virtual environment directory (optional, not committed).
+project/                          # Parent directory (optional)
+├── venv/                         # Python virtual environment (not committed)
+└── repository/
+    ├── Makefile                  # Convenience commands for Docker + tests
+    ├── docker-compose.yml        # Multi-container orchestration
+    ├── pyproject.toml            # Settings for mypy / black / isort
+    ├── pytest.ini                # Pytest configuration
+    ├── .env.example              # Template environment config
+    ├── .env                      # Actual runtime config (not committed)
+    ├── .gitignore
+    ├── .gitattributes
+    ├── .dockerignore
+    │
+    ├── src/                      # All application source code
+    │   ├── main.py               # Entry point (CLI, orchestration)
+    │   ├── util.py               # Shared helpers (logging, error handling)
+    │   ├── core/                 # Orchestration and global runtime context
+    │   │   ├── context.py        # Lazy singleton Session + accessors
+    │   │   ├── boss.py           # Main orchestrator for pipeline tasks
+    │   │   └── worker.py         # Worker routines / processing units
+    │   │
+    │   ├── connectors/           # Adapters for all DB + LLM backends
+    │   │   ├── base.py           # Shared ABCs for all connectors
+    │   │   ├── relational.py     # MySQL/Postgres connector (SQLAlchemy)
+    │   │   ├── document.py       # MongoDB connector (MongoEngine)
+    │   │   ├── graph.py          # Neo4j connector (NeoModel)
+    │   │   └── llm.py            # LLM connector (LangChain)
+    │   │
+    │   └── components/           # Pipeline logic and data-processing modules
+    │       ├── corpus.py
+    │       ├── metrics.py
+    │       ├── fact_storage.py
+    │       ├── relation_extraction.py
+    │       └── book_conversion.py
+    │
+    ├── tests/                    # Full pytest suite (ordered + dependent)
+    │   ├── README.md
+    │   ├── __init__.py
+    │   ├── conftest.py
+    │   ├── test_db_basic.py      # Minimal DB tests (relational/doc/graph)
+    │   ├── test_db_files.py      # File-based example dataset tests
+    │   ├── test_kg_triples.py    # KnowledgeGraph behaviors, parsing tests
+    │   └── examples-db/          # Deterministic cql/json fixtures for tests
+    │       ├── relational/
+    │       ├── document/
+    │       └── graph/
+    │
+    ├── datasets/                 # Local data or user-supplied corpora
+    │   └── (empty or populated as-needed)
+    ├── deps/                     # Lists of required Python packages
+    │   ├── requirements.txt
+    │   ├── development.txt
+    │   ├── bookscore.txt
+    │   └── (etc.)
+    ├── docker/                   # All Dockerfiles + DB setup scripts
+    │   ├── Dockerfile.python
+    │   ├── Dockerfile.blazor
+    │   ├── Dockerfile.bookscore
+    │   ├── (etc.)
+    │   └── db-init/
+    │
+    ├── docs/                     # Documentation (Doxygen + custom guides)
+    │   ├── Doxyfile
+    │   ├── html/                 # Auto-generated Doxygen HTML (not committed)
+    │   └── latex/                # Auto-generated LaTeX (not committed)
+    ├── logs/                     # Runtime logs / snapshots of output
+    │   └── output.txt
+    ├── web-app/                  # Blazor frontend component
+    └── .github/                  # CI/CD workflows
+        └── workflows/
 ```
-
 
 ## Setup (Windows)
 
@@ -110,19 +161,19 @@ Create OpenAI and HuggingFace API keys, and copy them into `OPENAI_API_KEY` and 
 
 ## 3 - Additional Information
 
-#### Database Connections / Network Troubleshooting
+### Database Connections / Network Troubleshooting
 
 We have also compiled a [detailed guide](docs/database_instructions.md) addressing issues found when connecting the various components.
 
-#### Docker Hostname Resolution
+### Docker Hostname Resolution
 
 Optionally, Docker can be used to run our exact setup with test datasets and minimal configurations. [Docker Guide](docs/docker_setup.md)
 
-#### Web Application
+### Web Application
 
 To extend the provided web app or to build your own, please reference our [Blazor UI Notes](docs/web_app_notes.md).
 
-#### Code Review Tools
+### Code Review Tools
 
 - Doxygen
 - Black
@@ -132,6 +183,17 @@ To extend the provided web app or to build your own, please reference our [Blazo
 - git-story
 - GitClear
 
-#### Code Documentation with Doxygen
+### Code Documentation with Doxygen
 
-Pre-compiled code diagrams can be accessed from `docs/html/annotated.html`. We discuss our process in more detail [here](docs/code_style.md).
+Pre-compiled code diagrams can be accessed from `docs/html/annotated.html`. We discuss our standards and development process in more detail [here](docs/code_style.md).
+
+### Design Justification
+
+An overview of our implementation decisions can be found on the [Design Patterns page](docs/implementation_design.md).
+
+
+## License
+This project is licensed under **CC BY-NC-ND 4.0**.  
+You may use the code for personal or research purposes only.  
+Commercial use and derivative works are not permitted.  
+See the full license in the [LICENSE](LICENSE) file.

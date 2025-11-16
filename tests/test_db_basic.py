@@ -1,13 +1,14 @@
-from components.connectors import RelationalConnector
-from components.document_storage import DocumentConnector
-from components.fact_storage import GraphConnector
 import pytest
+from src.connectors.document import DocumentConnector
+from src.connectors.graph import GraphConnector
+from src.connectors.relational import RelationalConnector
 from src.util import Log
 
 
 # ------------------------------------------------------------------------------
 # BUILT-IN DATABASE TESTS: Run check_connection() for minimal connection test.
 # ------------------------------------------------------------------------------
+@pytest.mark.relational
 @pytest.mark.order(1)
 @pytest.mark.dependency(name="rel_minimal")
 def test_db_relational_minimal(relational_db: RelationalConnector) -> None:
@@ -16,6 +17,7 @@ def test_db_relational_minimal(relational_db: RelationalConnector) -> None:
     assert connected
 
 
+@pytest.mark.document
 @pytest.mark.order(2)
 @pytest.mark.dependency(name="docs_minimal")
 def test_db_docs_minimal(docs_db: DocumentConnector) -> None:
@@ -24,6 +26,8 @@ def test_db_docs_minimal(docs_db: DocumentConnector) -> None:
     assert connected
 
 
+@pytest.mark.graph
+@pytest.mark.kg
 @pytest.mark.order(3)
 @pytest.mark.dependency(name="graph_minimal")
 def test_db_graph_minimal(graph_db: GraphConnector) -> None:
@@ -35,6 +39,7 @@ def test_db_graph_minimal(graph_db: GraphConnector) -> None:
 # ------------------------------------------------------------------------------
 # BUILT-IN DATABASE TESTS: Run test_operations() for comprehensive usage tests.
 # ------------------------------------------------------------------------------
+@pytest.mark.relational
 @pytest.mark.order(4)
 @pytest.mark.dependency(name="rel_comprehensive", depends=["rel_minimal"])
 def test_db_relational_comprehensive(relational_db: RelationalConnector) -> None:
@@ -43,6 +48,7 @@ def test_db_relational_comprehensive(relational_db: RelationalConnector) -> None
     assert operational
 
 
+@pytest.mark.document
 @pytest.mark.order(5)
 @pytest.mark.dependency(name="docs_comprehensive", depends=["docs_minimal"])
 def test_db_docs_comprehensive(docs_db: DocumentConnector) -> None:
@@ -51,10 +57,11 @@ def test_db_docs_comprehensive(docs_db: DocumentConnector) -> None:
     assert operational
 
 
+@pytest.mark.graph
+@pytest.mark.kg
 @pytest.mark.order(6)
 @pytest.mark.dependency(name="graph_comprehensive", depends=["graph_minimal"])
 def test_db_graph_comprehensive(graph_db: GraphConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
     operational = graph_db.test_operations(raise_error=True)
     assert operational
-

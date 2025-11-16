@@ -1,0 +1,12 @@
+# Enforce LF explicitly for shell files
+*.sh text eol=lf
+
+# Enforce LF for root-level .env files
+.env          text eol=lf
+.env.example  text eol=lf
+
+# Enforce LF for Makefile (required)
+Makefile      text eol=lf
+
+# Enforce LF for all Dockerfiles
+*.dockerfile  text eol=lf

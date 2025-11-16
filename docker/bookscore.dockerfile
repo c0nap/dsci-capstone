@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && pip install --upgrade pip setuptools wheel \
  && rm -rf /var/lib/apt/lists/*
 
-COPY req/bookscore.txt .
+COPY deps/bookscore.txt .
 RUN pip install --no-cache-dir -r bookscore.txt
 
 
@@ -62,8 +62,7 @@ PY
 
 # Copy source code into the container (optional .dockerignore)
 COPY src/ src/
-COPY components/ components/
-COPY Makefile pyproject.toml ./
+COPY Makefile ./
 
 # Declare build args - whether to include .env or .env.dummy
 ARG ENV_FILE
@@ -75,4 +74,4 @@ RUN make env-docker
 RUN mv .env.docker .env
 
 # Supply task as command line flag to set worker behavior
-CMD ["python", "-m", "src.flask", "--task", "bookscore"]
+CMD ["python", "-m", "src.core.worker", "--task", "bookscore"]

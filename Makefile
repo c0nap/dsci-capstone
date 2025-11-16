@@ -273,11 +273,11 @@ docker-build-dev:
 	make docker-build-dev-python
 	make docker-build-dev-blazor
 docker-build-dev-python:
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.python \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/python.dockerfile \
 		--build-arg ENV_FILE=".env" \
 		-t dsci-cap-img-python-dev:latest .
 docker-build-dev-blazor:
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.blazor \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/blazor.dockerfile \
 		--build-arg ENV_FILE=".env" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.json \
 		-t dsci-cap-img-blazor-dev:latest .
@@ -286,12 +286,12 @@ docker-build-dev-workers:
 	make docker-build-dev-bscore
 	make docker-build-dev-qeval
 docker-build-dev-bscore:
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.bookscore \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/bookscore.dockerfile \
 		--build-arg ENV_FILE=".env" \
 		--build-arg TASK="bookscore" \
 		-t dsci-cap-img-bscore-dev:latest .
 docker-build-dev-qeval:
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.questeval \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/questeval.dockerfile \
 		--build-arg ENV_FILE=".env" \
 		--build-arg TASK="questeval" \
 		-t dsci-cap-img-qeval-dev:latest .
@@ -308,13 +308,13 @@ docker-build-prod:
 	make docker-build-prod-blazor
 docker-build-prod-python:
 	make env-dummy  # Generates .env.dummy from .env.example
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.python \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/python.dockerfile \
 		--build-arg ENV_FILE=".env.dummy" \
 		-t dsci-cap-img-python-prod:latest .
 docker-build-prod-blazor:
 	make env-dummy  # Generates .env.dummy from .env.example
 	make appsettings-dummy  # Generates appsettings.Dummy.json from .env.dummy and appsettings.Example.json
-	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/Dockerfile.blazor \
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/blazor.dockerfile \
 		--build-arg ENV_FILE=".env.dummy" \
 		--build-arg APPSET_FILE=web-app/BlazorApp/appsettings.Dummy.json \
 		-t dsci-cap-img-blazor-prod:latest .

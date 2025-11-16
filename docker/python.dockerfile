@@ -16,15 +16,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && pip install --upgrade pip setuptools wheel build \
  && rm -rf /var/lib/apt/lists/*
 
-COPY req/requirements.txt requirements.txt
+COPY deps/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 
 # Copy source code into the container (optional .dockerignore)
 COPY src/ src/
 COPY tests/ tests/
-COPY db/ db/
-COPY components/ components/
 COPY datasets/ datasets/
 
 # Declare build args - whether to include .env or .env.dummy
@@ -37,7 +35,7 @@ COPY Makefile .
 RUN make env-docker
 RUN mv .env.docker .env
 
-COPY pyproject.toml .
+COPY pyproject.toml pytest.ini .
 
 # default command
 CMD ["python", "-m", "src.main"]

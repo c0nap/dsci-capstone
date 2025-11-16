@@ -121,7 +121,6 @@ class Log:
             msg = Log.msg_bad_addr(connection_string)
             super().__init__(prefix=prefix, msg=msg)
 
-
     # --------- Builder Pattern ---------
     # Compose your own standardized error messages depending on the context
     # Everything in the prefix will have color - a few words to contextualize the error source.
@@ -199,7 +198,9 @@ class Log:
     @param manage  Present-tense verb representing the database operation performed, e.g. create, drop."""
 
     msg_success_managed_gr = lambda managed, database_name: f"Successfully {managed} graph '{database_name}'"
-    msg_fail_manage_gr = lambda manage, database_name, connection_string: f"Failed to {manage} graph '{database_name}' on connection {connection_string}"
+    msg_fail_manage_gr = (
+        lambda manage, database_name, connection_string: f"Failed to {manage} graph '{database_name}' on connection {connection_string}"
+    )
 
     msg_fail_parse = lambda alias, bad_value, expected_type: f"Could not convert {alias} with value {bad_value} to type {expected_type}"
 
@@ -228,17 +229,12 @@ class Log:
 
     get_unique = "UNIQUE: "
 
-    msg_none_df = lambda collection_type, collection_name:  f"Unable to fetch DataFrame from {collection_type} '{collection_name}' - None"
+    msg_none_df = lambda collection_type, collection_name: f"Unable to fetch DataFrame from {collection_type} '{collection_name}' - None"
 
     kg = "TRIPLES: "
     sub_gr = "SUBGRAPH: "
     gr_rag = "RAG: "
     msg_bad_triples = lambda graph_name: f"No triples found for graph {graph_name}"
-
-
-def all_none(*args):
-    """Checks if all provided args are None."""
-    return all(arg is None for arg in args)
 
 
 def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = [], sort_columns: List[str] = []) -> DataFrame:
@@ -258,14 +254,8 @@ def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = [], sort_colum
     if df is None or df.empty:
         return df
     # Exclude non-hashable columns e.g. lists and dicts
-    safe_cols = [
-        c for c in df.columns
-        if c not in ignored_columns and is_hashable_col(df[c])
-    ]
-    sort_columns = [
-        c for c in sort_columns
-        if c in df.columns and is_hashable_col(df[c])
-    ]
+    safe_cols = [c for c in df.columns if c not in ignored_columns and is_hashable_col(df[c])]
+    sort_columns = [c for c in sort_columns if c in df.columns and is_hashable_col(df[c])]
     # If we have no columns to sort on, just reset the row indexing.
     if not safe_cols:
         return df.reset_index(drop=True)
@@ -276,7 +266,7 @@ def df_natural_sorted(df: DataFrame, ignored_columns: List[str] = [], sort_colum
 
 
 def check_values(results: List[Any], expected: List[Any], verbose: bool, log_source: str, raise_error: bool) -> bool:
-    """Safely compare two lists of values. Helper for @ref components.connectors.RelationalConnector.test_operations
+    """Safely compare two lists of values. Helper for @ref src.connectors.relational.RelationalConnector.test_operations
     @param results  A list of observed values from the database.
     @param expected  A list of correct values to compare against.
     @param verbose  Whether to print success messages.

@@ -171,6 +171,32 @@ Once the `docs` branch contains `index.html`, you're ready to set up [GitHub Pag
 The updated code documentation can be found at the URL [c0nap.github.io/dsci-capstone](https://c0nap.github.io/dsci-capstone/).
 
 
+# Project Setup
+
+## Line Endings
+
+When you press the "Enter" key on your keyboard, Windows will typically insert two characters, i.e. `\r\n`. This is a backwards compatibility feature for very old systems. However, modern low-level UNIX systems only use `\n` to indicate newlines, and will interpret the `\r` as an unrecognized character.
+
+The Windows-style `CRLF` line endings are completely acceptable for Python code, but things can break when these files are copied over to Docker containers (which can have different system architectures). `LF` line endings will work on any system.
+
+We use `.gitattributes` to make sure GitHub never receives Windows-style `CRLF` line endings for critical files used by the database Docker containers. Namely, the secrets files `.env`, `.env.example`, and the initialization scripts `db/init-neo4j.sh` will usually lead to a `bin/sh` parsing error if `\r` is present.
+
+**NOTE:** When you edit one of these files for development, your changes will likely contain CRLF line endings. If you then package that file into a Docker image or and run things locally, your setup will be contaminated and likely error when run.
+
+Make sure your IDE can recognize the provided `.editorconfig` file to avoid this. Sublime Text requires the EditorConfig package to be installed via `Ctrl+Shift+P`, but once running will auto-convert line endings on save.
+
+### Diagnostic Commands
+
+1. Check what Git has stored (LF = `$`, CRLF = `^M$`):
+```bash
+git show HEAD:path/to/file.sh | cat -A
+```
+
+2. Check the working copy on disk (LF = `$`, CRLF = `\r$`):
+```bash
+sed -n 'l' path/to/file.sh | head
+```
+
 
 # Role of Generative AI
 

@@ -39,8 +39,16 @@ def task_worker():
             task_queue.task_done()
 
 
-def process_task(mongo_db: MongoHandle, collection_name: str, chunk_id: str, task_name: str, chunk_doc: Dict[str, Any], boss_url: str,
-	task_handler: Callable[[Dict[str, Any]], Dict[str, Any]], task_kwargs: Any = None):
+def process_task(
+    mongo_db: MongoHandle,
+    collection_name: str,
+    chunk_id: str,
+    task_name: str,
+    chunk_doc: Dict[str, Any],
+    boss_url: str,
+    task_handler: Callable[[Dict[str, Any]], Dict[str, Any]],
+    task_kwargs: Any = None,
+) -> None:
     """Perform the assigned task in a background thread.
     This includes updating task status, running the handler, saving results,
     and notifying the boss service when complete.
@@ -108,14 +116,14 @@ def get_task_info(task_name: str) -> Tuple[Callable[[Dict[str, Any]], Dict[str, 
     @throws ImportError If the task module cannot be imported.
     @throws AttributeError If the task function is not found in the module."""
     if task_name == "bookscore":
-        from components.metrics import run_bookscore
+        from src.components.metrics import run_bookscore
 
         return run_bookscore, {
             "model": "gpt-4o-mini",
             "use_v2": False,  # single-pass mode
         }
     elif task_name == "questeval":
-        from components.metrics import run_questeval
+        from src.components.metrics import run_questeval
 
         return run_questeval, {
             "qeval_task": "summarization",

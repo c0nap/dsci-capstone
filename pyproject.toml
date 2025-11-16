@@ -18,11 +18,6 @@ float_to_top = false                # Don’t move imports above module-level do
 no_sections = true                  # Disable blank lines between stdlib / third-party / local section
 #multi_line_output = 5               # Use vertical hanging indent for multi-line imports; improves readability
 
-[tool.pytest.ini_options]   # Configuration for pytest (test runner)
-minversion = "8.0"                  # Require pytest 8.0+; ensures features/options used are supported
-addopts = "-ra -q --color=yes"      # -ra: show extra summary for skipped/failed tests, -q: reduce verbosity for clarity
-testpaths = ["tests"]               # Only look in the tests/ directory for test discovery; avoids running irrelevant files
-
 [tool.mypy]                 # Configuration for mypy (static type checker)
 python_version = 3.12              # Type check using Python 3.12 rules for consistency with your code
 ignore_missing_imports = true      # Suppress errors for missing type hints in third-party libraries
@@ -34,11 +29,3 @@ disallow_untyped_calls = false     # Allow calls to untyped functions; avoids no
 warn_return_any = false            # Don’t warn when returning Any; minimizes false positives in complex functions
 show_error_codes = true            # Display error codes alongside messages for clarity
 allow_redefinition = true          # Update the inferred type on reassignment
-
-
-# Handled by Doxyfile already
-# [tool.doxygen]              # Configuration for Doxygen (documentation generator)
-# INPUT = "src"                        # Specify source code folder; tells Doxygen what to document
-# RECURSIVE = "YES"                    # Include subdirectories; ensures complete documentation
-# OUTPUT_DIRECTORY = "docs/doxygen"    # Output folder for generated docs; keeps documentation separate from code
-

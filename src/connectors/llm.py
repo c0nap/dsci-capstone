@@ -1,65 +1,19 @@
 from dotenv import load_dotenv
-import os
-import re
-import spacy
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-
-
-nlp = spacy.blank("en")  # blank English model, no pipeline
-sentencizer = nlp.add_pipe("sentencizer")
-
-# Read environment variables at runtime
-load_dotenv(".env")
-
-
-class RelationExtractor:
-    def __init__(self, model_name="Babelscape/rebel-large", max_tokens=1024):
-        os.environ["HF_HUB_TOKEN"] = os.environ["HF_HUB_TOKEN"]
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-        self.max_tokens = max_tokens
-        self.tuple_delim = "  "
-
-    def extract(self, text: str, parse_tuples: bool = False):
-        # Split into sentences: RE models generally output 1 relation per input.
-        text = text.replace("\n", " ").strip()
-        doc = nlp(text)
-        sentences = [sent.text for sent in doc.sents]
-
-        # Perform RE on each sentence individually
-        out = []
-        for sentence in sentences:
-            inputs = self.tokenizer(
-                sentence,
-                return_tensors="pt",
-                truncation=True,
-                max_length=self.max_tokens,
-            )
-            outputs = self.model.generate(**inputs)
-            decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            if parse_tuples:
-                parts = [str(element).strip() for element in decoded.split(self.tuple_delim)]
-                # group 3 at a time using zip
-                for subj, obj, rel in zip(parts[0::3], parts[1::3], parts[2::3]):
-                    out.append(tuple([subj, rel, obj]))
-            else:  # raw REBEL text: 'subj  obj  rel'
-                out.append(decoded)
-        return out
-
-
-from components.connectors import Connector
 from langchain_core.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate,
 )
 from langchain_openai import ChatOpenAI
+import os
+import re
+from src.connectors.base import Connector
 from typing import Any, List, Tuple
 
 
 class LLMConnector(Connector):
     """Connector for prompting and returning LLM output (raw text/JSON) via LangChain.
-    @note  The method @ref components.text_processing.LLMConnector.execute_query simplifies the prompt process.
+    @note  The method @ref src.connectors.llm.LLMConnector.execute_query simplifies the prompt process.
     """
 
     # TODO: we may want various models with different configurations
@@ -68,38 +22,43 @@ class LLMConnector(Connector):
         self,
         temperature: float = 0,
         system_prompt: str = "You are a helpful assistant.",
-    ):
+    ) -> None:
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
-        self.model_name = None
-        self.temperature = temperature
-        self.system_prompt = system_prompt
-        self.llm = None
+        # Read environment variables at runtime
+        load_dotenv(".env")
+        self.model_name: str = None
+        self.temperature: float = temperature
+        self.system_prompt: str = system_prompt
+        self.llm: ChatOpenAI = None
         self.configure()
 
-    def configure(self):
+    def configure(self) -> None:
         """Initialize the LangChain LLM using environment credentials.
         @details
             Reads:
                 - OPENAI_API_KEY from .env for authentication
                 - LLM_MODEL and LLM_TEMPERATURE to override defaults"""
         self.model_name = os.environ["LLM_MODEL"]
-        self.llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature)
+        self.llm = ChatOpenAI(model=self.model_name, temperature=self.temperature)
 
-    def test_operations(self):
-        """Send a trivial prompt to verify LLM connectivity.
-        @return  Whether the prompt executed successfully."""
-        result = self.execute_full_query("You are a helpful assistant.", query)
+    def test_operations(self, raise_error: bool = True) -> bool:
+        """Establish a basic connection to the database, and test full functionality.
+        @details  Can be configured to fail silently, which enables retries or external handling.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the prompt executed successfully.
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
+        result = self.execute_full_query("You are a helpful assistant.", "ping")
         return result.strip() == "pong"
         # TODO
 
     def check_connection(self, log_source: str, raise_error: bool) -> bool:
-        """Minimal connection test to determine if our connection string is valid.
+        """Send a trivial prompt to verify LLM connectivity.
         @param log_source  The Log class prefix indicating which method is performing the check.
         @param raise_error  Whether to raise an error on connection failure.
-        @return  Whether the connection test was successful.
+        @return  Whether the prompt executed successfully.
         @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
-        result = self.execute_full_query("You are a helpful assistant.", query)
+        result = self.execute_full_query("You are a helpful assistant.", "ping")
         return result.strip() == "pong"
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
@@ -116,7 +75,7 @@ class LLMConnector(Connector):
 
         formatted_prompt = prompt.format_prompt()  # <-- returns ChatPromptValue
         response = self.llm.invoke(formatted_prompt.to_messages())  # <-- to_messages() returns list of BaseMessage
-        return response.content
+        return str(response.content)
 
     def execute_query(self, query: str) -> str:
         """Send a single prompt through the connection and return raw LLM output.
@@ -124,7 +83,7 @@ class LLMConnector(Connector):
         @return Raw LLM response as a string."""
         return self.execute_full_query(self.system_prompt, query)
 
-    def execute_file(self, filename: str) -> str:
+    def execute_file(self, filename: str) -> str:  # type: ignore[override]
         """Run a single prompt from a file.
         @details  Reads the entire file as a single string and sends it to execute_query.
         @param filename  Path to the prompt file (.txt)
