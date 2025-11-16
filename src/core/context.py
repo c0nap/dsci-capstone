@@ -46,8 +46,8 @@ class Session:
         # TODO: Split into scene graph, event graph, and social graph.
 
 
-## Global storage for the lazy singleton
-_session = None
+# Internal module storage for the lazy session singleton
+_session: Session = None
 
 
 def get_session(*args: Any, **kwargs: Any) -> Session:
@@ -62,7 +62,7 @@ def get_session(*args: Any, **kwargs: Any) -> Session:
     return _session
 
 
-# Help type checkers resolve 'session'
+## The global instance of the singleton Session class.
 session: Session
 
 
