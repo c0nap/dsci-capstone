@@ -59,10 +59,12 @@ def get_session(*args: Any, **kwargs) -> Session:
         _session_instance = Session(*args, **kwargs)
     return _session_instance
 
-
-
-
-
-
-if __name__ == "__main__":
-    session = Session()
+@property
+def session() -> Session:
+    """Aesthetically pleasing accessor for the Session singleton.
+    @details  Usage:
+        from src.core.context import session
+        session.graph_db.run_query(...)
+    Behaves like a global variable but resolves lazily.
+    @return  The global instance of the Session class."""
+    return get_session()
