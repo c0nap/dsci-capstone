@@ -52,12 +52,14 @@ This is especially useful if the class is heavy (takes a long time to initialize
 
 ### Convenient Access
 
-When using a factory method, any code wishing to use the instance must call a method and assign the result to a variable. This is cumbersome, and Python offers a workaround with the `@property` decorator.
+When using a factory method, any code wishing to use the instance must call a method and assign the result to a variable. This is cumbersome, and Python offers a workaround by overriding the module-level `__getattr__` function.
 
 ```python
-@property
-def session():
-    return get_session()
+def __getattr__(name):
+    # Only called as a fallback if module properties do not resolve
+    if name == "session":
+        return get_session()
+    raise AttributeError(...)
 ```
 
 This treats the import as a property similar to `session = Session()`, but without the compile-time construction. It can be used directly as a variable.

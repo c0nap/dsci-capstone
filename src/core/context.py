@@ -59,12 +59,20 @@ def get_session(*args: Any, **kwargs) -> Session:
         _session = Session(*args, **kwargs)
     return _session
 
-@property
-def session() -> Session:
-    """Aesthetically pleasing accessor for the Session singleton.
-    @details  Usage:
-        from src.core.context import session
-        session.graph_db.run_query(...)
-    Behaves like a global variable but resolves lazily.
-    @return  The global instance of the Session class."""
-    return get_session()
+
+# Help type checkers resolve 'session'
+session: Session
+
+def __getattr__(name: str) -> Any:
+    """Lazy attribute resolution for module-level imports.
+    @details
+        - Only called when normal attribute lookup fails (i.e., name not in module globals).
+        - Enables lazy session creation: `from src.core.context import session`
+        - Regular imports (Session, get_session, etc.) bypass this entirely.
+    @param name  The attribute name being accessed.
+    @return  The session singleton if 'session' is requested.
+    @raises AttributeError  If an unknown/undefined attribute is requested."""
+    if name == "session":
+        return get_session()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
