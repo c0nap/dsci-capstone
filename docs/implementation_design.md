@@ -21,7 +21,9 @@ session.main_graph.add_triple("Alice", "ownsItem", "Alice's glasses")
 
 ### Singleton Design
 
+Our standard implementation involves a static `_created` property on the Session class which gets set to True inside `__init__()`. This prevents future calls to `Session()` from assigning new values to local fields.
 
+The class also needs to override the `__new__()` static method to prevent returning a different instance
 
 ### Factory Method
 
@@ -42,15 +44,33 @@ def get_session():
     return _session
 ```
 
-In this example, `global` exposes the module-scoped variable to the local function scope.
+In this example, `global` assigns the local function-scoped variable to the module scope. The internal `_instance` variable of the Session class is assigned to the global `_session` variable.
 
-**Advantages:** 
+**Advantage:** Loading happens at runtime, not collection-time.
 
-### Property Access
+This is especially useful if the class is heavy (takes a long time to initialize) or error-prone.
 
-When using a factory method, 
+### Convenient Access
 
-### Why is reinitialization forbidden?
+When using a factory method, any code wishing to use the instance must call a method and assign the result to a variable. This is cumbersome, and Python offers a workaround with the `@property` decorator.
+
+```python
+@property
+def session():
+    return get_session()
+```
+
+This treats the import as a property similar to `session = Session()`, but without the compile-time construction. It can be used directly as a variable.
+
+```python
+from src.core.context import session, get_session
+session.docs_db.execute_query('{"ping": 1}')
+
+# Also valid, but awkward to use
+session = get_session()
+```
+
+### Preventing Reconfiguration
 
 Since the singleton design is implmented in two parts (block duplicate calls to both `__new__` and `__init__`), a natural question is to consider if this second half is truly necessary.
 
@@ -69,4 +89,24 @@ session.graph_db = GraphConnector(...)
 ```
 
 This type of manual reassignment is not intended, but provides a fallback if the object MUST be reconfigured for some reason.
+
+
+## Relational Database Connector
+
+TODO - from src.connectors.relational import RelationalConnector
+
+### Factory Method
+
+TODO - from_env
+
+
+## Relation Extraction
+
+TODO - Implement
+
+### Chain of Responsibility
+
+TODO - Implement
+
+
 
