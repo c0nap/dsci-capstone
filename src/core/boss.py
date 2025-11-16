@@ -2,13 +2,13 @@
 Manages task distribution to workers and tracks completion order."""
 
 from collections import defaultdict
-from src.connectors.document import DocumentConnector
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, Response
 import os
 import pandas as pd
 from pymongo.database import Database
 import requests
+from src.connectors.document import DocumentConnector
 from src.core.context import session
 import threading
 import time
@@ -19,7 +19,9 @@ MongoHandle = Generator["Database[Any]", None, None]
 
 
 # TODO: reconcile duplicate with main.py
-def pipeline_5b(summary: str, book_title: str, book_id: str, chunk: str, gold_summary: str = "", bookscore: float = None, questeval: float = None) -> None:
+def pipeline_5b(
+    summary: str, book_title: str, book_id: str, chunk: str, gold_summary: str = "", bookscore: float = None, questeval: float = None
+) -> None:
     """Send metrics to Blazor
     - Compute basic metrics (ROUGE, BERTScore)
     - Wait for advanced metrics (QuestEval, BooookScore)
@@ -457,27 +459,28 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
 
 def create_boss_thread(DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
-	# Drop old chunks
-	mongo_db = session.docs_db.get_unmanaged_handle()
-	collection = getattr(mongo_db, COLLECTION)
-	collection.drop()
-	print("Deleted old chunks...")
+    # Drop old chunks
+    mongo_db = session.docs_db.get_unmanaged_handle()
+    collection = getattr(mongo_db, COLLECTION)
+    collection.drop()
+    print("Deleted old chunks...")
 
-	# Load configuration
-	task_types = ["questeval", "bookscore"]
-	worker_urls = load_worker_config(task_types)
-	if not worker_urls:
-	    print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
+    # Load configuration
+    task_types = ["questeval", "bookscore"]
+    worker_urls = load_worker_config(task_types)
+    if not worker_urls:
+        print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
 
-	# Create and run app
-	app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
+    # Create and run app
+    app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
 
-	# Start the Flask server in the background - disable hot-reaload on files changed
-	run_app = lambda: app.run(host="0.0.0.0", port=BOSS_PORT, use_reloader=False)
-	threading.Thread(target=run_app, daemon=True).start()
+    # Start the Flask server in the background - disable hot-reaload on files changed
+    run_app = lambda: app.run(host="0.0.0.0", port=BOSS_PORT, use_reloader=False)
+    threading.Thread(target=run_app, daemon=True).start()
 
-	# Wait for boss to be ready
-	time.sleep(1)
+    # Wait for boss to be ready
+    time.sleep(1)
+
 
 ##############################################################################################
 # Helpers to interact with the Flask boss thread.

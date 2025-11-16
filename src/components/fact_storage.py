@@ -1,7 +1,7 @@
-from src.connectors.graph import GraphConnector
 from pandas import concat, DataFrame, option_context
 import random
 import re
+from src.connectors.graph import GraphConnector
 from src.util import Log
 from typing import Any, Dict, List, Optional, Tuple
 

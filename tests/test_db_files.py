@@ -1,14 +1,15 @@
-from src.connectors.base import DatabaseConnector
-from src.connectors.relational import RelationalConnector
-from src.connectors.document import DocumentConnector
-from src.connectors.graph import GraphConnector
 import os
 from pandas import DataFrame
 import pytest
+from src.connectors.base import DatabaseConnector
+from src.connectors.document import DocumentConnector
+from src.connectors.graph import GraphConnector
+from src.connectors.relational import RelationalConnector
 from src.util import Log
 import sys
 import time
 from typing import Generator, List, Optional
+
 
 # ------------------------------------------------------------------------------
 # DATABASE FILE TESTS: Run execute_file with example scripts.

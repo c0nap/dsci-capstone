@@ -39,8 +39,16 @@ def task_worker():
             task_queue.task_done()
 
 
-def process_task(mongo_db: MongoHandle, collection_name: str, chunk_id: str, task_name: str, chunk_doc: Dict[str, Any], boss_url: str,
-	task_handler: Callable[[Dict[str, Any]], Dict[str, Any]], task_kwargs: Any = None) -> None:
+def process_task(
+    mongo_db: MongoHandle,
+    collection_name: str,
+    chunk_id: str,
+    task_name: str,
+    chunk_doc: Dict[str, Any],
+    boss_url: str,
+    task_handler: Callable[[Dict[str, Any]], Dict[str, Any]],
+    task_kwargs: Any = None,
+) -> None:
     """Perform the assigned task in a background thread.
     This includes updating task status, running the handler, saving results,
     and notifying the boss service when complete.

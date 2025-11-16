@@ -1,7 +1,7 @@
-from src.connectors.relational import RelationalConnector
+import pytest
 from src.connectors.document import DocumentConnector
 from src.connectors.graph import GraphConnector
-import pytest
+from src.connectors.relational import RelationalConnector
 from src.util import Log
 
 
@@ -65,4 +65,3 @@ def test_db_graph_comprehensive(graph_db: GraphConnector) -> None:
     """Tests if the GraphConnector is working as intended."""
     operational = graph_db.test_operations(raise_error=True)
     assert operational
-

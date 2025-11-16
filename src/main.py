@@ -1,14 +1,19 @@
-from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
-from src.components.metrics import Metrics
-from src.core.boss import create_boss_thread, post_process_full_story, post_chunk_status, post_story_status
+from dotenv import load_dotenv
 import json
 import os
 import pandas as pd
 import random
-import traceback
+from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
+from src.components.metrics import Metrics
+from src.core.boss import (
+    create_boss_thread,
+    post_chunk_status,
+    post_process_full_story,
+    post_story_status
+)
 from src.core.context import session
-from dotenv import load_dotenv
 import time
+import traceback
 
 
 def convert_single():
@@ -216,8 +221,8 @@ def test_relation_extraction():
 
 def process_single():
     """Uses NLP and LLM to process an existing TEI file."""
-    from src.connectors.llm import LLMConnector
     from src.components.relation_extraction import RelationExtractor
+    from src.connectors.llm import LLMConnector
 
     try:
         df = pd.read_csv("datasets/books.csv")
@@ -530,9 +535,9 @@ def pipeline_2(collection_name, chunks, book_title):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
-    from src.connectors.llm import LLMConnector
-    from src.components.relation_extraction import RelationExtractor
     import json
+    from src.components.relation_extraction import RelationExtractor
+    from src.connectors.llm import LLMConnector
 
     re_rebel = "Babelscape/rebel-large"
     re_rst = "GAIR/rst-information-extraction-11b"
@@ -655,6 +660,7 @@ def pipeline_5a(summary, book_title, book_id):
     m.post_basic_output(book_id, book_title, summary)
     print("\nOutput sent to web app.")
 
+
 # TODO: reconcile duplicate with boss.py
 from src.core.boss import pipeline_5b
 
@@ -745,9 +751,6 @@ CHAPTER 12. THE END OF THE END\n
     for task_type in ["questeval", "bookscore"]:
         response = post_process_full_story(BOSS_PORT, story_id, task_type)
         print(f"Triggered {task_type}: {response.json()}")
-
-
-    
 
     # Hand off to Flask - keep main thread alive so daemon thread continues
     print("Initial processing complete. Server listening for additional requests from Blazor...")

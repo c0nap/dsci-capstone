@@ -1,4 +1,3 @@
-from src.connectors.base import DatabaseConnector
 from contextlib import contextmanager
 from dotenv import load_dotenv
 import json
@@ -10,6 +9,7 @@ from mongoengine import (
 import os
 from pandas import DataFrame, json_normalize
 from pymongo.database import Database
+from src.connectors.base import DatabaseConnector
 from src.util import check_values, df_natural_sorted, Log
 from time import time
 from typing import Any, Dict, Generator, List, Optional, Set, Type

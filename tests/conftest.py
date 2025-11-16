@@ -1,9 +1,9 @@
 import pytest
-from src.core.context import get_session, Session
-from src.util import Log
-from src.connectors.relational import RelationalConnector
 from src.connectors.document import DocumentConnector
 from src.connectors.graph import GraphConnector
+from src.connectors.relational import RelationalConnector
+from src.core.context import get_session, Session
+from src.util import Log
 
 
 # Command-line flags for pytest
@@ -24,7 +24,6 @@ def session(request):
     yield _session
 
 
-
 # ------------------------------------------------------------------------------
 # DATABASE FIXTURES: Checkpoint the database connector instances from Session.
 # ------------------------------------------------------------------------------
@@ -33,7 +32,7 @@ def relational_db(session: Session) -> RelationalConnector:
     """Fixture to get relational database connection."""
     _relational_db = session.relational_db
     if _relational_db.database_exists("pytest"):
-    	_relational_db.drop_database("pytest")
+        _relational_db.drop_database("pytest")
     with _relational_db.temp_database("pytest"):
         yield _relational_db
 
@@ -43,7 +42,7 @@ def docs_db(session: Session) -> DocumentConnector:
     """Fixture to get document database connection."""
     _docs_db = session.docs_db
     if _docs_db.database_exists("pytest"):
-    	_docs_db.drop_database("pytest")
+        _docs_db.drop_database("pytest")
     with _docs_db.temp_database("pytest"):
         yield _docs_db
 
@@ -53,7 +52,6 @@ def graph_db(session: Session) -> GraphConnector:
     """Fixture to get document database connection."""
     _graph_db = session.graph_db
     if _graph_db.database_exists("pytest"):
-    	_graph_db.drop_database("pytest")
+        _graph_db.drop_database("pytest")
     with _graph_db.temp_database("pytest"):
         yield _graph_db
-

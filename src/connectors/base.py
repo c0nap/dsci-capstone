@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+import os
 from pandas import DataFrame
 from src.util import Log
-import os
 from typing import Any, Generator, List, Optional
+
 
 class Connector(ABC):
     """Abstract base class for external connectors.

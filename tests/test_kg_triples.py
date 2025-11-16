@@ -1,7 +1,7 @@
-from src.connectors.graph import GraphConnector
-from src.components.fact_storage import KnowledgeGraph
 from pandas import DataFrame
 import pytest
+from src.components.fact_storage import KnowledgeGraph
+from src.connectors.graph import GraphConnector
 from src.util import Log
 
 

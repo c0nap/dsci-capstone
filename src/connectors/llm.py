@@ -1,14 +1,14 @@
-from src.connectors.base import Connector
+from dotenv import load_dotenv
 from langchain_core.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate,
 )
 from langchain_openai import ChatOpenAI
-from typing import Any, List, Tuple
-from dotenv import load_dotenv
 import os
 import re
+from src.connectors.base import Connector
+from typing import Any, List, Tuple
 
 
 class LLMConnector(Connector):

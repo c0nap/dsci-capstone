@@ -1,11 +1,11 @@
 from dotenv import load_dotenv
-from src.connectors.base import DatabaseConnector
 import os
 from pandas import DataFrame
 from sqlalchemy import create_engine, MetaData, Row, select, Table, text
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.pool import NullPool
 from sqlparse import parse as sql_parse
+from src.connectors.base import DatabaseConnector
 from src.util import check_values, df_natural_sorted, Log
 from typing import Any, List, Optional, Tuple
 

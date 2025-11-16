@@ -1,7 +1,7 @@
-from src.connectors.relational import RelationalConnector
+from src.components.fact_storage import KnowledgeGraph
 from src.connectors.document import DocumentConnector
 from src.connectors.graph import GraphConnector
-from src.components.fact_storage import KnowledgeGraph
+from src.connectors.relational import RelationalConnector
 from typing import Any, Self
 
 
@@ -10,6 +10,7 @@ class Session:
     @details
         - This class implements Singleton design so only one session can be created.
     """
+
     _instance = None
     _created = False
 
@@ -48,6 +49,7 @@ class Session:
 ## Global storage for the lazy singleton
 _session = None
 
+
 def get_session(*args: Any, **kwargs: Any) -> Session:
     """Lazily creates a session on first call, otherwise returns the existing session.
     @note  Will ignore any arguments passed after creation.
@@ -63,6 +65,7 @@ def get_session(*args: Any, **kwargs: Any) -> Session:
 # Help type checkers resolve 'session'
 session: Session
 
+
 def __getattr__(name: str) -> Any:
     """Lazy attribute resolution for module-level imports.
     @details
@@ -75,4 +78,3 @@ def __getattr__(name: str) -> Any:
     if name == "session":
         return get_session()
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
-
