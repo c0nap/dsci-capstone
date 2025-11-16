@@ -109,4 +109,11 @@ TODO - Implement
 TODO - Implement
 
 
+## Pipeline Architecture
+
+TODO - Boss & Workers
+
+Write directly to MongoDB
+
+TODO - Metrics: run_bookscore, run_questeval, etc
 
