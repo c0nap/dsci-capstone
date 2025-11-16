@@ -44,6 +44,19 @@ class Session:
         # TODO: Split into scene graph, event graph, and social graph.
 
 
+# Global storage for the lazy singleton
+_session_instance = None
+
+def get_session(verbose: bool = False) -> Session:
+    """ """
+    global _session_instance
+    if _session_instance is None:
+        _session_instance = Session(verbose=verbose)
+    return _session_instance
+
+
+
+
 
 if __name__ == "__main__":
     session = Session()
