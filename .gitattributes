@@ -8,5 +8,5 @@
 # Enforce LF for Makefile (required)
 Makefile      text eol=lf
 
-# Enforce LF for all Dockerfiles in docker/
-docker/Dockerfile*  text eol=lf
+# Enforce LF for all Dockerfiles
+*.dockerfile  text eol=lf
