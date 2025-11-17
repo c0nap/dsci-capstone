@@ -584,12 +584,14 @@ def pipeline_3(triples):
     @details
         - Neo4j graph database
         - Blazor graph page"""
+    # Load existing triples to save NLP time / LLM tokens during MVP stage
+    with open(json_path, "r") as f:
+        triples = json.load(f)
+
     for triple in triples:
-        subj = triple["s"]
-        rel = triple["r"]
-        obj = triple["o"]
-        print(subj, rel, obj)
-        session.main_graph.add_triple(subj, rel, obj)
+        print(triple["s"], triple["r"], triple["o"])
+    # TODO: normalize
+    session.main_graph.add_triples_json(triples)
 
     # basic linear verbalization of triples (concatenate)
     edge_count_df = session.main_graph.get_edge_counts(top_n=3)
@@ -597,18 +599,8 @@ def pipeline_3(triples):
     print("\nMost relevant nodes:")
     print(edge_count_df)
 
-    triples_df = session.main_graph.get_all_triples()
-    triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
-    triples_string = ""
-    for _, row in edge_count_df.iterrows():
-        node_name = row.get("node_name")
-        node_triples_df = triples_df[triples_df["subject"] == node_name]
-
-        for _, triple in node_triples_df.iterrows():
-            subj = triple.get("subject")
-            rel = triple.get("relation")
-            obj = triple.get("object")
-            triples_string += f"{subj} {rel} {obj}\n"
+    triples_df = session.main_graph.get_by_ranked_degree(min_rank=3, id_columns=["subject_id"])
+    triples_string = session.main_graph.to_triples_string(triples_df, format="triple")
     print("\nTriples which best represent the graph:")
     print(triples_string)
     return triples_string
