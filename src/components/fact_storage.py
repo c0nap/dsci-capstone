@@ -169,6 +169,8 @@ class KnowledgeGraph:
     # ------------------------------------------------------------------------
     # Subgraph Selection
     # ------------------------------------------------------------------------
+    # TODO: add to_names and drop_ids flags to each of these
+    # user can avoid calling triples_to_names each time
 
     def get_subgraph_by_nodes(self, node_ids: List[str], id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
         """Return all triples where subject or object is in the specified node list.
@@ -193,10 +195,6 @@ class KnowledgeGraph:
 
         Log.success(Log.kg + Log.sub_gr, f"Found {len(sub_df)} triples for given nodes.", self.verbose)
         return sub_df
-
-
-        
-
 
     def get_neighborhood(self, node_id: str, depth: int = 1) -> DataFrame:
         """Get k-hop neighborhood around a central node.
@@ -230,6 +228,39 @@ class KnowledgeGraph:
 
         Log.success(Log.kg + Log.sub_gr, f"Found {len(result_df)} triples in {depth}-hop neighborhood.", self.verbose)
         return result_df
+
+    def get_degree_range(self, min_degree: int = 1, max_degree: int = -1) -> DataFrame:
+        """Return triples associated with nodes whose degree lies within the specified bounds.
+        @details
+            - Degree is defined as the number of relationships where a node appears as
+              start_node_id or end_node_id.
+            - Selects all nodes satisfying min_degree <= degree <= max_degree
+              and returns triples incident to those nodes.
+        @param max_degree  Maximum number of edges allowed for a node to be included (-1 = infer highest edge count).
+        @param min_degree  Minimum number of edges required for a node to be included.
+        @param id_columns  List of columns to compare against. Can be 'subject_id', 'object_id', or both.
+        @return  DataFrame containing an arbitrary number of triples for nodes in the specified degree range.
+        @throws Log.Failure  If the graph fails to load or degree computation fails.
+        @throws ValueError   If min_degree or max_degree values are invalid.
+        """
+        pass
+        
+    def get_by_ranked_degree(self, min_rank: int = 1, max_rank: int = -1) -> DataFrame:
+        """Return triples associated with nodes whose degree rank lies in the specified range.
+        @details
+            - Computes degree (edge count) for all nodes.
+            - Sorts nodes by degree descending, assigns ranks, and selects those with
+              min_rank <= rank <= max_rank.
+            - Returns all triples where subject_id or object_id matches a selected node.
+        @param min_rank  Minimum degree rank. Inclusive.
+        @param max_rank  Maximum degree rank (-1 = maximum degree) to include. Inclusive.
+        @param id_columns  List of columns to compare against. Can be 'subject_id', 'object_id', or both.
+        @return  DataFrame containing the triples for ranked nodes; columns:
+                 subject_id, relation_id, object_id.
+        @throws Log.Failure  If the graph cannot be queried.
+        @throws ValueError   If min_rank or max_rank values are invalid.
+        """
+        pass
 
     def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
         """Sample subgraph using directed random walk traversal starting from specified nodes.
