@@ -378,18 +378,36 @@ class KnowledgeGraph:
     # Verbalization Formats
     # ------------------------------------------------------------------------
 
-    def to_triple_string(self, triples_df: Optional[DataFrame] = None, format: str = "natural") -> str:
+    def to_triple_string(self, triple_names_df: Optional[DataFrame] = None, mode: str = "triple") -> str:
         """Convert triples to string representation in various formats.
         @details  Supports multiple output formats for LLM consumption:
-        - "natural": Human-readable sentences (e.g., "Alice knows Bob.")
-        - "triple": Raw triple format (e.g., "Alice KNOWS Bob")
+        - "natural": Human-readable sentences (e.g., "Alice employed by Bob.")
+        - "triple": Raw triple format (e.g., "Alice employedBy Bob")
         - "json": JSON array of objects with s/r/o keys
-        @param triples_df  DataFrame with subject/relation/object columns. If None, uses all triples from this graph.
-        @param format  Output format: "natural", "triple", or "json" (default: "natural").
+        @param triple_names_df  DataFrame with subject, relation, object columns. If None, uses all triples from this graph.
+        @param mode  Output format: "natural", "triple", or "json" (default: "triple").
         @return  String representation of triples in the specified format.
         @throws ValueError  If format is not recognized.
         """
-        pass
+        accepted_modes = ["natural", "triple", "json"]
+        if mode not in accepted_modes:
+            raise ValueError(f"Invalid triple string format {mode}; expected {accepted_modes}")
+        
+        if triple_names_df is None:
+            triple_names_df = session.main_graph.get_all_triples()
+            triple_names_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
+
+        # TODO: Simplify & add other modes
+        if mode not "triple":
+            return "TODO"
+
+        triples_string = ""
+        for _, row in edge_count_df.iterrows():
+            subj = triple.get("subject")
+            rel = triple.get("relation")
+            obj = triple.get("object")
+            triples_string += f"{subj} {rel} {obj}\n"
+        return triples_string
 
     def to_contextualized_string(self, focus_nodes: Optional[List[str]] = None, top_n: int = 5) -> str:
         """Convert triples to contextualized string grouped by focus nodes.
