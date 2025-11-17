@@ -428,23 +428,37 @@ def output_single():
 
 
 
-
+##########################################################################
 def pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     """Connects all components to convert an EPUB file to a book summary.
     @details  Data conversions:
         - EPUB file
         - XML (TEI)
     """
+    # TODO: migration in progress
 
     # convert EPUB file
     print(f"\n{'='*50}")
     print(f"Processing: {epub_path}")
 
-    converter = EPUBToTEI(epub_path, save_pandoc=False, save_tei=True)
+    tei_path = linear_01_convert_epub(epub_path)
+    story = linear_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str)
+    chunks = linear_03_chunk_story(story)
+
+    print("\n=== STORY SUMMARY ===")
+    print(f"Total chunks: {len(chunks)}")
+    return chunks
+
+
+def linear_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
+    if converter is None:
+        converter = EPUBToTEI(epub_path, save_pandoc=False, save_tei=True)
+    converter.epub_path = epub_path
     converter.convert_to_tei()
     converter.clean_tei()
-    tei_path = converter.tei_path
+    return converter.tei_path
 
+def linear_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str):
     chaps = [line.strip() for line in book_chapters.splitlines() if line.strip()]
     reader = ParagraphStreamTEI(
         tei_path,
@@ -455,12 +469,13 @@ def pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id):
         end_inclusive=end_str,
     )
     story = Story(reader)
-    story.pre_split_chunks(max_chunk_length=1500)
-    chunks = list(story.stream_chunks())
+    return story
 
-    print("\n=== STORY SUMMARY ===")
-    print(f"Total chunks: {len(chunks)}")
+def linear_03_chunk_story(story, max_chunk_length=1500):
+    story.pre_split_chunks(max_chunk_length=max_chunk_length)
+    chunks = list(story.stream_chunks())
     return chunks
+##########################################################################
 
 
 def pipeline_2(collection_name, chunks, book_title):
