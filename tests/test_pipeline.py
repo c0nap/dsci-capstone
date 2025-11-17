@@ -114,7 +114,46 @@ def test_linear_03_chunk_story(book_data):
 
 
 
+##########################################################################
+# Minimal aggregate test
+##########################################################################
+
+@pytest.mark.pipeline
+@pytest.mark.order(4)
+@pytest.mark.dependency(name="pipeline_A_minimal", scope="session")
+def test_pipeline_A_minimal(example_data_book1):
+    """Test running the aggregate pipeline_A on a single book."""
+    data = example_data_book1
+    chunks = pipeline_A(
+        data["epub"],
+        data["chapters"],
+        data["start"],
+        data["end"],
+        data["book_id"],
+        data["story_id"],
+    )
+    assert isinstance(chunks, list)
+    assert len(chunks) > 0
 
 
+@pytest.mark.pipeline
+@pytest.mark.order(5)
+@pytest.mark.dependency(name="pipeline_A_csv", scope="session")
+def test_pipeline_A_from_csv():
+    """Read example CSV and run pipeline_A for each row."""
+    csv_path = "datasets/books.csv"
+    assert os.path.exists(csv_path)
 
+    df = pd.read_csv(csv_path)
+    for _, row in df.iterrows():
+        epub_path = row.get("epub_path")
+        start_str = row.get("start_string") or None
+        end_str = row.get("end_string") or None
+        chapters = row.get("chapters", "")
+        book_id = row.get("book_id")
+        story_id = int(row.get("story_id"))
+
+        chunks = pipeline_A(epub_path, chapters, start_str, end_str, book_id, story_id)
+        assert isinstance(chunks, list)
+        assert len(chunks) > 0
 

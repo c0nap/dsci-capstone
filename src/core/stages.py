@@ -3,48 +3,10 @@ from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStre
 from src.components.metrics import Metrics
 from src.core.context import session
 import json
-import pandas as pd
+from typing import Optional
 # unused?
 import traceback
 
-
-
-def convert_from_csv():
-    """Converts several EPUB files to TEI format.
-    @note  Files are specified as rows in a CSV which contains parsing instructions."""
-    try:
-        df = pd.read_csv("datasets/books.csv")
-    except FileNotFoundError:
-        print("Error: datasets/books.csv not found")
-        return
-    except Exception as e:
-        print(f"Error reading CSV: {e}")
-        return
-
-    for _, row in df.iterrows():
-        try:
-            print(f"\n{'='*50}")
-            print(f"Processing: {row.get('epub_path', 'Unknown path')}")
-
-            # Handle NaN values for start/end strings - convert to None
-            start_str = row.get("start_string")
-            end_str = row.get("end_string")
-            if pd.isna(start_str):
-                start_str = None
-            if pd.isna(end_str):
-                end_str = None
-
-            converter = EPUBToTEI(
-                row.get("epub_path"),
-                save_pandoc=False,
-                save_tei=True,
-            )
-            converter.convert_to_tei()
-            converter.clean_tei()
-
-        except Exception as e:
-            print(f"Error processing {row.get('epub_path', 'unknown')}: {e}")
-            traceback.print_exc()
 
 
 ### Will revisit later - Book classes need refactoring ###
