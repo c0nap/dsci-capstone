@@ -3,7 +3,12 @@ import random
 import re
 from src.connectors.graph import GraphConnector
 from src.util import Log
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, TypedDict
+
+class Triple(TypedDict):
+    s: str
+    r: str
+    o: str
 
 
 class KnowledgeGraph:
@@ -50,6 +55,18 @@ class KnowledgeGraph:
                 Log.success(Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
         except Exception as e:
             raise Log.Failure(Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
+
+    def add_triples_json(self, triples_json: List[Triple]) -> None:
+        """Add several semantic triples to the graph from pre-verified JSON.
+        @note  JSONshould be pre-normalized using @ref src.connectors.llm.LLMConnector.normalize_triples.
+        @param triples_json  A list of Triple dictionaries containing keys: 's', 'r', and 'o'.
+        @throws Log.Failure  If any triple cannot be added to the graph database.
+        """
+        for triple in triples_json:
+            subj = triple["s"]
+            rel = triple["r"]
+            obj = triple["o"]
+            self.add_triple(subj, rel, obj)
 
     def get_all_triples(self) -> DataFrame:
         """Return all triples in the specified graph as a pandas DataFrame.

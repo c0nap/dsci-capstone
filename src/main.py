@@ -363,11 +363,9 @@ def output_single():
         triples = json.load(f)
 
     for triple in triples:
-        subj = triple["s"]
-        rel = triple["r"]
-        obj = triple["o"]
-        print(subj, rel, obj)
-        session.main_graph.add_triple(subj, rel, obj)
+        print(triple["s"], triple["r"], triple["o"])
+    # TODO: normalize
+    session.main_graph.add_triples_json(triples)
 
     # basic linear verbalization of triples (concatenate)
     edge_count_df = session.main_graph.get_edge_counts(top_n=3)
