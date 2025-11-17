@@ -7,10 +7,15 @@ from src.core.stages import (
 )
 from src.components.book_conversion import EPUBToTEI, ParagraphStreamTEI, Story
 import os
+from pandas import read_csv
 
 ##########################################################################
 # Fixtures
 ##########################################################################
+
+@pytest.fixture
+def book_data(request):
+    return request.getfixturevalue(request.param)
 
 @pytest.fixture
 def book_1_data():
@@ -120,9 +125,10 @@ def test_linear_03_chunk_story(book_data):
 @pytest.mark.pipeline
 @pytest.mark.order(4)
 @pytest.mark.dependency(name="pipeline_A_minimal", scope="session")
-def test_pipeline_A_minimal(example_data_book1):
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_pipeline_A_minimal(book_data):
     """Test running the aggregate pipeline_A on a single book."""
-    data = example_data_book1
+    data = book_data
     chunks = pipeline_A(
         data["epub"],
         data["chapters"],
@@ -143,7 +149,7 @@ def test_pipeline_A_from_csv():
     csv_path = "datasets/books.csv"
     assert os.path.exists(csv_path)
 
-    df = pd.read_csv(csv_path)
+    df = read_csv(csv_path)
     for _, row in df.iterrows():
         epub_path = row.get("epub_path")
         start_str = row.get("start_string") or None
