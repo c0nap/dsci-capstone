@@ -5,8 +5,7 @@ from src.core.stages import (
     linear_03_chunk_story,
     pipeline_A,
 )
-from src.components.epub_to_tei import EPUBToTEI
-from src.core.story import ParagraphStreamTEI, Story
+from src.components.book_conversion import EPUBToTEI, ParagraphStreamTEI, Story
 import os
 
 ##########################################################################
