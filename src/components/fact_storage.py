@@ -182,13 +182,13 @@ class KnowledgeGraph:
         @throws KeyError  If the provided column names are invalid.
         """
         # TODO: Update pytest for id_columns
-        missing = [k for k in keys if k not in triples_df.columns]
-        if missing:
-            raise KeyError(f"The provided key columns are not in triples_df: {missing}")
-
         triples_df = self.get_all_triples()
         if triples_df is None or triples_df.empty:
             raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
+
+        missing = [k for k in id_columns if k not in triples_df.columns]
+        if missing:
+            raise KeyError(f"The provided key columns are not in triples_df: {missing}")
 
         # Filter triples where either endpoint is in node_ids
         mask = triples_df[id_columns].isin(node_ids).any(axis=1)
@@ -467,7 +467,7 @@ class KnowledgeGraph:
             triple_names_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
 
         # TODO: Simplify & add other modes
-        if mode not "triple":
+        if mode != "triple":
             return "TODO"
 
         triples_string = ""

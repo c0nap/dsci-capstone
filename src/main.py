@@ -375,10 +375,7 @@ def output_single():
     print("\nMost relevant nodes:")
     print(edge_count_df)
 
-    popular_node_ids = list(set(edge_count_df["node_id"]))
-    triples_df = session.main_graph.get_subgraph_by_nodes(popular_node_ids, id_columns=["subject_id"])
-    triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
-
+    triples_df = session.main_graph.get_by_ranked_degree(min_rank=3, id_columns=["subject_id"])
     triples_string = session.main_graph.to_triples_string(triples_df, format="triple")
     print("\nTriples which best represent the graph:")
     print(triples_string)
