@@ -104,6 +104,8 @@ class DatabaseConnector:
 
 - Helper function names should be prefixed with an underscore _e.g._ `_parse_json`.
 
+- Common imports should go at the top of the module, but if a package is heavy (spacy, pandas, etc) or only used by one function, it should be placed at the top of that function.
+
 
 # Manually Generating Documentation with Doxygen
 

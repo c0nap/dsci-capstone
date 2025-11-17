@@ -3,6 +3,7 @@ from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStre
 from src.components.metrics import Metrics
 from src.core.context import session
 import json
+import pandas as pd
 # unused?
 import traceback
 
