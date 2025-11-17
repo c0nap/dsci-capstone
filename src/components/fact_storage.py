@@ -489,9 +489,9 @@ class KnowledgeGraph:
 
         triples_string = ""
         for _, triple in triple_names_df.iterrows():
-            subj = triple.get("subject")
-            rel = triple.get("relation")
-            obj = triple.get("object")
+            subj = triple["subject"]
+            rel = triple["relation"]
+            obj = triple["object"]
             triples_string += f"{subj} {rel} {obj}\n"
         return triples_string
 
@@ -569,7 +569,7 @@ class KnowledgeGraph:
         # Convert to DataFrame and sort
         result_df = DataFrame(list(edge_counts.items()), columns=["element_id", "edge_count"])
         result_df = result_df.rename(columns={"element_id": "node_id"})
-        result_df = result_df.sort_values("edge_count", ascending=False)
+        result_df = result_df.sort_values("edge_count", ascending=False).reset_index(drop=True)
         if top_n > 0:
             result_df = result_df.head(top_n)
 

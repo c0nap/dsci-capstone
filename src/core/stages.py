@@ -365,6 +365,7 @@ def output_single():
     print(edge_count_df)
 
     triples_df = session.main_graph.get_by_ranked_degree(min_rank=3, id_columns=["subject_id"])
+    triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
     triples_string = session.main_graph.to_triples_string(triples_df, mode="triple")
     print("\nTriples which best represent the graph:")
     print(triples_string)
@@ -538,6 +539,7 @@ def pipeline_3(triples):
     print(edge_count_df)
 
     triples_df = session.main_graph.get_by_ranked_degree(min_rank=3, id_columns=["subject_id"])
+    triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
     triples_string = session.main_graph.to_triples_string(triples_df, mode="triple")
     print("\nTriples which best represent the graph:")
     print(triples_string)
