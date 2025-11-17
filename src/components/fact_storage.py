@@ -171,6 +171,7 @@ class KnowledgeGraph:
     # ------------------------------------------------------------------------
     # TODO: add to_names and drop_ids flags to each of these
     # user can avoid calling triples_to_names each time
+    # TODO: better approach to id_columns for unidirectional vs bidirectional, fan-in vs fan-out
 
     def get_subgraph_by_nodes(self, node_ids: List[str], id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
         """Return all triples where subject or object is in the specified node list.
@@ -229,7 +230,7 @@ class KnowledgeGraph:
         Log.success(Log.kg + Log.sub_gr, f"Found {len(result_df)} triples in {depth}-hop neighborhood.", self.verbose)
         return result_df
 
-    def get_degree_range(self, min_degree: int = 1, max_degree: int = -1) -> DataFrame:
+    def get_degree_range(self, min_degree: int = 1, max_degree: int = -1, id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
         """Return triples associated with nodes whose degree lies within the specified bounds.
         @details
             - Degree is defined as the number of relationships where a node appears as
@@ -245,7 +246,7 @@ class KnowledgeGraph:
         """
         pass
         
-    def get_by_ranked_degree(self, min_rank: int = 1, max_rank: int = -1) -> DataFrame:
+    def get_by_ranked_degree(self, min_rank: int = 1, max_rank: int = -1, id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
         """Return triples associated with nodes whose degree rank lies in the specified range.
         @details
             - Computes degree (edge count) for all nodes.
@@ -260,7 +261,32 @@ class KnowledgeGraph:
         @throws Log.Failure  If the graph cannot be queried.
         @throws ValueError   If min_rank or max_rank values are invalid.
         """
-        pass
+        if min_rank < 1:
+            raise ValueError("min_rank must be >= 1")
+        if max_rank != -1 and max_rank < min_rank:
+            raise ValueError("max_rank must be >= min_rank, or -1 for no upper bound")
+
+        edge_count_df = session.main_graph.get_edge_counts()
+        if edge_df is None or edge_df.empty:
+            raise Log.Failure(Log.kg, "Failed to compute edge counts.")
+        # Sort and assign rank (1 = highest degree)
+        edge_df = edge_df.sort_values("edge_count", ascending=False).reset_index(drop=True)
+        edge_df["rank"] = edge_df.index + 1
+
+        # Determine actual max_rank
+        if max_rank == -1:
+            max_rank = int(edge_df["rank"].max())
+
+        # Filter nodes by rank
+        ranked_nodes = edge_df[
+            (edge_df["rank"] >= min_rank) & (edge_df["rank"] <= max_rank)
+        ]
+        if ranked_nodes.empty:
+            return DataFrame(columns=["subject_id", "relation_id", "object_id"])
+        node_ids = ranked_nodes["node_id"].tolist()
+
+        triples_df = self.get_subgraph_by_nodes(node_ids, id_columns=id_columns)
+        return triples_df
 
     def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
         """Sample subgraph using directed random walk traversal starting from specified nodes.
@@ -499,9 +525,9 @@ class KnowledgeGraph:
         """
         pass
 
-    def get_edge_counts(self, top_n: int = 10) -> DataFrame:
+    def get_edge_counts(self, top_n: int = -1) -> DataFrame:
         """Return node names and their edge counts, ordered by edge count descending.
-        @param top_n  Number of top nodes to return (by edge count). Default is 10.
+        @param top_n  Number of top nodes to return (by edge count). Default is -1 (all nodes).
         @return  DataFrame with columns: node_id, edge_count
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
@@ -526,7 +552,9 @@ class KnowledgeGraph:
         # Convert to DataFrame and sort
         result_df = DataFrame(list(edge_counts.items()), columns=["element_id", "edge_count"])
         result_df = result_df.rename(columns={"element_id": "node_id"})
-        result_df = result_df.sort_values("edge_count", ascending=False).head(top_n)
+        result_df = result_df.sort_values("edge_count", ascending=False)
+        if top_n > 0:
+            result_df = result_df.head(top_n)
 
         Log.success(Log.kg, f"Found top-{top_n} most popular nodes.", self.verbose)
         return result_df
