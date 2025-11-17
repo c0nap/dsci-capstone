@@ -374,9 +374,9 @@ def output_single():
     edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
     print("\nMost relevant nodes:")
     print(edge_count_df)
-    
+
     popular_node_ids = list(set(edge_count_df["node_id"]))
-    triples_df = session.main_graph.get_subgraph_by_nodes(popular_node_ids)
+    triples_df = session.main_graph.get_subgraph_by_nodes(popular_node_ids, id_columns=["subject_id"])
     triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
 
     triples_string = session.main_graph.to_triples_string(triples_df, format="triple")

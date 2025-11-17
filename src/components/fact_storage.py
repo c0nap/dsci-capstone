@@ -170,21 +170,33 @@ class KnowledgeGraph:
     # Subgraph Selection
     # ------------------------------------------------------------------------
 
-    def get_subgraph_by_nodes(self, node_ids: List[str]) -> DataFrame:
+    def get_subgraph_by_nodes(self, node_ids: List[str], id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
         """Return all triples where subject or object is in the specified node list.
         @param node_ids  List of node element IDs to filter by.
+        @param id_columns  List of columns to compare against. Can be 'subject_id', 'object_id', or both.
         @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
+        @throws KeyError  If the provided column names are invalid.
         """
+        # TODO: Update pytest for id_columns
+        missing = [k for k in keys if k not in triples_df.columns]
+        if missing:
+            raise KeyError(f"The provided key columns are not in triples_df: {missing}")
+
         triples_df = self.get_all_triples()
         if triples_df is None or triples_df.empty:
             raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
 
         # Filter triples where either endpoint is in node_ids
-        sub_df = triples_df[triples_df["subject_id"].isin(node_ids) | triples_df["object_id"].isin(node_ids)].reset_index(drop=True)
+        mask = triples_df[id_columns].isin(node_ids).any(axis=1)
+        sub_df = triples_df[mask].reset_index(drop=True)
 
         Log.success(Log.kg + Log.sub_gr, f"Found {len(sub_df)} triples for given nodes.", self.verbose)
         return sub_df
+
+
+        
+
 
     def get_neighborhood(self, node_id: str, depth: int = 1) -> DataFrame:
         """Get k-hop neighborhood around a central node.
