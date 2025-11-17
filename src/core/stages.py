@@ -585,5 +585,16 @@ def pipeline_5a(summary, book_title, book_id):
     print("\nOutput sent to web app.")
 
 
-# TODO: reconcile duplicate with boss.py
-from src.core.boss import pipeline_5b
+def pipeline_5b(
+    summary: str, book_title: str, book_id: str, chunk: str, gold_summary: str = "", bookscore: float = None, questeval: float = None
+) -> None:
+    """Send metrics to Blazor
+    - Compute basic metrics (ROUGE, BERTScore)
+    - Wait for advanced metrics (QuestEval, BooookScore)
+    - Post to Blazor metrics page"""
+    from src.components.metrics import Metrics
+
+    m = Metrics()
+    m.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
+    print("\nOutput sent to web app.")
+
