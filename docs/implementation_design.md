@@ -129,3 +129,6 @@ We prioritize readability by implementing both.
 1. Main() can use the letter-incremented high-level stages, like `pipeline_A` which take lots of inputs 
 2. PyTest can use the number-incremented low-level tasks, like `linear_01_does_something` or `group_02_does_parallel_1` or `group_02_does_parallel_2` 
 
+These are orchestrated by main and boss still - we do not implement a DAG.
+
+In the future, main() can improve performance by assigning these in parallel.
