@@ -8,22 +8,6 @@ import pandas as pd
 import traceback
 
 
-def convert_single():
-    """Converts one EPUB file to TEI format."""
-    print("\n\nCHAPTERS for book 1: FAIRY TALES")
-    epub_file_1 = "./datasets/examples/nested-fairy-tales.epub"
-    converter = EPUBToTEI(epub_file_1, save_pandoc=True, save_tei=True)
-    converter.convert_to_tei()
-    converter.clean_tei()
-    # converter.print_chapters(200)
-
-    print("\n\nCHAPTERS for book 2: MYTHS")
-    epub_file_2 = "./datasets/examples/nested-myths.epub"
-    converter = EPUBToTEI(epub_file_2, save_pandoc=True, save_tei=True)
-    converter.convert_to_tei()
-    converter.clean_tei()
-    # converter.print_chapters(200)
-
 
 def convert_from_csv():
     """Converts several EPUB files to TEI format.
@@ -147,59 +131,6 @@ def convert_from_csv():
 #         except Exception as e:
 #             print(f"Error processing {row.get('epub_path', 'unknown')}: {e}")
 #             traceback.print_exc()
-
-
-tei = "./datasets/examples/trilogy-wishes-1.tei"
-chapters = """
-CHAPTER 1 BEAUTIFUL AS THE DAY\n
-CHAPTER 2 GOLDEN GUINEAS\n
-CHAPTER 3 BEING WANTED\n
-CHAPTER 4 WINGS\n
-CHAPTER 5 NO WINGS\n
-CHAPTER 6 A CASTLE AND NO DINNER\n
-CHAPTER 7 A SIEGE AND BED\n
-CHAPTER 8 BIGGER THAN THE BAKER'S BOY\n
-CHAPTER 9 GROWN UP\n
-CHAPTER 10 SCALPS\n
-CHAPTER 11 THE LAST WISH\n
-"""  # Corresponds to text within <head> in TEI file.
-start = ""
-end = "But I must say no more."
-
-
-def chunk_single():
-    """Creates a Story and many Chunks from a TEI file.
-    @details
-        Requires hard-coded specificaitons
-            - List of all chapter names.
-            - Optional start / end strings."""
-    chaps = [line.strip() for line in chapters.splitlines() if line.strip()]
-    reader = ParagraphStreamTEI(
-        tei,
-        book_id=1,
-        story_id=1,
-        allowed_chapters=chaps,
-        start_inclusive=start,
-        end_inclusive=end,
-    )
-    story = Story(reader)
-    story.pre_split_chunks(max_chunk_length=1500)
-    chunks = list(story.stream_chunks())
-
-    print("\n=== STORY SUMMARY ===")
-    print(f"Total chunks: {len(chunks)}")
-    print("Chunk previews (first 10):")
-    for i in range(min(10, len(chunks))):
-        c = chunks[i]
-        snippet = (c.text[:80] + "...") if len(c.text) > 80 else c.text
-        print(f"  [{i}] Story:{c.story_percent:.1f}% Chapter:{c.chapter_percent:.1f}% - {snippet}")
-
-    print("\n\nFull chunks (last 3):")
-    for i in range(len(chunks) - 3, len(chunks)):
-        c = chunks[i]
-        print(f"  [{i}] {c}")
-        print(c.text)
-        print()
 
 
 def test_relation_extraction():
@@ -429,15 +360,12 @@ def output_single():
 
 
 ##########################################################################
-def pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id):
+def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     """Connects all components to convert an EPUB file to a book summary.
     @details  Data conversions:
         - EPUB file
         - XML (TEI)
     """
-    # TODO: migration in progress
-
-    # convert EPUB file
     print(f"\n{'='*50}")
     print(f"Processing: {epub_path}")
 
@@ -456,6 +384,7 @@ def linear_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
     converter.epub_path = epub_path
     converter.convert_to_tei()
     converter.clean_tei()
+    # TODO: converter.print_chapters(200)
     return converter.tei_path
 
 def linear_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str):
