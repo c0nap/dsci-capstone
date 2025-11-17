@@ -25,6 +25,8 @@ class KnowledgeGraph:
         self.database = database
         ## Whether to print debug messages.
         self.verbose = verbose
+        ## Flag to drop any existing graph when the first triple is added.
+        self._first_insert = True
 
     def add_triple(self, subject: str, relation: str, object_: str) -> None:
         """Add a semantic triple to the graph using raw Cypher.
@@ -34,6 +36,10 @@ class KnowledgeGraph:
         @note  LLM output should be pre-normalized using @ref src.connectors.llm.LLMConnector.normalize_triples.
         @throws Log.Failure  If the triple cannot be added to our graph database.
         """
+        if self._first_insert:
+            self._first_insert = False
+            if self.database.graph_exists(self.graph_name):
+                self.database.drop_graph(self.graph_name)
 
         # Normalize already-cleaned inputs for extra Cypher safety
         relation = re.sub(r"[^A-Za-z0-9_]", "_", relation).upper().strip("_")
