@@ -488,7 +488,7 @@ class KnowledgeGraph:
             return "TODO"
 
         triples_string = ""
-        for _, row in edge_count_df.iterrows():
+        for _, triple in triple_names_df.iterrows():
             subj = triple.get("subject")
             rel = triple.get("relation")
             obj = triple.get("object")
