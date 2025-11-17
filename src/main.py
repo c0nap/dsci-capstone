@@ -584,10 +584,6 @@ def pipeline_3(triples):
     @details
         - Neo4j graph database
         - Blazor graph page"""
-    # Load existing triples to save NLP time / LLM tokens during MVP stage
-    with open(json_path, "r") as f:
-        triples = json.load(f)
-
     for triple in triples:
         print(triple["s"], triple["r"], triple["o"])
     # TODO: normalize

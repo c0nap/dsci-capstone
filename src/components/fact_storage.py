@@ -464,7 +464,7 @@ class KnowledgeGraph:
     # Verbalization Formats
     # ------------------------------------------------------------------------
 
-    def to_triple_string(self, triple_names_df: Optional[DataFrame] = None, mode: str = "triple") -> str:
+    def to_triples_string(self, triple_names_df: Optional[DataFrame] = None, mode: str = "triple") -> str:
         """Convert triples to string representation in various formats.
         @details  Supports multiple output formats for LLM consumption:
         - "natural": Human-readable sentences (e.g., "Alice employed by Bob.")
