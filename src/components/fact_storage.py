@@ -266,7 +266,7 @@ class KnowledgeGraph:
         if max_rank != -1 and max_rank < min_rank:
             raise ValueError("max_rank must be >= min_rank, or -1 for no upper bound")
 
-        edge_count_df = session.main_graph.get_edge_counts()
+        edge_df = self.get_edge_counts()
         if edge_df is None or edge_df.empty:
             raise Log.Failure(Log.kg, "Failed to compute edge counts.")
         # Sort and assign rank (1 = highest degree)
