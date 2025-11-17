@@ -9,12 +9,15 @@ from src.components.epub_to_tei import EPUBToTEI
 from src.core.story import ParagraphStreamTEI, Story
 import os
 
+##########################################################################
+# Fixtures
+##########################################################################
+
 @pytest.fixture
-def example_data():
-    """Returns a dictionary of all example data for tests."""
+def book_1_data():
+    """Example data for Book 1: nested-fairy-tales.epub"""
     return {
-        "epub_1": "./datasets/examples/nested-fairy-tales.epub",
-        "epub_2": "./datasets/examples/nested-myths.epub",
+        "epub": "./datasets/examples/nested-fairy-tales.epub",
         "chapters": """
             CHAPTER 1 BEAUTIFUL AS THE DAY
             CHAPTER 2 GOLDEN GUINEAS
@@ -34,32 +37,53 @@ def example_data():
         "story_id": 1,
     }
 
+@pytest.fixture
+def book_2_data():
+    """Example data for Book 2: nested-myths.epub"""
+    return {
+        "epub": "./datasets/examples/nested-myths.epub",
+        "chapters": """
+            CHAPTER 1 ORIGINS
+            CHAPTER 2 HEROES
+            CHAPTER 3 GODS AND MONSTERS
+            CHAPTER 4 TRIALS
+            CHAPTER 5 RESOLUTIONS
+        """,
+        "start": "",
+        "end": "Thus ends the tale.",
+        "book_id": 2,
+        "story_id": 1,
+    }
+
+##########################################################################
+# Tests
+##########################################################################
 
 @pytest.mark.pipeline
 @pytest.mark.order(1)
 @pytest.mark.dependency(name="linear_01", scope="session")
-# TODO: extract epub_1 from fixture 1, epub_2 from fixture 2, etc
-def test_linear_01_convert_epub(example_data, epub_key):
-    """Test EPUB -> TEI conversion."""
-    tei_path = linear_01_convert_epub(example_data[epub_key])
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_linear_01_convert_epub(book_data):
+    """Test EPUB -> TEI conversion for multiple books."""
+    tei_path = linear_01_convert_epub(book_data["epub"])
     assert tei_path.endswith(".tei")
-    # Verify file exists:
     assert os.path.exists(tei_path)
 
 
 @pytest.mark.pipeline
 @pytest.mark.order(2)
 @pytest.mark.dependency(name="linear_02", scope="session")
-def test_linear_02_parse_chapters(example_data):
-    """Test TEI -> Story parsing."""
-    tei_path = linear_01_convert_epub(example_data["epub_1"])
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_linear_02_parse_chapters(book_data):
+    """Test TEI -> Story parsing for multiple books."""
+    tei_path = linear_01_convert_epub(book_data["epub"])
     story = linear_02_parse_chapters(
         tei_path,
-        example_data["chapters"],
-        example_data["book_id"],
-        example_data["story_id"],
-        example_data["start"],
-        example_data["end"],
+        book_data["chapters"],
+        book_data["book_id"],
+        book_data["story_id"],
+        book_data["start"],
+        book_data["end"],
     )
     assert isinstance(story, Story)
     assert hasattr(story, "reader")
@@ -68,16 +92,17 @@ def test_linear_02_parse_chapters(example_data):
 @pytest.mark.pipeline
 @pytest.mark.order(3)
 @pytest.mark.dependency(name="linear_03", scope="session")
-def test_linear_03_chunk_story(example_data):
-    """Test Story -> chunks splitting."""
-    tei_path = linear_01_convert_epub(example_data["epub_1"])
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_linear_03_chunk_story(book_data):
+    """Test Story -> chunks splitting for multiple books."""
+    tei_path = linear_01_convert_epub(book_data["epub"])
     story = linear_02_parse_chapters(
         tei_path,
-        example_data["chapters"],
-        example_data["book_id"],
-        example_data["story_id"],
-        example_data["start"],
-        example_data["end"],
+        book_data["chapters"],
+        book_data["book_id"],
+        book_data["story_id"],
+        book_data["start"],
+        book_data["end"],
     )
     chunks = linear_03_chunk_story(story)
     assert isinstance(chunks, list)
@@ -85,6 +110,11 @@ def test_linear_03_chunk_story(example_data):
     for c in chunks:
         assert hasattr(c, "text")
         assert len(c.text) > 0
+
+
+
+
+
 
 
 
