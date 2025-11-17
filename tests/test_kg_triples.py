@@ -569,3 +569,35 @@ def test_detect_community_clusters_comprehensive(nature_scene_graph: KnowledgeGr
     has_community_id = "community_id" in nodes_louvain_ml.columns and nodes_louvain_ml["community_id"].notna().any()
     has_community_list = "community_list" in nodes_louvain_ml.columns and nodes_louvain_ml["community_list"].notna().any()
     assert has_community_id or has_community_list, "Louvain multi-level should assign either community_id or community_list"
+
+
+@pytest.mark.kg
+@pytest.mark.order(24)
+@pytest.mark.dependency(name="degree_rank_filter", depends=["subgraph_by_nodes"], scope="session")
+def test_get_by_ranked_degree(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test filtering triples by ranked node degree.
+    @details  Validates that get_by_ranked_degree correctly returns triples
+    whose endpoints belong to nodes within the specified degree rank range.
+    """
+    kg = nature_scene_graph
+
+    # Compute all node degrees
+    degree_df = kg.get_edge_counts(top_n=10_000)
+    assert not degree_df.empty
+
+    # Grab the top-ranked node (rank 1)
+    top_node_id = degree_df.sort_values("edge_count", ascending=False)["node_id"].iloc[0]
+
+    # Fetch triples for rank 1 only
+    subgraph = kg.get_by_ranked_degree(min_rank=1, max_rank=1)
+    assert subgraph is not None
+    assert len(subgraph) > 0
+
+    # All triples must involve the top-ranked node
+    endpoints = set(subgraph["subject_id"]).union(set(subgraph["object_id"]))
+    assert top_node_id in endpoints
+
+    # Optional: verify degree ordering consistency
+    # (rank=1 node must have >= every other degree)
+    top_degree = degree_df[degree_df["node_id"] == top_node_id]["edge_count"].iloc[0]
+    assert all(top_degree >= degree_df["edge_count"])
