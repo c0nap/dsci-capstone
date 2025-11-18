@@ -37,6 +37,7 @@ def book_1_data():
         "book_id": 1,
         "story_id": 1,
         "book_title": "Five Children and It",
+        "tei": "./tests/examples-pipeline/epub/trilogy-wishes-1.tei",
     }
 
 @pytest.fixture
@@ -63,6 +64,7 @@ def book_2_data():
         "book_id": 2,
         "story_id": 1,
         "book_title": "The Phoenix and the Carpet",
+        "tei": "./tests/examples-pipeline/epub/trilogy-wishes-2.tei",
     }
 
 
@@ -88,7 +90,7 @@ def test_task_01_convert_epub(book_data):
 def test_task_02_parse_chapters(book_data):
     """Test TEI -> Story parsing for multiple books."""
     # TODO - save data as fixture instead of calling earlier?
-    tei_path = task_01_convert_epub(book_data["epub"])
+    tei_path = book_data["tei"]
     story = task_02_parse_chapters(
         tei_path,
         book_data["chapters"],
@@ -107,8 +109,8 @@ def test_task_02_parse_chapters(book_data):
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_task_03_chunk_story(book_data):
     """Test Story -> chunks splitting for multiple books."""
+    tei_path = book_data["tei"]
     # TODO - save data as fixture instead of calling earlier?
-    tei_path = task_01_convert_epub(book_data["epub"])
     story = task_02_parse_chapters(
         tei_path,
         book_data["chapters"],
