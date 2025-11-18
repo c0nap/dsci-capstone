@@ -29,7 +29,7 @@ def old_main(collection_name):
 
     full_pipeline(
         collection_name,
-        epub_path="./datasets/examples/trilogy-wishes-2.epub",
+        epub_path="./tests/examples-pipeline/epub/trilogy-wishes-2.epub",
         book_chapters="""
 CHAPTER 1. THE EGG\n
 CHAPTER 2. THE TOPLESS TOWER\n
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     post_story_status(BOSS_PORT, story_id, 'preprocessing', 'in-progress')
     post_story_status(BOSS_PORT, story_id, 'chunking', 'in-progress')
     chunks = stages.pipeline_1(
-        epub_path="./datasets/examples/trilogy-wishes-2.epub",
+        epub_path="./tests/examples-pipeline/epub/trilogy-wishes-2.epub",
         book_chapters="""
 CHAPTER 1. THE EGG\n
 CHAPTER 2. THE TOPLESS TOWER\n

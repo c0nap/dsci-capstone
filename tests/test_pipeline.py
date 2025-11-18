@@ -19,9 +19,9 @@ def book_data(request):
 
 @pytest.fixture
 def book_1_data():
-    """Example data for Book 1: nested-fairy-tales.epub"""
+    """Example data for Book 1: Five Children and It"""
     return {
-        "epub": "./datasets/examples/nested-fairy-tales.epub",
+        "epub": "./tests/examples-pipeline/epub/trilogy-wishes-1.epub",
         "chapters": """
             CHAPTER 1 BEAUTIFUL AS THE DAY
             CHAPTER 2 GOLDEN GUINEAS
@@ -39,25 +39,36 @@ def book_1_data():
         "end": "But I must say no more.",
         "book_id": 1,
         "story_id": 1,
+        "book_title": "Five Children and It",
     }
 
 @pytest.fixture
 def book_2_data():
-    """Example data for Book 2: nested-myths.epub"""
+    """Example data for Book 2: The Phoenix and the Carpet"""
     return {
-        "epub": "./datasets/examples/nested-myths.epub",
+        "epub": "./tests/examples-pipeline/epub/trilogy-wishes-2.epub",
         "chapters": """
-            CHAPTER 1 ORIGINS
-            CHAPTER 2 HEROES
-            CHAPTER 3 GODS AND MONSTERS
-            CHAPTER 4 TRIALS
-            CHAPTER 5 RESOLUTIONS
-        """,
+			CHAPTER 1. THE EGG\n
+			CHAPTER 2. THE TOPLESS TOWER\n
+			CHAPTER 3. THE QUEEN COOK\n
+			CHAPTER 4. TWO BAZAARS\n
+			CHAPTER 5. THE TEMPLE\n
+			CHAPTER 6. DOING GOOD\n
+			CHAPTER 7. MEWS FROM PERSIA\n
+			CHAPTER 8. THE CATS, THE COW, AND THE BURGLAR\n
+			CHAPTER 9. THE BURGLAR’S BRIDE\n
+			CHAPTER 10. THE HOLE IN THE CARPET\n
+			CHAPTER 11. THE BEGINNING OF THE END\n
+			CHAPTER 12. THE END OF THE END\n
+		""",
         "start": "",
-        "end": "Thus ends the tale.",
+        "end": "end of the Phoenix and the Carpet.",
         "book_id": 2,
         "story_id": 1,
+        "book_title": "The Phoenix and the Carpet",
     }
+
+
 
 ##########################################################################
 # Tests
