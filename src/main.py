@@ -35,29 +35,29 @@ def pipeline_B(collection_name, chunks, book_title):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
-    ci, c = task_10_random_chunk(chunks)
+    ci, c = stages.task_10_random_chunk(chunks)
     print("\nChunk details:")
     print(f"  index: {ci}\n")
     print(c.text)
 
-    task_11_send_chunk(c)
+    stages.task_11_send_chunk(c)
     print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
 
-    extracted = task_12_relation_extraction_rebel(c.text)
+    extracted = stages.task_12_relation_extraction_rebel(c.text)
     print(f"\nNLP output:")
     for triple in extracted:
         print(triple)
     print()
-    triples_string = task_13_concatenate_triples(extracted)
+    triples_string = stages.task_13_concatenate_triples(extracted)
     
-    prompt, llm_output = task_14_relation_extraction_llm(triples_string, c.text)
+    prompt, llm_output = stages.task_14_relation_extraction_llm(triples_string, c.text)
     print("\n    LLM prompt:")
     print(prompt)
     print("\n    LLM output:")
     print(llm_output)
     print("\n" + "=" * 50 + "\n")
 
-    triples = task_15_sanitize_triples_llm(llm_output)
+    triples = stages.task_15_sanitize_triples_llm(llm_output)
     print("\nValid JSON")
     return triples, c
 
@@ -65,7 +65,7 @@ def pipeline_B(collection_name, chunks, book_title):
 
 def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id)
-    triples, chunk = stages.pipeline_2(collection_name, chunks, book_title)
+    triples, chunk = pipeline_B(collection_name, chunks, book_title)
     triples_string = stages.pipeline_3(triples)
     summary = stages.pipeline_4(collection_name, triples_string, chunk.get_chunk_id())
     stages.pipeline_5a(summary, book_title, book_id)
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     book_title = "The Phoenix and the Carpet"
     post_story_status(BOSS_PORT, story_id, 'preprocessing', 'in-progress')
     post_story_status(BOSS_PORT, story_id, 'chunking', 'in-progress')
-    chunks = stages.pipeline_1(
+    chunks = pipeline_A(
         epub_path="./tests/examples-pipeline/epub/trilogy-wishes-2.epub",
         book_chapters="""
 CHAPTER 1. THE EGG\n
@@ -142,7 +142,7 @@ CHAPTER 12. THE END OF THE END\n
     post_story_status(BOSS_PORT, story_id, 'preprocessing', 'completed')
     post_story_status(BOSS_PORT, story_id, 'chunking', 'completed')
 
-    triples, chunk = stages.pipeline_2(COLLECTION, chunks, book_title)
+    triples, chunk = pipeline_B(COLLECTION, chunks, book_title)
     chunk_id = chunk.get_chunk_id()
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'relation_extraction', 'in-progress')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'llm_inference', 'in-progress')

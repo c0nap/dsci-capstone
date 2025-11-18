@@ -23,7 +23,7 @@ class Log:
     ## ANSI code for bright yellow / cream
     BRIGHT = "\033[93m"
     ## ANSI code for light blue
-    CYAN = "\033[94m"
+    CYAN = "\033[96m"
     ## ANSI code to reset color
     WHITE = "\033[0m"
 

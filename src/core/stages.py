@@ -409,6 +409,7 @@ def task_14_relation_extraction_llm(triples_string, text):
     prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
     prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
     llm_output = llm.execute_query(prompt)
+    return (prompt, llm_output)
 
 @Log.time
 def task_15_sanitize_triples_llm(llm_output):
