@@ -153,17 +153,14 @@ class Log:
             """
             if not Log.RECORD_TIME:
                 return func(*args, **kwargs)
-    
+            
             # Capture full call chain (skip internal frames)
             stack = inspect.stack()
             call_chain_parts = []
-            for frame_info in reversed(stack[2:]):
+            for frame_info in reversed(stack[1:]):
                 func_name = frame_info.function
-                if func_name not in ['<module>', 'wrapper']:
+                if func_name not in ['<module>', 'timer', '__enter__', '__exit__']:
                     call_chain_parts.append(func_name)
-            
-            call_chain_parts.append(func.__name__)
-            call_chain = " -> ".join(call_chain_parts)
             
             start = time.time()
             try:
@@ -193,20 +190,25 @@ class Log:
     
         # Auto-detect function name if not provided
         if name is None:
-            frame = inspect.currentframe().f_back
-            name = frame.f_code.co_name
+            stack = inspect.stack()
+            # Find the first frame that's not timer/__enter__/__exit__
+            for frame_info in stack[1:]:
+                func_name = frame_info.function
+                if func_name not in ['timer', '__enter__', '__exit__']:
+                    name = func_name
+                    break
         
         # Capture full call chain (skip internal frames)
         stack = inspect.stack()
         call_chain_parts = []
-        for frame_info in reversed(stack[2:]):
+        for frame_info in reversed(stack[1:]):
             func_name = frame_info.function
-            if func_name not in ['<module>', 'timer']:
+            if func_name not in ['<module>', 'timer', '__enter__', '__exit__']:
                 call_chain_parts.append(func_name)
         
         call_chain_parts.append(name)
         call_chain = " -> ".join(call_chain_parts)
-        
+
         start = time.time()
         try:
             yield  # If an exception happens here... (see below)
