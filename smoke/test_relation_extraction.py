@@ -1,51 +1,115 @@
 import pytest
 from src.core.stages import *
 
+@pytest.fixture
+def book_data():
+    """Minimal data for smoke tests - mirrors book_2 structure"""
+    chunk_id = "story-2_book-2_chapter-1_p.25000"
+    
+    chunk_path = f"./tests/examples-pipeline/chunks/{chunk_id}.txt"
+    triples_path = f"./tests/examples-pipeline/triples/{chunk_id}.json"
+    
+    # Read chunk text and triples from files
+    with open(chunk_path, 'r') as f:
+        chunk_text = f.read()
+    
+    with open(triples_path, 'r') as f:
+        llm_triples_json = f.read()
+    
+    chunk = Chunk(
+        chunk_text,
+        book_id=2,
+        chapter_number=1,
+        line_start=50,
+        line_end=85,
+        story_id=2,
+        story_percent=8.0,
+        chapter_percent=25.0,
+    )
+    
+    return {
+        "chunk": chunk,
+        "chunk_text": chunk_text,
+        "rebel_triples": [
+            "children  had  carpet",
+            "carpet  arrived  nursery",
+            "egg  was_in  carpet",
+            "egg  hatched  Phoenix",
+            "Phoenix  can  talk",
+            "Phoenix  is  ancient",
+            "carpet  is  wishing_carpet",
+            "carpet  takes_to  anywhere",
+            "Phoenix  recommends  Egypt",
+            "children  want  adventures",
+        ],
+        "llm_triples_json": llm_triples_json,
+    }
+
+
 @pytest.mark.pipeline
 @pytest.mark.smoke
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="task_12_rebel_minimal", scope="session")
-def test_task_12_rebel_minimal():
-    """Runs REBEL on a basic example."""
-    sample_text = "Alice met Bob in the forest. Bob then went to the village."
-    extracted = task_12_relation_extraction_rebel(sample_text, parse_tuples=False)
+@pytest.mark.dependency(name="task_12_rebel_comprehensive", scope="session")
+def test_task_12_rebel_comprehensive(book_data):
+    """Runs REBEL on realistic pipeline data."""
+    extracted = task_12_relation_extraction_rebel(book_data["chunk_text"], parse_tuples=False)
     
     assert isinstance(extracted, list)
-    assert len(extracted) > 0
-    # REBEL returns raw strings when parse_tuples=False
+    assert len(extracted) >= 5  # Realistic chunk should yield multiple triples
     assert all(isinstance(triple, str) for triple in extracted)
+    # Verify REBEL's tuple delimiter present in raw output
+    assert any("  " in triple for triple in extracted)
 
 
 @pytest.mark.pipeline
 @pytest.mark.smoke
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="task_12_rebel_tuples", scope="session")
-def test_task_12_rebel_with_tuples():
-    """Runs REBEL with tuple parsing enabled."""
-    sample_text = "The Phoenix told the children about the magic carpet."
-    extracted = task_12_relation_extraction_rebel(sample_text, parse_tuples=True)
+@pytest.mark.dependency(name="task_12_rebel_tuples_comprehensive", scope="session")
+def test_task_12_rebel_tuples_comprehensive(book_data):
+    """Runs REBEL with tuple parsing on realistic data."""
+    extracted = task_12_relation_extraction_rebel(book_data["chunk_text"], parse_tuples=True)
     
     assert isinstance(extracted, list)
-    assert len(extracted) > 0
-    # With parse_tuples=True, returns (subject, relation, object) tuples
+    assert len(extracted) >= 5
     assert all(isinstance(triple, tuple) and len(triple) == 3 for triple in extracted)
+    # Verify tuple structure: (subject, relation, object)
+    for subj, rel, obj in extracted:
+        assert isinstance(subj, str) and len(subj) > 0
+        assert isinstance(rel, str) and len(rel) > 0
+        assert isinstance(obj, str) and len(obj) > 0
+
+
+@pytest.mark.pipeline
+@pytest.mark.smoke
+@pytest.mark.order(13)
+@pytest.mark.dependency(name="task_13_comprehensive", scope="session", depends=["task_12_rebel_comprehensive"])
+def test_task_13_comprehensive(book_data):
+    """Test concatenating realistic REBEL output."""
+    triples_string = task_13_concatenate_triples(book_data["rebel_triples"])
+    
+    assert isinstance(triples_string, str)
+    assert triples_string.count("\n") == len(book_data["rebel_triples"])
+    # Verify all triples present
+    for triple in book_data["rebel_triples"]:
+        assert triple in triples_string
 
 
 @pytest.mark.pipeline
 @pytest.mark.smoke
 @pytest.mark.order(14)
-@pytest.mark.dependency(name="task_14_llm_minimal", scope="session")
-def test_task_14_llm_minimal():
-    """Test LLM-based triple sanitization with minimal input."""
-    triples_string = "Alice  met  Bob\nBob  went_to  village"
-    text = "Alice met Bob in the forest. Bob then went to the village."
+@pytest.mark.dependency(name="task_14_llm_comprehensive", scope="session", depends=["task_13_comprehensive"])
+def test_task_14_llm_comprehensive(book_data):
+    """Test LLM-based triple sanitization with realistic data."""
+    triples_string = "\n".join(book_data["rebel_triples"])
     
-    prompt, llm_output = task_14_relation_extraction_llm(triples_string, text)
+    prompt, llm_output = task_14_relation_extraction_llm(triples_string, book_data["chunk_text"])
     
     assert isinstance(prompt, str)
     assert triples_string in prompt
+    assert book_data["chunk_text"] in prompt
     assert isinstance(llm_output, str)
     assert len(llm_output) > 0
+
 
 
 
