@@ -97,105 +97,6 @@ import traceback
 
 
 
-
-def process_single():
-    """Uses NLP and LLM to process an existing TEI file."""
-    from src.components.relation_extraction import RelationExtractor
-    from src.connectors.llm import LLMConnector
-
-    try:
-        df = pd.read_csv("datasets/books.csv")
-    except FileNotFoundError:
-        print("Error: datasets/books.csv not found")
-        return
-    except Exception as e:
-        print(f"Error reading CSV: {e}")
-        return
-    row = df.iloc[0]
-
-    print(f"\n{'='*50}")
-    print(f"Processing: {row.get('tei_path', 'Unknown path')}")
-
-    # Handle NaN values for start/end strings - convert to None
-    start_str = row.get("start_string")
-    end_str = row.get("end_string")
-    if pd.isna(start_str):
-        start_str = None
-    if pd.isna(end_str):
-        end_str = None
-
-    chapters = row.get("chapters")
-    chaps = [line.strip() for line in chapters.splitlines() if line.strip()]
-    reader = ParagraphStreamTEI(
-        tei,
-        book_id=1,
-        story_id=1,
-        allowed_chapters=chaps,
-        start_inclusive=start,
-        end_inclusive=end,
-    )
-    story = Story(reader)
-    story.pre_split_chunks(max_chunk_length=1500)
-    chunks = list(story.stream_chunks())
-
-    print("\n=== STORY SUMMARY ===")
-    print(f"Total chunks: {len(chunks)}")
-
-    print("\n=== NLP EXTRACTION SAMPLE ===")
-    re_rebel = "Babelscape/rebel-large"
-    re_rst = "GAIR/rst-information-extraction-11b"
-    ner_renard = "compnet-renard/bert-base-cased-literary-NER"
-    nlp = RelationExtractor(model_name=re_rebel, max_tokens=1024)
-    llm = LLMConnector(
-        temperature=0,
-        system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
-    )
-
-    unique_numbers = random.sample(range(len(chunks)), 2)
-    for i in unique_numbers:
-        c = chunks[i]
-        print("\nChunk details:")
-        print(f"  [{i}] {c}\n")
-        print(c.text)
-
-        extracted = nlp.extract(c.text, parse_tuples=True)
-        print(f"\nNLP output:")
-        for triple in extracted:
-            print(triple)
-        print()
-
-        triples_string = ""
-        for triple in extracted:
-            triples_string += str(triple) + "\n"
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-        prompt += f"And here is the original text:\n{c.text}\n\n"
-        prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
-        prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
-        llm_output = llm.execute_query(prompt)
-
-        print("\n    LLM prompt:")
-        print(llm.system_prompt)
-        print(prompt)
-
-        print("\n    LLM output:")
-        print(llm_output)
-
-        try:
-            data = json.loads(llm_output)
-            print("\nValid JSON")
-        except json.JSONDecodeError as e:
-            print("\nInvalid JSON:", e)
-            continue
-
-        json_path = f"./datasets/triples/chunk-{i}_story-{c.story_id}.json"
-        os.makedirs(os.path.dirname(json_path), exist_ok=True)
-        with open(json_path, "w") as f:
-            f.write(llm_output)
-        print(f"JSON saved to '{json_path}'")
-
-        print("\n" + "=" * 50 + "\n")
-
-
 triple_files = [
     "./datasets/triples/chunk-160_story-1.json",
     "./datasets/triples/chunk-70_story-1.json",
@@ -400,7 +301,7 @@ def task_14_relation_extraction_llm(triples_string, text):
             system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
         )
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-        prompt += f"And here is the original text:\n{c.text}\n\n"
+        prompt += f"And here is the original text:\n{text}\n\n"
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
         prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
         llm_output = llm.execute_query(prompt)
