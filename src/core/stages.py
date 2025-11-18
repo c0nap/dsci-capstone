@@ -322,6 +322,7 @@ def output_single():
 ##########################################################################
 
 # PIPELINE STAGE A
+@Log.time
 def linear_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
     if converter is None:
         converter = EPUBToTEI(epub_path, save_pandoc=False, save_tei=True)
@@ -331,6 +332,7 @@ def linear_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
     # TODO: converter.print_chapters(200)
     return converter.tei_path
 
+@Log.time
 def linear_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str):
     chaps = [line.strip() for line in book_chapters.splitlines() if line.strip()]
     reader = ParagraphStreamTEI(
@@ -344,16 +346,19 @@ def linear_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_s
     story = Story(reader)
     return story
 
+@Log.time
 def linear_03_chunk_story(story, max_chunk_length=1500):
     story.pre_split_chunks(max_chunk_length=max_chunk_length)
     chunks = list(story.stream_chunks())
     return chunks
 
 # PIPELINE STAGE B
+@Log.time
 def linear_10_random_chunk(chunks):
     unique_numbers, sample = linear_10_sample_chunks(chunks, n_sample = 1)
     return (unique_numbers[0], sample[0])
 
+@Log.time
 def linear_10_sample_chunks(chunks, n_sample):
     unique_numbers = random.sample(range(len(chunks)), n_sample)[0]
     sample = []
@@ -362,12 +367,14 @@ def linear_10_sample_chunks(chunks, n_sample):
         sample.append(c)
     return (unique_numbers, sample)
 
+@Log.time
 def linear_11_send_chunk(c):
     mongo_db = session.docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)
     collection.insert_one(c.to_mongo_dict())
     collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
 
+@Log.time
 def linear_12_relation_extraction_rebel(text):
     from src.components.relation_extraction import RelationExtractor
     re_rebel = "Babelscape/rebel-large"
@@ -381,7 +388,7 @@ def linear_12_relation_extraction_rebel(text):
 
 ##########################################################################
 
-
+@Log.time
 def pipeline_B(collection_name, chunks, book_title):
     """Extracts triples from a random chunk.
     @details
@@ -433,7 +440,7 @@ def pipeline_B(collection_name, chunks, book_title):
 
     return triples, c
 
-
+@Log.time
 def pipeline_3(triples):
     """Generates a LLM summary using Neo4j triples.
     @details
@@ -457,7 +464,7 @@ def pipeline_3(triples):
     print(triples_string)
     return triples_string
 
-
+@Log.time
 def pipeline_4(collection_name, triples_string, chunk_id):
     """Generate chunk summary"""
     from src.connectors.llm import LLMConnector
@@ -482,14 +489,14 @@ def pipeline_4(collection_name, triples_string, chunk_id):
 
     return summary
 
-
+@Log.time
 def pipeline_5a(summary, book_title, book_id):
     """Send book info to Blazor
     - Post to Blazor metrics page"""
     session.metrics.post_basic_output(book_id, book_title, summary)
     print("\nOutput sent to web app.")
 
-
+@Log.time
 def pipeline_5b(
     summary: str, book_title: str, book_id: str, chunk: str, gold_summary: str = "", bookscore: float = None, questeval: float = None
 ) -> None:

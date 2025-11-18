@@ -9,8 +9,9 @@ from src.core.boss import (
     post_process_full_story,
     post_story_status
 )
+from src.util import Log
 
-
+@Log.time
 def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     """Connects all components to convert an EPUB file to a book summary.
     @details  Data conversions:
@@ -27,6 +28,9 @@ def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     print("\n=== STORY SUMMARY ===")
     print(f"Total chunks: {len(chunks)}")
     return chunks
+
+
+
 
 
 def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
