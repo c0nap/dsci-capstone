@@ -21,9 +21,9 @@ def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     print(f"\n{'='*50}")
     print(f"Processing: {epub_path}")
 
-    tei_path = stages.linear_01_convert_epub(epub_path)
-    story = stages.linear_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str)
-    chunks = stages.linear_03_chunk_story(story)
+    tei_path = stages.task_01_convert_epub(epub_path)
+    story = stages.task_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str)
+    chunks = stages.task_03_chunk_story(story)
 
     print("\n=== STORY SUMMARY ===")
     print(f"Total chunks: {len(chunks)}")

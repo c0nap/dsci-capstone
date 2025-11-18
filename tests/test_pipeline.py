@@ -1,8 +1,8 @@
 import pytest
 from src.core.stages import (
-    linear_01_convert_epub,
-    linear_02_parse_chapters,
-    linear_03_chunk_story,
+    task_01_convert_epub,
+    task_02_parse_chapters,
+    task_03_chunk_story,
 )
 from src.main import pipeline_A
 from src.components.book_conversion import EPUBToTEI, ParagraphStreamTEI, Story
@@ -75,23 +75,23 @@ def book_2_data():
 
 @pytest.mark.pipeline
 @pytest.mark.order(1)
-@pytest.mark.dependency(name="linear_01", scope="session")
+@pytest.mark.dependency(name="task_01", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_linear_01_convert_epub(book_data):
+def test_task_01_convert_epub(book_data):
     """Test EPUB -> TEI conversion for multiple books."""
-    tei_path = linear_01_convert_epub(book_data["epub"])
+    tei_path = task_01_convert_epub(book_data["epub"])
     assert tei_path.endswith(".tei")
     assert os.path.exists(tei_path)
 
 
 @pytest.mark.pipeline
 @pytest.mark.order(2)
-@pytest.mark.dependency(name="linear_02", scope="session")
+@pytest.mark.dependency(name="task_02", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_linear_02_parse_chapters(book_data):
+def test_task_02_parse_chapters(book_data):
     """Test TEI -> Story parsing for multiple books."""
-    tei_path = linear_01_convert_epub(book_data["epub"])
-    story = linear_02_parse_chapters(
+    tei_path = task_01_convert_epub(book_data["epub"])
+    story = task_02_parse_chapters(
         tei_path,
         book_data["chapters"],
         book_data["book_id"],
@@ -105,12 +105,12 @@ def test_linear_02_parse_chapters(book_data):
 
 @pytest.mark.pipeline
 @pytest.mark.order(3)
-@pytest.mark.dependency(name="linear_03", scope="session")
+@pytest.mark.dependency(name="task_03", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_linear_03_chunk_story(book_data):
+def test_task_03_chunk_story(book_data):
     """Test Story -> chunks splitting for multiple books."""
-    tei_path = linear_01_convert_epub(book_data["epub"])
-    story = linear_02_parse_chapters(
+    tei_path = task_01_convert_epub(book_data["epub"])
+    story = task_02_parse_chapters(
         tei_path,
         book_data["chapters"],
         book_data["book_id"],
@@ -118,7 +118,7 @@ def test_linear_03_chunk_story(book_data):
         book_data["start"],
         book_data["end"],
     )
-    chunks = linear_03_chunk_story(story)
+    chunks = task_03_chunk_story(story)
     assert isinstance(chunks, list)
     assert len(chunks) > 0
     for c in chunks:

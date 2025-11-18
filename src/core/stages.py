@@ -323,7 +323,7 @@ def output_single():
 
 # PIPELINE STAGE A
 @Log.time
-def linear_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
+def task_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
     if converter is None:
         converter = EPUBToTEI(epub_path, save_pandoc=False, save_tei=True)
     converter.epub_path = epub_path
@@ -333,7 +333,7 @@ def linear_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
     return converter.tei_path
 
 @Log.time
-def linear_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str):
+def task_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str):
     chaps = [line.strip() for line in book_chapters.splitlines() if line.strip()]
     reader = ParagraphStreamTEI(
         tei_path,
@@ -347,19 +347,19 @@ def linear_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_s
     return story
 
 @Log.time
-def linear_03_chunk_story(story, max_chunk_length=1500):
+def task_03_chunk_story(story, max_chunk_length=1500):
     story.pre_split_chunks(max_chunk_length=max_chunk_length)
     chunks = list(story.stream_chunks())
     return chunks
 
 # PIPELINE STAGE B
 @Log.time
-def linear_10_random_chunk(chunks):
-    unique_numbers, sample = linear_10_sample_chunks(chunks, n_sample = 1)
+def task_10_random_chunk(chunks):
+    unique_numbers, sample = task_10_sample_chunks(chunks, n_sample = 1)
     return (unique_numbers[0], sample[0])
 
 @Log.time
-def linear_10_sample_chunks(chunks, n_sample):
+def task_10_sample_chunks(chunks, n_sample):
     unique_numbers = random.sample(range(len(chunks)), n_sample)[0]
     sample = []
     for i in unique_numbers:
@@ -368,14 +368,14 @@ def linear_10_sample_chunks(chunks, n_sample):
     return (unique_numbers, sample)
 
 @Log.time
-def linear_11_send_chunk(c):
+def task_11_send_chunk(c):
     mongo_db = session.docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)
     collection.insert_one(c.to_mongo_dict())
     collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
 
 @Log.time
-def linear_12_relation_extraction_rebel(text):
+def task_12_relation_extraction_rebel(text):
     from src.components.relation_extraction import RelationExtractor
     re_rebel = "Babelscape/rebel-large"
     # TODO: different models
@@ -402,15 +402,15 @@ def pipeline_B(collection_name, chunks, book_title):
         system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
     )
 
-    ci, c = linear_10_random_chunk(chunks)
+    ci, c = task_10_random_chunk(chunks)
     print("\nChunk details:")
     print(f"  index: {ci}\n")
     print(c.text)
 
-    linear_11_send_chunk(c)
+    task_11_send_chunk(c)
     print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
 
-    extracted = linear_12_relation_extraction_rebel(c.text)
+    extracted = task_12_relation_extraction_rebel(c.text)
     print(f"\nNLP output:")
     triples_string = ""
     for triple in extracted:
