@@ -106,6 +106,8 @@ class DatabaseConnector:
 
 - Common imports should go at the top of the module, but if a package is heavy (spacy, pandas, etc) or only used by one function, it should be placed at the top of that function.
 
+- Never call `pytest .` from root directory, as this will ignore `pytest.ini` and search for ALL PyTest files. This is a problem because the tests in `/smoke` are heavy, network-bound, or costly.
+
 
 # Manually Generating Documentation with Doxygen
 

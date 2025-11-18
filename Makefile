@@ -140,7 +140,7 @@ docker-workers-dev:
 docker-test:
 	make docker-python CMD="pytest \
 		$(if $(filter 1,$(VERBY)),--log-success) \
-		$(if $(filter 1,$(COLOR)),,--no-log-colors)  ."
+		$(if $(filter 1,$(COLOR)),,--no-log-colors)"
 
 # Recompiles docker images to test the latest source code
 # Pytest will capture all console output - see non-capturing targets below.
@@ -153,7 +153,7 @@ docker-test-raw:
 	make docker-build-dev-python
 	make docker-python CMD="python -m pytest -s \
 		$(if $(filter 1,$(VERBY)),--log-success) \
-		$(if $(filter 1,$(COLOR)),,--no-log-colors) ."
+		$(if $(filter 1,$(COLOR)),,--no-log-colors)"
 
 # Shows Python print statements, but pytest output is messy.
 # Default to verbose and colorful.
@@ -161,7 +161,7 @@ docker-test-fancy:
 	make docker-build-dev-python
 	make docker-python CMD="python -m pytest -s \
 		$(if $(filter 0,$(VERBY)),,--log-success) \
-		$(if $(filter 0,$(COLOR)),--no-log-colors) ."
+		$(if $(filter 0,$(COLOR)),--no-log-colors)"
 	
 # Deploy everything to docker, but only run pytests
 docker-all-tests:
@@ -182,7 +182,7 @@ SMOKE ?= -m smoke
 
 # Run expensive smoke tests
 docker-smoke:
-	make docker-python CMD="pytest --override-ini='testpaths=smoke' $(SMOKE)"
+	make docker-python CMD="pytest $(SMOKE) smoke/"
 
 docker-smoke-dev:
 	make docker-build-dev-python
