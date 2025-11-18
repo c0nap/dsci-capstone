@@ -159,7 +159,7 @@ def test_pipeline_A_from_csv():
     csv_path = "./tests/examples-pipeline/books.csv"
     assert os.path.exists(csv_path)
 
-    df = read_csv(csv_path)
+    df = read_csv(csv_path).fillna("")  # necessary for start_string blank
     for _, row in df.iterrows():
         epub_path = row["epub_path"]
         start_str = row["start_string"] or None
