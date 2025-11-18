@@ -22,7 +22,7 @@ def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     print(f"\n{'='*50}")
     print(f"Processing: {epub_path}")
 
-    tei_path = task_01_convert_epub(epub_path)
+    tei_path = stages.task_01_convert_epub(epub_path)
     story = stages.task_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str)
     chunks = stages.task_03_chunk_story(story)
 
@@ -31,39 +31,39 @@ def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     return chunks
 
 
+@Log.time
 def pipeline_B(collection_name, chunks, book_title):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
-    with Log.timer():
-        ci, c = stages.task_10_random_chunk(chunks)
-        print("\nChunk details:")
-        print(f"  index: {ci}\n")
-        print(c.text)
+    ci, c = stages.task_10_random_chunk(chunks)
+    print("\nChunk details:")
+    print(f"  index: {ci}\n")
+    print(c.text)
+
+    stages.task_11_send_chunk(c, collection_name, book_title)
+    print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
+
+    extracted = stages.task_12_relation_extraction_rebel(c.text)
+    print(f"\nNLP output:")
+    for triple in extracted:
+        print(triple)
+    print()
+    triples_string = stages.task_13_concatenate_triples(extracted)
     
-        stages.task_11_send_chunk(c, collection_name, book_title)
-        print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
-    
-        extracted = stages.task_12_relation_extraction_rebel(c.text)
-        print(f"\nNLP output:")
-        for triple in extracted:
-            print(triple)
-        print()
-        triples_string = stages.task_13_concatenate_triples(extracted)
-        
-        prompt, llm_output = stages.task_14_relation_extraction_llm(triples_string, c.text)
-        print("\n    LLM prompt:")
-        print(prompt)
-        print("\n    LLM output:")
-        print(llm_output)
-        print("\n" + "=" * 50 + "\n")
-    
-        triples = stages.task_15_sanitize_triples_llm(llm_output)
-        print("\nValid JSON")
-        return triples, c
+    prompt, llm_output = stages.task_14_relation_extraction_llm(triples_string, c.text)
+    print("\n    LLM prompt:")
+    print(prompt)
+    print("\n    LLM output:")
+    print(llm_output)
+    print("\n" + "=" * 50 + "\n")
+
+    triples = stages.task_15_sanitize_triples_llm(llm_output)
+    print("\nValid JSON")
+    return triples, c
 
 
-
+@Log.time
 def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id)
     triples, chunk = pipeline_B(collection_name, chunks, book_title)

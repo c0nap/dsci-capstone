@@ -431,65 +431,66 @@ def task_15_sanitize_triples_llm(llm_output):
 ##########################################################################
 
 
+@Log.time
 def pipeline_3(triples):
     """Generates a LLM summary using Neo4j triples.
     @details
         - Neo4j graph database
         - Blazor graph page"""
-    with Log.timer():
-        for triple in triples:
-            print(triple["s"], triple["r"], triple["o"])
-        # TODO: normalize
-        session.main_graph.add_triples_json(triples)
-    
-        # basic linear verbalization of triples (concatenate)
-        edge_count_df = session.main_graph.get_edge_counts(top_n=3)
-        edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
-        print("\nMost relevant nodes:")
-        print(edge_count_df)
-    
-        triples_df = session.main_graph.get_by_ranked_degree(min_rank=3, id_columns=["subject_id"])
-        triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
-        triples_string = session.main_graph.to_triples_string(triples_df, mode="triple")
-        print("\nTriples which best represent the graph:")
-        print(triples_string)
-        return triples_string
+    for triple in triples:
+        print(triple["s"], triple["r"], triple["o"])
+    # TODO: normalize
+    session.main_graph.add_triples_json(triples)
+
+    # basic linear verbalization of triples (concatenate)
+    edge_count_df = session.main_graph.get_edge_counts(top_n=3)
+    edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
+    print("\nMost relevant nodes:")
+    print(edge_count_df)
+
+    triples_df = session.main_graph.get_by_ranked_degree(min_rank=3, id_columns=["subject_id"])
+    triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
+    triples_string = session.main_graph.to_triples_string(triples_df, mode="triple")
+    print("\nTriples which best represent the graph:")
+    print(triples_string)
+    return triples_string
 
 
+@Log.time
 def pipeline_4(collection_name, triples_string, chunk_id):
     """Generate chunk summary"""
-    with Log.timer():
-        from src.connectors.llm import LLMConnector
-    
-        # Prompt LLM to generate summary
-        llm = LLMConnector(
-            temperature=0,
-            system_prompt="You are a helpful assistant that processes semantic triples.",
-        )
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-        prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
-        prompt += "Output your generated summary and nothing else."
-        summary = llm.execute_query(prompt)
-    
-        print("\nGenerated summary:")
-        print(summary)
-    
-        mongo_db = session.docs_db.get_unmanaged_handle()
-        collection = getattr(mongo_db, collection_name)
-        collection.update_one({"_id": chunk_id}, {"$set": {"summary": summary}})
-        print(f"    [Wrote summary to Mongo with chunk_id: {chunk_id}]")
-    
-        return summary
+    from src.connectors.llm import LLMConnector
+
+    # Prompt LLM to generate summary
+    llm = LLMConnector(
+        temperature=0,
+        system_prompt="You are a helpful assistant that processes semantic triples.",
+    )
+    prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+    prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
+    prompt += "Output your generated summary and nothing else."
+    summary = llm.execute_query(prompt)
+
+    print("\nGenerated summary:")
+    print(summary)
+
+    mongo_db = session.docs_db.get_unmanaged_handle()
+    collection = getattr(mongo_db, collection_name)
+    collection.update_one({"_id": chunk_id}, {"$set": {"summary": summary}})
+    print(f"    [Wrote summary to Mongo with chunk_id: {chunk_id}]")
+
+    return summary
 
 
+@Log.time
 def pipeline_5a(summary, book_title, book_id):
     """Send book info to Blazor
     - Post to Blazor metrics page"""
-    with Log.timer():
-        session.metrics.post_basic_output(book_id, book_title, summary)
-        print("\nOutput sent to web app.")
+    session.metrics.post_basic_output(book_id, book_title, summary)
+    print("\nOutput sent to web app.")
 
 
+@Log.time
 def pipeline_5b(
     summary: str, book_title: str, book_id: str, chunk: str, gold_summary: str = "", bookscore: float = None, questeval: float = None
 ) -> None:
