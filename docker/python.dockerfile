@@ -23,6 +23,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source code into the container (optional .dockerignore)
 COPY src/ src/
 COPY tests/ tests/
+COPY smoke/ smoke/
 COPY datasets/ datasets/
 
 # Declare build args - whether to include .env or .env.dummy
