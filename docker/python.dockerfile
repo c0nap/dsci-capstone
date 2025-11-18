@@ -36,7 +36,7 @@ COPY Makefile .
 RUN make env-docker
 RUN mv .env.docker .env
 
-COPY pyproject.toml pytest.ini .
+COPY pyproject.toml pytest.ini conftest.py .
 
 # default command
 CMD ["python", "-m", "src.main"]
