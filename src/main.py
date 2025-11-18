@@ -24,7 +24,7 @@ def old_main(collection_name):
     # chunk_single()
     # process_single()
     # graph_triple_files()
-    # (Metrics()).post_example_results()
+    # session.metrics.post_example_results()
     # output_single()
 
     full_pipeline(

@@ -155,15 +155,18 @@ def test_pipeline_A_minimal(book_data):
 @pytest.mark.order(5)
 @pytest.mark.dependency(name="pipeline_A_csv", scope="session")
 def test_pipeline_A_from_csv():
-    """Read example CSV and run pipeline_A for each row."""
+    """Read example CSV and run pipeline_A for each row.
+    @details
+    - Excel -> Save As -> CSV (UTF-8)
+    - Pandas will convert all blanks to None, so we must undo using fillna."""
     csv_path = "./tests/examples-pipeline/books.csv"
     assert os.path.exists(csv_path)
 
     df = read_csv(csv_path).fillna("")  # necessary for start_string blank
     for _, row in df.iterrows():
         epub_path = row["epub_path"]
-        start_str = row["start_string"] or None
-        end_str = row["end_string"] or None
+        start_str = row["start_string"]
+        end_str = row["end_string"]
         chapters = row["chapters"]
         book_id = row["book_id"]
         story_id = int(row["story_id"])

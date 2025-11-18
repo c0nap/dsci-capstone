@@ -2,6 +2,7 @@ from src.components.fact_storage import KnowledgeGraph
 from src.connectors.document import DocumentConnector
 from src.connectors.graph import GraphConnector
 from src.connectors.relational import RelationalConnector
+from src.components.metrics import Metrics
 from typing import Any, Self
 
 
@@ -43,6 +44,8 @@ class Session:
         self.graph_db = GraphConnector(verbose=verbose)
         ## Main storage for initial pipeline.
         self.main_graph = KnowledgeGraph("main", self.graph_db)
+        ## The metrics class needs an instance to read the .env file.
+        self.metrics = Metrics()
         # TODO: Split into scene graph, event graph, and social graph.
 
 

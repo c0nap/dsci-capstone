@@ -1,6 +1,5 @@
 import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
-from src.components.metrics import Metrics
 from src.core.context import session
 import json
 from typing import Optional
@@ -288,8 +287,7 @@ def output_single():
     print("\nGenerated summary:")
     print(response)
 
-    m = Metrics()
-    m.post_basic_output(book_id="1", book_title="Five Children and It", summary=response)
+    session.metrics.post_basic_output(book_id="1", book_title="Five Children and It", summary=response)
     print("\nOutput sent to web app.")
 
 
@@ -481,10 +479,7 @@ def pipeline_4(collection_name, triples_string, chunk_id):
 def pipeline_5a(summary, book_title, book_id):
     """Send book info to Blazor
     - Post to Blazor metrics page"""
-    from src.components.metrics import Metrics
-
-    m = Metrics()
-    m.post_basic_output(book_id, book_title, summary)
+    session.metrics.post_basic_output(book_id, book_title, summary)
     print("\nOutput sent to web app.")
 
 
@@ -495,9 +490,6 @@ def pipeline_5b(
     - Compute basic metrics (ROUGE, BERTScore)
     - Wait for advanced metrics (QuestEval, BooookScore)
     - Post to Blazor metrics page"""
-    from src.components.metrics import Metrics
-
-    m = Metrics()
-    m.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
+    session.metrics.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
     print("\nOutput sent to web app.")
 
