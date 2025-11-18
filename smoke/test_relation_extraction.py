@@ -1,5 +1,5 @@
 import pytest
-from src.core import stages
+from src.core.stages import *
 
 @pytest.mark.pipeline
 @pytest.mark.smoke
@@ -8,6 +8,6 @@ from src.core import stages
 def test_task_12_rebel_minimal():
     """Runs REBEL on a basic example."""
     sample_text = "Alice met Bob in the forest. Bob then went to the village."
-    extracted = stages.task_12_relation_extraction_rebel(sample_text, parse_tuples=False)
+    extracted = task_12_relation_extraction_rebel(sample_text, parse_tuples=False)
 
     assert True # TODO

@@ -1,5 +1,5 @@
 import pytest
-from src.core import stages
+from src.core.stages import *
 from src.main import pipeline_A
 from src.components.book_conversion import EPUBToTEI, ParagraphStreamTEI, Story
 import os
@@ -76,7 +76,7 @@ def book_2_data():
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_task_01_convert_epub(book_data):
     """Test EPUB -> TEI conversion for multiple books."""
-    tei_path = stages.task_01_convert_epub(book_data["epub"])
+    tei_path = task_01_convert_epub(book_data["epub"])
     assert tei_path.endswith(".tei")
     assert os.path.exists(tei_path)
 
@@ -88,8 +88,8 @@ def test_task_01_convert_epub(book_data):
 def test_task_02_parse_chapters(book_data):
     """Test TEI -> Story parsing for multiple books."""
     # TODO - save data as fixture instead of calling earlier?
-    tei_path = stages.task_01_convert_epub(book_data["epub"])
-    story = stages.task_02_parse_chapters(
+    tei_path = task_01_convert_epub(book_data["epub"])
+    story = task_02_parse_chapters(
         tei_path,
         book_data["chapters"],
         book_data["book_id"],
