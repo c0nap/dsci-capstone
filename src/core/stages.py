@@ -320,6 +320,8 @@ def output_single():
 
 
 ##########################################################################
+
+# PIPELINE STAGE A
 def linear_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
     if converter is None:
         converter = EPUBToTEI(epub_path, save_pandoc=False, save_tei=True)
@@ -346,39 +348,62 @@ def linear_03_chunk_story(story, max_chunk_length=1500):
     story.pre_split_chunks(max_chunk_length=max_chunk_length)
     chunks = list(story.stream_chunks())
     return chunks
+
+# PIPELINE STAGE B
+def linear_10_random_chunk(chunks):
+    unique_numbers, sample = linear_10_sample_chunks(chunks, n_sample = 1)
+    return (unique_numbers[0], sample[0])
+
+def linear_10_sample_chunks(chunks, n_sample):
+    unique_numbers = random.sample(range(len(chunks)), n_sample)[0]
+    sample = []
+    for i in unique_numbers:
+        c = chunks[i]
+        sample.append(c)
+    return (unique_numbers, sample)
+
+def linear_11_send_chunk(c):
+    mongo_db = session.docs_db.get_unmanaged_handle()
+    collection = getattr(mongo_db, collection_name)
+    collection.insert_one(c.to_mongo_dict())
+    collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
+
+def linear_12_relation_extraction_rebel(text):
+    from src.components.relation_extraction import RelationExtractor
+    re_rebel = "Babelscape/rebel-large"
+    # TODO: different models
+    #re_rst = "GAIR/rst-information-extraction-11b"
+    #ner_renard = "compnet-renard/bert-base-cased-literary-NER"
+
+    nlp = RelationExtractor(model_name=re_rebel, max_tokens=1024)
+    triples = nlp.extract(text, parse_tuples=True)
+    return triples
+
 ##########################################################################
 
 
-def pipeline_2(collection_name, chunks, book_title):
+def pipeline_B(collection_name, chunks, book_title):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
     import json
-    from src.components.relation_extraction import RelationExtractor
     from src.connectors.llm import LLMConnector
 
-    re_rebel = "Babelscape/rebel-large"
-    re_rst = "GAIR/rst-information-extraction-11b"
-    ner_renard = "compnet-renard/bert-base-cased-literary-NER"
-    nlp = RelationExtractor(model_name=re_rebel, max_tokens=1024)
+    
     llm = LLMConnector(
         temperature=0,
         system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
     )
 
-    unique_number = random.sample(range(len(chunks)), 1)[0]
-    c = chunks[unique_number]
+    ci, c = linear_10_random_chunk(chunks)
     print("\nChunk details:")
-    print(f"  index: {c}\n")
+    print(f"  index: {ci}\n")
     print(c.text)
 
-    mongo_db = session.docs_db.get_unmanaged_handle()
-    collection = getattr(mongo_db, collection_name)
-    collection.insert_one(c.to_mongo_dict())
-    collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
+    linear_11_send_chunk(c)
     print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
 
-    extracted = nlp.extract(c.text, parse_tuples=True)
+    extracted = linear_12_relation_extraction_rebel(c.text)
     print(f"\nNLP output:")
     triples_string = ""
     for triple in extracted:
