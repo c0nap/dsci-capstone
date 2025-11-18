@@ -108,6 +108,8 @@ class DatabaseConnector:
 
 - Never call `pytest .` from root directory, as this will ignore `pytest.ini` and search for ALL PyTest files. This is a problem because the tests in `/smoke` are heavy, network-bound, or costly.
 
+- Scripts are treated as modules to simplify imports between folders.
+
 
 # Manually Generating Documentation with Doxygen
 

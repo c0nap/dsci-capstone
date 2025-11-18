@@ -133,24 +133,24 @@ cd /mnt/c/project/repository
 
 5. Install required packages into your virtual environment.
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install -r deps/requirements.txt
 ```
 
-6. Copy `.env.example` to `.env`, and add your PostgreSQL credentials. Make sure `DB_ENGINE` is set to `POSTGRESQL`. If you have pre-installed engines running on Windows instead of WSL, use `hostname -I` to find the IP.
-
-7. Run setup script to verify basic components are working. Scripts are treated as modules to simplify imports between folders.
+6. Install required system libraries: Pandoc is used for EPUB file conversion.
 ```bash
-python -m src.setup
+sudo apt install pandoc
 ```
+
+7. Copy `.env.example` to `.env`, and add your PostgreSQL credentials. Make sure `DB_ENGINE` is set to `POSTGRESQL`. If you have pre-installed engines running on Windows instead of WSL, use `hostname -I` to find the IP.
 
 8. Run pytests to load example tables into database.
 ```bash
-pytest .
+pytest
 ```
 
-9. Install required system libraries: Pandoc is used for EPUB file conversion.
+9. Start main pipeline which uses the provided example books from Project Gutenberg.
 ```bash
-sudo apt install pandoc
+python -m src.main
 ```
 
 ## API Keys
