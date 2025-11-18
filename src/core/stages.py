@@ -406,7 +406,7 @@ def task_14_relation_extraction_llm(triples_string, text):
         llm_output = llm.execute_query(prompt)
         return (prompt, llm_output)
 
-def task_15_sanitize_triples_llm(llm_output):
+def task_15_sanitize_triples_llm(llm_output: str):
     with Log.timer():
         # TODO: call LLM.normalize_triples
         triples = json.loads(llm_output)

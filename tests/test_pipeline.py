@@ -84,7 +84,7 @@ def book_2_data():
     
     # Read triples from files
     with open(triples_1_path, 'r') as f:
-        llm_triples_json = json.load(f)
+        llm_triples_json = f.read()
 
     chunk_1 = Chunk(
         chunk_1_text,
@@ -245,10 +245,10 @@ def test_task_10_random_chunk(book_data):
 @pytest.mark.order(11)
 @pytest.mark.dependency(name="task_11", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_task_11_send_chunk(book_data):
+def test_task_11_send_chunk(docs_db, book_data):
     """Test inserting chunk into MongoDB collection."""
     chunk = book_data["sample_chunk"]
-    collection_name = "pytest"
+    collection_name = "example_chunks"
     book_title = book_data["book_title"]
     
     task_11_send_chunk(chunk, collection_name, book_title)
