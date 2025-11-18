@@ -317,7 +317,6 @@ def output_single():
 ##########################################################################
 
 # PIPELINE STAGE A
-
 def task_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
     with Log.timer():
         # TODO: refactor converter, move to session.tei_converter?
@@ -328,7 +327,6 @@ def task_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
         converter.clean_tei()
         # TODO: converter.print_chapters(200)
         return converter.tei_path
-
 
 def task_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str):
     with Log.timer():
@@ -344,7 +342,6 @@ def task_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str
         story = Story(reader)
         return story
 
-
 def task_03_chunk_story(story, max_chunk_length=1500):
     with Log.timer():
         story.pre_split_chunks(max_chunk_length=max_chunk_length)
@@ -352,12 +349,10 @@ def task_03_chunk_story(story, max_chunk_length=1500):
         return chunks
 
 # PIPELINE STAGE B
-
 def task_10_random_chunk(chunks):
     with Log.timer():
         unique_numbers, sample = task_10_sample_chunks(chunks, n_sample = 1)
         return (unique_numbers[0], sample[0])
-
 
 def task_10_sample_chunks(chunks, n_sample):
     with Log.timer():
@@ -368,7 +363,6 @@ def task_10_sample_chunks(chunks, n_sample):
             sample.append(c)
         return (unique_numbers, sample)
 
-
 def task_11_send_chunk(c, collection_name, book_title):
     with Log.timer():
         # TODO: remove book_title from chunk schema?
@@ -376,7 +370,6 @@ def task_11_send_chunk(c, collection_name, book_title):
         collection = getattr(mongo_db, collection_name)
         collection.insert_one(c.to_mongo_dict())
         collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
-
 
 def task_12_relation_extraction_rebel(text, max_tokens=1024, parse_tuples=True):
     with Log.timer():
@@ -390,7 +383,6 @@ def task_12_relation_extraction_rebel(text, max_tokens=1024, parse_tuples=True):
         extracted = nlp.extract(text, parse_tuples=parse_tuples)
         return extracted
 
-
 def task_13_concatenate_triples(text):
     with Log.timer():
         # TODO: to_triples_string in RelationExtractor?
@@ -398,7 +390,6 @@ def task_13_concatenate_triples(text):
         for triple in extracted:
             triples_string += str(triple) + "\n"
         return triples_string
-
 
 def task_14_relation_extraction_llm(triples_string, text):
     with Log.timer():
@@ -415,7 +406,6 @@ def task_14_relation_extraction_llm(triples_string, text):
         llm_output = llm.execute_query(prompt)
         return (prompt, llm_output)
 
-
 def task_15_sanitize_triples_llm(llm_output):
     with Log.timer():
         # TODO: call LLM.normalize_triples
@@ -423,7 +413,6 @@ def task_15_sanitize_triples_llm(llm_output):
         return triples
 
 ##########################################################################
-
 
 @Log.time
 def pipeline_3(triples):

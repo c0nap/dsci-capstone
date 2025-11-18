@@ -1,13 +1,13 @@
 import pytest
-import src.core.stages
+from src.core import stages
 
 @pytest.mark.pipeline
 @pytest.mark.smoke
 @pytest.mark.order(1)
 @pytest.mark.dependency(name="task_12_rebel_minimal", scope="session")
-def test_task_12_rebel_minimal(book_data):
+def test_task_12_rebel_minimal():
     """Runs REBEL on a basic example."""
     sample_text = "Alice met Bob in the forest. Bob then went to the village."
-    extracted = task_12_relation_extraction_rebel(sample_text, parse_tuples=False)
+    extracted = stages.task_12_relation_extraction_rebel(sample_text, parse_tuples=False)
 
     assert True # TODO
