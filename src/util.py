@@ -131,7 +131,7 @@ class Log:
 
 
     # --------- Decorator Pattern ---------
-    # Use the @Log.time function 
+    # Use the @Log.time tag to print a Time Elapsed message on every call to that function.
     @staticmethod
     def time(func: Callable[..., Any]) -> Callable[..., Any]:
         """Logs the time elapsed for a function call.
@@ -149,10 +149,12 @@ class Log:
             @param kwargs  Keyword arguments forwarded to the original function.
             @return  The result of calling the original function.
             """
+            if not Log.RECORD_TIME:
+                return func(*args, **kwargs)
             start = time.time()
             result = func(*args, **kwargs)
             elapsed = time.time() - start
-            print(f"{Log.TIME_COLOR}[TIME]{Log.WHITE} {func.__name__} took {elapsed:.3f}s")
+            print(f"{Log.TIME_COLOR}[TIME]{Log.BRIGHT} {func.__name__} took {elapsed:.3f}s{Log.WHITE}")
             return result
         return wrapper
 
