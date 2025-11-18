@@ -30,6 +30,36 @@ def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     return chunks
 
 
+@Log.time
+def pipeline_B(collection_name, chunks, book_title):
+    """Extracts triples from a random chunk.
+    @details
+        - JSON triples (NLP & LLM)"""
+    ci, c = task_10_random_chunk(chunks)
+    print("\nChunk details:")
+    print(f"  index: {ci}\n")
+    print(c.text)
+
+    task_11_send_chunk(c)
+    print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
+
+    extracted = task_12_relation_extraction_rebel(c.text)
+    print(f"\nNLP output:")
+    for triple in extracted:
+        print(triple)
+    print()
+    triples_string = task_13_concatenate_triples(extracted)
+    
+    prompt, llm_output = task_14_relation_extraction_llm(triples_string, c.text)
+    print("\n    LLM prompt:")
+    print(prompt)
+    print("\n    LLM output:")
+    print(llm_output)
+    print("\n" + "=" * 50 + "\n")
+
+    triples = task_15_sanitize_triples_llm(llm_output)
+    print("\nValid JSON")
+    return triples, c
 
 
 
