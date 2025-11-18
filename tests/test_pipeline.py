@@ -282,7 +282,7 @@ def test_task_13_concatenate_triples(book_data):
 
 @pytest.mark.pipeline
 @pytest.mark.order(15)
-@pytest.mark.dependency(name="task_15", scope="session")
+@pytest.mark.dependency(name="task_15_minimal", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_task_15_sanitize_triples_llm(book_data):
     """Test parsing LLM output JSON into triples list."""
@@ -291,15 +291,26 @@ def test_task_15_sanitize_triples_llm(book_data):
     triples = task_15_sanitize_triples_llm(llm_output)
     
     assert isinstance(triples, list)
-    assert len(triples) > 0
-    # Verify structure: each triple should have s, r, o keys
+    assert len(triples) == 10  # Matches fixture data
+    # Verify structure: each triple has s, r, o keys
     for triple in triples:
         assert "s" in triple
         assert "r" in triple
         assert "o" in triple
+        assert isinstance(triple["s"], str) and len(triple["s"]) > 0
+        assert isinstance(triple["r"], str) and len(triple["r"]) > 0
+        assert isinstance(triple["o"], str) and len(triple["o"]) > 0
 
 
-
+# @pytest.mark.pipeline
+# @pytest.mark.order(15)
+# @pytest.mark.dependency(name="task_15_comprehensive", scope="session", depends=["task_15_minimal"])
+# def test_task_15_comprehensive(book_data):
+#     """Test parsing realistic LLM JSON output."""
+#     triples = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
+    
+#     # TODO - normalize_triples with malformed llm output
+#     pass
 
 
 
