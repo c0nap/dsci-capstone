@@ -117,11 +117,33 @@ def test_task_14_llm_triples(book_data):
 
 
 
-# @pytest.mark.pipeline
-# @pytest.mark.smoke
-# @pytest.mark.order(4)
-# @pytest.mark.dependency(name="pipeline_B_minimal", scope="session")
-# def test_pipeline_B_minimal():
-#     """Test running the aggregate pipeline_A on a single book."""
-#     pass
+@pytest.mark.pipeline
+@pytest.mark.smoke
+@pytest.mark.order(16)
+@pytest.mark.dependency(name="pipeline_B_minimal", scope="session", depends=["task_14_llm_minimal", "task_12_rebel_tuples_comprehensive"])
+def test_pipeline_B_minimal(book_data):
+    """Test running the aggregate pipeline_B on smoke test data."""
+    collection_name = "test_pipeline_b_smoke"
+    chunks = [book_data["chunk"]]
+    book_title = "The Phoenix and the Carpet"
+    
+    triples, chunk = pipeline_B(collection_name, chunks, book_title)
+    
+    # Verify output structure
+    assert isinstance(triples, list)
+    assert len(triples) > 0
+    assert isinstance(chunk, Chunk)
+    
+    # Verify each triple has required structure
+    for triple in triples:
+        assert "s" in triple
+        assert "r" in triple
+        assert "o" in triple
+    
+    # Verify chunk was inserted into MongoDB
+    mongo_db = session.docs_db.get_unmanaged_handle()
+    collection = getattr(mongo_db, collection_name)
+    doc = collection.find_one({"_id": chunk.get_chunk_id()})
+    assert doc is not None
+    assert doc["book_title"] == book_title
 

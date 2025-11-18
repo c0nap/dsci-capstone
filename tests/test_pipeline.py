@@ -323,7 +323,7 @@ def test_task_15_sanitize_triples_llm(book_data):
 
 @pytest.mark.pipeline
 @pytest.mark.order(4)
-@pytest.mark.dependency(name="pipeline_A_minimal", scope="session")
+@pytest.mark.dependency(name="pipeline_A_minimal", scope="session", depends=["task_03", "task_02", "task_01"])
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_pipeline_A_minimal(book_data):
     """Test running the aggregate pipeline_A on a single book."""
