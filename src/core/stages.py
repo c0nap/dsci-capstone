@@ -323,160 +323,173 @@ def output_single():
 ##########################################################################
 
 # PIPELINE STAGE A
-@Log.time
+
 def task_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
-    # TODO: refactor converter, move to session.tei_converter?
-    if converter is None:
-        converter = EPUBToTEI(epub_path, save_pandoc=False, save_tei=True)
-    converter.epub_path = epub_path
-    converter.convert_to_tei()
-    converter.clean_tei()
-    # TODO: converter.print_chapters(200)
-    return converter.tei_path
+    with Log.timer():
+        # TODO: refactor converter, move to session.tei_converter?
+        if converter is None:
+            converter = EPUBToTEI(epub_path, save_pandoc=False, save_tei=True)
+        converter.epub_path = epub_path
+        converter.convert_to_tei()
+        converter.clean_tei()
+        # TODO: converter.print_chapters(200)
+        return converter.tei_path
 
-@Log.time
+
 def task_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str):
-    chaps = [line.strip() for line in book_chapters.splitlines() if line.strip()]
-    reader = ParagraphStreamTEI(
-        tei_path,
-        book_id,
-        story_id,
-        allowed_chapters=chaps,
-        start_inclusive=start_str,
-        end_inclusive=end_str,
-    )
-    story = Story(reader)
-    return story
+    with Log.timer():
+        chaps = [line.strip() for line in book_chapters.splitlines() if line.strip()]
+        reader = ParagraphStreamTEI(
+            tei_path,
+            book_id,
+            story_id,
+            allowed_chapters=chaps,
+            start_inclusive=start_str,
+            end_inclusive=end_str,
+        )
+        story = Story(reader)
+        return story
 
-@Log.time
+
 def task_03_chunk_story(story, max_chunk_length=1500):
-    story.pre_split_chunks(max_chunk_length=max_chunk_length)
-    chunks = list(story.stream_chunks())
-    return chunks
+    with Log.timer():
+        story.pre_split_chunks(max_chunk_length=max_chunk_length)
+        chunks = list(story.stream_chunks())
+        return chunks
 
 # PIPELINE STAGE B
-@Log.time
+
 def task_10_random_chunk(chunks):
-    unique_numbers, sample = task_10_sample_chunks(chunks, n_sample = 1)
-    return (unique_numbers[0], sample[0])
+    with Log.timer():
+        unique_numbers, sample = task_10_sample_chunks(chunks, n_sample = 1)
+        return (unique_numbers[0], sample[0])
 
-@Log.time
+
 def task_10_sample_chunks(chunks, n_sample):
-    unique_numbers = random.sample(range(len(chunks)), n_sample)
-    sample = []
-    for i in unique_numbers:
-        c = chunks[i]
-        sample.append(c)
-    return (unique_numbers, sample)
+    with Log.timer():
+        unique_numbers = random.sample(range(len(chunks)), n_sample)
+        sample = []
+        for i in unique_numbers:
+            c = chunks[i]
+            sample.append(c)
+        return (unique_numbers, sample)
 
-@Log.time
+
 def task_11_send_chunk(c, collection_name, book_title):
-    # TODO: remove book_title from chunk schema?
-    mongo_db = session.docs_db.get_unmanaged_handle()
-    collection = getattr(mongo_db, collection_name)
-    collection.insert_one(c.to_mongo_dict())
-    collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
+    with Log.timer():
+        # TODO: remove book_title from chunk schema?
+        mongo_db = session.docs_db.get_unmanaged_handle()
+        collection = getattr(mongo_db, collection_name)
+        collection.insert_one(c.to_mongo_dict())
+        collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
 
-@Log.time
+
 def task_12_relation_extraction_rebel(text):
-    from src.components.relation_extraction import RelationExtractor
-    # TODO: move to session.rel_extract
-    re_rebel = "Babelscape/rebel-large"
-    # TODO: different models
-    #re_rst = "GAIR/rst-information-extraction-11b"
-    #ner_renard = "compnet-renard/bert-base-cased-literary-NER"
-    nlp = RelationExtractor(model_name=re_rebel, max_tokens=1024)
-    triples = nlp.extract(text, parse_tuples=True)
-    return triples
+    with Log.timer():
+        from src.components.relation_extraction import RelationExtractor
+        # TODO: move to session.rel_extract
+        re_rebel = "Babelscape/rebel-large"
+        # TODO: different models
+        #re_rst = "GAIR/rst-information-extraction-11b"
+        #ner_renard = "compnet-renard/bert-base-cased-literary-NER"
+        nlp = RelationExtractor(model_name=re_rebel, max_tokens=1024)
+        triples = nlp.extract(text, parse_tuples=True)
+        return triples
 
-@Log.time
+
 def task_13_concatenate_triples(text):
-    # TODO: to_triples_string in RelationExtractor?
-    triples_string = ""
-    for triple in extracted:
-        triples_string += str(triple) + "\n"
-    return triples_string
+    with Log.timer():
+        # TODO: to_triples_string in RelationExtractor?
+        triples_string = ""
+        for triple in extracted:
+            triples_string += str(triple) + "\n"
+        return triples_string
 
-@Log.time
+
 def task_14_relation_extraction_llm(triples_string, text):
-    from src.connectors.llm import LLMConnector
-    # TODO: move to session.llm
-    llm = LLMConnector(
-        temperature=0,
-        system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
-    )
-    prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-    prompt += f"And here is the original text:\n{c.text}\n\n"
-    prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
-    prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
-    llm_output = llm.execute_query(prompt)
-    return (prompt, llm_output)
+    with Log.timer():
+        from src.connectors.llm import LLMConnector
+        # TODO: move to session.llm
+        llm = LLMConnector(
+            temperature=0,
+            system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
+        )
+        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+        prompt += f"And here is the original text:\n{c.text}\n\n"
+        prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
+        prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
+        llm_output = llm.execute_query(prompt)
+        return (prompt, llm_output)
 
-@Log.time
+
 def task_15_sanitize_triples_llm(llm_output):
-    # TODO: call LLM.normalize_triples
-    triples = json.loads(llm_output)
-    return triples
+    with Log.timer():
+        # TODO: call LLM.normalize_triples
+        triples = json.loads(llm_output)
+        return triples
 
 ##########################################################################
 
-@Log.time
+
 def pipeline_3(triples):
     """Generates a LLM summary using Neo4j triples.
     @details
         - Neo4j graph database
         - Blazor graph page"""
-    for triple in triples:
-        print(triple["s"], triple["r"], triple["o"])
-    # TODO: normalize
-    session.main_graph.add_triples_json(triples)
+    with Log.timer():
+        for triple in triples:
+            print(triple["s"], triple["r"], triple["o"])
+        # TODO: normalize
+        session.main_graph.add_triples_json(triples)
+    
+        # basic linear verbalization of triples (concatenate)
+        edge_count_df = session.main_graph.get_edge_counts(top_n=3)
+        edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
+        print("\nMost relevant nodes:")
+        print(edge_count_df)
+    
+        triples_df = session.main_graph.get_by_ranked_degree(min_rank=3, id_columns=["subject_id"])
+        triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
+        triples_string = session.main_graph.to_triples_string(triples_df, mode="triple")
+        print("\nTriples which best represent the graph:")
+        print(triples_string)
+        return triples_string
 
-    # basic linear verbalization of triples (concatenate)
-    edge_count_df = session.main_graph.get_edge_counts(top_n=3)
-    edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
-    print("\nMost relevant nodes:")
-    print(edge_count_df)
 
-    triples_df = session.main_graph.get_by_ranked_degree(min_rank=3, id_columns=["subject_id"])
-    triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
-    triples_string = session.main_graph.to_triples_string(triples_df, mode="triple")
-    print("\nTriples which best represent the graph:")
-    print(triples_string)
-    return triples_string
-
-@Log.time
 def pipeline_4(collection_name, triples_string, chunk_id):
     """Generate chunk summary"""
-    from src.connectors.llm import LLMConnector
+    with Log.timer():
+        from src.connectors.llm import LLMConnector
+    
+        # Prompt LLM to generate summary
+        llm = LLMConnector(
+            temperature=0,
+            system_prompt="You are a helpful assistant that processes semantic triples.",
+        )
+        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+        prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
+        prompt += "Output your generated summary and nothing else."
+        summary = llm.execute_query(prompt)
+    
+        print("\nGenerated summary:")
+        print(summary)
+    
+        mongo_db = session.docs_db.get_unmanaged_handle()
+        collection = getattr(mongo_db, collection_name)
+        collection.update_one({"_id": chunk_id}, {"$set": {"summary": summary}})
+        print(f"    [Wrote summary to Mongo with chunk_id: {chunk_id}]")
+    
+        return summary
 
-    # Prompt LLM to generate summary
-    llm = LLMConnector(
-        temperature=0,
-        system_prompt="You are a helpful assistant that processes semantic triples.",
-    )
-    prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-    prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
-    prompt += "Output your generated summary and nothing else."
-    summary = llm.execute_query(prompt)
 
-    print("\nGenerated summary:")
-    print(summary)
-
-    mongo_db = session.docs_db.get_unmanaged_handle()
-    collection = getattr(mongo_db, collection_name)
-    collection.update_one({"_id": chunk_id}, {"$set": {"summary": summary}})
-    print(f"    [Wrote summary to Mongo with chunk_id: {chunk_id}]")
-
-    return summary
-
-@Log.time
 def pipeline_5a(summary, book_title, book_id):
     """Send book info to Blazor
     - Post to Blazor metrics page"""
-    session.metrics.post_basic_output(book_id, book_title, summary)
-    print("\nOutput sent to web app.")
+    with Log.timer():
+        session.metrics.post_basic_output(book_id, book_title, summary)
+        print("\nOutput sent to web app.")
 
-@Log.time
+
 def pipeline_5b(
     summary: str, book_title: str, book_id: str, chunk: str, gold_summary: str = "", bookscore: float = None, questeval: float = None
 ) -> None:
@@ -484,6 +497,7 @@ def pipeline_5b(
     - Compute basic metrics (ROUGE, BERTScore)
     - Wait for advanced metrics (QuestEval, BooookScore)
     - Post to Blazor metrics page"""
-    session.metrics.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
-    print("\nOutput sent to web app.")
+    with Log.timer():
+        session.metrics.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
+        print("\nOutput sent to web app.")
 
