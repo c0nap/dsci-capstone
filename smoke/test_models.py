@@ -1,5 +1,6 @@
 import pytest
 from src.core.stages import *
+from src.main import pipeline_B
 
 @pytest.fixture
 def book_data():
