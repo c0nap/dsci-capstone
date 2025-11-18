@@ -3,8 +3,8 @@ from src.core.stages import (
     linear_01_convert_epub,
     linear_02_parse_chapters,
     linear_03_chunk_story,
-    pipeline_A,
 )
+from src.main import pipeline_A
 from src.components.book_conversion import EPUBToTEI, ParagraphStreamTEI, Story
 import os
 from pandas import read_csv

@@ -11,8 +11,26 @@ from src.core.boss import (
 )
 
 
+def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
+    """Connects all components to convert an EPUB file to a book summary.
+    @details  Data conversions:
+        - EPUB file
+        - XML (TEI)
+    """
+    print(f"\n{'='*50}")
+    print(f"Processing: {epub_path}")
+
+    tei_path = stages.linear_01_convert_epub(epub_path)
+    story = stages.linear_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str)
+    chunks = stages.linear_03_chunk_story(story)
+
+    print("\n=== STORY SUMMARY ===")
+    print(f"Total chunks: {len(chunks)}")
+    return chunks
+
+
 def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
-    chunks = stages.pipeline_1(epub_path, book_chapters, start_str, end_str, book_id, story_id)
+    chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id)
     triples, chunk = stages.pipeline_2(collection_name, chunks, book_title)
     triples_string = stages.pipeline_3(triples)
     summary = stages.pipeline_4(collection_name, triples_string, chunk.get_chunk_id())

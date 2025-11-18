@@ -320,24 +320,6 @@ def output_single():
 
 
 ##########################################################################
-def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
-    """Connects all components to convert an EPUB file to a book summary.
-    @details  Data conversions:
-        - EPUB file
-        - XML (TEI)
-    """
-    print(f"\n{'='*50}")
-    print(f"Processing: {epub_path}")
-
-    tei_path = linear_01_convert_epub(epub_path)
-    story = linear_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str)
-    chunks = linear_03_chunk_story(story)
-
-    print("\n=== STORY SUMMARY ===")
-    print(f"Total chunks: {len(chunks)}")
-    return chunks
-
-
 def linear_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
     if converter is None:
         converter = EPUBToTEI(epub_path, save_pandoc=False, save_tei=True)
