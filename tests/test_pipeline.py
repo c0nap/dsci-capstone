@@ -8,6 +8,7 @@ from src.main import pipeline_A
 from src.components.book_conversion import EPUBToTEI, ParagraphStreamTEI, Story
 import os
 from pandas import read_csv
+from src.util import Log
 
 ##########################################################################
 # Fixtures

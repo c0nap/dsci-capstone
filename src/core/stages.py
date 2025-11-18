@@ -3,6 +3,7 @@ from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStre
 from src.core.context import session
 import json
 from typing import Optional
+from src.util import Log
 # unused?
 import traceback
 
