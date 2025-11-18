@@ -1,5 +1,5 @@
-book_id,story_id,epub_path,title_key,author_key,language_key,date_key,start_string,end_string,tei_path,chapters
-1,1,datasets/examples/trilogy-wishes-1.epub,Title,Author,Language,Release date,,But I must say no more.,datasets/examples/trilogy-wishes-1.tei,"CHAPTER 1 BEAUTIFUL AS THE DAY
+﻿book_id,story_id,epub_path,start_string,end_string,chapters,book_title
+1,1,./tests/examples-pipeline/epub/trilogy-wishes-1.epub,,But I must say no more.,"CHAPTER 1 BEAUTIFUL AS THE DAY
 CHAPTER 2 GOLDEN GUINEAS
 CHAPTER 3 BEING WANTED
 CHAPTER 4 WINGS
@@ -9,4 +9,16 @@ CHAPTER 7 A SIEGE AND BED
 CHAPTER 8 BIGGER THAN THE BAKER'S BOY
 CHAPTER 9 GROWN UP
 CHAPTER 10 SCALPS
-CHAPTER 11 THE LAST WISH"
+CHAPTER 11 THE LAST WISH",Five Children and It
+2,1,./tests/examples-pipeline/epub/trilogy-wishes-2.epub,,end of the Phoenix and the Carpet.,"CHAPTER 1. THE EGG
+CHAPTER 2. THE TOPLESS TOWER
+CHAPTER 3. THE QUEEN COOK
+CHAPTER 4. TWO BAZAARS
+CHAPTER 5. THE TEMPLE
+CHAPTER 6. DOING GOOD
+CHAPTER 7. MEWS FROM PERSIA
+CHAPTER 8. THE CATS, THE COW, AND THE BURGLAR
+CHAPTER 9. THE BURGLAR’S BRIDE
+CHAPTER 10. THE HOLE IN THE CARPET
+CHAPTER 11. THE BEGINNING OF THE END
+CHAPTER 12. THE END OF THE END",The Phoenix and the Carpet

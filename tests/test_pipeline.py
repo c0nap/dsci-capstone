@@ -48,26 +48,25 @@ def book_2_data():
     return {
         "epub": "./tests/examples-pipeline/epub/trilogy-wishes-2.epub",
         "chapters": """
-			CHAPTER 1. THE EGG\n
-			CHAPTER 2. THE TOPLESS TOWER\n
-			CHAPTER 3. THE QUEEN COOK\n
-			CHAPTER 4. TWO BAZAARS\n
-			CHAPTER 5. THE TEMPLE\n
-			CHAPTER 6. DOING GOOD\n
-			CHAPTER 7. MEWS FROM PERSIA\n
-			CHAPTER 8. THE CATS, THE COW, AND THE BURGLAR\n
-			CHAPTER 9. THE BURGLAR’S BRIDE\n
-			CHAPTER 10. THE HOLE IN THE CARPET\n
-			CHAPTER 11. THE BEGINNING OF THE END\n
-			CHAPTER 12. THE END OF THE END\n
-		""",
+            CHAPTER 1. THE EGG\n
+            CHAPTER 2. THE TOPLESS TOWER\n
+            CHAPTER 3. THE QUEEN COOK\n
+            CHAPTER 4. TWO BAZAARS\n
+            CHAPTER 5. THE TEMPLE\n
+            CHAPTER 6. DOING GOOD\n
+            CHAPTER 7. MEWS FROM PERSIA\n
+            CHAPTER 8. THE CATS, THE COW, AND THE BURGLAR\n
+            CHAPTER 9. THE BURGLAR’S BRIDE\n
+            CHAPTER 10. THE HOLE IN THE CARPET\n
+            CHAPTER 11. THE BEGINNING OF THE END\n
+            CHAPTER 12. THE END OF THE END\n
+        """,
         "start": "",
         "end": "end of the Phoenix and the Carpet.",
         "book_id": 2,
         "story_id": 1,
         "book_title": "The Phoenix and the Carpet",
     }
-
 
 
 ##########################################################################
@@ -157,17 +156,17 @@ def test_pipeline_A_minimal(book_data):
 @pytest.mark.dependency(name="pipeline_A_csv", scope="session")
 def test_pipeline_A_from_csv():
     """Read example CSV and run pipeline_A for each row."""
-    csv_path = "datasets/books.csv"
+    csv_path = "./tests/examples-pipeline/books.csv"
     assert os.path.exists(csv_path)
 
     df = read_csv(csv_path)
     for _, row in df.iterrows():
-        epub_path = row.get("epub_path")
-        start_str = row.get("start_string") or None
-        end_str = row.get("end_string") or None
-        chapters = row.get("chapters", "")
-        book_id = row.get("book_id")
-        story_id = int(row.get("story_id"))
+        epub_path = row["epub_path"]
+        start_str = row["start_string"] or None
+        end_str = row["end_string"] or None
+        chapters = row["chapters"]
+        book_id = row["book_id"]
+        story_id = int(row["story_id"])
 
         chunks = pipeline_A(epub_path, chapters, start_str, end_str, book_id, story_id)
         assert isinstance(chunks, list)
