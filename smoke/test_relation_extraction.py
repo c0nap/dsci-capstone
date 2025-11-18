@@ -11,3 +11,13 @@ def test_task_12_rebel_minimal():
     extracted = task_12_relation_extraction_rebel(sample_text, parse_tuples=False)
 
     assert True # TODO
+
+
+@pytest.mark.pipeline
+@pytest.mark.smoke
+@pytest.mark.order(4)
+@pytest.mark.dependency(name="pipeline_B_minimal", scope="session")
+def test_pipeline_B_minimal():
+    """Test running the aggregate pipeline_A on a single book."""
+    pass
+

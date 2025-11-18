@@ -383,7 +383,7 @@ def task_12_relation_extraction_rebel(text, max_tokens=1024, parse_tuples=True):
         extracted = nlp.extract(text, parse_tuples=parse_tuples)
         return extracted
 
-def task_13_concatenate_triples(text):
+def task_13_concatenate_triples(extracted):
     with Log.timer():
         # TODO: to_triples_string in RelationExtractor?
         triples_string = ""
