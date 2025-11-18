@@ -165,15 +165,23 @@ class Log:
             start = time.time()
             try:
                 result = func(*args, **kwargs)
-            except Exception:  # For any exception raised by the wrapped function...
-                exc_type, exc_value, exc_traceback = sys.exc_info()
+            except Exception:  # Fix traceback of the wrapped function...
+                _, exc, trace = sys.exc_info()
                 
-                # Remove the 'wrapper' function's frame from the traceback chain
-                #   Skip TWO frames: wrapper's try block + the re-raise line itself
-                if exc_traceback.tb_next is not None:
-                    raise exc_value.with_traceback(exc_traceback.tb_next) from None
-                else:  # Fallback: just allow the messy traceback - this should not happen
-                     raise
+                # Not feasible to completely remove 'wrapper' frame from the traceback chain
+                # This makes it slightly less intrusive:                       File "/pipeline/src/main.py", line 121, in <module>
+                #   File "/pipeline/src/main.py", line 121, in <module>          chunks = pipeline_A(
+                #     chunks = pipeline_A(                                                ^^^^^^^^^^^
+                #              ^^^^^^^^^^^                                     File "/pipeline/src/util.py", line 167, in wrapper
+                #   File "/pipeline/src/util.py", line 174, in wrapper           result = func(*args, **kwargs)
+                #     raise exc.with_traceback(trace.tb_next)                             ^^^^^^^^^^^^^^^^^^^^^
+                #   File "/pipeline/src/main.py", line 24, in pipeline_A       File "/pipeline/src/main.py", line 24, in pipeline_A
+                #     tei_path = task_01_convert_epub(epub_path)                 tei_path = task_01_convert_epub(epub_path)
+                #                ^^^^^^^^^^^^^^^^^^^^                                       ^^^^^^^^^^^^^^^^^^^^
+                if trace.tb_next is not None:
+                    raise exc.with_traceback(trace.tb_next)
+                # Fallback: just allow the messy traceback - this should not happen
+                raise
             finally:
                 if Log.RECORD_TIME:
                     elapsed = time.time() - start

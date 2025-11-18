@@ -11,6 +11,7 @@ from src.core.boss import (
 )
 from src.util import Log
 
+
 @Log.time
 def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     """Connects all components to convert an EPUB file to a book summary.
