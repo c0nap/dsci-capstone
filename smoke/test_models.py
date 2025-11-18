@@ -47,11 +47,12 @@ def book_data():
 
 
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="task_12_rebel_minimal", scope="session")
-def test_task_12_rebel_minimal():
+@pytest.mark.dependency(name="job_12_rebel_minimal", scope="session")
+def test_job_12_rebel_minimal():
     """Runs REBEL on a basic example."""
     sample_text = "Alice met Bob in the forest. Bob then went to the village."
     extracted = task_12_relation_extraction_rebel(sample_text, parse_tuples=False)
@@ -62,11 +63,12 @@ def test_task_12_rebel_minimal():
     assert any("  " in triple for triple in extracted)
 
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="task_12_rebel_chunk", scope="session", depends=["task_12_rebel_minimal"])
-def test_task_12_rebel_chunk(book_data):
+@pytest.mark.dependency(name="job_12_rebel_chunk", scope="session", depends=["job_12_rebel_minimal"])
+def test_job_12_rebel_chunk(book_data):
     """Runs REBEL on realistic pipeline data. Do not convert to tuples yet."""
     extracted = task_12_relation_extraction_rebel(book_data["chunk_text"], parse_tuples=False)
     
@@ -77,11 +79,12 @@ def test_task_12_rebel_chunk(book_data):
     assert any("  " in triple for triple in extracted)
 
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="task_12_rebel_tuples_comprehensive", scope="session", depends=["task_12_rebel_minimal", "task_12_rebel_chunk"])
-def test_task_12_rebel_tuples_comprehensive(book_data):
+@pytest.mark.dependency(name="job_12_rebel_tuples", scope="session", depends=["job_12_rebel_minimal", "job_12_rebel_chunk"])
+def test_job_12_rebel_tuples(book_data):
     """Runs REBEL with tuple parsing on realistic data."""
     extracted = task_12_relation_extraction_rebel(book_data["chunk_text"], parse_tuples=True)
     
@@ -95,11 +98,12 @@ def test_task_12_rebel_tuples_comprehensive(book_data):
         assert isinstance(obj, str) and len(obj) > 0
 
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(14)
-@pytest.mark.dependency(name="task_14_llm_minimal", scope="session")
-def test_task_14_llm_triples(book_data):
+@pytest.mark.dependency(name="job_14_llm_minimal", scope="session")
+def test_job_14_llm_minimal(book_data):
     """Test LLM-based triple sanitization with realistic data."""
     triples_string = "\n".join(book_data["rebel_triples"])
     
@@ -118,12 +122,13 @@ def test_task_14_llm_triples(book_data):
 
 
 @pytest.mark.pipeline
+@pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(16)
-@pytest.mark.dependency(name="pipeline_B_minimal", scope="session", depends=["task_14_llm_minimal", "task_12_rebel_tuples_comprehensive"])
+@pytest.mark.dependency(name="stage_B_minimal", scope="session", depends=["job_14_llm_minimal", "job_12_rebel_tuples"])
 def test_pipeline_B_minimal(book_data):
     """Test running the aggregate pipeline_B on smoke test data."""
-    collection_name = "test_pipeline_b_smoke"
+    collection_name = "example_chunks"
     chunks = [book_data["chunk"]]
     book_title = "The Phoenix and the Carpet"
     

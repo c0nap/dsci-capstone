@@ -156,22 +156,24 @@ def book_2_data():
 # Tests
 ##########################################################################
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_A
 @pytest.mark.order(1)
-@pytest.mark.dependency(name="task_01", scope="session")
+@pytest.mark.dependency(name="job_01", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_task_01_convert_epub(book_data):
+def test_job_01_convert_epub(book_data):
     """Test EPUB -> TEI conversion for multiple books."""
     tei_path = task_01_convert_epub(book_data["epub"])
     assert tei_path.endswith(".tei")
     assert os.path.exists(tei_path)
 
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_A
 @pytest.mark.order(2)
-@pytest.mark.dependency(name="task_02", scope="session")
+@pytest.mark.dependency(name="job_02", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_task_02_parse_chapters(book_data):
+def test_job_02_parse_chapters(book_data):
     """Test TEI -> Story parsing for multiple books."""
     # TODO - save data as fixture instead of calling earlier?
     tei_path = book_data["tei"]
@@ -187,11 +189,12 @@ def test_task_02_parse_chapters(book_data):
     assert hasattr(story, "reader")
 
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_A
 @pytest.mark.order(3)
-@pytest.mark.dependency(name="task_03", scope="session")
+@pytest.mark.dependency(name="job_03", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_task_03_chunk_story(book_data):
+def test_job_03_chunk_story(book_data):
     """Test Story -> chunks splitting for multiple books."""
     tei_path = book_data["tei"]
     # TODO - save data as fixture instead of calling earlier?
@@ -211,11 +214,12 @@ def test_task_03_chunk_story(book_data):
         assert len(c.text) > 0
 
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_B
 @pytest.mark.order(10)
-@pytest.mark.dependency(name="task_10_sample", scope="session")
+@pytest.mark.dependency(name="job_10_multi", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_task_10_sample_chunks(book_data):
+def test_job_10_sample_chunks(book_data):
     """Test sampling multiple chunks from a list."""
     chunks = book_data["chunks_list"]
     n_sample = 2
@@ -228,11 +232,12 @@ def test_task_10_sample_chunks(book_data):
     assert all(isinstance(c, Chunk) for c in sample)
 
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_B
 @pytest.mark.order(10)
-@pytest.mark.dependency(name="task_10_random", scope="session", depends=["task_10_sample"])
+@pytest.mark.dependency(name="job_10_single", scope="session", depends=["job_10_multi"])
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_task_10_random_chunk(book_data):
+def test_job_10_random_chunk(book_data):
     """Test selecting a single random chunk."""
     chunks = book_data["chunks_list"]
     
@@ -243,11 +248,12 @@ def test_task_10_random_chunk(book_data):
     assert isinstance(chunk, Chunk)
 
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_B
 @pytest.mark.order(11)
-@pytest.mark.dependency(name="task_11", scope="session")
+@pytest.mark.dependency(name="job_11", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_task_11_send_chunk(docs_db, book_data):
+def test_job_11_send_chunk(docs_db, book_data):
     """Test inserting chunk into MongoDB collection."""
     chunk = book_data["sample_chunk"]
     collection_name = "example_chunks"
@@ -265,11 +271,12 @@ def test_task_11_send_chunk(docs_db, book_data):
     assert doc["text"] == chunk.text
 
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_B
 @pytest.mark.order(13)
-@pytest.mark.dependency(name="task_13", scope="session")
+@pytest.mark.dependency(name="job_13", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_task_13_concatenate_triples(book_data):
+def test_job_13_concatenate_triples(book_data):
     """Test converting extracted triples to newline-delimited string."""
     extracted = book_data["rebel_triples"]
     
@@ -282,11 +289,12 @@ def test_task_13_concatenate_triples(book_data):
         assert str(triple) in triples_string
 
 
-@pytest.mark.pipeline
+@pytest.mark.task
+@pytest.mark.stage_B
 @pytest.mark.order(15)
-@pytest.mark.dependency(name="task_15_minimal", scope="session")
+@pytest.mark.dependency(name="job_15_minimal", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_task_15_sanitize_triples_llm(book_data):
+def test_job_15_sanitize_triples_llm(book_data):
     """Test parsing LLM output JSON into triples list."""
     llm_output = book_data["llm_triples_json"]
     num_triples = book_data["num_triples"]
@@ -305,10 +313,11 @@ def test_task_15_sanitize_triples_llm(book_data):
         assert isinstance(triple["o"], str) and len(triple["o"]) > 0
 
 
-# @pytest.mark.pipeline
+# @pytest.mark.task
+# @pytest.mark.stage_B
 # @pytest.mark.order(15)
-# @pytest.mark.dependency(name="task_15_comprehensive", scope="session", depends=["task_15_minimal"])
-# def test_task_15_comprehensive(book_data):
+# @pytest.mark.dependency(name="task_15_comprehensive", scope="session", depends=["job_15_minimal"])
+# def test_job_15_comprehensive(book_data):
 #     """Test parsing realistic LLM JSON output."""
 #     triples = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
     
@@ -322,8 +331,9 @@ def test_task_15_sanitize_triples_llm(book_data):
 ##########################################################################
 
 @pytest.mark.pipeline
+@pytest.mark.stage_A
 @pytest.mark.order(4)
-@pytest.mark.dependency(name="pipeline_A_minimal", scope="session", depends=["task_03", "task_02", "task_01"])
+@pytest.mark.dependency(name="stage_A_minimal", scope="session", depends=["job_03", "job_02", "job_01"])
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_pipeline_A_minimal(book_data):
     """Test running the aggregate pipeline_A on a single book."""
@@ -341,8 +351,9 @@ def test_pipeline_A_minimal(book_data):
 
 
 @pytest.mark.pipeline
+@pytest.mark.stage_A
 @pytest.mark.order(5)
-@pytest.mark.dependency(name="pipeline_A_csv", scope="session")
+@pytest.mark.dependency(name="stage_A_csv", scope="session")
 def test_pipeline_A_from_csv():
     """Read example CSV and run pipeline_A for each row.
     @details
