@@ -140,7 +140,7 @@ class Log:
         @param func  The function to wrap.
         @return  The wrapped function that logs time and forwards the result.
         """
-
+    
         # Preserve the original function's name and docstring.
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -151,12 +151,105 @@ class Log:
             """
             if not Log.RECORD_TIME:
                 return func(*args, **kwargs)
+    
+            # Capture full call chain (skip internal frames)
+            stack = inspect.stack()
+            call_chain_parts = []
+            for frame_info in reversed(stack[2:]):
+                func_name = frame_info.function
+                if func_name not in ['<module>', 'wrapper']:
+                    call_chain_parts.append(func_name)
+            
+            call_chain_parts.append(func.__name__)
+            call_chain = " -> ".join(call_chain_parts)
+            
             start = time.time()
-            result = func(*args, **kwargs)
-            elapsed = time.time() - start
-            print(f"{Log.TIME_COLOR}[TIME]{Log.BRIGHT} {func.__name__} took {elapsed:.3f}s{Log.WHITE}")
+            try:
+                result = func(*args, **kwargs)  # Fixed: removed "return" here
+            finally:
+                elapsed = time.time() - start
+                print(f"{Log.TIME_COLOR}[TIME]{Log.BRIGHT} {func.__name__} took {elapsed:.3f}s{Log.WHITE}")  # Fixed: func.name -> func.__name__
+                Log._timing_results.append((func.__name__, elapsed, call_chain))  # Fixed: name -> func.__name__
             return result
         return wrapper
+    
+    
+    # Use the Log.timer context to print a Time Elapsed message once the function is finished.
+    # Advantage over @Log.time: Cleaner traceback
+    @staticmethod
+    @contextmanager
+    def timer(name: str = None):
+        """Context manager for recording the execution time of code blocks.
+        @param name  Optional name for the timed block. If not provided, uses caller function name.
+        Usage:
+            with Log.timer():
+                # your code here
+        """
+        if not Log.RECORD_TIME:
+            yield
+            return
+    
+        # Auto-detect function name if not provided
+        if name is None:
+            frame = inspect.currentframe().f_back
+            name = frame.f_code.co_name
+        
+        # Capture full call chain (skip internal frames)
+        stack = inspect.stack()
+        call_chain_parts = []
+        for frame_info in reversed(stack[2:]):
+            func_name = frame_info.function
+            if func_name not in ['<module>', 'timer']:
+                call_chain_parts.append(func_name)
+        
+        call_chain_parts.append(name)
+        call_chain = " -> ".join(call_chain_parts)
+        
+        start = time.time()
+        try:
+            yield  # If an exception happens here... (see below)
+        finally:
+            elapsed = time.time() - start  # Data recorded even on failure
+            print(f"{Log.TIME_COLOR}[TIME]{Log.BRIGHT} {name} took {elapsed:.3f}s{Log.WHITE}")  # Fixed: func.name -> name
+            # Store timing result for later summary
+            Log._timing_results.append((name, elapsed, call_chain))
+
+
+    _timing_results: List[Tuple[str, float, str]] = []  # (func_name, elapsed, call_chain)
+    @staticmethod
+    def get_timing_summary() -> DataFrame:
+        """Returns timing results as a pandas DataFrame.
+        @return  DataFrame with columns: function, elapsed, call_chain
+        """
+        if not Log._timing_results:
+            return DataFrame(columns=['function', 'elapsed', 'call_chain'])
+        df = DataFrame(
+            Log._timing_results,
+            columns=['function', 'elapsed', 'call_chain']
+        )
+        return df
+    
+    @staticmethod
+    def clear_timing_data():
+        """Clears all recorded timing data."""
+        Log._timing_results.clear()
+    
+    @staticmethod
+    def print_timing_summary():
+        """Prints a formatted timing summary grouped by function."""
+        df = Log.get_timing_summary()
+        if df.empty:
+            print("No timing data recorded.")
+            return
+        print("\n=== TIMING SUMMARY ===")
+        
+        # Group by function and show stats
+        grouped = df.groupby('function')['elapsed'].agg(['count', 'sum', 'mean', 'min', 'max'])
+        grouped.columns = ['calls', 'total', 'avg', 'min', 'max']
+        
+        print(grouped.to_string())
+        print(f"\nTotal execution time: {df['elapsed'].sum():.3f}s")
+
 
 
     # --------- Builder Pattern ---------
