@@ -1,12 +1,12 @@
 [
-	{"s": "children", "r": "received", "o": "new carpet"},
-	{"s": "carpet", "r": "contained", "o": "egg"},
-	{"s": "egg", "r": "hatched", "o": "Phoenix"},
-	{"s": "Phoenix", "r": "can", "o": "talk"},
-	{"s": "Phoenix", "r": "has_lived", "o": "thousands of years"},
-	{"s": "carpet", "r": "is", "o": "wishing carpet"},
-	{"s": "carpet", "r": "travels_to", "o": "any place or time"},
-	{"s": "Phoenix", "r": "suggests_visiting", "o": "Egypt"},
-	{"s": "Anthea", "r": "asks_about", "o": "adventures"},
-	{"s": "Jane", "r": "is_excited_about", "o": "travel"},
+  {"s": "children", "r": "received", "o": "new carpet"},
+  {"s": "carpet", "r": "contained", "o": "egg"},
+  {"s": "egg", "r": "hatched", "o": "Phoenix"},
+  {"s": "Phoenix", "r": "can", "o": "talk"},
+  {"s": "Phoenix", "r": "has_lived", "o": "thousands of years"},
+  {"s": "carpet", "r": "is", "o": "wishing carpet"},
+  {"s": "carpet", "r": "travels_to", "o": "any place or time"},
+  {"s": "Phoenix", "r": "suggests_visiting", "o": "Egypt"},
+  {"s": "Anthea", "r": "asks_about", "o": "adventures"},
+  {"s": "Jane", "r": "is_excited_about", "o": "travel"}
 ]

@@ -1,7 +1,7 @@
 import pytest
 from src.core.stages import *
 from src.main import pipeline_A
-from src.components.book_conversion import EPUBToTEI, ParagraphStreamTEI, Story
+from src.components.book_conversion import EPUBToTEI, ParagraphStreamTEI, Story, Chunk
 import os
 from pandas import read_csv
 from src.util import Log
@@ -62,7 +62,6 @@ def book_1_data():
             Chunk("They learned their lesson.", 1, 3, 36, 37, 1, 16.5, 20.0),
         ],
         "sample_chunk": sample_chunk,
-        "collection_name": "test_chunks_book1",
         "rebel_triples": ["children  found  Psammead", "Psammead  grants  wishes"],
         "llm_triples_json": '[{"s": "children", "r": "found", "o": "Psammead"}, {"s": "Psammead", "r": "grants", "o": "wishes"}]',
     }
@@ -76,7 +75,6 @@ def book_2_data():
     chunk_1_path = f"./tests/examples-pipeline/chunks/{chunk_1_id}.txt"
     chunk_2_path = f"./tests/examples-pipeline/chunks/{chunk_2_id}.txt"
     triples_1_path = f"./tests/examples-pipeline/triples/{chunk_1_id}.json"
-    triples_2_path = f"./tests/examples-pipeline/triples/{chunk_2_id}.json"
     
     # Read chunk texts from files
     with open(chunk_1_path, 'r') as f:
@@ -86,8 +84,7 @@ def book_2_data():
     
     # Read triples from files
     with open(triples_1_path, 'r') as f:
-        triples_list = [json.loads(line) for line in f if line.strip()]
-        llm_triples_json = json.dumps(triples_list)
+        llm_triples_json = json.load(f)
 
     chunk_1 = Chunk(
         chunk_1_text,
@@ -136,8 +133,7 @@ def book_2_data():
             chunk_1,
             chunk_2,
         ],
-        "sample_chunk": sample_chunk,
-        "collection_name": "test_chunks_book2",
+        "sample_chunk": chunk_1,
         "rebel_triples": [
             "children  had  carpet",
             "carpet  arrived  nursery",
@@ -252,13 +248,13 @@ def test_task_10_random_chunk(book_data):
 def test_task_11_send_chunk(book_data):
     """Test inserting chunk into MongoDB collection."""
     chunk = book_data["sample_chunk"]
-    collection_name = book_data["collection_name"]
+    collection_name = "pytest"
     book_title = book_data["book_title"]
     
     task_11_send_chunk(chunk, collection_name, book_title)
     
     # Verify chunk was inserted with correct book_title
-    mongo_db = session.docs_db.get_unmanaged_handle()
+    mongo_db = docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)
     doc = collection.find_one({"_id": chunk.get_chunk_id()})
     
