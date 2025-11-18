@@ -167,11 +167,11 @@ class Log:
             
             start = time.time()
             try:
-                result = func(*args, **kwargs)  # Fixed: removed "return" here
+                result = func(*args, **kwargs)
             finally:
                 elapsed = time.time() - start
-                print(f"{Log.TIME_COLOR}[TIME]{Log.BRIGHT} {func.__name__} took {elapsed:.3f}s{Log.WHITE}")  # Fixed: func.name -> func.__name__
-                Log._timing_results.append((func.__name__, elapsed, call_chain))  # Fixed: name -> func.__name__
+                print(f"{Log.TIME_COLOR}[TIME]{Log.BRIGHT} {func.__name__} took {elapsed:.3f}s{Log.WHITE}")
+                Log._timing_results.append((func.__name__, elapsed, call_chain))
             return result
         return wrapper
     

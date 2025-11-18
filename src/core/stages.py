@@ -362,7 +362,7 @@ def task_10_random_chunk(chunks):
 
 @Log.time
 def task_10_sample_chunks(chunks, n_sample):
-    unique_numbers = random.sample(range(len(chunks)), n_sample)[0]
+    unique_numbers = random.sample(range(len(chunks)), n_sample)
     sample = []
     for i in unique_numbers:
         c = chunks[i]
@@ -370,7 +370,8 @@ def task_10_sample_chunks(chunks, n_sample):
     return (unique_numbers, sample)
 
 @Log.time
-def task_11_send_chunk(c):
+def task_11_send_chunk(c, collection_name, book_title):
+    # TODO: remove book_title from chunk schema?
     mongo_db = session.docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)
     collection.insert_one(c.to_mongo_dict())
