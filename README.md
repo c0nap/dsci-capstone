@@ -41,6 +41,7 @@ project/                          # Parent directory (optional)
     ├── docker-compose.yml        # Multi-container orchestration
     ├── pyproject.toml            # Settings for mypy / black / isort
     ├── pytest.ini                # Pytest configuration
+    ├── conftest.py               # Shared PyTest fixtures
     ├── .env.example              # Template environment config
     ├── .env                      # Actual runtime config (not committed)
     ├── .gitignore
@@ -72,7 +73,6 @@ project/                          # Parent directory (optional)
     ├── tests/                    # Full pytest suite (ordered + dependent)
     │   ├── README.md
     │   ├── __init__.py
-    │   ├── conftest.py
     │   ├── test_db_basic.py      # Minimal DB tests (relational/doc/graph)
     │   ├── test_db_files.py      # File-based example dataset tests
     │   ├── test_kg_triples.py    # KnowledgeGraph behaviors, parsing tests
