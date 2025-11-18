@@ -325,6 +325,7 @@ def output_single():
 # PIPELINE STAGE A
 @Log.time
 def task_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
+    # TODO: refactor converter, move to session.tei_converter?
     if converter is None:
         converter = EPUBToTEI(epub_path, save_pandoc=False, save_tei=True)
     converter.epub_path = epub_path
@@ -378,13 +379,41 @@ def task_11_send_chunk(c):
 @Log.time
 def task_12_relation_extraction_rebel(text):
     from src.components.relation_extraction import RelationExtractor
+    # TODO: move to session.rel_extract
     re_rebel = "Babelscape/rebel-large"
     # TODO: different models
     #re_rst = "GAIR/rst-information-extraction-11b"
     #ner_renard = "compnet-renard/bert-base-cased-literary-NER"
-
     nlp = RelationExtractor(model_name=re_rebel, max_tokens=1024)
     triples = nlp.extract(text, parse_tuples=True)
+    return triples
+
+@Log.time
+def task_13_concatenate_triples(text):
+    # TODO: to_triples_string in RelationExtractor?
+    triples_string = ""
+    for triple in extracted:
+        triples_string += str(triple) + "\n"
+    return triples_string
+
+@Log.time
+def task_14_relation_extraction_llm(triples_string, text):
+    from src.connectors.llm import LLMConnector
+    # TODO: move to session.llm
+    llm = LLMConnector(
+        temperature=0,
+        system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
+    )
+    prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+    prompt += f"And here is the original text:\n{c.text}\n\n"
+    prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
+    prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
+    llm_output = llm.execute_query(prompt)
+
+@Log.time
+def task_15_sanitize_triples_llm(llm_output):
+    # TODO: call LLM.normalize_triples
+    triples = json.loads(llm_output)
     return triples
 
 ##########################################################################
@@ -394,15 +423,6 @@ def pipeline_B(collection_name, chunks, book_title):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
-    import json
-    from src.connectors.llm import LLMConnector
-
-    
-    llm = LLMConnector(
-        temperature=0,
-        system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
-    )
-
     ci, c = task_10_random_chunk(chunks)
     print("\nChunk details:")
     print(f"  index: {ci}\n")
@@ -413,18 +433,12 @@ def pipeline_B(collection_name, chunks, book_title):
 
     extracted = task_12_relation_extraction_rebel(c.text)
     print(f"\nNLP output:")
-    triples_string = ""
     for triple in extracted:
         print(triple)
-        triples_string += str(triple) + "\n"
     print()
-
-    prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-    prompt += f"And here is the original text:\n{c.text}\n\n"
-    prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
-    prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
-    llm_output = llm.execute_query(prompt)
-
+    triples_string = task_13_concatenate_triples(extracted)
+    
+    llm_output = task_14_relation_extraction_llm(triples_string, c.text)
     print("\n    LLM prompt:")
     print(llm.system_prompt)
     print(prompt)
@@ -432,13 +446,8 @@ def pipeline_B(collection_name, chunks, book_title):
     print(llm_output)
     print("\n" + "=" * 50 + "\n")
 
-    try:
-        triples = json.loads(llm_output)
-        print("\nValid JSON")
-    except json.JSONDecodeError as e:
-        print("\nInvalid JSON:", e)
-        return
-
+    triples = task_15_sanitize_triples_llm(llm_output)
+    print("\nValid JSON")
     return triples, c
 
 @Log.time
