@@ -387,11 +387,11 @@ docker-push-dev-blazor:
 .PHONY: docker-network
 docker-network:
 	if ! docker network inspect capstone_default >/dev/null 2>&1; then
-	    docker network create \
-	        --label com.docker.compose.network=default \
-	        --label com.docker.compose.project=capstone \
-	        capstone_default
-	    echo "Created new network 'capstone_default'"
+		docker network create \
+			--label com.docker.compose.network=default \
+			--label com.docker.compose.project=capstone \
+			capstone_default
+		echo "Created new network 'capstone_default'"
 	else
 		echo "Network 'capstone_default' already exists; continue..."
 	fi
@@ -432,10 +432,10 @@ docker-full-reset:
 ###############################################################################
 docker-python-size:
 	 docker run --rm dsci-cap-img-python-dev:latest sh -c "
-	  	echo '=== Largest packages ===' && \
-	  	du -sh /usr/local/lib/python3.12/site-packages/* 2>/dev/null | sort -hr | head -15 && \
-	  	echo '=== Torch version ===' && \
-	  	python -c \"import torch; print(f'Torch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')\""
+		echo '=== Largest packages ===' && \
+		du -sh /usr/local/lib/python3.12/site-packages/* 2>/dev/null | sort -hr | head -15 && \
+		echo '=== Torch version ===' && \
+		python -c \"import torch; print(f'Torch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')\""
 
 
 
