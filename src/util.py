@@ -4,6 +4,7 @@ import time
 import functools
 from contextlib import contextmanager
 import inspect
+import sys
 
 
 class Log:
@@ -151,9 +152,6 @@ class Log:
             @param kwargs  Keyword arguments forwarded to the original function.
             @return  The result of calling the original function.
             """
-            if not Log.RECORD_TIME:
-                return func(*args, **kwargs)
-            
             # Capture full call chain (skip internal frames)
             stack = inspect.stack()
             call_chain_parts = []
@@ -161,14 +159,26 @@ class Log:
                 func_name = frame_info.function
                 if func_name not in ['<module>', 'timer', '__enter__', '__exit__']:
                     call_chain_parts.append(func_name)
-            
+            call_chain_parts.append(func.__name__)
+            call_chain = " -> ".join(call_chain_parts)
+
             start = time.time()
             try:
                 result = func(*args, **kwargs)
+            except Exception:  # For any exception raised by the wrapped function...
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                
+                # Remove the 'wrapper' function's frame from the traceback chain
+                #   Skip TWO frames: wrapper's try block + the re-raise line itself
+                if exc_traceback.tb_next is not None:
+                    raise exc_value.with_traceback(exc_traceback.tb_next) from None
+                else:  # Fallback: just allow the messy traceback - this should not happen
+                     raise
             finally:
-                elapsed = time.time() - start
-                print(f"{Log.TIME_COLOR}[TIME]{Log.BRIGHT} {func.__name__} took {elapsed:.3f}s{Log.WHITE}")
-                Log._timing_results.append((func.__name__, elapsed, call_chain))
+                if Log.RECORD_TIME:
+                    elapsed = time.time() - start
+                    print(f"{Log.TIME_COLOR}[TIME]{Log.BRIGHT} {func.__name__} took {elapsed:.3f}s{Log.WHITE}")
+                    Log._timing_results.append((func.__name__, elapsed, call_chain))
             return result
         return wrapper
     
@@ -205,7 +215,6 @@ class Log:
             func_name = frame_info.function
             if func_name not in ['<module>', 'timer', '__enter__', '__exit__']:
                 call_chain_parts.append(func_name)
-        
         call_chain_parts.append(name)
         call_chain = " -> ".join(call_chain_parts)
 
