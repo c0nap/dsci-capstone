@@ -64,6 +64,7 @@ def book_1_data():
         "sample_chunk": sample_chunk,
         "rebel_triples": ["children  found  Psammead", "Psammead  grants  wishes"],
         "llm_triples_json": '[{"s": "children", "r": "found", "o": "Psammead"}, {"s": "Psammead", "r": "grants", "o": "wishes"}]',
+        "num_triples": 2
     }
 
 @pytest.fixture
@@ -147,6 +148,7 @@ def book_2_data():
             "children  want  adventures",
         ],
         "llm_triples_json": llm_triples_json,
+        "num_triples": 10,
     }
 
 
@@ -287,11 +289,12 @@ def test_task_13_concatenate_triples(book_data):
 def test_task_15_sanitize_triples_llm(book_data):
     """Test parsing LLM output JSON into triples list."""
     llm_output = book_data["llm_triples_json"]
+    num_triples = book_data["num_triples"]
     
     triples = task_15_sanitize_triples_llm(llm_output)
     
     assert isinstance(triples, list)
-    assert len(triples) == 10  # Matches fixture data
+    assert len(triples) == num_triples  # Matches fixture data
     # Verify structure: each triple has s, r, o keys
     for triple in triples:
         assert "s" in triple
