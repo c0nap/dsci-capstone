@@ -95,13 +95,7 @@ import traceback
 #             traceback.print_exc()
 
 
-def test_relation_extraction():
-    """Runs REBEL on a basic example; used for debugging."""
-    from components.text_processing import RelationExtractor
 
-    sample_text = "Alice met Bob in the forest. Bob then went to the village."
-    extractor = RelationExtractor(model_name="Babelscape/rebel-large")
-    print(extractor.extract(sample_text))
 
 
 def process_single():

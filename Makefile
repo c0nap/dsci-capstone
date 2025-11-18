@@ -178,6 +178,16 @@ docker-all-main:
 	make docker-python
 
 
+SMOKE ?= -m smoke
+
+# Run expensive smoke tests
+docker-smoke:
+	make docker-python CMD="pytest $(SMOKE) smoke/"
+
+docker-smoke-dev:
+	make docker-build-dev-python
+	make docker-smoke SMOKE=$(SMOKE)
+
 
 ###############################################################################
 # Start worker services in their own containers.
