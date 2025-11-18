@@ -135,25 +135,27 @@ docker-workers-dev:
 ###############################################################################
 .PHONY: docker-test docker-test-dev docker-test-raw docker-all-tests docker-all-main
 
+PTARGS ?=
+
 # Run pytests using existing container images.
 # Default to VERBY=0 and COLOR=1.
 docker-test:
 	make docker-python CMD="pytest \
 		$(if $(filter 1,$(VERBY)),--log-success) \
-		$(if $(filter 1,$(COLOR)),,--no-log-colors)"
+		$(if $(filter 1,$(COLOR)),,--no-log-colors) $(PTARGS)"
 
 # Recompiles docker images to test the latest source code
 # Pytest will capture all console output - see non-capturing targets below.
 docker-test-dev:
 	make docker-build-dev-python
-	make docker-test
+	make docker-test PTARGS="$(PTARGS)"
 
 # Default to NOT verbose, and NO colors in messages from the Log class.
 docker-test-raw:
 	make docker-build-dev-python
 	make docker-python CMD="python -m pytest -s \
 		$(if $(filter 1,$(VERBY)),--log-success) \
-		$(if $(filter 1,$(COLOR)),,--no-log-colors)"
+		$(if $(filter 1,$(COLOR)),,--no-log-colors) $(PTARGS)"
 
 # Shows Python print statements, but pytest output is messy.
 # Default to verbose and colorful.
@@ -161,14 +163,14 @@ docker-test-fancy:
 	make docker-build-dev-python
 	make docker-python CMD="python -m pytest -s \
 		$(if $(filter 0,$(VERBY)),,--log-success) \
-		$(if $(filter 0,$(COLOR)),--no-log-colors)"
+		$(if $(filter 0,$(COLOR)),--no-log-colors) $(PTARGS)"
 	
 # Deploy everything to docker, but only run pytests
 docker-all-tests:
 	make docker-all-dbs
 	make docker-blazor-silent
 	sleep 15   # extra time needed for neo4j
-	make docker-test
+	make docker-test PTARGS="$(PTARGS)"
 
 # Deploy everything to docker and run the full pipeline
 docker-all-main:
@@ -178,15 +180,15 @@ docker-all-main:
 	make docker-python
 
 
-SMOKE ?= -m smoke
+SMARGS ?= -m smoke
 
 # Run expensive smoke tests
 docker-smoke:
-	make docker-python CMD="pytest $(SMOKE) smoke/"
+	make docker-python CMD="pytest $(SMARGS) smoke/"
 
 docker-smoke-dev:
 	make docker-build-dev-python
-	make docker-smoke SMOKE="$(SMOKE)"
+	make docker-smoke SMARGS="$(SMARGS)"
 
 
 ###############################################################################
