@@ -186,7 +186,7 @@ docker-smoke:
 
 docker-smoke-dev:
 	make docker-build-dev-python
-	make docker-smoke SMOKE=$(SMOKE)
+	make docker-smoke SMOKE="$(SMOKE)"
 
 
 ###############################################################################
