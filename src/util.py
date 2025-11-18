@@ -1,5 +1,7 @@
 from pandas import DataFrame, Series
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Callable
+import time
+import functools
 
 
 class Log:
@@ -7,6 +9,11 @@ class Log:
 
     ## Enable ANSI colors in output
     USE_COLORS = True
+    ## Enable time-logging with the @Log.time decorator
+    RECORD_TIME = True
+    ## Print the entire DataFrame to console
+    FULL_DF = False
+
     ## ANSI code for green text
     GREEN = "\033[32m"
     ## ANSI code for red text
@@ -15,6 +22,8 @@ class Log:
     YELLOW = "\033[33m"
     ## ANSI code for bright yellow / cream
     BRIGHT = "\033[93m"
+    ## ANSI code for light blue
+    CYAN = "\033[94m"
     ## ANSI code to reset color
     WHITE = "\033[0m"
 
@@ -24,11 +33,10 @@ class Log:
     WARNING_COLOR = YELLOW
     ## ANSI color applied to the prefix of critical fail messages
     FAILURE_COLOR = RED
+    ## ANSI color applied to the prefix of time-elapsed messages
+    TIME_COLOR = CYAN
     ## ANSI color applied to the body of every Log message
     MSG_COLOR = BRIGHT
-
-    ## When printing the results of a query
-    FULL_DF = False
 
     # These functions can be used to print the standard prefix
     # before your own print(), or a message can be specified.
@@ -120,6 +128,34 @@ class Log:
             prefix = f"{source_prefix}{Log.bad_addr}"
             msg = Log.msg_bad_addr(connection_string)
             super().__init__(prefix=prefix, msg=msg)
+
+
+    # --------- Decorator Pattern ---------
+    # Use the @Log.time function 
+    @staticmethod
+    def time(func: Callable[..., Any]) -> Callable[..., Any]:
+        """Logs the time elapsed for a function call.
+        @details
+        - Uses an inner wrapper function to capture *args and **kwargs.
+        @param func  The function to wrap.
+        @return  The wrapped function that logs time and forwards the result.
+        """
+
+        # Preserve the original function's name and docstring.
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            """Wrapper around the original function to measure elapsed time.
+            @param args  Positional arguments forwarded to the original function.
+            @param kwargs  Keyword arguments forwarded to the original function.
+            @return  The result of calling the original function.
+            """
+            start = time.time()
+            result = func(*args, **kwargs)
+            elapsed = time.time() - start
+            print(f"{Log.TIME_COLOR}[TIME]{Log.WHITE} {func.__name__} took {elapsed:.3f}s")
+            return result
+        return wrapper
+
 
     # --------- Builder Pattern ---------
     # Compose your own standardized error messages depending on the context
