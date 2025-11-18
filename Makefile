@@ -182,7 +182,7 @@ SMOKE ?= -m smoke
 
 # Run expensive smoke tests
 docker-smoke:
-	make docker-python CMD="pytest $(SMOKE) smoke/"
+	make docker-python CMD="pytest --override-ini='testpaths=smoke' $(SMOKE)"
 
 docker-smoke-dev:
 	make docker-build-dev-python

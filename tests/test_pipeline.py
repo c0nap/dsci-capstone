@@ -1,5 +1,5 @@
 import pytest
-import src.core.stages
+from src.core import stages
 from src.main import pipeline_A
 from src.components.book_conversion import EPUBToTEI, ParagraphStreamTEI, Story
 import os
