@@ -222,3 +222,6 @@ CHAPTER 12. THE END OF THE END\n
             time.sleep(1)
     except KeyboardInterrupt:
         print("\nShutting down...")
+        Log.dump_timing_csv()
+
+

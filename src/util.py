@@ -270,7 +270,21 @@ class Log:
             columns=['function', 'elapsed', 'call_chain']
         )
         return df
+
+    @staticmethod
+    def dump_timing_csv(file_path: str = "./logs/elapsed_time.csv") -> None:
+        """Save timing results to a CSV file.
+        @param file_path  Where the saved CSV will be located.
+        @return  DataFrame with columns: function, elapsed, call_chain
+        """
+        df = Log.get_timing_summary()
+        df.to_csv(path, index=False)
+        Log.time_message(prefix="[DUMP] ", msh=)
+        print(Log.elapsed_time("dump_timing_csv", 0, ))
     
+    t_dump = "[DUMP] "
+    msg_time_dump = lambda file_path: f"Save time records to '{file_path}'"
+
     @staticmethod
     def clear_timing_data():
         """Clears all recorded timing data."""
