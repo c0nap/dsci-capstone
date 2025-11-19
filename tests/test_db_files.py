@@ -14,7 +14,7 @@ from typing import Generator, List, Optional
 # ------------------------------------------------------------------------------
 # DATABASE FILE TESTS: Run execute_file with example scripts.
 # ------------------------------------------------------------------------------
-@pytest.fixture(scope="module")
+@pytest.fixture
 def load_examples_relational(relational_db: RelationalConnector) -> Generator[None, None, None]:
     """Fixture to create relational tables using engine-specific syntax."""
     if relational_db.db_type == "MYSQL":

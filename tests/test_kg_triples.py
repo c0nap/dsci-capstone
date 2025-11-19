@@ -52,7 +52,7 @@ def test_knowledge_graph_triples(main_graph: KnowledgeGraph) -> None:
     assert any((triples_df["subject"] == "Bob") & (triples_df["relation"] == "FOLLOWS") & (triples_df["object"] == "Alice"))
 
     # Verify nodes were created (should be 3 unique: Alice, Bob, Charlie)
-    df = graph_db.get_dataframe("social_kg")
+    df = kg.database.get_dataframe("social_kg")
     assert not df.empty
     df_nodes = df[df["element_type"] == "node"]
     assert len(df_nodes) == 3
@@ -63,7 +63,7 @@ def test_knowledge_graph_triples(main_graph: KnowledgeGraph) -> None:
     assert node_names == {"Alice", "Bob", "Charlie"}
 
     # Test triples_to_names with pre-fetched lookup DataFrame
-    elements_df = graph_db.get_dataframe("social_kg")
+    elements_df = kg.database.get_dataframe("social_kg")
     triples_df_cached = kg.triples_to_names(triples_ids_df, drop_ids=True, df_lookup=elements_df)
     assert triples_df_cached is not None
     assert len(triples_df_cached) == 5
@@ -96,8 +96,7 @@ def test_knowledge_graph_triples(main_graph: KnowledgeGraph) -> None:
     assert len(alice_knows_bob) == 1
 
 
-@pytest.fixture
-@pytest.mark.parametrize("main_graph", ["nature_scene"], indirect=True)
+@pytest.fixture(params=["nature_scene"])
 def nature_scene_graph(main_graph: KnowledgeGraph) -> KnowledgeGraph:
     """Create a scene graph with multiple location-based communities for testing.
     @details  Graph structure represents a park with distinct areas:

@@ -61,15 +61,15 @@ def graph_db(session: Session) -> GraphConnector:
         yield _graph_db
 
 
-@pytest.fixture
-def main_graph(request, graph_db: GraphConnector) -> KnowledgeGraph:
+@pytest.fixture(params=["example_graph"])
+def main_graph(request, graph_db: GraphConnector, session: Session) -> KnowledgeGraph:
     """Fixture to get document database connection."""
     graph_name = request.param
     _main_graph = session.main_graph
     _main_graph.graph_name = graph_name
-    if _graph_db.graph_exists(graph_name):
-        _graph_db.drop_graph(graph_name)
-    with _graph_db.temp_graph(graph_name):
+    if graph_db.graph_exists(graph_name):
+        graph_db.drop_graph(graph_name)
+    with graph_db.temp_graph(graph_name):
         yield _main_graph
 
 
