@@ -95,33 +95,6 @@ from typing import Optional
 #             traceback.print_exc()
 
 
-triple_files = [
-    "./datasets/triples/chunk-160_story-1.json",
-    "./datasets/triples/chunk-70_story-1.json",
-]
-
-
-def graph_triple_files():
-    """Loads JSON into Neo4j to test the Blazor graph page."""
-    for json_path in triple_files:
-        print(f"\n{'='*50}")
-        print(f"Processing: {json_path}")
-
-        # Load existing triples to save NLP time / LLM tokens during MVP stage
-        with open(json_path, "r") as f:
-            triples = json.load(f)
-
-        for triple in triples:
-            subj = triple["s"]
-            rel = triple["r"]
-            obj = triple["o"]
-
-            print(subj, rel, obj)
-            session.main_graph.add_triple(subj, rel, obj)
-
-    print(f"\n{'='*50}")
-    session.main_graph.print_triples(max_col_width=20)
-
 
 response_files = ["./datasets/triples/chunk-160_story-1.txt"]
 
@@ -361,9 +334,7 @@ def group_21_3_post_statistics():
 def task_22_verbalize_triples(mode="triple"):
     with Log.timer():
         triples_df = session.main_graph.get_by_ranked_degree(worst_rank=3, id_columns=["subject_id"])
-        print(triples_df.to_string())
         triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
-        print(triples_df.to_string())
         triples_string = session.main_graph.to_triples_string(triples_df, mode=mode)
         return triples_string
 

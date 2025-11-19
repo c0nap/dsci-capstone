@@ -274,9 +274,8 @@ class Log:
         @return  DataFrame with columns: function, elapsed, call_chain
         """
         df = Log.get_timing_summary()
-        df.to_csv(path, index=False)
+        df.to_csv(file_path, index=False)
         Log.time_message(prefix=t_dump, msg=Log.msg_time_dump(file_path))
-        print(Log.elapsed_time("dump_timing_csv", 0, ))
     
     t_dump = "[DUMP] "
     msg_time_dump = lambda file_path: f"Save time records to '{file_path}'"
