@@ -328,10 +328,12 @@ def group_21_1_describe_graph(top_n = 3):
 def group_21_2_send_statistics():
     with Log.timer():
         # TODO: upload to mongo
+        pass
 
 def group_21_3_post_statistics():
     with Log.timer():
         # TODO: notify blazor
+        pass
 
 def task_22_verbalize_triples(mode = "triple"):
     with Log.timer():
