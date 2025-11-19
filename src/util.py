@@ -4,6 +4,7 @@ import time
 import functools
 from contextlib import contextmanager
 import inspect
+from inspect import FrameInfo
 import sys
 
 
@@ -152,6 +153,21 @@ class Log:
 
     msg_elapsed_time = lambda name, elapsed_time: f"{name} took {elapsed:.3f}s{Log.WHITE}"
 
+    def format_call_chain(stack: List[FrameInfo], name: str) -> str:
+        """Sanitize and concatenate the full call stack for console output.
+        @param stack  The frame stack obtained by inspect.stack().
+        @param name  The name of the caller function.
+        @return  A string representing the full call chain."""
+        call_chain_parts = []
+        for frame_info in reversed(stack[1:]):
+            func_name = frame_info.function
+            # Skip internal and logging frames
+            if func_name not in ['timer', 'time', 'wrapper', '<module>', '__enter__', '__exit__']:
+                call_chain_parts.append(func_name)
+        call_chain_parts.append(name)
+        call_chain = " -> ".join(call_chain_parts)
+        return call_chain
+
     # --------- Decorator Pattern ---------
     # Use the @Log.time tag to print a Time Elapsed message on every call to that function.
     @staticmethod
@@ -171,24 +187,15 @@ class Log:
             @param kwargs  Keyword arguments forwarded to the original function.
             @return  The result of calling the original function.
             """
-            # Capture full call chain (skip internal frames)
-            stack = inspect.stack()
-            call_chain_parts = []
-            for frame_info in reversed(stack[1:]):
-                func_name = frame_info.function
-                if func_name not in ['<module>', 'timer', '__enter__', '__exit__']:
-                    call_chain_parts.append(func_name)
-            call_chain_parts.append(func.__name__)
-            call_chain = " -> ".join(call_chain_parts)
-
+            call_chain = Log.format_call_chain(inspect.stack(), func.__name__)
             start = time.time()
             try:
                 result = func(*args, **kwargs)
             except Exception:  # Fix traceback of the wrapped function...
                 _, exc, trace = sys.exc_info()
                 
-                # Not feasible to completely remove 'wrapper' frame from the traceback chain
-                # This makes it slightly less intrusive:                       File "/pipeline/src/main.py", line 121, in <module>
+                # Not feasible to completely remove 'wrapper' frame from the traceback
+                # This makes it slightly less intrusive:           otherwise:  File "/pipeline/src/main.py", line 121, in <module>
                 #   File "/pipeline/src/main.py", line 121, in <module>          chunks = pipeline_A(
                 #     chunks = pipeline_A(                                                ^^^^^^^^^^^
                 #              ^^^^^^^^^^^                                     File "/pipeline/src/util.py", line 167, in wrapper
@@ -225,8 +232,8 @@ class Log:
             return
     
         # Auto-detect function name if not provided
+        stack = inspect.stack()
         if name is None:
-            stack = inspect.stack()
             # Find the first frame that's not timer/__enter__/__exit__
             for frame_info in stack[1:]:
                 func_name = frame_info.function
@@ -234,16 +241,7 @@ class Log:
                     name = func_name
                     break
         
-        # Capture full call chain (skip internal frames)
-        stack = inspect.stack()
-        call_chain_parts = []
-        for frame_info in reversed(stack[1:]):
-            func_name = frame_info.function
-            if func_name not in ['<module>', 'timer', '__enter__', '__exit__']:
-                call_chain_parts.append(func_name)
-        call_chain_parts.append(name)
-        call_chain = " -> ".join(call_chain_parts)
-
+        call_chain = Log.format_call_chain(stack, name)
         start = time.time()
         try:
             yield  # If an exception happens here... (see below)
