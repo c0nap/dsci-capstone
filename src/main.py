@@ -198,16 +198,16 @@ CHAPTER 12. THE END OF THE END\n
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'llm_inference', 'completed')
 
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'graph_verbalization', 'in-progress')
-    triples_string = stages.pipeline_3(triples)
+    triples_string = pipeline_C(triples)
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'graph_verbalization', 'completed')
 
     post_story_status(BOSS_PORT, story_id, 'summarization', 'in-progress')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'in-progress')
-    summary = stages.pipeline_4(COLLECTION, triples_string, chunk.get_chunk_id())
+    summary = pipeline_D(COLLECTION, triples_string, chunk.get_chunk_id())
     post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
-    # stages.pipeline_5 is moved to callback() to finalize asynchronously
-    # stages.pipeline_5a(summary, book_title, book_id)
+    # pipeline_E is moved to callback() to finalize asynchronously
+    # alternative: pipeline_E(summary, book_title, book_id)
 
     # Post chunk - this will enqueue worker processing
     for task_type in ["questeval", "bookscore"]:
