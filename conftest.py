@@ -61,7 +61,7 @@ def graph_db(session: Session) -> GraphConnector:
         yield _graph_db
 
 
-@pytest.fixture(params=["example_graph"])
+@pytest.fixture(params=["empty_graph"])
 def main_graph(request, graph_db: GraphConnector, session: Session) -> KnowledgeGraph:
     """Fixture to get document database connection."""
     graph_name = request.param

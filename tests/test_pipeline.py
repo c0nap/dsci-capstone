@@ -348,7 +348,7 @@ def test_job_20_send_triples(main_graph, book_data):
 @pytest.mark.task
 @pytest.mark.stage_C
 @pytest.mark.order(21)
-@pytest.mark.dependency(name="job_21", scope="session", depends=["job_20"])
+@pytest.mark.dependency(name="job_21", scope="session", depends=["job_20", "job_15_minimal"])
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_21_describe_graph(main_graph, book_data):
     """Test generating edge count summary of knowledge graph."""
@@ -369,7 +369,7 @@ def test_job_21_describe_graph(main_graph, book_data):
 @pytest.mark.task
 @pytest.mark.stage_C
 @pytest.mark.order(22)
-@pytest.mark.dependency(name="job_22", scope="session", depends=["job_20"])
+@pytest.mark.dependency(name="job_22", scope="session", depends=["job_20", "job_15_minimal"])
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_22_verbalize_triples(main_graph, book_data):
     """Test converting high-degree triples to string format."""
