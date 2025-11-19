@@ -342,27 +342,6 @@ def task_22_verbalize_triples(mode = "triple"):
 ##########################################################################
 
 @Log.time
-def pipeline_3(json_triples):
-    """Generates a LLM summary using Neo4j triples.
-    @details
-        - Neo4j graph database
-        - Blazor graph page"""
-    for triple in json_triples:
-        print(triple["s"], triple["r"], triple["o"])
-    task_20_send_triples(json_triples)
-
-    # basic linear verbalization of triples (concatenate)
-    edge_count_df = task_21_graph_summary()
-    print("\nMost relevant nodes:")
-    print(edge_count_df)
-
-    triples_string = task_22_verbalize_triples()
-    print("\nTriples which best represent the graph:")
-    print(triples_string)
-    return triples_string
-
-
-@Log.time
 def pipeline_4(collection_name, triples_string, chunk_id):
     """Generate chunk summary"""
     from src.connectors.llm import LLMConnector

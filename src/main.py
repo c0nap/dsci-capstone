@@ -63,11 +63,33 @@ def pipeline_B(collection_name, chunks, book_title):
     return triples, c
 
 
+
+@Log.time
+def pipeline_C(json_triples):
+    """Generates a LLM summary using Neo4j triples.
+    @details
+        - Neo4j graph database
+        - Blazor graph page"""
+    for triple in json_triples:
+        print(triple["s"], triple["r"], triple["o"])
+    stages.task_20_send_triples(json_triples)
+
+    # basic linear verbalization of triples (concatenate)
+    edge_count_df = stages.task_21_graph_summary()
+    print("\nMost relevant nodes:")
+    print(edge_count_df)
+
+    triples_string = stages.task_22_verbalize_triples()
+    print("\nTriples which best represent the graph:")
+    print(triples_string)
+    return triples_string
+
+
 @Log.time
 def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id)
     triples, chunk = pipeline_B(collection_name, chunks, book_title)
-    triples_string = stages.pipeline_3(triples)
+    triples_string = pipeline_C(triples)
     summary = stages.pipeline_4(collection_name, triples_string, chunk.get_chunk_id())
     stages.pipeline_5a(summary, book_title, book_id)
 
