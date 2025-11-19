@@ -115,8 +115,8 @@ def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str,
     chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id)
     triples, chunk = pipeline_B(collection_name, chunks, book_title)
     triples_string = pipeline_C(triples)
-    summary = stages.pipeline_4(collection_name, triples_string, chunk.get_chunk_id())
-    stages.pipeline_5a(summary, book_title, book_id)
+    summary = pipeline_D(collection_name, triples_string, chunk.get_chunk_id())
+    pipeline_E(summary, book_title, book_id)
 
 
 def old_main(collection_name):

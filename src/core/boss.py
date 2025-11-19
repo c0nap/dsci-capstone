@@ -18,10 +18,6 @@ from typing import Any, Dict, Generator, List, Optional, Tuple
 MongoHandle = Generator["Database[Any]", None, None]
 
 
-# TODO: reconcile duplicate with main.py
-from src.main import pipeline_E
-
-
 def load_worker_config(task_types: List[str]) -> Dict[str, str]:
     """Load worker service URLs from environment variables.
     @param task_types  List of valid task keys to use when searching the .env
@@ -240,6 +236,8 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         """Receive status notifications from worker services.
         Handles started, completed, and failed statuses.
         @return Simple acknowledgment response."""
+        from src.main import pipeline_E
+
         data = request.json
 
         chunk_id = data.get("chunk_id")
