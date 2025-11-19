@@ -548,10 +548,11 @@ def test_detect_community_clusters_comprehensive(nature_scene_graph: KnowledgeGr
 
     # Test 6: Empty community handling (valid - communities can have no internal edges)
     # Just verify that calling with any integer doesn't crash
-    result = kg.get_community_subgraph(999999)
+    result = kg.get_community_subgraph(-1)
     assert result is not None
     assert isinstance(result, DataFrame)
     assert list(result.columns) == ["subject_id", "relation_id", "object_id"]
+    assert len(result) == 0
 
     # Test 7: Louvain with multi-level (should work but may not produce hierarchy)
     kg.detect_community_clusters(method="louvain", multi_level=True)
@@ -565,8 +566,8 @@ def test_detect_community_clusters_comprehensive(nature_scene_graph: KnowledgeGr
 
 @pytest.mark.kg
 @pytest.mark.order(24)
-@pytest.mark.dependency(name="degree_rank_filter", depends=["subgraph_by_nodes"], scope="session")
-def test_get_by_ranked_degree(nature_scene_graph: KnowledgeGraph) -> None:
+@pytest.mark.dependency(name="degree_rank", depends=["subgraph_by_nodes"], scope="session")
+def test_ranked_degree(nature_scene_graph: KnowledgeGraph) -> None:
     """Test filtering triples by ranked node degree.
     @details  Validates that get_by_ranked_degree correctly returns triples
     whose endpoints belong to nodes within the specified degree rank range.
@@ -574,14 +575,14 @@ def test_get_by_ranked_degree(nature_scene_graph: KnowledgeGraph) -> None:
     kg = nature_scene_graph
 
     # Compute all node degrees
-    degree_df = kg.get_edge_counts(top_n=10_000)
+    degree_df = kg.get_edge_counts()
     assert not degree_df.empty
 
     # Grab the top-ranked node (rank 1)
     top_node_id = degree_df.sort_values("edge_count", ascending=False)["node_id"].iloc[0]
 
     # Fetch triples for rank 1 only
-    subgraph = kg.get_by_ranked_degree(min_rank=1, max_rank=1)
+    subgraph = kg.get_by_ranked_degree(best_rank=1, worst_rank=1)
     assert subgraph is not None
     assert len(subgraph) > 0
 
@@ -593,3 +594,32 @@ def test_get_by_ranked_degree(nature_scene_graph: KnowledgeGraph) -> None:
     # (rank=1 node must have >= every other degree)
     top_degree = degree_df[degree_df["node_id"] == top_node_id]["edge_count"].iloc[0]
     assert all(top_degree >= degree_df["edge_count"])
+
+
+@pytest.mark.kg
+@pytest.mark.order(25)
+@pytest.mark.dependency(name="degree_rank_ties", depends=["degree_rank"], scope="session")
+def test_ranked_degree_ties(main_graph: KnowledgeGraph) -> None:
+    """Test that degree ranking correctly handles ties with minimal data.
+    @details  Verifies that nodes with equal degrees receive the same rank
+              and querying for non-existent ranks returns empty DataFrame.
+    """
+    kg = main_graph
+    
+    # Add two isolated nodes (each with degree 1)
+    kg.add_triple("node_a", "relates_to", "node_b")
+    kg.add_triple("node_c", "relates_to", "node_d")
+    
+    degree_df = kg.get_edge_counts()
+    assert len(degree_df) == 4  # 4 nodes total
+    
+    # Both isolated pairs should have same degree and rank
+    # Ranks should be: all nodes have degree=1, so all should be rank 1
+    degree_df = degree_df.sort_values("edge_count", ascending=False).reset_index(drop=True)
+    degree_df["rank"] = degree_df["edge_count"].rank(method="dense", ascending=False).astype(int)
+    assert degree_df["rank"].nunique() == 1  # All same rank
+    assert degree_df["rank"].iloc[0] == 1
+    
+    # Querying for rank 2 should return empty (no rank 2 exists)
+    empty_result = kg.get_by_ranked_degree(best_rank=2, worst_rank=2)
+    assert empty_result.empty, "No rank-2 nodes exist, should return empty"

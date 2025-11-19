@@ -269,41 +269,44 @@ class KnowledgeGraph:
         """
         pass
         
-    def get_by_ranked_degree(self, min_rank: int = 1, max_rank: int = -1, id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
+    def get_by_ranked_degree(self, best_rank: int = 1, worst_rank: int = -1, id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
         """Return triples associated with nodes whose degree rank lies in the specified range.
         @details
             - Computes degree (edge count) for all nodes.
             - Sorts nodes by degree descending, assigns ranks, and selects those with
-              min_rank <= rank <= max_rank.
+              best_rank <= rank <= worst_rank.
             - Returns all triples where subject_id or object_id matches a selected node.
-        @param min_rank  Minimum degree rank. Inclusive.
-        @param max_rank  Maximum degree rank (-1 = maximum degree) to include. Inclusive.
+        @param best_rank  Minimum degree rank. Inclusive.
+        @param worst_rank  Maximum degree rank (-1 = maximum degree) to include. Inclusive.
         @param id_columns  List of columns to compare against. Can be 'subject_id', 'object_id', or both.
         @return  DataFrame containing the triples for ranked nodes; columns:
                  subject_id, relation_id, object_id.
         @throws Log.Failure  If the graph cannot be queried.
-        @throws ValueError   If min_rank or max_rank values are invalid.
+        @throws ValueError   If best_rank or worst_rank values are invalid.
         """
-        if min_rank < 1:
-            raise ValueError("min_rank must be >= 1")
-        if max_rank != -1 and max_rank < min_rank:
-            raise ValueError("max_rank must be >= min_rank, or -1 for no upper bound")
+        if best_rank < 1:
+            raise ValueError("best_rank must be >= 1")
+        if worst_rank != -1 and worst_rank < best_rank:
+            raise ValueError("worst_rank must be >= best_rank, or -1 for no upper bound")
 
         edge_df = self.get_edge_counts()
         if edge_df is None or edge_df.empty:
             raise Log.Failure(Log.kg, "Failed to compute edge counts.")
         # Sort and assign rank (1 = highest degree)
         edge_df = edge_df.sort_values("edge_count", ascending=False).reset_index(drop=True)
-        edge_df["rank"] = edge_df.index + 1
+        # Dense ranking: tied nodes get same rank, next rank is consecutive
+        edge_df["rank"] = edge_df["edge_count"].rank(method="dense", ascending=False).astype(int)
+        print(edge_df.to_string())
 
-        # Determine actual max_rank
-        if max_rank == -1:
-            max_rank = int(edge_df["rank"].max())
+        # Determine actual worst_rank
+        if worst_rank == -1:
+            worst_rank = int(edge_df["rank"].max())
 
         # Filter nodes by rank
         ranked_nodes = edge_df[
-            (edge_df["rank"] >= min_rank) & (edge_df["rank"] <= max_rank)
+            (edge_df["rank"] >= best_rank) & (edge_df["rank"] <= worst_rank)
         ]
+        print(ranked_nodes)
         if ranked_nodes.empty:
             return DataFrame(columns=["subject_id", "relation_id", "object_id"])
         node_ids = ranked_nodes["node_id"].tolist()
