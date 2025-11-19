@@ -369,17 +369,7 @@ def task_31_send_summary(summary, collection_name, chunk_id):
 
 ##########################################################################
 
-@Log.time
-def pipeline_4(collection_name, triples_string, chunk_id):
-    """Generate chunk summary"""
-    _, summary = task_30_summarize_llm(triples_string)
-    print("\nGenerated summary:")
-    print(summary)
 
-    task_31_send_summary(summary, collection_name, chunk_id)
-    print(f"    [Wrote summary to Mongo with chunk_id: {chunk_id}]")
-
-    return summary
 
 
 @Log.time

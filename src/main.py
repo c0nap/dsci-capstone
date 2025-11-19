@@ -86,6 +86,19 @@ def pipeline_C(json_triples):
 
 
 @Log.time
+def pipeline_D(collection_name, triples_string, chunk_id):
+    """Generate chunk summary"""
+    _, summary = stages.task_30_summarize_llm(triples_string)
+    print("\nGenerated summary:")
+    print(summary)
+
+    stages.task_31_send_summary(summary, collection_name, chunk_id)
+    print(f"    [Wrote summary to Mongo with chunk_id: {chunk_id}]")
+
+    return summary
+
+
+@Log.time
 def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id)
     triples, chunk = pipeline_B(collection_name, chunks, book_title)
