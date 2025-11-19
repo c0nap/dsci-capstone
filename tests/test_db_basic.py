@@ -8,6 +8,7 @@ from src.util import Log
 # ------------------------------------------------------------------------------
 # BUILT-IN DATABASE TESTS: Run check_connection() for minimal connection test.
 # ------------------------------------------------------------------------------
+@pytest.mark.db
 @pytest.mark.relational
 @pytest.mark.order(1)
 @pytest.mark.dependency(name="rel_minimal")
@@ -17,6 +18,7 @@ def test_db_relational_minimal(relational_db: RelationalConnector) -> None:
     assert connected
 
 
+@pytest.mark.db
 @pytest.mark.document
 @pytest.mark.order(2)
 @pytest.mark.dependency(name="docs_minimal")
@@ -26,6 +28,7 @@ def test_db_docs_minimal(docs_db: DocumentConnector) -> None:
     assert connected
 
 
+@pytest.mark.db
 @pytest.mark.graph
 @pytest.mark.kg
 @pytest.mark.order(3)
@@ -39,6 +42,7 @@ def test_db_graph_minimal(graph_db: GraphConnector) -> None:
 # ------------------------------------------------------------------------------
 # BUILT-IN DATABASE TESTS: Run test_operations() for comprehensive usage tests.
 # ------------------------------------------------------------------------------
+@pytest.mark.db
 @pytest.mark.relational
 @pytest.mark.order(4)
 @pytest.mark.dependency(name="rel_comprehensive", depends=["rel_minimal"])
@@ -48,6 +52,7 @@ def test_db_relational_comprehensive(relational_db: RelationalConnector) -> None
     assert operational
 
 
+@pytest.mark.db
 @pytest.mark.document
 @pytest.mark.order(5)
 @pytest.mark.dependency(name="docs_comprehensive", depends=["docs_minimal"])
@@ -57,6 +62,7 @@ def test_db_docs_comprehensive(docs_db: DocumentConnector) -> None:
     assert operational
 
 
+@pytest.mark.db
 @pytest.mark.graph
 @pytest.mark.kg
 @pytest.mark.order(6)
