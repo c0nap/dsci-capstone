@@ -295,7 +295,7 @@ class KnowledgeGraph:
         if edge_df is None or edge_df.empty:
             raise Log.Failure(Log.kg, "Failed to compute edge counts.")
         # Sort and assign rank (1 = highest degree)
-        edge_df = edge_df.sort_values(["edge_count", "node_id"], ascending=False).reset_index(drop=True)
+        edge_df = edge_df.sort_values(["edge_count", "node_id"], ascending=[False, True]).reset_index(drop=True)
         
         if enforce_count:
             # Take exact number of nodes by position, ignoring rank gaps

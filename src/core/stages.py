@@ -311,7 +311,7 @@ def task_20_send_triples(triples):
 
 def group_21_1_describe_graph(top_n=3):
     with Log.timer():
-        edge_count_df = session.main_graph.get_edge_counts()
+        edge_count_df = session.main_graph.get_edge_counts(top_n)
         edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
         # TODO: other graph summary dataframes / consolidate
         return edge_count_df
