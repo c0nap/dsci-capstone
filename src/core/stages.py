@@ -367,28 +367,34 @@ def task_31_send_summary(summary, collection_name, chunk_id):
         collection = getattr(mongo_db, collection_name)
         collection.update_one({"_id": chunk_id}, {"$set": {"summary": summary}})
 
-##########################################################################
-
-
-
-
-@Log.time
-def pipeline_5a(summary, book_title, book_id):
+# PIPELINE STAGE E - EVALUATE / SUMMARY -> METRICS
+def task_40_post_summary(book_id, book_title, summary):
     """Send book info to Blazor
-    - Post to Blazor metrics page"""
-    session.metrics.post_basic_output(book_id, book_title, summary)
-    print("\nOutput sent to web app.")
+        - Post to Blazor metrics page"""
+    with Log.timer():
+        session.metrics.post_basic_output(book_id, book_title, summary)
 
-
-@Log.time
-def pipeline_5b(
-    summary: str, book_title: str, book_id: str, chunk: str, gold_summary: str = "", bookscore: float = None, questeval: float = None
-) -> None:
+def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, booook_score, questeval_score):
     """Send metrics to Blazor
     - Compute basic metrics (ROUGE, BERTScore)
     - Wait for advanced metrics (QuestEval, BooookScore)
     - Post to Blazor metrics page"""
     with Log.timer():
         session.metrics.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
-        print("\nOutput sent to web app.")
+# TODO: move rouge / bertscore out of post function
+# TODO: move post out of metrics
+
+##########################################################################
+
+
+@Log.time
+def pipeline_5(
+    summary: str, book_title: str, book_id: str, chunk: str = "", gold_summary: str = "", bookscore: float = None, questeval: float = None
+) -> None:
+    """Compute metrics and send available data to Blazor"""
+    if chunk == "":
+        task_40_post_summary(book_id, book_title, summary)
+    else:
+        task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval)
+    print("\nOutput sent to web app.")
 
