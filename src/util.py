@@ -135,23 +135,30 @@ class Log:
 
 
     @staticmethod
-    def elapsed_time(name: str, elapsed: float, call_chain: str, prefix: str = "[TIME] ", verbose: bool = True) -> None:
-        """A warning message begins with a yellow prefix.
-        @param name  The human-friendly function name.
-        @param elapsed  The number of seconds (will be rounded to 3 decimals).
-        @param call_chain  The full stack of function calls.
+    def time_message(prefix: str = "[TIME] ", msg: str = "", verbose: bool = True) -> None:
+        """A time message begins with a light blue prefix.
         @param prefix  The context of the message.
-        @param verbose  Whether to actually print. Saves space and reduces nested if statements.
-        """
-        # Store timing result for later summary
-            Log._timing_results.append((name, elapsed, call_chain))
+        @param msg  The message to print.
+        @param verbose  Whether to actually print. Saves space and reduces nested if statements."""
         if not verbose:
             return
-        msg = Log.msg_elapsed_time(name, elapsed)
         text = f"{Log.TIME_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
         print(text)
 
-    msg_elapsed_time = lambda name, elapsed_time: f"{name} took {elapsed:.3f}s{Log.WHITE}"
+    @staticmethod
+    def elapsed_time(name: str, seconds: float, call_chain: str, verbose: bool = True) -> None:
+        """Print the time taken to complete a function.
+        @param name  The name of the function.
+        @param seconds  The number of seconds (will be rounded to 3 decimals)
+        @param call_chain  The full stack of function calls (for record-keeping)
+        @param verbose  Whether to actually print. Saves space and reduces nested if statements.
+        """
+        # Store timing result for later summary
+        Log._timing_results.append((name, seconds, call_chain))
+        msg = Log.msg_elapsed_time(name, seconds)
+        Log.time_message(msg=msg, verbose=verbose)
+
+    msg_elapsed_time = lambda name, seconds: f"{name} took {seconds:.3f}s{Log.WHITE}"
 
     def format_call_chain(stack: List[FrameInfo], name: str) -> str:
         """Sanitize and concatenate the full call stack for console output.
