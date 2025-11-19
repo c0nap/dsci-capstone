@@ -310,31 +310,53 @@ def task_14_relation_extraction_llm(triples_string, text):
 def task_15_sanitize_triples_llm(llm_output: str):
     with Log.timer():
         # TODO: call LLM.normalize_triples
-        triples = json.loads(llm_output)
-        return triples
+        json_triples = json.loads(llm_output)
+        return json_triples
+
+# PIPELINE STAGE C
+def task_20_send_triples(triples):
+    with Log.timer():
+        session.main_graph.add_triples_json(triples)
+
+def group_21_1_describe_graph(top_n = 3):
+    with Log.timer():
+        edge_count_df = session.main_graph.get_edge_counts()
+        edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
+        # TODO: other graph summary dataframes / consolidate
+        return edge_count_df
+
+def group_21_2_send_statistics():
+    with Log.timer():
+        # TODO: upload to mongo
+
+def group_21_3_post_statistics():
+    with Log.timer():
+        # TODO: notify blazor
+
+def task_22_verbalize_triples(mode = "triple"):
+    with Log.timer():
+        triples_df = session.main_graph.get_by_ranked_degree(min_rank=3, id_columns=["subject_id"])
+        triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
+        triples_string = session.main_graph.to_triples_string(triples_df, mode=mode)
 
 ##########################################################################
 
 @Log.time
-def pipeline_3(triples):
+def pipeline_3(json_triples):
     """Generates a LLM summary using Neo4j triples.
     @details
         - Neo4j graph database
         - Blazor graph page"""
-    for triple in triples:
+    for triple in json_triples:
         print(triple["s"], triple["r"], triple["o"])
-    # TODO: normalize
-    session.main_graph.add_triples_json(triples)
+    task_20_send_triples(json_triples)
 
     # basic linear verbalization of triples (concatenate)
-    edge_count_df = session.main_graph.get_edge_counts(top_n=3)
-    edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
+    edge_count_df = task_21_graph_summary()
     print("\nMost relevant nodes:")
     print(edge_count_df)
 
-    triples_df = session.main_graph.get_by_ranked_degree(min_rank=3, id_columns=["subject_id"])
-    triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
-    triples_string = session.main_graph.to_triples_string(triples_df, mode="triple")
+    triples_string = task_22_verbalize_triples()
     print("\nTriples which best represent the graph:")
     print(triples_string)
     return triples_string
