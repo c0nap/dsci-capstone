@@ -231,6 +231,7 @@ def task_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
 
 def task_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str):
     with Log.timer():
+        # TODO: refactor Story creation to make tests modular - still not independent yet
         chaps = [line.strip() for line in book_chapters.splitlines() if line.strip()]
         reader = ParagraphStreamTEI(
             tei_path,

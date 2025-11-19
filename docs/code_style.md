@@ -110,6 +110,8 @@ class DatabaseConnector:
 
 - Scripts are treated as modules to simplify imports between folders.
 
+- **Time-Elapsed:** By convention, use the `@Log.time` decorator for high-level helper functions. This will pollute the traceback with 2 extra lines per call, but reduces nesting in code. In contrast the context manager (e.g. `with Log.timer`) is reserved for low-level repeatable tasks since their traceback MUST be easy to debug and test.
+
 
 # Manually Generating Documentation with Doxygen
 
