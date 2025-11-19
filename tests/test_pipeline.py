@@ -1,9 +1,9 @@
 import pytest
 from src.core.stages import *
-from src.main import pipeline_A
+from src.main import pipeline_A, pipeline_C, pipeline_E
 from src.components.book_conversion import EPUBToTEI, ParagraphStreamTEI, Story, Chunk
 import os
-from pandas import read_csv
+from pandas import DataFrame, read_csv
 from src.util import Log
 
 ##########################################################################
@@ -333,7 +333,7 @@ def test_job_15_sanitize_triples_llm(book_data):
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_20_send_triples(main_graph, book_data):
     """Test inserting triples into knowledge graph."""
-    triples_json = json.loads(book_data["llm_triples_json"])
+    triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
     
     task_20_send_triples(triples_json)
     
@@ -352,7 +352,7 @@ def test_job_20_send_triples(main_graph, book_data):
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_21_describe_graph(main_graph, book_data):
     """Test generating edge count summary of knowledge graph."""
-    triples_json = json.loads(book_data["llm_triples_json"])
+    triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
 
     # First insert triples, treat task_20 as a helper function
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
@@ -360,7 +360,7 @@ def test_job_21_describe_graph(main_graph, book_data):
     
     edge_count_df = group_21_1_describe_graph()
     
-    assert isinstance(edge_count_df, pd.DataFrame)
+    assert isinstance(edge_count_df, DataFrame)
     assert "node_name" in edge_count_df.columns
     assert "edge_count" in edge_count_df.columns
     assert len(edge_count_df) > 0
@@ -373,12 +373,12 @@ def test_job_21_describe_graph(main_graph, book_data):
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_22_verbalize_triples(main_graph, book_data):
     """Test converting high-degree triples to string format."""
-    triples_json = json.loads(book_data["llm_triples_json"])
+    triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
     # First insert triples, treat task_20 as a helper function
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
     task_20_send_triples(triples_json)
     
-    triples_string = task_22_verbalize_triples(mode="triple")
+    triples_string = task_22_verbalize_triples()
     
     assert isinstance(triples_string, str)
     assert len(triples_string) > 0
@@ -438,7 +438,7 @@ def test_pipeline_A_minimal(book_data):
 
 @pytest.mark.pipeline
 @pytest.mark.stage_A
-@pytest.mark.order(5)
+@pytest.mark.order(110)
 @pytest.mark.dependency(name="stage_A_csv", scope="session")
 def test_pipeline_A_from_csv():
     """Read example CSV and run pipeline_A for each row.
@@ -461,3 +461,64 @@ def test_pipeline_A_from_csv():
         assert isinstance(chunks, list)
         assert len(chunks) > 0
 
+
+@pytest.mark.pipeline
+@pytest.mark.stage_C
+@pytest.mark.order(130)
+@pytest.mark.dependency(name="stage_C_minimal", scope="session", depends=["job_20", "job_22"])
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_pipeline_C_minimal(main_graph, book_data):
+    """Test running pipeline_C with smoke test data."""
+    json_triples = json.loads(book_data["llm_triples_json"])
+    
+    triples_string = pipeline_C(json_triples)
+    
+    # Verify triples were inserted
+    triples_df = main_graph.get_all_triples()
+    assert "subject_id" in triples_df.columns
+    assert "relation_id" in triples_df.columns
+    assert "object_id" in triples_df.columns
+    assert len(triples_df) > 0
+
+    assert isinstance(triples_string, str)
+    assert len(triples_string) > 0
+
+
+@pytest.mark.pipeline
+@pytest.mark.stage_E
+@pytest.mark.order(150)
+@pytest.mark.dependency(name="stage_E_minimal", scope="session")
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_pipeline_E_minimal_summary_only(book_data):
+    """Test running pipeline_E with summary-only mode."""
+    summary = "The children discover a magical carpet with a Phoenix."
+    book_title = book_data["book_title"]
+    book_id = str(book_data["book_id"])
+    
+    # Test summary-only path (no chunk parameter)
+    pipeline_E(summary, book_title, book_id)
+    
+    # TODO: Cannot verify without task_40_post_summary implementation
+    assert True  # Placeholder - verifies no exceptions raised
+
+
+@pytest.mark.pipeline
+@pytest.mark.stage_E
+@pytest.mark.order(151)
+@pytest.mark.dependency(name="stage_E_payload", scope="session", depends=["stage_E_minimal"])
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_pipeline_E_minimal_full_payload(book_data):
+    """Test running pipeline_E with full payload including metrics."""
+    summary = "The children discover a magical carpet with a Phoenix."
+    book_title = book_data["book_title"]
+    book_id = str(book_data["book_id"])
+    chunk_text = book_data["chunk_text"]
+    gold_summary = "Children find magical carpet."
+    bookscore = 0.85
+    questeval = 0.92
+    
+    # Test full payload path
+    pipeline_E(summary, book_title, book_id, chunk_text, gold_summary, bookscore, questeval)
+    
+    # TODO: Cannot verify without task_40_post_payload implementation
+    assert True  # Placeholder - verifies no exceptions raised

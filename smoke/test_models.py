@@ -125,7 +125,7 @@ def test_job_14_llm_minimal(book_data):
 @pytest.mark.pipeline
 @pytest.mark.stage_B
 @pytest.mark.smoke
-@pytest.mark.order(16)
+@pytest.mark.order(120)
 @pytest.mark.dependency(name="stage_B_minimal", scope="session", depends=["job_14_llm_minimal", "job_12_rebel_tuples"])
 def test_pipeline_B_minimal(book_data):
     """Test running the aggregate pipeline_B on smoke test data."""
@@ -153,3 +153,29 @@ def test_pipeline_B_minimal(book_data):
     assert doc is not None
     assert doc["book_title"] == book_title
 
+
+@pytest.mark.pipeline
+@pytest.mark.stage_D
+@pytest.mark.smoke
+@pytest.mark.order(140)
+@pytest.mark.dependency(name="stage_D_minimal", scope="session", depends=["pipeline_B_minimal"])
+def test_pipeline_D_minimal(docs_db, book_data):
+    """Test running pipeline_D with smoke test data."""
+    collection_name = "test_pipeline_d_smoke"
+    chunk = book_data["sample_chunk"]
+    triples_string = "\n".join(book_data["rebel_triples"])
+    
+    # Insert chunk first - verified by pipeline_B_minimal
+    task_11_send_chunk(chunk, collection_name, book_data["book_title"])
+    
+    summary = pipeline_D(collection_name, triples_string, chunk.get_chunk_id())
+    
+    assert isinstance(summary, str)
+    assert len(summary) > 0
+    
+    # Verify summary was written to MongoDB
+    mongo_db = docs_db.get_unmanaged_handle()
+    collection = getattr(mongo_db, collection_name)
+    doc = collection.find_one({"_id": chunk.get_chunk_id()})
+    assert doc is not None
+    assert doc["summary"] == summary
