@@ -45,7 +45,7 @@ class Log:
     # before your own print(), or a message can be specified.
 
     @staticmethod
-    def success(prefix: str = "PASS", msg: str = "", verbose: bool = True) -> None:
+    def success(prefix: str = "PASS: ", msg: str = "", verbose: bool = True) -> None:
         """A success message begins with a green prefix.
         @param prefix  The context of the message.
         @param msg  The message to print.
@@ -56,7 +56,7 @@ class Log:
         print(text)
 
     @staticmethod
-    def warn(prefix: str = "PASS", msg: str = "", verbose: bool = True) -> None:
+    def warn(prefix: str = "WARN: ", msg: str = "", verbose: bool = True) -> None:
         """A warning message begins with a yellow prefix.
         @param prefix  The context of the message.
         @param msg  The message to print.
@@ -67,7 +67,7 @@ class Log:
         print(text)
 
     @staticmethod
-    def fail(prefix: str = "ERROR", msg: str = "", raise_error: bool = True, other_error: Optional[Exception] = None) -> None:
+    def fail(prefix: str = "ERROR: ", msg: str = "", raise_error: bool = True, other_error: Optional[Exception] = None) -> None:
         """A failure message begins with a red prefix.
         @param prefix  The context of the message.
         @param msg  The message to print.
@@ -108,7 +108,7 @@ class Log:
         - Enforces a consistent color scheme across all raised errors for quick scanning.
         """
 
-        def __init__(self, prefix: str = "ERROR", msg: str = ""):
+        def __init__(self, prefix: str = "ERROR: ", msg: str = ""):
             self.prefix = prefix
             self.msg = msg if msg else Log.msg_unknown_error
             super().__init__(self.__str__())
@@ -132,6 +132,25 @@ class Log:
             msg = Log.msg_bad_addr(connection_string)
             super().__init__(prefix=prefix, msg=msg)
 
+
+    @staticmethod
+    def elapsed_time(name: str, elapsed: float, call_chain: str, prefix: str = "[TIME] ", verbose: bool = True) -> None:
+        """A warning message begins with a yellow prefix.
+        @param name  The human-friendly function name.
+        @param elapsed  The number of seconds (will be rounded to 3 decimals).
+        @param call_chain  The full stack of function calls.
+        @param prefix  The context of the message.
+        @param verbose  Whether to actually print. Saves space and reduces nested if statements.
+        """
+        # Store timing result for later summary
+            Log._timing_results.append((name, elapsed, call_chain))
+        if not verbose:
+            return
+        msg = Log.msg_elapsed_time(name, elapsed)
+        text = f"{Log.TIME_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
+        print(text)
+
+    msg_elapsed_time = lambda name, elapsed_time: f"{name} took {elapsed:.3f}s{Log.WHITE}"
 
     # --------- Decorator Pattern ---------
     # Use the @Log.time tag to print a Time Elapsed message on every call to that function.
@@ -185,8 +204,7 @@ class Log:
             finally:
                 if Log.RECORD_TIME:
                     elapsed = time.time() - start
-                    print(f"{Log.TIME_COLOR}[TIME]{Log.BRIGHT} {func.__name__} took {elapsed:.3f}s{Log.WHITE}")
-                    Log._timing_results.append((func.__name__, elapsed, call_chain))
+                    Log.elapsed_time(func.__name__, elapsed, call_chain)
             return result
         return wrapper
     
@@ -231,9 +249,7 @@ class Log:
             yield  # If an exception happens here... (see below)
         finally:
             elapsed = time.time() - start  # Data recorded even on failure
-            print(f"{Log.TIME_COLOR}[TIME]{Log.BRIGHT} {name} took {elapsed:.3f}s{Log.WHITE}")  # Fixed: func.name -> name
-            # Store timing result for later summary
-            Log._timing_results.append((name, elapsed, call_chain))
+            Log.elapsed_time(name, elapsed, call_chain)
 
 
     _timing_results: List[Tuple[str, float, str]] = []  # (func_name, elapsed, call_chain)
