@@ -8,7 +8,8 @@ from src.util import Log
 @pytest.mark.kg
 @pytest.mark.order(16)
 @pytest.mark.dependency(name="knowledge_graph_triples", depends=["graph_minimal", "graph_comprehensive"], scope="session")
-def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
+@pytest.mark.parametrize("main_graph", ["social_kg"], indirect=True)
+def test_knowledge_graph_triples(main_graph: KnowledgeGraph) -> None:
     """Test KnowledgeGraph triple operations using add_triple and get_all_triples.
     @details  Validates the KnowledgeGraph wrapper for semantic triple management:
     - add_triple() creates nodes and relationships
@@ -16,11 +17,7 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     - get_triple_properties() constructs a DataFrame with element properties as columns
     - triples_to_names() maps IDs to human-readable names
     """
-    graph_db.drop_graph("social_kg")
-
-    # Create a KnowledgeGraph instance
-    kg = KnowledgeGraph("social_kg", graph_db)
-
+    kg = main_graph
     # Add triples using the simplified API
     kg.add_triple("Alice", "KNOWS", "Bob")
     kg.add_triple("Bob", "KNOWS", "Charlie")
@@ -98,11 +95,10 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     alice_knows_bob = props_df[(props_df["n1.name"] == "Alice") & (props_df["r.rel_type"] == "KNOWS") & (props_df["n2.name"] == "Bob")]
     assert len(alice_knows_bob) == 1
 
-    graph_db.drop_graph("social_kg")
-
 
 @pytest.fixture
-def nature_scene_graph(graph_db: GraphConnector) -> KnowledgeGraph:
+@pytest.mark.parametrize("main_graph", ["nature_scene"], indirect=True)
+def nature_scene_graph(main_graph: KnowledgeGraph) -> KnowledgeGraph:
     """Create a scene graph with multiple location-based communities for testing.
     @details  Graph structure represents a park with distinct areas:
     - Playground: swings, slide, kids
@@ -111,8 +107,7 @@ def nature_scene_graph(graph_db: GraphConnector) -> KnowledgeGraph:
     - School building: doors, windows, classroom
     Each area forms a natural community for GraphRAG testing.
     """
-    graph_db.drop_graph("nature_scene")
-    kg = KnowledgeGraph("nature_scene", graph_db)
+    kg = main_graph
 
     # Playground community
     kg.add_triple("Kid1", "PLAYS_ON", "Swings")
@@ -148,8 +143,6 @@ def nature_scene_graph(graph_db: GraphConnector) -> KnowledgeGraph:
     kg.add_triple("School", "NEAR", "Playground")
 
     yield kg
-
-    graph_db.drop_graph("nature_scene")
 
 
 @pytest.mark.kg
