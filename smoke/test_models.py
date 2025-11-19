@@ -1,6 +1,7 @@
 import pytest
 from src.core.stages import *
-from src.main import pipeline_B
+from src.main import pipeline_B, pipeline_D
+from src.components.book_conversion import Chunk
 
 
 @pytest.fixture
@@ -122,7 +123,7 @@ def test_job_14_llm_minimal(book_data):
 @pytest.mark.smoke
 @pytest.mark.order(120)
 @pytest.mark.dependency(name="stage_B_minimal", scope="session", depends=["job_14_llm_minimal", "job_12_rebel_tuples"])
-def test_pipeline_B_minimal(book_data):
+def test_pipeline_B_minimal(docs_db, book_data):
     """Test running the aggregate pipeline_B on smoke test data."""
     collection_name = "example_chunks"
     chunks = [book_data["chunk"]]
@@ -142,7 +143,7 @@ def test_pipeline_B_minimal(book_data):
         assert "o" in triple
 
     # Verify chunk was inserted into MongoDB
-    mongo_db = session.docs_db.get_unmanaged_handle()
+    mongo_db = docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)
     doc = collection.find_one({"_id": chunk.get_chunk_id()})
     assert doc is not None

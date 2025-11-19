@@ -5,7 +5,7 @@ from inspect import FrameInfo
 from pandas import DataFrame, Series
 import sys
 import time
-from typing import Any, Callable, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple, Generator
 
 
 class Log:
@@ -159,6 +159,7 @@ class Log:
 
     msg_elapsed_time = lambda name, seconds: f"{name} took {seconds:.3f}s{Log.WHITE}"
 
+    @staticmethod
     def format_call_chain(stack: List[FrameInfo], name: str) -> str:
         """Sanitize and concatenate the full call stack for console output.
         @param stack  The frame stack obtained by inspect.stack().
@@ -222,11 +223,11 @@ class Log:
 
         return wrapper
 
-    # Use the Log.timer context to print a Time Elapsed message once the function is finished.
+    # Use the 'Log.timer' context to print a Time Elapsed message once the function is finished.
     # Advantage over @Log.time: Cleaner traceback
     @staticmethod
     @contextmanager
-    def timer(name: str = None):
+    def timer(name: str = None) -> Generator[None, None, None]:
         """Context manager for recording the execution time of code blocks.
         @param name  Optional name for the timed block. If not provided, uses caller function name.
         Usage:

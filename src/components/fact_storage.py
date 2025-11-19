@@ -305,13 +305,12 @@ class KnowledgeGraph:
         else:
             # Dense ranking: tied nodes get same rank, next rank is consecutive
             edge_df["rank"] = edge_df["edge_count"].rank(method="dense", ascending=False).astype(int)
-
-        # Determine actual worst_rank
-        if worst_rank == -1:
-            worst_rank = int(edge_df["rank"].max())
-
-        # Filter nodes by rank
-        ranked_nodes = edge_df[(edge_df["rank"] >= best_rank) & (edge_df["rank"] <= worst_rank)]
+            # Determine actual worst_rank
+            if worst_rank == -1:
+                worst_rank = int(edge_df["rank"].max())
+            # Filter nodes by rank
+            ranked_nodes = edge_df[(edge_df["rank"] >= best_rank) & (edge_df["rank"] <= worst_rank)]
+        
         if ranked_nodes.empty:
             return DataFrame(columns=["subject_id", "relation_id", "object_id"])
         node_ids = ranked_nodes["node_id"].tolist()
@@ -494,8 +493,8 @@ class KnowledgeGraph:
             raise ValueError(f"Invalid triple string format {mode}; expected {accepted_modes}")
 
         if triple_names_df is None:
-            triple_names_df = session.main_graph.get_all_triples()
-            triple_names_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
+            triples_df = self.get_all_triples()
+            triple_names_df = self.triples_to_names(triples_df, drop_ids=True)
 
         # TODO: Simplify & add other modes
         if mode != "triple":

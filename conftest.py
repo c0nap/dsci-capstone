@@ -5,17 +5,18 @@ from src.connectors.graph import GraphConnector
 from src.connectors.relational import RelationalConnector
 from src.core.context import get_session, Session
 from src.util import Log
+from typing import Generator, Any
 
 
 # Command-line flags for pytest
 # Usage: pytest --log-success --no-log-colors .
-def pytest_addoption(parser):
+def pytest_addoption(parser: Any) -> None:
     parser.addoption("--log-success", action="store_true", default=False)
     parser.addoption("--no-log-colors", action="store_false", default=True)
 
 
 @pytest.fixture(scope="session")
-def session(request):
+def session(request: pytest.FixtureRequest) -> Generator[Session, None, None]:
     """Fixture to create session."""
     # Parse control args
     verbose = request.config.getoption("--log-success")
@@ -29,7 +30,7 @@ def session(request):
 # DATABASE FIXTURES: Checkpoint the database connector instances from Session.
 # ------------------------------------------------------------------------------
 @pytest.fixture
-def relational_db(session: Session) -> RelationalConnector:
+def relational_db(session: Session) -> Generator[RelationalConnector, None, None]:
     """Fixture to get relational database connection."""
     database_name = "pytest"
     _relational_db = session.relational_db
@@ -40,7 +41,7 @@ def relational_db(session: Session) -> RelationalConnector:
 
 
 @pytest.fixture
-def docs_db(session: Session) -> DocumentConnector:
+def docs_db(session: Session) -> Generator[DocumentConnector, None, None]:
     """Fixture to get document database connection."""
     database_name = "pytest"
     _docs_db = session.docs_db
@@ -51,7 +52,7 @@ def docs_db(session: Session) -> DocumentConnector:
 
 
 @pytest.fixture
-def graph_db(session: Session) -> GraphConnector:
+def graph_db(session: Session) -> Generator[GraphConnector, None, None]:
     """Fixture to get document database connection."""
     database_name = "pytest"
     _graph_db = session.graph_db
@@ -62,7 +63,7 @@ def graph_db(session: Session) -> GraphConnector:
 
 
 @pytest.fixture(params=["empty_graph"])
-def main_graph(request, graph_db: GraphConnector, session: Session) -> KnowledgeGraph:
+def main_graph(request: pytest.FixtureRequest, graph_db: GraphConnector, session: Session) -> Generator[KnowledgeGraph, None, None]:
     """Fixture to get document database connection."""
     graph_name = request.param
     _main_graph = session.main_graph

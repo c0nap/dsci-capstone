@@ -96,15 +96,13 @@ from typing import Optional
 
 
 
-response_files = ["./datasets/triples/chunk-160_story-1.txt"]
-
 
 def output_single():
     """Generates a summary from triples stored in JSON, and posts data to Blazor."""
     from src.connectors.llm import LLMConnector
 
-    json_path = triple_files[0]
-    response_path = response_files[0]
+    json_path = "REMOVE THIS"
+    response_path = "REMOVE THIS"
 
     print(f"\n{'='*50}")
     print(f"Processing: {json_path}")
@@ -190,7 +188,7 @@ def output_single():
 
 
 # PIPELINE STAGE A - PREPROCESS / BOOKS -> CHUNKS
-def task_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
+def task_01_convert_epub(epub_path: str, converter: Optional[EPUBToTEI] = None) -> str:
     with Log.timer():
         # TODO: refactor converter, move to session.tei_converter?
         if converter is None:
@@ -295,7 +293,7 @@ def task_14_relation_extraction_llm(triples_string, text):
         return (prompt, llm_output)
 
 
-def task_15_sanitize_triples_llm(llm_output: str):
+def task_15_sanitize_triples_llm(llm_output: str) -> str:
     with Log.timer():
         # TODO: call LLM.normalize_triples
         json_triples = json.loads(llm_output)

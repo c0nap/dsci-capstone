@@ -3,6 +3,7 @@ import pytest
 from src.components.fact_storage import KnowledgeGraph
 from src.connectors.graph import GraphConnector
 from src.util import Log
+from typing import Generator
 
 
 @pytest.mark.kg
@@ -97,7 +98,7 @@ def test_knowledge_graph_triples(main_graph: KnowledgeGraph) -> None:
 
 
 @pytest.fixture(params=["nature_scene"])
-def nature_scene_graph(main_graph: KnowledgeGraph) -> KnowledgeGraph:
+def nature_scene_graph(main_graph: KnowledgeGraph) -> Generator[KnowledgeGraph, None, None]:
     """Create a scene graph with multiple location-based communities for testing.
     @details  Graph structure represents a park with distinct areas:
     - Playground: swings, slide, kids
