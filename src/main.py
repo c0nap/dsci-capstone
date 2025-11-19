@@ -99,6 +99,18 @@ def pipeline_D(collection_name, triples_string, chunk_id):
 
 
 @Log.time
+def pipeline_E(
+    summary: str, book_title: str, book_id: str, chunk: str = "", gold_summary: str = "", bookscore: float = None, questeval: float = None
+) -> None:
+    """Compute metrics and send available data to Blazor"""
+    if chunk == "":
+        stages.task_40_post_summary(book_id, book_title, summary)
+    else:
+        stages.task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval)
+    print("\nOutput sent to web app.")
+
+
+@Log.time
 def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id)
     triples, chunk = pipeline_B(collection_name, chunks, book_title)

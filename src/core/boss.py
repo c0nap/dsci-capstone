@@ -19,7 +19,7 @@ MongoHandle = Generator["Database[Any]", None, None]
 
 
 # TODO: reconcile duplicate with main.py
-from src.core import stages
+from src.main import pipeline_E
 
 
 def load_worker_config(task_types: List[str]) -> Dict[str, str]:
@@ -301,7 +301,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     gold_summary = chunk.get("gold_summary", text[: len(text) // 2])
                     bookscore = float(chunk["bookscore"]["result"]["value"])
                     questeval = float(chunk["questeval"]["result"]["value"])
-                    stages.pipeline_5b(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
+                    stages.pipeline_E(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
 
                     print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")
 

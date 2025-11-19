@@ -387,14 +387,5 @@ def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, booo
 ##########################################################################
 
 
-@Log.time
-def pipeline_5(
-    summary: str, book_title: str, book_id: str, chunk: str = "", gold_summary: str = "", bookscore: float = None, questeval: float = None
-) -> None:
-    """Compute metrics and send available data to Blazor"""
-    if chunk == "":
-        task_40_post_summary(book_id, book_title, summary)
-    else:
-        task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval)
-    print("\nOutput sent to web app.")
+
 
