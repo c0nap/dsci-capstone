@@ -13,7 +13,7 @@ class Log:
 
     ## Enable ANSI colors in output
     USE_COLORS = True
-    ## Enable time-logging with the @Log.time decorator
+    ## Enable time-logging with the 'Log.time' decorator
     RECORD_TIME = True
     ## Print the entire DataFrame to console
     FULL_DF = False
@@ -176,7 +176,7 @@ class Log:
         return call_chain
 
     # --------- Decorator Pattern ---------
-    # Use the @Log.time tag to print a Time Elapsed message on every call to that function.
+    # Use the 'Log.time' tag to print a Time Elapsed message on every call to that function.
     @staticmethod
     def time(func: Callable[..., Any]) -> Callable[..., Any]:
         """Logs the time elapsed for a function call.

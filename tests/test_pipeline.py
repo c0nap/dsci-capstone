@@ -30,19 +30,19 @@ def book_1_data():
 
     return {
         "epub": "./tests/examples-pipeline/epub/trilogy-wishes-1.epub",
-        "chapters": """
-            CHAPTER 1 BEAUTIFUL AS THE DAY
-            CHAPTER 2 GOLDEN GUINEAS
-            CHAPTER 3 BEING WANTED
-            CHAPTER 4 WINGS
-            CHAPTER 5 NO WINGS
-            CHAPTER 6 A CASTLE AND NO DINNER
-            CHAPTER 7 A SIEGE AND BED
-            CHAPTER 8 BIGGER THAN THE BAKER'S BOY
-            CHAPTER 9 GROWN UP
-            CHAPTER 10 SCALPS
-            CHAPTER 11 THE LAST WISH
-        """,
+        "chapters": (
+            "CHAPTER 1 BEAUTIFUL AS THE DAY\n"
+            "CHAPTER 2 GOLDEN GUINEAS\n"
+            "CHAPTER 3 BEING WANTED\n"
+            "CHAPTER 4 WINGS\n"
+            "CHAPTER 5 NO WINGS\n"
+            "CHAPTER 6 A CASTLE AND NO DINNER\n"
+            "CHAPTER 7 A SIEGE AND BED\n"
+            "CHAPTER 8 BIGGER THAN THE BAKER'S BOY\n"
+            "CHAPTER 9 GROWN UP\n"
+            "CHAPTER 10 SCALPS\n"
+            "CHAPTER 11 THE LAST WISH"
+        ),
         "start": "",
         "end": "But I must say no more.",
         "book_id": 1,
@@ -110,20 +110,20 @@ def book_2_data():
 
     return {
         "epub": "./tests/examples-pipeline/epub/trilogy-wishes-2.epub",
-        "chapters": """
-            CHAPTER 1. THE EGG\n
-            CHAPTER 2. THE TOPLESS TOWER\n
-            CHAPTER 3. THE QUEEN COOK\n
-            CHAPTER 4. TWO BAZAARS\n
-            CHAPTER 5. THE TEMPLE\n
-            CHAPTER 6. DOING GOOD\n
-            CHAPTER 7. MEWS FROM PERSIA\n
-            CHAPTER 8. THE CATS, THE COW, AND THE BURGLAR\n
-            CHAPTER 9. THE BURGLAR’S BRIDE\n
-            CHAPTER 10. THE HOLE IN THE CARPET\n
-            CHAPTER 11. THE BEGINNING OF THE END\n
-            CHAPTER 12. THE END OF THE END\n
-        """,
+        "chapters": (
+            "CHAPTER 1. THE EGG\n"
+            "CHAPTER 2. THE TOPLESS TOWER\n"
+            "CHAPTER 3. THE QUEEN COOK\n"
+            "CHAPTER 4. TWO BAZAARS\n"
+            "CHAPTER 5. THE TEMPLE\n"
+            "CHAPTER 6. DOING GOOD\n"
+            "CHAPTER 7. MEWS FROM PERSIA\n"
+            "CHAPTER 8. THE CATS, THE COW, AND THE BURGLAR\n"
+            "CHAPTER 9. THE BURGLAR’S BRIDE\n"
+            "CHAPTER 10. THE HOLE IN THE CARPET\n"
+            "CHAPTER 11. THE BEGINNING OF THE END\n"
+            "CHAPTER 12. THE END OF THE END\n"
+        ),
         "start": "",
         "end": "end of the Phoenix and the Carpet.",
         "book_id": 2,
@@ -495,10 +495,11 @@ def test_pipeline_E_minimal_summary_only(book_data):
     book_title = book_data["book_title"]
     book_id = str(book_data["book_id"])
     
+    # TODO: Cannot verify output - need task_40_post_payload implementation
+
     # Test summary-only path (no chunk parameter)
     pipeline_E(summary, book_title, book_id)
-    
-    # TODO: Cannot verify without task_40_post_summary implementation
+
     assert True  # Placeholder - verifies no exceptions raised
 
 
@@ -517,8 +518,9 @@ def test_pipeline_E_minimal_full_payload(book_data):
     bookscore = 0.85
     questeval = 0.92
     
+    # TODO: Cannot verify output - need task_40_post_payload implementation
+
     # Test full payload path
     pipeline_E(summary, book_title, book_id, chunk_text, gold_summary, bookscore, questeval)
     
-    # TODO: Cannot verify without task_40_post_payload implementation
     assert True  # Placeholder - verifies no exceptions raised
