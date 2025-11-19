@@ -217,7 +217,7 @@ def output_single():
 
 ##########################################################################
 
-# PIPELINE STAGE A
+# PIPELINE STAGE A - PREPROCESS / BOOKS -> CHUNKS
 def task_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
     with Log.timer():
         # TODO: refactor converter, move to session.tei_converter?
@@ -249,7 +249,7 @@ def task_03_chunk_story(story, max_chunk_length=1500):
         chunks = list(story.stream_chunks())
         return chunks
 
-# PIPELINE STAGE B
+# PIPELINE STAGE B - RELATION EXTRACTION / CHUNKS -> TRIPLES
 def task_10_random_chunk(chunks):
     with Log.timer():
         unique_numbers, sample = task_10_sample_chunks(chunks, n_sample = 1)
@@ -271,6 +271,9 @@ def task_11_send_chunk(c, collection_name, book_title):
         collection = getattr(mongo_db, collection_name)
         collection.insert_one(c.to_mongo_dict())
         collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
+# TODO: 11, 12, 13 fit better as preprocessing tasks
+# tied to pipeline_B -> pipeline_A
+
 
 def task_12_relation_extraction_rebel(text, max_tokens=1024, parse_tuples=True):
     with Log.timer():
@@ -313,10 +316,11 @@ def task_15_sanitize_triples_llm(llm_output: str):
         json_triples = json.loads(llm_output)
         return json_triples
 
-# PIPELINE STAGE C
+# PIPELINE STAGE C - ENRICHMENT / EXTRA TRIPLES
 def task_20_send_triples(triples):
     with Log.timer():
         session.main_graph.add_triples_json(triples)
+# TODO: 20 -> B
 
 def group_21_1_describe_graph(top_n = 3):
     with Log.timer():
