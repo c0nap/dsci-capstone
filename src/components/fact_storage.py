@@ -270,7 +270,7 @@ class KnowledgeGraph:
         """
         pass
 
-    def get_by_ranked_degree(self, best_rank: int = 1, worst_rank: int = -1, id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
+    def get_by_ranked_degree(self, best_rank: int = 1, worst_rank: int = -1, enforce_count: bool = False, id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
         """Return triples associated with nodes whose degree rank lies in the specified range.
         @details
             - Computes degree (edge count) for all nodes.
@@ -279,6 +279,7 @@ class KnowledgeGraph:
             - Returns all triples where subject_id or object_id matches a selected node.
         @param best_rank  Minimum degree rank. Inclusive.
         @param worst_rank  Maximum degree rank (-1 = maximum degree) to include. Inclusive.
+        @param enforce_count  Always return (worst_rank - best_rank + 1) rows (fallback to node_id order).
         @param id_columns  List of columns to compare against. Can be 'subject_id', 'object_id', or both.
         @return  DataFrame containing the triples for ranked nodes; columns:
                  subject_id, relation_id, object_id.
@@ -294,10 +295,16 @@ class KnowledgeGraph:
         if edge_df is None or edge_df.empty:
             raise Log.Failure(Log.kg, "Failed to compute edge counts.")
         # Sort and assign rank (1 = highest degree)
-        edge_df = edge_df.sort_values("edge_count", ascending=False).reset_index(drop=True)
-        # Dense ranking: tied nodes get same rank, next rank is consecutive
-        edge_df["rank"] = edge_df["edge_count"].rank(method="dense", ascending=False).astype(int)
-        print(edge_df.to_string())
+        edge_df = edge_df.sort_values(["edge_count", "node_id"], ascending=False).reset_index(drop=True)
+        
+        if enforce_count:
+            # Take exact number of nodes by position, ignoring rank gaps
+            start_idx = best_rank - 1  # Convert 1-indexed rank to 0-indexed position
+            end_idx = worst_rank if worst_rank != -1 else len(edge_df)
+            ranked_nodes = edge_df.iloc[start_idx:end_idx]
+        else:
+            # Dense ranking: tied nodes get same rank, next rank is consecutive
+            edge_df["rank"] = edge_df["edge_count"].rank(method="dense", ascending=False).astype(int)
 
         # Determine actual worst_rank
         if worst_rank == -1:
@@ -305,7 +312,6 @@ class KnowledgeGraph:
 
         # Filter nodes by rank
         ranked_nodes = edge_df[(edge_df["rank"] >= best_rank) & (edge_df["rank"] <= worst_rank)]
-        print(ranked_nodes)
         if ranked_nodes.empty:
             return DataFrame(columns=["subject_id", "relation_id", "object_id"])
         node_ids = ranked_nodes["node_id"].tolist()

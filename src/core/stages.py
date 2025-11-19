@@ -124,7 +124,7 @@ def output_single():
     print("\nMost relevant nodes:")
     print(edge_count_df)
 
-    triples_df = session.main_graph.get_by_ranked_degree(worst_rank=3, id_columns=["subject_id"])
+    triples_df = session.main_graph.get_by_ranked_degree(worst_rank=3, enforce_count=True, id_columns=["subject_id"])
     triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
     triples_string = session.main_graph.to_triples_string(triples_df, mode="triple")
     print("\nTriples which best represent the graph:")
@@ -333,7 +333,7 @@ def group_21_3_post_statistics():
 
 def task_22_verbalize_triples(mode="triple"):
     with Log.timer():
-        triples_df = session.main_graph.get_by_ranked_degree(worst_rank=3, id_columns=["subject_id"])
+        triples_df = session.main_graph.get_by_ranked_degree(worst_rank=3, enforce_count=True, id_columns=["subject_id"])
         triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
         triples_string = session.main_graph.to_triples_string(triples_df, mode=mode)
         return triples_string
