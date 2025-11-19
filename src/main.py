@@ -10,6 +10,7 @@ from src.core.boss import (
     post_story_status
 )
 from src.util import Log
+from src.charts import Plot
 import time
 
 
@@ -215,7 +216,10 @@ CHAPTER 12. THE END OF THE END\n
         print(f"Triggered {task_type}: {response.json()}")
 
     # Write core function timing - Keyboard interrupt doesnt work
+    Log.print_timing_summary()
     Log.dump_timing_csv()   # Eventually updated by callback()
+    Plot.time_elapsed_by_names(Log.get_timing_summary(), "./logs/avg_runtime.png")
+
 
     # Hand off to Flask - keep main thread alive so daemon thread continues
     print("Initial processing complete. Server listening for additional requests from Blazor...")

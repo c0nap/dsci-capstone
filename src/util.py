@@ -4,6 +4,7 @@ import inspect
 from inspect import FrameInfo
 from pandas import DataFrame, Series
 import sys
+import os
 import time
 from typing import Any, Callable, List, Optional, Tuple, Generator
 
@@ -153,7 +154,7 @@ class Log:
         @param verbose  Whether to actually print. Saves space and reduces nested if statements.
         """
         # Store timing result for later summary
-        Log._timing_results.append((name, seconds, call_chain))
+        Log._timing_results.append((name, seconds, call_chain, Log.run_id))
         msg = Log.msg_elapsed_time(name, seconds)
         Log.time_message(msg=msg, verbose=verbose)
 
@@ -257,6 +258,7 @@ class Log:
             Log.elapsed_time(name, elapsed, call_chain)
 
     _timing_results: List[Tuple[str, float, str]] = []  # (func_name, elapsed, call_chain)
+    run_id: int = 1
 
     @staticmethod
     def get_timing_summary() -> DataFrame:
@@ -264,19 +266,22 @@ class Log:
         @return  DataFrame with columns: function, elapsed, call_chain
         """
         if not Log._timing_results:
-            return DataFrame(columns=['function', 'elapsed', 'call_chain'])
-        df = DataFrame(Log._timing_results, columns=['function', 'elapsed', 'call_chain'])
+            return DataFrame(columns=['function', 'elapsed', 'call_chain', "run_id"])
+        df = DataFrame(Log._timing_results, columns=['function', 'elapsed', 'call_chain', "run_id"])
         return df
 
     @staticmethod
     def dump_timing_csv(file_path: str = "./logs/elapsed_time.csv") -> None:
-        """Save timing results to a CSV file.
+        """Save timing results to a CSV file, appending if it already exists.
         @param file_path  Where the saved CSV will be located.
         @return  DataFrame with columns: function, elapsed, call_chain
         """
+        # Check if file exists to decide whether to write header
+        file_exists = os.path.exists(file_path)
+
         df = Log.get_timing_summary()
-        df.to_csv(file_path, index=False)
-        Log.time_message(prefix=t_dump, msg=Log.msg_time_dump(file_path))
+        df.to_csv(file_path, mode="a", index=False, header=not file_exists)
+        Log.time_message(prefix=Log.t_dump, msg=Log.msg_time_dump(file_path))
     
     t_dump = "[DUMP] "
     msg_time_dump = lambda file_path: f"Save time records to '{file_path}'"
