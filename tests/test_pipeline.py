@@ -512,7 +512,7 @@ def test_pipeline_E_minimal_full_payload(book_data):
     summary = "The children discover a magical carpet with a Phoenix."
     book_title = book_data["book_title"]
     book_id = str(book_data["book_id"])
-    chunk_text = book_data["chunk_text"]
+    chunk_text = book_data["sample_chunk"].text
     gold_summary = "Children find magical carpet."
     bookscore = 0.85
     questeval = 0.92

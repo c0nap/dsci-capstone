@@ -279,7 +279,7 @@ class Log:
         """
         df = Log.get_timing_summary()
         df.to_csv(path, index=False)
-        Log.time_message(prefix="[DUMP] ", msh=)
+        Log.time_message(prefix=t_dump, msg=Log.msg_time_dump(file_path))
         print(Log.elapsed_time("dump_timing_csv", 0, ))
     
     t_dump = "[DUMP] "

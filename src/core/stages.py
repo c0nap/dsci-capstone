@@ -379,7 +379,7 @@ def task_40_post_summary(book_id, book_title, summary):
     with Log.timer():
         session.metrics.post_basic_output(book_id, book_title, summary)
 
-def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, booook_score, questeval_score):
+def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval):
     """Send metrics to Blazor
     - Compute basic metrics (ROUGE, BERTScore)
     - Wait for advanced metrics (QuestEval, BooookScore)
