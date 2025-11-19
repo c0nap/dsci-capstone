@@ -316,7 +316,7 @@ def task_15_sanitize_triples_llm(llm_output: str):
         json_triples = json.loads(llm_output)
         return json_triples
 
-# PIPELINE STAGE C - ENRICHMENT / EXTRA TRIPLES
+# PIPELINE STAGE C - ENRICHMENT / TRIPLES -> GRAPH
 def task_20_send_triples(triples):
     with Log.timer():
         session.main_graph.add_triples_json(triples)
@@ -345,29 +345,38 @@ def task_22_verbalize_triples(mode = "triple"):
         triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
         triples_string = session.main_graph.to_triples_string(triples_df, mode=mode)
 
+# PIPELINE STAGE D - CONSOLIDATE / GRAPH -> SUMMARY
+def task_30_summarize_llm(triples_string):
+    """Prompt LLM to generate summary"""
+    with Log.timer():
+        from src.connectors.llm import LLMConnector
+        # TODO: move to session.llm
+        llm = LLMConnector(
+            temperature=0,
+            system_prompt="You are a helpful assistant that processes semantic triples.",
+        )
+        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+        prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
+        prompt += "Output your generated summary and nothing else."
+        summary = llm.execute_query(prompt)
+        return (prompt, summary)
+
+def task_31_send_summary(summary, collection_name, chunk_id):
+    with Log.timer():
+        mongo_db = session.docs_db.get_unmanaged_handle()
+        collection = getattr(mongo_db, collection_name)
+        collection.update_one({"_id": chunk_id}, {"$set": {"summary": summary}})
+
 ##########################################################################
 
 @Log.time
 def pipeline_4(collection_name, triples_string, chunk_id):
     """Generate chunk summary"""
-    from src.connectors.llm import LLMConnector
-
-    # Prompt LLM to generate summary
-    llm = LLMConnector(
-        temperature=0,
-        system_prompt="You are a helpful assistant that processes semantic triples.",
-    )
-    prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-    prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
-    prompt += "Output your generated summary and nothing else."
-    summary = llm.execute_query(prompt)
-
+    _, summary = task_30_summarize_llm(triples_string)
     print("\nGenerated summary:")
     print(summary)
 
-    mongo_db = session.docs_db.get_unmanaged_handle()
-    collection = getattr(mongo_db, collection_name)
-    collection.update_one({"_id": chunk_id}, {"$set": {"summary": summary}})
+    task_31_send_summary(summary, collection_name, chunk_id)
     print(f"    [Wrote summary to Mongo with chunk_id: {chunk_id}]")
 
     return summary
