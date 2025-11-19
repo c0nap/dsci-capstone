@@ -326,6 +326,87 @@ def test_job_15_sanitize_triples_llm(book_data):
 
 
 
+@pytest.mark.task
+@pytest.mark.stage_C
+@pytest.mark.order(20)
+@pytest.mark.dependency(name="job_20", scope="session", depends=["job_15_minimal"])
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_job_20_send_triples(main_graph, book_data):
+    """Test inserting triples into knowledge graph."""
+    triples_json = json.loads(book_data["llm_triples_json"])
+    
+    task_20_send_triples(triples_json)
+    
+    # Verify triples were inserted
+    result = main_graph.execute_query(
+        "MATCH (s)-[r]->(o) RETURN count(r) as edge_count"
+    )
+    assert result[0]["edge_count"] > 0
+
+
+@pytest.mark.task
+@pytest.mark.stage_C
+@pytest.mark.order(21)
+@pytest.mark.dependency(name="job_21", scope="session", depends=["job_20"])
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_job_21_describe_graph(main_graph, book_data):
+    """Test generating edge count summary of knowledge graph."""
+    # First insert triples to ensure graph has data
+    triples_json = json.loads(book_data["llm_triples_json"])
+    task_20_send_triples(triples_json)
+    
+    edge_count_df = group_21_1_describe_graph(top_n=3)
+    
+    assert isinstance(edge_count_df, pd.DataFrame)
+    assert "node_name" in edge_count_df.columns
+    assert "edge_count" in edge_count_df.columns or "count" in edge_count_df.columns
+    assert len(edge_count_df) > 0
+
+
+@pytest.mark.task
+@pytest.mark.stage_C
+@pytest.mark.order(22)
+@pytest.mark.dependency(name="job_22", scope="session", depends=["job_20"])
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_job_22_verbalize_triples(main_graph, book_data):
+    """Test converting high-degree triples to string format."""
+    # First insert triples to ensure graph has data
+    triples_json = json.loads(book_data["llm_triples_json"])
+    task_20_send_triples(triples_json)
+    
+    triples_string = task_22_verbalize_triples(mode="triple")
+    
+    assert isinstance(triples_string, str)
+    assert len(triples_string) > 0
+
+
+@pytest.mark.task
+@pytest.mark.stage_D
+@pytest.mark.order(31)
+@pytest.mark.dependency(name="job_31", scope="session")
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_job_31_send_summary(docs_db, book_data):
+    """Test updating chunk with summary in MongoDB."""
+    chunk = book_data["sample_chunk"]
+    collection_name = "example_chunks"
+    summary = "The children discover a magical carpet with a Phoenix egg inside."
+    
+    # First insert the chunk
+    task_11_send_chunk(chunk, collection_name, book_data["book_title"])
+    
+    # Then add summary
+    task_31_send_summary(summary, collection_name, chunk.get_chunk_id())
+    
+    # Verify summary was added
+    mongo_db = docs_db.get_unmanaged_handle()
+    collection = getattr(mongo_db, collection_name)
+    doc = collection.find_one({"_id": chunk.get_chunk_id()})
+    
+    assert doc is not None
+    assert doc["summary"] == summary
+
+
+
 ##########################################################################
 # Minimal aggregate test
 ##########################################################################
