@@ -5,6 +5,7 @@ from src.connectors.graph import GraphConnector
 from src.util import Log
 from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
+
 class Triple(TypedDict):
     s: str
     r: str
@@ -268,7 +269,7 @@ class KnowledgeGraph:
         @throws ValueError   If min_degree or max_degree values are invalid.
         """
         pass
-        
+
     def get_by_ranked_degree(self, best_rank: int = 1, worst_rank: int = -1, id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
         """Return triples associated with nodes whose degree rank lies in the specified range.
         @details
@@ -303,9 +304,7 @@ class KnowledgeGraph:
             worst_rank = int(edge_df["rank"].max())
 
         # Filter nodes by rank
-        ranked_nodes = edge_df[
-            (edge_df["rank"] >= best_rank) & (edge_df["rank"] <= worst_rank)
-        ]
+        ranked_nodes = edge_df[(edge_df["rank"] >= best_rank) & (edge_df["rank"] <= worst_rank)]
         print(ranked_nodes)
         if ranked_nodes.empty:
             return DataFrame(columns=["subject_id", "relation_id", "object_id"])
@@ -487,7 +486,7 @@ class KnowledgeGraph:
         accepted_modes = ["natural", "triple", "json"]
         if mode not in accepted_modes:
             raise ValueError(f"Invalid triple string format {mode}; expected {accepted_modes}")
-        
+
         if triple_names_df is None:
             triple_names_df = session.main_graph.get_all_triples()
             triple_names_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)

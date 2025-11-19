@@ -1,12 +1,12 @@
+import json
 import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from src.core.context import session
-import json
-from typing import Optional
 from src.util import Log
+
 # unused?
 import traceback
-
+from typing import Optional
 
 
 ### Will revisit later - Book classes need refactoring ###
@@ -93,8 +93,6 @@ import traceback
 #         except Exception as e:
 #             print(f"Error processing {row.get('epub_path', 'unknown')}: {e}")
 #             traceback.print_exc()
-
-
 
 
 triple_files = [
@@ -217,6 +215,7 @@ def output_single():
 
 ##########################################################################
 
+
 # PIPELINE STAGE A - PREPROCESS / BOOKS -> CHUNKS
 def task_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
     with Log.timer():
@@ -228,6 +227,7 @@ def task_01_convert_epub(epub_path, converter: Optional[EPUBToTEI] = None):
         converter.clean_tei()
         # TODO: converter.print_chapters(200)
         return converter.tei_path
+
 
 def task_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str):
     with Log.timer():
@@ -244,17 +244,20 @@ def task_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str
         story = Story(reader)
         return story
 
+
 def task_03_chunk_story(story, max_chunk_length=1500):
     with Log.timer():
         story.pre_split_chunks(max_chunk_length=max_chunk_length)
         chunks = list(story.stream_chunks())
         return chunks
 
+
 # PIPELINE STAGE B - RELATION EXTRACTION / CHUNKS -> TRIPLES
 def task_10_random_chunk(chunks):
     with Log.timer():
-        unique_numbers, sample = task_10_sample_chunks(chunks, n_sample = 1)
+        unique_numbers, sample = task_10_sample_chunks(chunks, n_sample=1)
         return (unique_numbers[0], sample[0])
+
 
 def task_10_sample_chunks(chunks, n_sample):
     with Log.timer():
@@ -265,6 +268,7 @@ def task_10_sample_chunks(chunks, n_sample):
             sample.append(c)
         return (unique_numbers, sample)
 
+
 def task_11_send_chunk(c, collection_name, book_title):
     with Log.timer():
         # TODO: remove book_title from chunk schema?
@@ -272,6 +276,8 @@ def task_11_send_chunk(c, collection_name, book_title):
         collection = getattr(mongo_db, collection_name)
         collection.insert_one(c.to_mongo_dict())
         collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
+
+
 # TODO: 11, 12, 13 fit better as preprocessing tasks
 # tied to pipeline_B -> pipeline_A
 
@@ -279,14 +285,16 @@ def task_11_send_chunk(c, collection_name, book_title):
 def task_12_relation_extraction_rebel(text, max_tokens=1024, parse_tuples=True):
     with Log.timer():
         from src.components.relation_extraction import RelationExtractor
+
         # TODO: move to session.rel_extract
         re_rebel = "Babelscape/rebel-large"
         # TODO: different models
-        #re_rst = "GAIR/rst-information-extraction-11b"
-        #ner_renard = "compnet-renard/bert-base-cased-literary-NER"
+        # re_rst = "GAIR/rst-information-extraction-11b"
+        # ner_renard = "compnet-renard/bert-base-cased-literary-NER"
         nlp = RelationExtractor(model_name=re_rebel, max_tokens=max_tokens)
         extracted = nlp.extract(text, parse_tuples=parse_tuples)
         return extracted
+
 
 def task_13_concatenate_triples(extracted):
     with Log.timer():
@@ -296,9 +304,11 @@ def task_13_concatenate_triples(extracted):
             triples_string += str(triple) + "\n"
         return triples_string
 
+
 def task_14_relation_extraction_llm(triples_string, text):
     with Log.timer():
         from src.connectors.llm import LLMConnector
+
         # TODO: move to session.llm
         llm = LLMConnector(
             temperature=0,
@@ -311,36 +321,44 @@ def task_14_relation_extraction_llm(triples_string, text):
         llm_output = llm.execute_query(prompt)
         return (prompt, llm_output)
 
+
 def task_15_sanitize_triples_llm(llm_output: str):
     with Log.timer():
         # TODO: call LLM.normalize_triples
         json_triples = json.loads(llm_output)
         return json_triples
 
+
 # PIPELINE STAGE C - ENRICHMENT / TRIPLES -> GRAPH
 def task_20_send_triples(triples):
     with Log.timer():
         session.main_graph.add_triples_json(triples)
+
+
 # TODO: 20 -> B
 
-def group_21_1_describe_graph(top_n = 3):
+
+def group_21_1_describe_graph(top_n=3):
     with Log.timer():
         edge_count_df = session.main_graph.get_edge_counts()
         edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
         # TODO: other graph summary dataframes / consolidate
         return edge_count_df
 
+
 def group_21_2_send_statistics():
     with Log.timer():
         # TODO: upload to mongo
         pass
+
 
 def group_21_3_post_statistics():
     with Log.timer():
         # TODO: notify blazor
         pass
 
-def task_22_verbalize_triples(mode = "triple"):
+
+def task_22_verbalize_triples(mode="triple"):
     with Log.timer():
         triples_df = session.main_graph.get_by_ranked_degree(worst_rank=3, id_columns=["subject_id"])
         print(triples_df.to_string())
@@ -349,11 +367,13 @@ def task_22_verbalize_triples(mode = "triple"):
         triples_string = session.main_graph.to_triples_string(triples_df, mode=mode)
         return triples_string
 
+
 # PIPELINE STAGE D - CONSOLIDATE / GRAPH -> SUMMARY
 def task_30_summarize_llm(triples_string):
     """Prompt LLM to generate summary"""
     with Log.timer():
         from src.connectors.llm import LLMConnector
+
         # TODO: move to session.llm
         llm = LLMConnector(
             temperature=0,
@@ -365,19 +385,22 @@ def task_30_summarize_llm(triples_string):
         summary = llm.execute_query(prompt)
         return (prompt, summary)
 
+
 def task_31_send_summary(summary, collection_name, chunk_id):
     with Log.timer():
         mongo_db = session.docs_db.get_unmanaged_handle()
         collection = getattr(mongo_db, collection_name)
         collection.update_one({"_id": chunk_id}, {"$set": {"summary": summary}})
 
+
 # PIPELINE STAGE E - EVALUATE / SUMMARY -> METRICS
 def task_40_post_summary(book_id, book_title, summary):
     """Send book info to Blazor
-        - Post to Blazor metrics page"""
+    - Post to Blazor metrics page"""
     # TODO: pytest
     with Log.timer():
         session.metrics.post_basic_output(book_id, book_title, summary)
+
 
 def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval):
     """Send metrics to Blazor
@@ -387,11 +410,9 @@ def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, book
     # TODO: pytest
     with Log.timer():
         session.metrics.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
+
+
 # TODO: move rouge / bertscore out of post function
 # TODO: move post out of metrics
 
 ##########################################################################
-
-
-
-

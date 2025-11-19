@@ -1,8 +1,8 @@
 from src.components.fact_storage import KnowledgeGraph
+from src.components.metrics import Metrics
 from src.connectors.document import DocumentConnector
 from src.connectors.graph import GraphConnector
 from src.connectors.relational import RelationalConnector
-from src.components.metrics import Metrics
 from typing import Any, Self
 
 

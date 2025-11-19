@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
-import time
 from src.core import stages
+
 # move to stages
 from src.core.boss import (
     create_boss_thread,
@@ -10,6 +10,7 @@ from src.core.boss import (
     post_story_status
 )
 from src.util import Log
+import time
 
 
 @Log.time
@@ -50,7 +51,7 @@ def pipeline_B(collection_name, chunks, book_title):
         print(triple)
     print()
     triples_string = stages.task_13_concatenate_triples(extracted)
-    
+
     prompt, llm_output = stages.task_14_relation_extraction_llm(triples_string, c.text)
     print("\n    LLM prompt:")
     print(prompt)
@@ -61,7 +62,6 @@ def pipeline_B(collection_name, chunks, book_title):
     triples = stages.task_15_sanitize_triples_llm(llm_output)
     print("\nValid JSON")
     return triples, c
-
 
 
 @Log.time
@@ -223,5 +223,3 @@ CHAPTER 12. THE END OF THE END\n
     except KeyboardInterrupt:
         print("\nShutting down...")
         Log.dump_timing_csv()
-
-

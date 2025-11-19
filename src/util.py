@@ -1,11 +1,11 @@
-from pandas import DataFrame, Series
-from typing import Any, List, Optional, Callable, Tuple
-import time
-import functools
 from contextlib import contextmanager
+import functools
 import inspect
 from inspect import FrameInfo
+from pandas import DataFrame, Series
 import sys
+import time
+from typing import Any, Callable, List, Optional, Tuple
 
 
 class Log:
@@ -133,7 +133,6 @@ class Log:
             msg = Log.msg_bad_addr(connection_string)
             super().__init__(prefix=prefix, msg=msg)
 
-
     @staticmethod
     def time_message(prefix: str = "[TIME] ", msg: str = "", verbose: bool = True) -> None:
         """A time message begins with a light blue prefix.
@@ -185,7 +184,7 @@ class Log:
         @param func  The function to wrap.
         @return  The wrapped function that logs time and forwards the result.
         """
-    
+
         # Preserve the original function's name and docstring.
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -200,7 +199,7 @@ class Log:
                 result = func(*args, **kwargs)
             except Exception:  # Fix traceback of the wrapped function...
                 _, exc, trace = sys.exc_info()
-                
+
                 # Not feasible to completely remove 'wrapper' frame from the traceback
                 # This makes it slightly less intrusive:           otherwise:  File "/pipeline/src/main.py", line 121, in <module>
                 #   File "/pipeline/src/main.py", line 121, in <module>          chunks = pipeline_A(
@@ -220,9 +219,9 @@ class Log:
                     elapsed = time.time() - start
                     Log.elapsed_time(func.__name__, elapsed, call_chain)
             return result
+
         return wrapper
-    
-    
+
     # Use the Log.timer context to print a Time Elapsed message once the function is finished.
     # Advantage over @Log.time: Cleaner traceback
     @staticmethod
@@ -237,7 +236,7 @@ class Log:
         if not Log.RECORD_TIME:
             yield
             return
-    
+
         # Auto-detect function name if not provided
         stack = inspect.stack()
         if name is None:
@@ -247,7 +246,7 @@ class Log:
                 if func_name not in ['timer', '__enter__', '__exit__']:
                     name = func_name
                     break
-        
+
         call_chain = Log.format_call_chain(stack, name)
         start = time.time()
         try:
@@ -256,8 +255,8 @@ class Log:
             elapsed = time.time() - start  # Data recorded even on failure
             Log.elapsed_time(name, elapsed, call_chain)
 
-
     _timing_results: List[Tuple[str, float, str]] = []  # (func_name, elapsed, call_chain)
+
     @staticmethod
     def get_timing_summary() -> DataFrame:
         """Returns timing results as a pandas DataFrame.
@@ -265,10 +264,7 @@ class Log:
         """
         if not Log._timing_results:
             return DataFrame(columns=['function', 'elapsed', 'call_chain'])
-        df = DataFrame(
-            Log._timing_results,
-            columns=['function', 'elapsed', 'call_chain']
-        )
+        df = DataFrame(Log._timing_results, columns=['function', 'elapsed', 'call_chain'])
         return df
 
     @staticmethod
@@ -289,7 +285,7 @@ class Log:
     def clear_timing_data():
         """Clears all recorded timing data."""
         Log._timing_results.clear()
-    
+
     @staticmethod
     def print_timing_summary():
         """Prints a formatted timing summary grouped by function."""
@@ -298,15 +294,13 @@ class Log:
             print("No timing data recorded.")
             return
         print("\n=== TIMING SUMMARY ===")
-        
+
         # Group by function and show stats
         grouped = df.groupby('function')['elapsed'].agg(['count', 'sum', 'mean', 'min', 'max'])
         grouped.columns = ['calls', 'total', 'avg', 'min', 'max']
-        
+
         print(grouped.to_string())
         print(f"\nTotal execution time: {df['elapsed'].sum():.3f}s")
-
-
 
     # --------- Builder Pattern ---------
     # Compose your own standardized error messages depending on the context

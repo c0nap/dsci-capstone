@@ -605,21 +605,21 @@ def test_ranked_degree_ties(main_graph: KnowledgeGraph) -> None:
               and querying for non-existent ranks returns empty DataFrame.
     """
     kg = main_graph
-    
+
     # Add two isolated nodes (each with degree 1)
     kg.add_triple("node_a", "relates_to", "node_b")
     kg.add_triple("node_c", "relates_to", "node_d")
-    
+
     degree_df = kg.get_edge_counts()
     assert len(degree_df) == 4  # 4 nodes total
-    
+
     # Both isolated pairs should have same degree and rank
     # Ranks should be: all nodes have degree=1, so all should be rank 1
     degree_df = degree_df.sort_values("edge_count", ascending=False).reset_index(drop=True)
     degree_df["rank"] = degree_df["edge_count"].rank(method="dense", ascending=False).astype(int)
     assert degree_df["rank"].nunique() == 1  # All same rank
     assert degree_df["rank"].iloc[0] == 1
-    
+
     # Querying for rank 2 should return empty (no rank 2 exists)
     empty_result = kg.get_by_ranked_degree(best_rank=2, worst_rank=2)
     assert empty_result.empty, "No rank-2 nodes exist, should return empty"

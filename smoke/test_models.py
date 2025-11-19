@@ -2,21 +2,22 @@ import pytest
 from src.core.stages import *
 from src.main import pipeline_B
 
+
 @pytest.fixture
 def book_data():
     """Minimal data for smoke tests - mirrors book_2 structure"""
     chunk_id = "story-2_book-2_chapter-1_p.25000"
-    
+
     chunk_path = f"./tests/examples-pipeline/chunks/{chunk_id}.txt"
     triples_path = f"./tests/examples-pipeline/triples/{chunk_id}.json"
-    
+
     # Read chunk text and triples from files
     with open(chunk_path, 'r') as f:
         chunk_text = f.read()
-    
+
     with open(triples_path, 'r') as f:
         llm_triples_json = f.read()
-    
+
     chunk = Chunk(
         chunk_text,
         book_id=2,
@@ -27,7 +28,7 @@ def book_data():
         story_percent=8.0,
         chapter_percent=25.0,
     )
-    
+
     return {
         "chunk": chunk,
         "chunk_text": chunk_text,
@@ -45,7 +46,6 @@ def book_data():
         ],
         "llm_triples_json": llm_triples_json,
     }
-
 
 
 @pytest.mark.task
@@ -72,7 +72,7 @@ def test_job_12_rebel_minimal():
 def test_job_12_rebel_chunk(book_data):
     """Runs REBEL on realistic pipeline data. Do not convert to tuples yet."""
     extracted = task_12_relation_extraction_rebel(book_data["chunk_text"], parse_tuples=False)
-    
+
     assert isinstance(extracted, list)
     assert len(extracted) >= 5  # Realistic chunk should yield multiple triples
     assert all(isinstance(triple, str) for triple in extracted)
@@ -88,7 +88,7 @@ def test_job_12_rebel_chunk(book_data):
 def test_job_12_rebel_tuples(book_data):
     """Runs REBEL with tuple parsing on realistic data."""
     extracted = task_12_relation_extraction_rebel(book_data["chunk_text"], parse_tuples=True)
-    
+
     assert isinstance(extracted, list)
     assert len(extracted) >= 5
     assert all(isinstance(triple, tuple) and len(triple) == 3 for triple in extracted)
@@ -107,19 +107,14 @@ def test_job_12_rebel_tuples(book_data):
 def test_job_14_llm_minimal(book_data):
     """Test LLM-based triple sanitization with realistic data."""
     triples_string = "\n".join(book_data["rebel_triples"])
-    
+
     prompt, llm_output = task_14_relation_extraction_llm(triples_string, book_data["chunk_text"])
-    
+
     assert isinstance(prompt, str)
     assert triples_string in prompt
     assert book_data["chunk_text"] in prompt
     assert isinstance(llm_output, str)
     assert len(llm_output) > 0
-
-
-
-
-
 
 
 @pytest.mark.pipeline
@@ -132,20 +127,20 @@ def test_pipeline_B_minimal(book_data):
     collection_name = "example_chunks"
     chunks = [book_data["chunk"]]
     book_title = "The Phoenix and the Carpet"
-    
+
     triples, chunk = pipeline_B(collection_name, chunks, book_title)
-    
+
     # Verify output structure
     assert isinstance(triples, list)
     assert len(triples) > 0
     assert isinstance(chunk, Chunk)
-    
+
     # Verify each triple has required structure
     for triple in triples:
         assert "s" in triple
         assert "r" in triple
         assert "o" in triple
-    
+
     # Verify chunk was inserted into MongoDB
     mongo_db = session.docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)
@@ -164,15 +159,15 @@ def test_pipeline_D_minimal(docs_db, book_data):
     collection_name = "test_pipeline_d_smoke"
     chunk = book_data["sample_chunk"]
     triples_string = "\n".join(book_data["rebel_triples"])
-    
+
     # Insert chunk first - verified by pipeline_B_minimal
     task_11_send_chunk(chunk, collection_name, book_data["book_title"])
-    
+
     summary = pipeline_D(collection_name, triples_string, chunk.get_chunk_id())
-    
+
     assert isinstance(summary, str)
     assert len(summary) > 0
-    
+
     # Verify summary was written to MongoDB
     mongo_db = docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)

@@ -1,18 +1,21 @@
-import pytest
-from src.core.stages import *
-from src.main import pipeline_A, pipeline_C, pipeline_E
-from src.components.book_conversion import EPUBToTEI, ParagraphStreamTEI, Story, Chunk
 import os
 from pandas import DataFrame, read_csv
+import pytest
+from src.components.book_conversion import Chunk, EPUBToTEI, ParagraphStreamTEI, Story
+from src.core.stages import *
+from src.main import pipeline_A, pipeline_C, pipeline_E
 from src.util import Log
+
 
 ##########################################################################
 # Fixtures
 ##########################################################################
 
+
 @pytest.fixture
 def book_data(request):
     return request.getfixturevalue(request.param)
+
 
 @pytest.fixture
 def book_1_data():
@@ -64,25 +67,26 @@ def book_1_data():
         "sample_chunk": sample_chunk,
         "rebel_triples": ["children  found  Psammead", "Psammead  grants  wishes"],
         "llm_triples_json": '[{"s": "children", "r": "found", "o": "Psammead"}, {"s": "Psammead", "r": "grants", "o": "wishes"}]',
-        "num_triples": 2
+        "num_triples": 2,
     }
+
 
 @pytest.fixture
 def book_2_data():
     """Example data for Book 2: The Phoenix and the Carpet - realistic pipeline data"""
     chunk_1_id = "story-2_book-2_chapter-1_p.25000"
     chunk_2_id = "story-2_book-2_chapter-1_p.50000"
-    
+
     chunk_1_path = f"./tests/examples-pipeline/chunks/{chunk_1_id}.txt"
     chunk_2_path = f"./tests/examples-pipeline/chunks/{chunk_2_id}.txt"
     triples_1_path = f"./tests/examples-pipeline/triples/{chunk_1_id}.json"
-    
+
     # Read chunk texts from files
     with open(chunk_1_path, 'r') as f:
         chunk_1_text = f.read()
     with open(chunk_2_path, 'r') as f:
         chunk_2_text = f.read()
-    
+
     # Read triples from files
     with open(triples_1_path, 'r') as f:
         llm_triples_json = f.read()
@@ -156,6 +160,7 @@ def book_2_data():
 # Tests
 ##########################################################################
 
+
 @pytest.mark.task
 @pytest.mark.stage_A
 @pytest.mark.order(1)
@@ -223,9 +228,9 @@ def test_job_10_sample_chunks(book_data):
     """Test sampling multiple chunks from a list."""
     chunks = book_data["chunks_list"]
     n_sample = 2
-    
+
     unique_numbers, sample = task_10_sample_chunks(chunks, n_sample)
-    
+
     assert len(unique_numbers) == n_sample
     assert len(sample) == n_sample
     assert all(0 <= idx < len(chunks) for idx in unique_numbers)
@@ -240,9 +245,9 @@ def test_job_10_sample_chunks(book_data):
 def test_job_10_random_chunk(book_data):
     """Test selecting a single random chunk."""
     chunks = book_data["chunks_list"]
-    
+
     unique_number, chunk = task_10_random_chunk(chunks)
-    
+
     assert isinstance(unique_number, int)
     assert 0 <= unique_number < len(chunks)
     assert isinstance(chunk, Chunk)
@@ -258,14 +263,14 @@ def test_job_11_send_chunk(docs_db, book_data):
     chunk = book_data["sample_chunk"]
     collection_name = "example_chunks"
     book_title = book_data["book_title"]
-    
+
     task_11_send_chunk(chunk, collection_name, book_title)
-    
+
     # Verify chunk was inserted with correct book_title
     mongo_db = docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)
     doc = collection.find_one({"_id": chunk.get_chunk_id()})
-    
+
     assert doc is not None
     assert doc["book_title"] == book_title
     assert doc["text"] == chunk.text
@@ -279,9 +284,9 @@ def test_job_11_send_chunk(docs_db, book_data):
 def test_job_13_concatenate_triples(book_data):
     """Test converting extracted triples to newline-delimited string."""
     extracted = book_data["rebel_triples"]
-    
+
     triples_string = task_13_concatenate_triples(extracted)
-    
+
     assert isinstance(triples_string, str)
     assert triples_string.count("\n") == len(extracted)
     # Verify each triple appears in output
@@ -298,9 +303,9 @@ def test_job_15_sanitize_triples_llm(book_data):
     """Test parsing LLM output JSON into triples list."""
     llm_output = book_data["llm_triples_json"]
     num_triples = book_data["num_triples"]
-    
+
     triples = task_15_sanitize_triples_llm(llm_output)
-    
+
     assert isinstance(triples, list)
     assert len(triples) == num_triples  # Matches fixture data
     # Verify structure: each triple has s, r, o keys
@@ -320,10 +325,9 @@ def test_job_15_sanitize_triples_llm(book_data):
 # def test_job_15_comprehensive(book_data):
 #     """Test parsing realistic LLM JSON output."""
 #     triples = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
-    
+
 #     # TODO - normalize_triples with malformed llm output
 #     pass
-
 
 
 @pytest.mark.task
@@ -334,9 +338,9 @@ def test_job_15_sanitize_triples_llm(book_data):
 def test_job_20_send_triples(main_graph, book_data):
     """Test inserting triples into knowledge graph."""
     triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
-    
+
     task_20_send_triples(triples_json)
-    
+
     # Verify triples were inserted
     triples_df = main_graph.get_all_triples()
     assert "subject_id" in triples_df.columns
@@ -357,9 +361,9 @@ def test_job_21_describe_graph(main_graph, book_data):
     # First insert triples, treat task_20 as a helper function
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
     task_20_send_triples(triples_json)
-    
+
     edge_count_df = group_21_1_describe_graph()
-    
+
     assert isinstance(edge_count_df, DataFrame)
     assert "node_name" in edge_count_df.columns
     assert "edge_count" in edge_count_df.columns
@@ -377,9 +381,9 @@ def test_job_22_verbalize_triples(main_graph, book_data):
     # First insert triples, treat task_20 as a helper function
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
     task_20_send_triples(triples_json)
-    
+
     triples_string = task_22_verbalize_triples()
-    
+
     assert isinstance(triples_string, str)
     assert len(triples_string) > 0
 
@@ -394,27 +398,27 @@ def test_job_31_send_summary(docs_db, book_data):
     chunk = book_data["sample_chunk"]
     collection_name = "example_chunks"
     summary = "The children discover a magical carpet with a Phoenix egg inside."
-    
+
     # First insert the chunk, treat task_11 as a helper function now
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
     task_11_send_chunk(chunk, collection_name, book_data["book_title"])
-    
+
     # Then add summary
     task_31_send_summary(summary, collection_name, chunk.get_chunk_id())
-    
+
     # Verify summary was added
     mongo_db = docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, collection_name)
     doc = collection.find_one({"_id": chunk.get_chunk_id()})
-    
+
     assert doc is not None
     assert doc["summary"] == summary
-
 
 
 ##########################################################################
 # Minimal aggregate test
 ##########################################################################
+
 
 @pytest.mark.pipeline
 @pytest.mark.stage_A
@@ -470,9 +474,9 @@ def test_pipeline_A_from_csv():
 def test_pipeline_C_minimal(main_graph, book_data):
     """Test running pipeline_C with smoke test data."""
     json_triples = json.loads(book_data["llm_triples_json"])
-    
+
     triples_string = pipeline_C(json_triples)
-    
+
     # Verify triples were inserted
     triples_df = main_graph.get_all_triples()
     assert "subject_id" in triples_df.columns
@@ -494,7 +498,7 @@ def test_pipeline_E_minimal_summary_only(book_data):
     summary = "The children discover a magical carpet with a Phoenix."
     book_title = book_data["book_title"]
     book_id = str(book_data["book_id"])
-    
+
     # TODO: Cannot verify output - need task_40_post_payload implementation
 
     # Test summary-only path (no chunk parameter)
@@ -517,10 +521,10 @@ def test_pipeline_E_minimal_full_payload(book_data):
     gold_summary = "Children find magical carpet."
     bookscore = 0.85
     questeval = 0.92
-    
+
     # TODO: Cannot verify output - need task_40_post_payload implementation
 
     # Test full payload path
     pipeline_E(summary, book_title, book_id, chunk_text, gold_summary, bookscore, questeval)
-    
+
     assert True  # Placeholder - verifies no exceptions raised

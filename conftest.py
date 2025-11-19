@@ -1,8 +1,8 @@
 import pytest
+from src.components.fact_storage import KnowledgeGraph
 from src.connectors.document import DocumentConnector
 from src.connectors.graph import GraphConnector
 from src.connectors.relational import RelationalConnector
-from src.components.fact_storage import KnowledgeGraph
 from src.core.context import get_session, Session
 from src.util import Log
 
@@ -71,5 +71,3 @@ def main_graph(request, graph_db: GraphConnector, session: Session) -> Knowledge
         graph_db.drop_graph(graph_name)
     with graph_db.temp_graph(graph_name):
         yield _main_graph
-
-
