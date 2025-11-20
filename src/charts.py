@@ -12,15 +12,15 @@ class Plot:
         """Plot average elapsed time per function name, averaging across runs.
         @param filename  Where to save the generated chart
         """
-        df = Log.get_timing_summary()  # DataFrame with columns ['name', 'elapsed', 'call_chain', 'run_id']
+        df = Log.get_timing_summary()  # DataFrame with columns ['func_name', 'elapsed', 'call_chain', 'run_id']
         # 1. Average per-run per-function (handles multiple calls in a run)
-        per_run_avg = df.groupby(['run_id', 'name'])['elapsed'].mean().reset_index()
+        per_run_avg = df.groupby(['run_id', 'func_name'])['elapsed'].mean().reset_index()
         
         # 2. Average across all runs
-        overall_avg = per_run_avg.groupby('name')['elapsed'].mean().reset_index()
+        overall_avg = per_run_avg.groupby('func_name')['elapsed'].mean().reset_index()
         
         # 3. Plot
-        sns.barplot(data=overall_avg, x='name', y='elapsed')
+        sns.barplot(data=overall_avg, x='func_name', y='elapsed')
         plt.xticks(rotation=45, ha='right')
         plt.ylabel("Average elapsed time")
         plt.xlabel("Function name")
