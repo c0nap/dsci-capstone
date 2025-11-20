@@ -270,7 +270,9 @@ class KnowledgeGraph:
         """
         pass
 
-    def get_by_ranked_degree(self, best_rank: int = 1, worst_rank: int = -1, enforce_count: bool = False, id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
+    def get_by_ranked_degree(
+        self, best_rank: int = 1, worst_rank: int = -1, enforce_count: bool = False, id_columns: List[str] = ["subject_id", "object_id"]
+    ) -> DataFrame:
         """Return triples associated with nodes whose degree rank lies in the specified range.
         @details
             - Computes degree (edge count) for all nodes.
@@ -296,7 +298,7 @@ class KnowledgeGraph:
             raise Log.Failure(Log.kg, "Failed to compute edge counts.")
         # Sort and assign rank (1 = highest degree)
         edge_df = edge_df.sort_values(["edge_count", "node_id"], ascending=[False, True]).reset_index(drop=True)
-        
+
         if enforce_count:
             # Take exact number of nodes by position, ignoring rank gaps
             start_idx = best_rank - 1  # Convert 1-indexed rank to 0-indexed position
@@ -310,7 +312,7 @@ class KnowledgeGraph:
                 worst_rank = int(edge_df["rank"].max())
             # Filter nodes by rank
             ranked_nodes = edge_df[(edge_df["rank"] >= best_rank) & (edge_df["rank"] <= worst_rank)]
-        
+
         if ranked_nodes.empty:
             return DataFrame(columns=["subject_id", "relation_id", "object_id"])
         node_ids = ranked_nodes["node_id"].tolist()

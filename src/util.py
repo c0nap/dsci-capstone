@@ -2,11 +2,11 @@ from contextlib import contextmanager
 import functools
 import inspect
 from inspect import FrameInfo
-from pandas import DataFrame, Series, read_csv, concat
-import sys
 import os
+from pandas import concat, DataFrame, read_csv, Series
+import sys
 import time
-from typing import Any, Callable, List, Optional, Tuple, Generator
+from typing import Any, Callable, Generator, List, Optional, Tuple
 
 
 class Log:
@@ -332,7 +332,7 @@ class Log:
         df = Log.get_merged_timing()
         df.to_csv(file_path, mode="a", index=False, header=not file_exists)
         Log.time_message(prefix=Log.t_dump, msg=Log.msg_time_dump(file_path))
-    
+
     t_dump = "[DUMP] "
     msg_time_dump = lambda file_path: f"Saved time records to '{file_path}'"
 

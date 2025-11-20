@@ -5,7 +5,7 @@ from src.connectors.graph import GraphConnector
 from src.connectors.relational import RelationalConnector
 from src.core.context import get_session, Session
 from src.util import Log
-from typing import Generator, Any
+from typing import Any, Generator
 
 
 # Command-line flags for pytest

@@ -1,18 +1,13 @@
 from dotenv import load_dotenv
 import os
+import pickle
+from src.charts import Plot
 from src.core import stages
 
 # move to stages
-from src.core.boss import (
-    create_boss_thread,
-    post_chunk_status,
-    post_process_full_story,
-    post_story_status
-)
+from src.core.boss import create_boss_thread, post_chunk_status, post_process_full_story, post_story_status
 from src.util import Log
-from src.charts import Plot
 import time
-import pickle
 
 
 @Log.time
@@ -234,9 +229,8 @@ CHAPTER 12. THE END OF THE END\n
 
     # Write core function timing - Keyboard interrupt doesnt work
     Log.print_timing_summary()
-    Log.dump_timing_csv()   # Eventually updated by callback()
+    Log.dump_timing_csv()  # Eventually updated by callback()
     Plot.time_elapsed_by_names("./logs/avg_runtime.png")
-
 
     # Hand off to Flask - keep main thread alive so daemon thread continues
     print("Initial processing complete. Server listening for additional requests from Blazor...")

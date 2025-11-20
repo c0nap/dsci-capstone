@@ -1,7 +1,7 @@
 import pytest
+from src.components.book_conversion import Chunk
 from src.core.stages import *
 from src.main import pipeline_B, pipeline_D
-from src.components.book_conversion import Chunk
 
 
 @pytest.fixture
