@@ -20,13 +20,15 @@ class Plot:
         overall_avg = per_run_avg.groupby('function')['elapsed'].mean().reset_index()
         
         # 3. Plot
+        title = "Average Function Runtime Across Runs"
         sns.barplot(data=overall_avg, x='function', y='elapsed')
         plt.xticks(rotation=45, ha='right')
         plt.ylabel("Average elapsed time")
         plt.xlabel("Function name")
-        plt.title("Average Function Runtime Across Runs")
+        plt.title(title)
         plt.tight_layout()
         
         # 4. Save the figure
         plt.savefig(filename)
         plt.close()
+        Log.chart(title, filename)

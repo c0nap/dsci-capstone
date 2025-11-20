@@ -29,6 +29,8 @@ class Log:
     BRIGHT = "\033[93m"
     ## ANSI code for light blue
     CYAN = "\033[96m"
+    ## ANSI code for light gray
+    GRAY = "\033[90m"
     ## ANSI code to reset color
     WHITE = "\033[0m"
 
@@ -40,6 +42,8 @@ class Log:
     FAILURE_COLOR = RED
     ## ANSI color applied to the prefix of time-elapsed messages
     TIME_COLOR = CYAN
+    ## ANSI color applied to the prefix of chart generation messages
+    CHART_COLOR = GRAY
     ## ANSI color applied to the body of every Log message
     MSG_COLOR = BRIGHT
 
@@ -146,6 +150,29 @@ class Log:
         print(text)
 
     @staticmethod
+    def chart_message(prefix: str = "[CHART] ", msg: str = "", verbose: bool = True) -> None:
+        """A chart message begins with a gray prefix.
+        @param prefix  The context of the message.
+        @param msg  The message to print.
+        @param verbose  Whether to actually print. Saves space and reduces nested if statements."""
+        if not verbose:
+            return
+        text = f"{Log.CHART_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
+        print(text)
+
+    @staticmethod
+    def chart(title: str, filename: str, verbose: bool = True) -> None:
+        """Print the time taken to complete a function.
+        @param title  The title of the chart.
+        @param filename  Where the chart was saved to.
+        @param verbose  Whether to actually print. Saves space and reduces nested if statements.
+        """
+        msg = Log.msg_chart_saved(name, seconds)
+        Log.chart_message(msg=msg, verbose=verbose)
+
+    msg_chart_saved = lambda title, filename: f"Saved chart '{title}'' to {filename}"
+
+    @staticmethod
     def elapsed_time(name: str, seconds: float, call_chain: str, verbose: bool = True) -> None:
         """Print the time taken to complete a function.
         @param name  The name of the function.
@@ -158,7 +185,7 @@ class Log:
         msg = Log.msg_elapsed_time(name, seconds)
         Log.time_message(msg=msg, verbose=verbose)
 
-    msg_elapsed_time = lambda name, seconds: f"{name} took {seconds:.3f}s{Log.WHITE}"
+    msg_elapsed_time = lambda name, seconds: f"{name} took {seconds:.3f}s"
 
     @staticmethod
     def format_call_chain(stack: List[FrameInfo], name: str) -> str:
