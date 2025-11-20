@@ -12,6 +12,7 @@ from src.core.boss import (
 from src.util import Log
 from src.charts import Plot
 import time
+import pickle
 
 
 @Log.time
@@ -162,14 +163,26 @@ if __name__ == "__main__":
     create_boss_thread(DB_NAME, BOSS_PORT, COLLECTION)
 
     # TODO - PIPELINE HERE
+    load_from_checkpoint = False
+    checkpoint_path = "./datasets/checkpoint.pkl"
+    os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
+
     story_id = 1
     book_id = 2
     book_title = "The Phoenix and the Carpet"
-    post_story_status(BOSS_PORT, story_id, 'preprocessing', 'in-progress')
-    post_story_status(BOSS_PORT, story_id, 'chunking', 'in-progress')
-    chunks = pipeline_A(
-        epub_path="./tests/examples-pipeline/epub/trilogy-wishes-2.epub",
-        book_chapters="""
+
+    if load_from_checkpoint:
+        with open(checkpoint_path, "rb") as f:
+            data = pickle.load(f)
+        triples = data["triples"]
+        chunk = data["chunk"]
+        print(f"Checkpoint loaded from {checkpoint_path}")
+    else:
+        post_story_status(BOSS_PORT, story_id, 'preprocessing', 'in-progress')
+        post_story_status(BOSS_PORT, story_id, 'chunking', 'in-progress')
+        chunks = pipeline_A(
+            epub_path="./tests/examples-pipeline/epub/trilogy-wishes-2.epub",
+            book_chapters="""
 CHAPTER 1. THE EGG\n
 CHAPTER 2. THE TOPLESS TOWER\n
 CHAPTER 3. THE QUEEN COOK\n
@@ -183,15 +196,19 @@ CHAPTER 10. THE HOLE IN THE CARPET\n
 CHAPTER 11. THE BEGINNING OF THE END\n
 CHAPTER 12. THE END OF THE END\n
 """,
-        start_str="",
-        end_str="end of the Phoenix and the Carpet.",
-        book_id=book_id,
-        story_id=story_id,
-    )
-    post_story_status(BOSS_PORT, story_id, 'preprocessing', 'completed')
-    post_story_status(BOSS_PORT, story_id, 'chunking', 'completed')
+            start_str="",
+            end_str="end of the Phoenix and the Carpet.",
+            book_id=book_id,
+            story_id=story_id,
+        )
+        post_story_status(BOSS_PORT, story_id, 'preprocessing', 'completed')
+        post_story_status(BOSS_PORT, story_id, 'chunking', 'completed')
+        triples, chunk = pipeline_B(COLLECTION, chunks, book_title)
 
-    triples, chunk = pipeline_B(COLLECTION, chunks, book_title)
+        with open(checkpoint_path, "wb") as f:
+            pickle.dump({"triples": triples, "chunk": chunk}, f)
+        print(f"Checkpoint saved to {checkpoint_path}")
+
     chunk_id = chunk.get_chunk_id()
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'relation_extraction', 'in-progress')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'llm_inference', 'in-progress')
