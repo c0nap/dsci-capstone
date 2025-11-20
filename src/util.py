@@ -257,13 +257,13 @@ class Log:
             elapsed = time.time() - start  # Data recorded even on failure
             Log.elapsed_time(name, elapsed, call_chain)
 
-    _timing_results: List[Tuple[str, float, str]] = []  # (func_name, elapsed, call_chain)
+    _timing_results: List[Tuple[str, float, str, int]] = []  # (func_name, elapsed, call_chain, run_id)
     run_id: int = 1
 
     @staticmethod
     def get_timing_summary() -> DataFrame:
         """Returns timing results as a pandas DataFrame.
-        @return  DataFrame with columns: function, elapsed, call_chain
+        @return  DataFrame with columns: function, elapsed, call_chain, run_id
         """
         if not Log._timing_results:
             return DataFrame(columns=['function', 'elapsed', 'call_chain', "run_id"])
@@ -276,6 +276,8 @@ class Log:
         @param file_path  Where the saved CSV will be located.
         @return  DataFrame with columns: function, elapsed, call_chain
         """
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
         # Check if file exists to decide whether to write header
         file_exists = os.path.exists(file_path)
 
@@ -284,7 +286,7 @@ class Log:
         Log.time_message(prefix=Log.t_dump, msg=Log.msg_time_dump(file_path))
     
     t_dump = "[DUMP] "
-    msg_time_dump = lambda file_path: f"Save time records to '{file_path}'"
+    msg_time_dump = lambda file_path: f"Saved time records to '{file_path}'"
 
     @staticmethod
     def clear_timing_data():

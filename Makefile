@@ -105,6 +105,12 @@ docker-bookscore:
 
 
 
+docker-copy-logs:
+	mkdir -p ./logs
+	docker cp container-python:/pipeline/logs/elapsed_time.csv ./logs/
+
+
+
 ###############################################################################
 # Starts container detached (no output) so we can continue using shell
 ###############################################################################

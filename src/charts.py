@@ -1,17 +1,18 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from src.util import Log
 
 
 class Plot:
     """Static plotting helpers for visualization."""
 
     @staticmethod
-    def time_elapsed_by_names(df: pd.DataFrame, filename: str) -> None:
+    def time_elapsed_by_names(filename: str = "./logs/avg_runtime.png") -> None:
         """Plot average elapsed time per function name, averaging across runs.
-        @param df  DataFrame with columns ['name', 'elapsed', 'call_chain', 'run_id']
         @param filename  Where to save the generated chart
         """
+        df = Log.get_timing_summary()  # DataFrame with columns ['name', 'elapsed', 'call_chain', 'run_id']
         # 1. Average per-run per-function (handles multiple calls in a run)
         per_run_avg = df.groupby(['run_id', 'name'])['elapsed'].mean().reset_index()
         
