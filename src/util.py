@@ -170,7 +170,7 @@ class Log:
         msg = Log.msg_chart_saved(title, filename)
         Log.chart_message(msg=msg, verbose=verbose)
 
-    msg_chart_saved = lambda title, filename: f"Saved chart '{title}'' to {filename}"
+    msg_chart_saved = lambda title, filename: f"Saved chart '{title}' to {filename}"
 
     @staticmethod
     def elapsed_time(name: str, seconds: float, call_chain: str, verbose: bool = True) -> None:

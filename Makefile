@@ -107,7 +107,7 @@ docker-bookscore:
 
 docker-copy-logs:
 	mkdir -p ./logs
-	docker cp container-python:/pipeline/logs/elapsed_time.csv ./logs/
+	docker cp container-python:/pipeline/logs/ ./logs/
 
 
 
