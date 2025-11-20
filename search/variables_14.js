@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['warning_5fcolor_0',['WARNING_COLOR',['../classsrc_1_1util_1_1Log.html#ad9ee4177b03c0a4ba0c6e9b846c88389',1,'src::util::Log']]],
-  ['white_1',['WHITE',['../classsrc_1_1util_1_1Log.html#a652e2466167c222e4a0c89844c6a2dc2',1,'src::util::Log']]]
+  ['verbose_0',['verbose',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#aa9e289eddb591991c9bc7321dc5b186b',1,'src.components.fact_storage.KnowledgeGraph.verbose'],['../classsrc_1_1connectors_1_1base_1_1DatabaseConnector.html#aa9e289eddb591991c9bc7321dc5b186b',1,'src.connectors.base.DatabaseConnector.verbose'],['../classsrc_1_1connectors_1_1document_1_1DocumentConnector.html#aa9e289eddb591991c9bc7321dc5b186b',1,'src.connectors.document.DocumentConnector.verbose'],['../classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#aa9e289eddb591991c9bc7321dc5b186b',1,'src.connectors.graph.GraphConnector.verbose'],['../classsrc_1_1connectors_1_1relational_1_1RelationalConnector.html#aa9e289eddb591991c9bc7321dc5b186b',1,'src.connectors.relational.RelationalConnector.verbose'],['../classsrc_1_1core_1_1context_1_1Session.html#aa9e289eddb591991c9bc7321dc5b186b',1,'src.core.context.Session.verbose']]]
 ];

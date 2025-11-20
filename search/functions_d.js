@@ -1,6 +1,22 @@
 var searchData=
 [
-  ['relational_5fdb_0',['relational_db',['../namespacetests_1_1conftest.html#a4886d53c9e02639abd88df5cc9c34907',1,'tests::conftest']]],
-  ['run_5fbookscore_1',['run_bookscore',['../namespacesrc_1_1components_1_1metrics.html#a1f749dab162b53d3fab2d5045b38888b',1,'src::components::metrics']]],
-  ['run_5fquesteval_2',['run_questeval',['../namespacesrc_1_1components_1_1metrics.html#a3ce5bfca04e60c127162d875ba4b8068',1,'src::components::metrics']]]
+  ['pipeline_5fa_0',['pipeline_A',['../namespacesrc_1_1main.html#a609a6dd25599a2a4cba2c8a4301a30de',1,'src::main']]],
+  ['pipeline_5fb_1',['pipeline_B',['../namespacesrc_1_1main.html#a700b8a422ce50ee33066c48cea141955',1,'src::main']]],
+  ['pipeline_5fc_2',['pipeline_C',['../namespacesrc_1_1main.html#ae617dcaa515febae405e96034ed27a47',1,'src::main']]],
+  ['pipeline_5fd_3',['pipeline_D',['../namespacesrc_1_1main.html#a4cceb76d94259e542400fa369b11b995',1,'src::main']]],
+  ['pipeline_5fe_4',['pipeline_E',['../namespacesrc_1_1main.html#a2d46043b8b3e7f3c38614c9829120e7d',1,'src::main']]],
+  ['post_5',['Post',['../classBlazorApp_1_1Controllers_1_1MetricsController.html#a92fb89fefb51cfdc31edde0b75f386d1',1,'BlazorApp::Controllers::MetricsController']]],
+  ['post_5fbasic_5fmetrics_6',['post_basic_metrics',['../classsrc_1_1components_1_1metrics_1_1Metrics.html#a64b4ae2f77652884587e069bab267f90',1,'src::components::metrics::Metrics']]],
+  ['post_5fbasic_5foutput_7',['post_basic_output',['../classsrc_1_1components_1_1metrics_1_1Metrics.html#a722e2673072c9cb98126894f347d773f',1,'src::components::metrics::Metrics']]],
+  ['post_5fchunk_5fstatus_8',['post_chunk_status',['../namespacesrc_1_1core_1_1boss.html#a8a3d192f726d047c24046cb5f6fbb72f',1,'src::core::boss']]],
+  ['post_5fpayload_9',['post_payload',['../classsrc_1_1components_1_1metrics_1_1Metrics.html#ad27f1ade00082c6f5458d3f46b5715f9',1,'src::components::metrics::Metrics']]],
+  ['post_5fprocess_5ffull_5fstory_10',['post_process_full_story',['../namespacesrc_1_1core_1_1boss.html#a4199aee8b608575ec6cec4237e6f4e5c',1,'src::core::boss']]],
+  ['post_5fstory_5fstatus_11',['post_story_status',['../namespacesrc_1_1core_1_1boss.html#abf489d90c061b6dc4645e9291093459e',1,'src::core::boss']]],
+  ['pre_5fcompute_5fsegments_12',['pre_compute_segments',['../classsrc_1_1components_1_1book__conversion_1_1ParagraphStreamTEI.html#a7174bd9e0835539d64382b48fe407eeb',1,'src::components::book_conversion::ParagraphStreamTEI']]],
+  ['pre_5fsplit_5fchunks_13',['pre_split_chunks',['../classsrc_1_1components_1_1book__conversion_1_1Story.html#aed521260de22620b54b840100d104dc3',1,'src::components::book_conversion::Story']]],
+  ['print_5fnodes_14',['print_nodes',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#ae52fff4df1a23fc6dd8227fef93886ab',1,'src::components::fact_storage::KnowledgeGraph']]],
+  ['print_5ftiming_5fsummary_15',['print_timing_summary',['../classsrc_1_1util_1_1Log.html#abc5a6071d08605d8fdfc5d8f9c2ae560',1,'src::util::Log']]],
+  ['print_5ftriples_16',['print_triples',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#afaeeb29f0775e789f7294855d827374f',1,'src::components::fact_storage::KnowledgeGraph']]],
+  ['process_5ftask_17',['process_task',['../namespacesrc_1_1core_1_1worker.html#a83598a730e3983fce8a57f43a30c834d',1,'src::core::worker']]],
+  ['pytest_5faddoption_18',['pytest_addoption',['../namespaceconftest.html#aa9644f2adeb861642614c5327b23f3cb',1,'conftest']]]
 ];

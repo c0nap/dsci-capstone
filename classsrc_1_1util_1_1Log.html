@@ -77,6 +77,7 @@ $(function() {
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
+<a href="#pro-static-attribs">Static Protected Attributes</a> &#124;
 <a href="classsrc_1_1util_1_1Log-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">Log Class Reference</div></div>
 </div><!--header-->
@@ -107,27 +108,69 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a6ba2a16243278beecfa67f68061c057c" id="r_a6ba2a16243278beecfa67f68061c057c"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a6ba2a16243278beecfa67f68061c057c">success</a> (str prefix=&quot;PASS&quot;, str msg=&quot;&quot;, bool verbose=True)</td></tr>
-<tr class="memdesc:a6ba2a16243278beecfa67f68061c057c"><td class="mdescLeft">&#160;</td><td class="mdescRight">A success message begins with a green prefix.  <br /></td></tr>
-<tr class="separator:a6ba2a16243278beecfa67f68061c057c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a502d3402a67e2206bf3993b223c48cab" id="r_a502d3402a67e2206bf3993b223c48cab"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a502d3402a67e2206bf3993b223c48cab">warn</a> (str prefix=&quot;PASS&quot;, str msg=&quot;&quot;, bool verbose=True)</td></tr>
-<tr class="memdesc:a502d3402a67e2206bf3993b223c48cab"><td class="mdescLeft">&#160;</td><td class="mdescRight">A warning message begins with a yellow prefix.  <br /></td></tr>
-<tr class="separator:a502d3402a67e2206bf3993b223c48cab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a80854a8419e07ddf1e37489092b8097f" id="r_a80854a8419e07ddf1e37489092b8097f"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a80854a8419e07ddf1e37489092b8097f">fail</a> (str prefix=&quot;ERROR&quot;, str msg=&quot;&quot;, bool raise_error=True, Optional[Exception] other_error=None)</td></tr>
-<tr class="memdesc:a80854a8419e07ddf1e37489092b8097f"><td class="mdescLeft">&#160;</td><td class="mdescRight">A failure message begins with a red prefix.  <br /></td></tr>
-<tr class="separator:a80854a8419e07ddf1e37489092b8097f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa1d0618e0fc4800b28a072a89c4fc46" id="r_afa1d0618e0fc4800b28a072a89c4fc46"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#afa1d0618e0fc4800b28a072a89c4fc46">success</a> (str prefix=&quot;PASS: &quot;, str msg=&quot;&quot;, bool verbose=True)</td></tr>
+<tr class="memdesc:afa1d0618e0fc4800b28a072a89c4fc46"><td class="mdescLeft">&#160;</td><td class="mdescRight">A success message begins with a green prefix.  <br /></td></tr>
+<tr class="separator:afa1d0618e0fc4800b28a072a89c4fc46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf9197c56324ee2a9c1e794d0f0ae5c4" id="r_aaf9197c56324ee2a9c1e794d0f0ae5c4"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#aaf9197c56324ee2a9c1e794d0f0ae5c4">warn</a> (str prefix=&quot;WARN: &quot;, str msg=&quot;&quot;, bool verbose=True)</td></tr>
+<tr class="memdesc:aaf9197c56324ee2a9c1e794d0f0ae5c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">A warning message begins with a yellow prefix.  <br /></td></tr>
+<tr class="separator:aaf9197c56324ee2a9c1e794d0f0ae5c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b7a682a21937a08d6d3ab381e3ea480" id="r_a2b7a682a21937a08d6d3ab381e3ea480"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a2b7a682a21937a08d6d3ab381e3ea480">fail</a> (str prefix=&quot;ERROR: &quot;, str msg=&quot;&quot;, bool raise_error=True, Optional[Exception] other_error=None)</td></tr>
+<tr class="memdesc:a2b7a682a21937a08d6d3ab381e3ea480"><td class="mdescLeft">&#160;</td><td class="mdescRight">A failure message begins with a red prefix.  <br /></td></tr>
+<tr class="separator:a2b7a682a21937a08d6d3ab381e3ea480"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a552911d9a772019b1a64654e119fae79" id="r_a552911d9a772019b1a64654e119fae79"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a552911d9a772019b1a64654e119fae79">success_legacy</a> (str msg=&quot;&quot;)</td></tr>
 <tr class="memdesc:a552911d9a772019b1a64654e119fae79"><td class="mdescLeft">&#160;</td><td class="mdescRight">A legacy success message begins with a Green Plus.  <br /></td></tr>
 <tr class="separator:a552911d9a772019b1a64654e119fae79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a46b60225cbb56d19911e2d54d5003579" id="r_a46b60225cbb56d19911e2d54d5003579"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a46b60225cbb56d19911e2d54d5003579">fail_legacy</a> (str msg=&quot;&quot;)</td></tr>
 <tr class="memdesc:a46b60225cbb56d19911e2d54d5003579"><td class="mdescLeft">&#160;</td><td class="mdescRight">A legacy failure message begins with a Red X.  <br /></td></tr>
 <tr class="separator:a46b60225cbb56d19911e2d54d5003579"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa360f8f800aec634d5864ad88b02884" id="r_afa360f8f800aec634d5864ad88b02884"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#afa360f8f800aec634d5864ad88b02884">time_message</a> (str prefix=&quot;[TIME] &quot;, str msg=&quot;&quot;, bool verbose=True)</td></tr>
+<tr class="memdesc:afa360f8f800aec634d5864ad88b02884"><td class="mdescLeft">&#160;</td><td class="mdescRight">A time message begins with a light blue prefix.  <br /></td></tr>
+<tr class="separator:afa360f8f800aec634d5864ad88b02884"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d0d24993e6f7bbf6c9036b3160969eb" id="r_a3d0d24993e6f7bbf6c9036b3160969eb"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a3d0d24993e6f7bbf6c9036b3160969eb">chart_message</a> (str prefix=&quot;[CHART] &quot;, str msg=&quot;&quot;, bool verbose=True)</td></tr>
+<tr class="memdesc:a3d0d24993e6f7bbf6c9036b3160969eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">A chart message begins with a gray prefix.  <br /></td></tr>
+<tr class="separator:a3d0d24993e6f7bbf6c9036b3160969eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44cfab896fba5059f7d542026790a922" id="r_a44cfab896fba5059f7d542026790a922"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a44cfab896fba5059f7d542026790a922">chart</a> (str title, str filename, bool verbose=True)</td></tr>
+<tr class="memdesc:a44cfab896fba5059f7d542026790a922"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print the time taken to complete a function.  <br /></td></tr>
+<tr class="separator:a44cfab896fba5059f7d542026790a922"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5cc3a8b84f1850515565533d658159ab" id="r_a5cc3a8b84f1850515565533d658159ab"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a5cc3a8b84f1850515565533d658159ab">elapsed_time</a> (str name, float seconds, str call_chain, bool verbose=True)</td></tr>
+<tr class="memdesc:a5cc3a8b84f1850515565533d658159ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print the time taken to complete a function.  <br /></td></tr>
+<tr class="separator:a5cc3a8b84f1850515565533d658159ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11ae931f38fbcaf6d09f6ef86140346e" id="r_a11ae931f38fbcaf6d09f6ef86140346e"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a11ae931f38fbcaf6d09f6ef86140346e">format_call_chain</a> (List[FrameInfo] stack, str name)</td></tr>
+<tr class="memdesc:a11ae931f38fbcaf6d09f6ef86140346e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sanitize and concatenate the full call stack for console output.  <br /></td></tr>
+<tr class="separator:a11ae931f38fbcaf6d09f6ef86140346e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13f0ea9f194f9ca82e1f99dbcc150b58" id="r_a13f0ea9f194f9ca82e1f99dbcc150b58"><td class="memItemLeft" align="right" valign="top">Callable[..., Any]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a13f0ea9f194f9ca82e1f99dbcc150b58">time</a> (Callable[..., Any] func)</td></tr>
+<tr class="memdesc:a13f0ea9f194f9ca82e1f99dbcc150b58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Logs the time elapsed for a function call.  <br /></td></tr>
+<tr class="separator:a13f0ea9f194f9ca82e1f99dbcc150b58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af900a78b0f5ce1fdf81543a52fc44ef5" id="r_af900a78b0f5ce1fdf81543a52fc44ef5"><td class="memItemLeft" align="right" valign="top">Generator[None, None, None]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#af900a78b0f5ce1fdf81543a52fc44ef5">timer</a> (str name=None)</td></tr>
+<tr class="memdesc:af900a78b0f5ce1fdf81543a52fc44ef5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Context manager for recording the execution time of code blocks.  <br /></td></tr>
+<tr class="separator:af900a78b0f5ce1fdf81543a52fc44ef5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accf12a3445579e157f97769e2c7a6c47" id="r_accf12a3445579e157f97769e2c7a6c47"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#accf12a3445579e157f97769e2c7a6c47">get_timing_summary</a> ()</td></tr>
+<tr class="memdesc:accf12a3445579e157f97769e2c7a6c47"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns timing results as a pandas DataFrame.  <br /></td></tr>
+<tr class="separator:accf12a3445579e157f97769e2c7a6c47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aedaa35774e5a881ffff85800bbaa4d4e" id="r_aedaa35774e5a881ffff85800bbaa4d4e"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#aedaa35774e5a881ffff85800bbaa4d4e">get_merged_timing</a> (str file_path=&quot;./logs/elapsed_time.csv&quot;)</td></tr>
+<tr class="memdesc:aedaa35774e5a881ffff85800bbaa4d4e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads the existing file, deletes rows matching this run_id, and adds current data.  <br /></td></tr>
+<tr class="separator:aedaa35774e5a881ffff85800bbaa4d4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab37a60685adc0bc097e35794678566d5" id="r_ab37a60685adc0bc097e35794678566d5"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#ab37a60685adc0bc097e35794678566d5">dump_timing_csv</a> (str file_path=&quot;./logs/elapsed_time.csv&quot;)</td></tr>
+<tr class="memdesc:ab37a60685adc0bc097e35794678566d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Save timing results to a CSV file, appending if it already exists.  <br /></td></tr>
+<tr class="separator:ab37a60685adc0bc097e35794678566d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fcb8ed6baacf903011e8ac24f51a466" id="r_a7fcb8ed6baacf903011e8ac24f51a466"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a7fcb8ed6baacf903011e8ac24f51a466">clear_timing_data</a> ()</td></tr>
+<tr class="memdesc:a7fcb8ed6baacf903011e8ac24f51a466"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clears all recorded timing data.  <br /></td></tr>
+<tr class="separator:a7fcb8ed6baacf903011e8ac24f51a466"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc5a6071d08605d8fdfc5d8f9c2ae560" id="r_abc5a6071d08605d8fdfc5d8f9c2ae560"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#abc5a6071d08605d8fdfc5d8f9c2ae560">print_timing_summary</a> ()</td></tr>
+<tr class="memdesc:abc5a6071d08605d8fdfc5d8f9c2ae560"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prints a formatted timing summary grouped by function.  <br /></td></tr>
+<tr class="separator:abc5a6071d08605d8fdfc5d8f9c2ae560"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:a3efb2f968d772ba5b535182f90d94c2a" id="r_a3efb2f968d772ba5b535182f90d94c2a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a3efb2f968d772ba5b535182f90d94c2a">USE_COLORS</a> = True</td></tr>
 <tr class="memdesc:a3efb2f968d772ba5b535182f90d94c2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable ANSI colors in output.  <br /></td></tr>
 <tr class="separator:a3efb2f968d772ba5b535182f90d94c2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76bdb1955a1b2fdef4ee691bb6a0bb33" id="r_a76bdb1955a1b2fdef4ee691bb6a0bb33"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a76bdb1955a1b2fdef4ee691bb6a0bb33">RECORD_TIME</a> = True</td></tr>
+<tr class="memdesc:a76bdb1955a1b2fdef4ee691bb6a0bb33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable time-logging with the 'Log.time' decorator.  <br /></td></tr>
+<tr class="separator:a76bdb1955a1b2fdef4ee691bb6a0bb33"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c713f752bbcb735929a2faac6a77389" id="r_a3c713f752bbcb735929a2faac6a77389"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a3c713f752bbcb735929a2faac6a77389">FULL_DF</a> = False</td></tr>
+<tr class="memdesc:a3c713f752bbcb735929a2faac6a77389"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print the entire DataFrame to console.  <br /></td></tr>
+<tr class="separator:a3c713f752bbcb735929a2faac6a77389"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50d6704e2a5f43eadb9abdf8a9eb0631" id="r_a50d6704e2a5f43eadb9abdf8a9eb0631"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a50d6704e2a5f43eadb9abdf8a9eb0631">GREEN</a> = &quot;\033[32m&quot;</td></tr>
 <tr class="memdesc:a50d6704e2a5f43eadb9abdf8a9eb0631"><td class="mdescLeft">&#160;</td><td class="mdescRight">ANSI code for green text.  <br /></td></tr>
 <tr class="separator:a50d6704e2a5f43eadb9abdf8a9eb0631"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -140,6 +183,12 @@ Static Public Attributes</h2></td></tr>
 <tr class="memitem:a945cd4bbc249b92cfa41c473a6efaaf6" id="r_a945cd4bbc249b92cfa41c473a6efaaf6"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a945cd4bbc249b92cfa41c473a6efaaf6">BRIGHT</a> = &quot;\033[93m&quot;</td></tr>
 <tr class="memdesc:a945cd4bbc249b92cfa41c473a6efaaf6"><td class="mdescLeft">&#160;</td><td class="mdescRight">ANSI code for bright yellow / cream.  <br /></td></tr>
 <tr class="separator:a945cd4bbc249b92cfa41c473a6efaaf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89ba134048042c3a249ec3b8815f4aa7" id="r_a89ba134048042c3a249ec3b8815f4aa7"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a89ba134048042c3a249ec3b8815f4aa7">CYAN</a> = &quot;\033[96m&quot;</td></tr>
+<tr class="memdesc:a89ba134048042c3a249ec3b8815f4aa7"><td class="mdescLeft">&#160;</td><td class="mdescRight">ANSI code for light blue.  <br /></td></tr>
+<tr class="separator:a89ba134048042c3a249ec3b8815f4aa7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d9e5c5072c2265989c0222d068e219d" id="r_a1d9e5c5072c2265989c0222d068e219d"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a1d9e5c5072c2265989c0222d068e219d">GRAY</a> = &quot;\033[90m&quot;</td></tr>
+<tr class="memdesc:a1d9e5c5072c2265989c0222d068e219d"><td class="mdescLeft">&#160;</td><td class="mdescRight">ANSI code for light gray.  <br /></td></tr>
+<tr class="separator:a1d9e5c5072c2265989c0222d068e219d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a652e2466167c222e4a0c89844c6a2dc2" id="r_a652e2466167c222e4a0c89844c6a2dc2"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a652e2466167c222e4a0c89844c6a2dc2">WHITE</a> = &quot;\033[0m&quot;</td></tr>
 <tr class="memdesc:a652e2466167c222e4a0c89844c6a2dc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">ANSI code to reset color.  <br /></td></tr>
 <tr class="separator:a652e2466167c222e4a0c89844c6a2dc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,12 +201,25 @@ Static Public Attributes</h2></td></tr>
 <tr class="memitem:a0c8e248cbf99af2f531ca327b7ad58a4" id="r_a0c8e248cbf99af2f531ca327b7ad58a4"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a0c8e248cbf99af2f531ca327b7ad58a4">FAILURE_COLOR</a> = <a class="el" href="classsrc_1_1util_1_1Log.html#a8704a46f8fff0fbca493358c7768d0e3">RED</a></td></tr>
 <tr class="memdesc:a0c8e248cbf99af2f531ca327b7ad58a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">ANSI color applied to the prefix of critical fail messages.  <br /></td></tr>
 <tr class="separator:a0c8e248cbf99af2f531ca327b7ad58a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a531630b6673d6a1c183a385ed456bd" id="r_a2a531630b6673d6a1c183a385ed456bd"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a2a531630b6673d6a1c183a385ed456bd">TIME_COLOR</a> = <a class="el" href="classsrc_1_1util_1_1Log.html#a89ba134048042c3a249ec3b8815f4aa7">CYAN</a></td></tr>
+<tr class="memdesc:a2a531630b6673d6a1c183a385ed456bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">ANSI color applied to the prefix of time-elapsed messages.  <br /></td></tr>
+<tr class="separator:a2a531630b6673d6a1c183a385ed456bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad94e998c971750154793580207d739c0" id="r_ad94e998c971750154793580207d739c0"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#ad94e998c971750154793580207d739c0">CHART_COLOR</a> = <a class="el" href="classsrc_1_1util_1_1Log.html#a1d9e5c5072c2265989c0222d068e219d">GRAY</a></td></tr>
+<tr class="memdesc:ad94e998c971750154793580207d739c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">ANSI color applied to the prefix of chart generation messages.  <br /></td></tr>
+<tr class="separator:ad94e998c971750154793580207d739c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad93949ca6338d1e0570c362cd9ddf7ca" id="r_ad93949ca6338d1e0570c362cd9ddf7ca"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#ad93949ca6338d1e0570c362cd9ddf7ca">MSG_COLOR</a> = <a class="el" href="classsrc_1_1util_1_1Log.html#a945cd4bbc249b92cfa41c473a6efaaf6">BRIGHT</a></td></tr>
 <tr class="memdesc:ad93949ca6338d1e0570c362cd9ddf7ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">ANSI color applied to the body of every Log message.  <br /></td></tr>
 <tr class="separator:ad93949ca6338d1e0570c362cd9ddf7ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3c713f752bbcb735929a2faac6a77389" id="r_a3c713f752bbcb735929a2faac6a77389"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a3c713f752bbcb735929a2faac6a77389">FULL_DF</a> = False</td></tr>
-<tr class="memdesc:a3c713f752bbcb735929a2faac6a77389"><td class="mdescLeft">&#160;</td><td class="mdescRight">When printing the results of a query.  <br /></td></tr>
-<tr class="separator:a3c713f752bbcb735929a2faac6a77389"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59e488100d55db60cd390e46a0f25229" id="r_a59e488100d55db60cd390e46a0f25229"><td class="memItemLeft" align="right" valign="top">f&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a59e488100d55db60cd390e46a0f25229">msg_chart_saved</a> = lambda title, filename&quot;Saved <a class="el" href="classsrc_1_1util_1_1Log.html#a44cfab896fba5059f7d542026790a922">chart</a> '{title}' to {filename}&quot;</td></tr>
+<tr class="separator:a59e488100d55db60cd390e46a0f25229"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeec82a56803236751e087de779f92723" id="r_aeec82a56803236751e087de779f92723"><td class="memItemLeft" align="right" valign="top">f&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#aeec82a56803236751e087de779f92723">msg_elapsed_time</a> = lambda name, seconds&quot;{name} took {seconds:.3f}s&quot;</td></tr>
+<tr class="separator:aeec82a56803236751e087de779f92723"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abcbc40e1d6304e85471d426d300c4799" id="r_abcbc40e1d6304e85471d426d300c4799"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#abcbc40e1d6304e85471d426d300c4799">run_id</a> = 1</td></tr>
+<tr class="separator:abcbc40e1d6304e85471d426d300c4799"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90da0fe11c8255c20e317d583d671428" id="r_a90da0fe11c8255c20e317d583d671428"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a90da0fe11c8255c20e317d583d671428">t_dump</a> = &quot;[DUMP] &quot;</td></tr>
+<tr class="separator:a90da0fe11c8255c20e317d583d671428"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0879b98f1299d1d13b1b7fbd63461e92" id="r_a0879b98f1299d1d13b1b7fbd63461e92"><td class="memItemLeft" align="right" valign="top">f&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a0879b98f1299d1d13b1b7fbd63461e92">msg_time_dump</a> = lambda file_path&quot;Saved <a class="el" href="classsrc_1_1util_1_1Log.html#a13f0ea9f194f9ca82e1f99dbcc150b58">time</a> records to '{file_path}'&quot;</td></tr>
+<tr class="separator:a0879b98f1299d1d13b1b7fbd63461e92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a62e0029b3b82db70e1bd9db6351b3de2" id="r_a62e0029b3b82db70e1bd9db6351b3de2"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a62e0029b3b82db70e1bd9db6351b3de2">conn_abc</a> = &quot;BASE CONNECTOR: &quot;</td></tr>
 <tr class="separator:a62e0029b3b82db70e1bd9db6351b3de2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e4bd708677b3fa8dc7ea0acb3c872d5" id="r_a9e4bd708677b3fa8dc7ea0acb3c872d5"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a9e4bd708677b3fa8dc7ea0acb3c872d5">db_conn_abc</a> = &quot;CONNECTOR: &quot;</td></tr>
@@ -280,12 +342,242 @@ Static Public Attributes</h2></td></tr>
 <tr class="separator:a9906de3893a6bfca7123621b5845de5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a493545173d6915e82da48168ae7d53d8" id="r_a493545173d6915e82da48168ae7d53d8"><td class="memItemLeft" align="right" valign="top">f&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a493545173d6915e82da48168ae7d53d8">msg_bad_triples</a> = lambda graph_name&quot;No triples found for graph {graph_name}&quot;</td></tr>
 <tr class="separator:a493545173d6915e82da48168ae7d53d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-static-attribs" name="pro-static-attribs"></a>
+Static Protected Attributes</h2></td></tr>
+<tr class="memitem:a2ee00269d00c03b8daf845497b176b7b" id="r_a2ee00269d00c03b8daf845497b176b7b"><td class="memItemLeft" align="right" valign="top">list&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1util_1_1Log.html#a2ee00269d00c03b8daf845497b176b7b">_timing_results</a> = []</td></tr>
+<tr class="separator:a2ee00269d00c03b8daf845497b176b7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The Log class standardizes console output. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a80854a8419e07ddf1e37489092b8097f" name="a80854a8419e07ddf1e37489092b8097f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a80854a8419e07ddf1e37489092b8097f">&#9670;&#160;</a></span>fail()</h2>
+<a id="a44cfab896fba5059f7d542026790a922" name="a44cfab896fba5059f7d542026790a922"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a44cfab896fba5059f7d542026790a922">&#9670;&#160;</a></span>chart()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> None chart </td>
+          <td>(</td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>title</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>filename</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool &#160;</td>
+          <td class="paramname"><em>verbose</em> = <code>True</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Print the time taken to complete a function. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">title</td><td>The title of the chart. </td></tr>
+    <tr><td class="paramname">filename</td><td>Where the chart was saved to. </td></tr>
+    <tr><td class="paramname">verbose</td><td>Whether to actually print. Saves space and reduces nested if statements. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a3d0d24993e6f7bbf6c9036b3160969eb" name="a3d0d24993e6f7bbf6c9036b3160969eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3d0d24993e6f7bbf6c9036b3160969eb">&#9670;&#160;</a></span>chart_message()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> None chart_message </td>
+          <td>(</td>
+          <td class="paramtype">str &#160;</td>
+          <td class="paramname"><em>prefix</em> = <code>&quot;[CHART]&#160;&quot;</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str &#160;</td>
+          <td class="paramname"><em>msg</em> = <code>&quot;&quot;</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool &#160;</td>
+          <td class="paramname"><em>verbose</em> = <code>True</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>A chart message begins with a gray prefix. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">prefix</td><td>The context of the message. </td></tr>
+    <tr><td class="paramname">msg</td><td>The message to print. </td></tr>
+    <tr><td class="paramname">verbose</td><td>Whether to actually print. Saves space and reduces nested if statements. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a7fcb8ed6baacf903011e8ac24f51a466" name="a7fcb8ed6baacf903011e8ac24f51a466"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7fcb8ed6baacf903011e8ac24f51a466">&#9670;&#160;</a></span>clear_timing_data()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">clear_timing_data </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Clears all recorded timing data. </p>
+
+</div>
+</div>
+<a id="ab37a60685adc0bc097e35794678566d5" name="ab37a60685adc0bc097e35794678566d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab37a60685adc0bc097e35794678566d5">&#9670;&#160;</a></span>dump_timing_csv()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> None dump_timing_csv </td>
+          <td>(</td>
+          <td class="paramtype">str &#160;</td>
+          <td class="paramname"><em>file_path</em> = <code>&quot;./logs/elapsed_time.csv&quot;</code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Save timing results to a CSV file, appending if it already exists. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">file_path</td><td>Where the saved CSV will be located. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>DataFrame with columns: function, elapsed, call_chain </dd></dl>
+
+</div>
+</div>
+<a id="a5cc3a8b84f1850515565533d658159ab" name="a5cc3a8b84f1850515565533d658159ab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5cc3a8b84f1850515565533d658159ab">&#9670;&#160;</a></span>elapsed_time()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> None elapsed_time </td>
+          <td>(</td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>seconds</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>call_chain</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool &#160;</td>
+          <td class="paramname"><em>verbose</em> = <code>True</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Print the time taken to complete a function. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>The name of the function. </td></tr>
+    <tr><td class="paramname">seconds</td><td>The number of seconds (will be rounded to 3 decimals) </td></tr>
+    <tr><td class="paramname">call_chain</td><td>The full stack of function calls (for record-keeping) </td></tr>
+    <tr><td class="paramname">verbose</td><td>Whether to actually print. Saves space and reduces nested if statements. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a2b7a682a21937a08d6d3ab381e3ea480" name="a2b7a682a21937a08d6d3ab381e3ea480"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2b7a682a21937a08d6d3ab381e3ea480">&#9670;&#160;</a></span>fail()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -297,7 +589,7 @@ Static Public Attributes</h2></td></tr>
           <td class="memname"> None fail </td>
           <td>(</td>
           <td class="paramtype">str &#160;</td>
-          <td class="paramname"><em>prefix</em> = <code>&quot;ERROR&quot;</code>, </td>
+          <td class="paramname"><em>prefix</em> = <code>&quot;ERROR:&#160;&quot;</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -383,8 +675,138 @@ Static Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a6ba2a16243278beecfa67f68061c057c" name="a6ba2a16243278beecfa67f68061c057c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6ba2a16243278beecfa67f68061c057c">&#9670;&#160;</a></span>success()</h2>
+<a id="a11ae931f38fbcaf6d09f6ef86140346e" name="a11ae931f38fbcaf6d09f6ef86140346e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a11ae931f38fbcaf6d09f6ef86140346e">&#9670;&#160;</a></span>format_call_chain()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> str format_call_chain </td>
+          <td>(</td>
+          <td class="paramtype">List[FrameInfo]&#160;</td>
+          <td class="paramname"><em>stack</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Sanitize and concatenate the full call stack for console output. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">stack</td><td>The frame stack obtained by inspect.stack(). </td></tr>
+    <tr><td class="paramname">name</td><td>The name of the caller function. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A string representing the full call chain. </dd></dl>
+
+</div>
+</div>
+<a id="aedaa35774e5a881ffff85800bbaa4d4e" name="aedaa35774e5a881ffff85800bbaa4d4e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aedaa35774e5a881ffff85800bbaa4d4e">&#9670;&#160;</a></span>get_merged_timing()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> DataFrame get_merged_timing </td>
+          <td>(</td>
+          <td class="paramtype">str &#160;</td>
+          <td class="paramname"><em>file_path</em> = <code>&quot;./logs/elapsed_time.csv&quot;</code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Reads the existing file, deletes rows matching this run_id, and adds current data. </p>
+<dl class="section return"><dt>Returns</dt><dd>DataFrame with columns: function, elapsed, call_chain, run_id </dd></dl>
+
+</div>
+</div>
+<a id="accf12a3445579e157f97769e2c7a6c47" name="accf12a3445579e157f97769e2c7a6c47"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#accf12a3445579e157f97769e2c7a6c47">&#9670;&#160;</a></span>get_timing_summary()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> DataFrame get_timing_summary </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns timing results as a pandas DataFrame. </p>
+<dl class="section return"><dt>Returns</dt><dd>DataFrame with columns: function, elapsed, call_chain, run_id </dd></dl>
+
+</div>
+</div>
+<a id="abc5a6071d08605d8fdfc5d8f9c2ae560" name="abc5a6071d08605d8fdfc5d8f9c2ae560"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc5a6071d08605d8fdfc5d8f9c2ae560">&#9670;&#160;</a></span>print_timing_summary()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">print_timing_summary </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Prints a formatted timing summary grouped by function. </p>
+
+</div>
+</div>
+<a id="afa1d0618e0fc4800b28a072a89c4fc46" name="afa1d0618e0fc4800b28a072a89c4fc46"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa1d0618e0fc4800b28a072a89c4fc46">&#9670;&#160;</a></span>success()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -396,7 +818,7 @@ Static Public Attributes</h2></td></tr>
           <td class="memname"> None success </td>
           <td>(</td>
           <td class="paramtype">str &#160;</td>
-          <td class="paramname"><em>prefix</em> = <code>&quot;PASS&quot;</code>, </td>
+          <td class="paramname"><em>prefix</em> = <code>&quot;PASS:&#160;&quot;</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -469,8 +891,134 @@ Static Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a502d3402a67e2206bf3993b223c48cab" name="a502d3402a67e2206bf3993b223c48cab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a502d3402a67e2206bf3993b223c48cab">&#9670;&#160;</a></span>warn()</h2>
+<a id="a13f0ea9f194f9ca82e1f99dbcc150b58" name="a13f0ea9f194f9ca82e1f99dbcc150b58"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a13f0ea9f194f9ca82e1f99dbcc150b58">&#9670;&#160;</a></span>time()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> Callable[..., Any] time </td>
+          <td>(</td>
+          <td class="paramtype">Callable[..., Any]&#160;</td>
+          <td class="paramname"><em>func</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Logs the time elapsed for a function call. </p>
+<ul>
+<li>Uses an inner wrapper function to capture *args and **kwargs. <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">func</td><td>The function to wrap. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The wrapped function that logs time and forwards the result. </dd></dl>
+</li>
+</ul>
+
+</div>
+</div>
+<a id="afa360f8f800aec634d5864ad88b02884" name="afa360f8f800aec634d5864ad88b02884"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa360f8f800aec634d5864ad88b02884">&#9670;&#160;</a></span>time_message()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> None time_message </td>
+          <td>(</td>
+          <td class="paramtype">str &#160;</td>
+          <td class="paramname"><em>prefix</em> = <code>&quot;[TIME]&#160;&quot;</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str &#160;</td>
+          <td class="paramname"><em>msg</em> = <code>&quot;&quot;</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool &#160;</td>
+          <td class="paramname"><em>verbose</em> = <code>True</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>A time message begins with a light blue prefix. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">prefix</td><td>The context of the message. </td></tr>
+    <tr><td class="paramname">msg</td><td>The message to print. </td></tr>
+    <tr><td class="paramname">verbose</td><td>Whether to actually print. Saves space and reduces nested if statements. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="af900a78b0f5ce1fdf81543a52fc44ef5" name="af900a78b0f5ce1fdf81543a52fc44ef5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af900a78b0f5ce1fdf81543a52fc44ef5">&#9670;&#160;</a></span>timer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"> Generator[None, None, None] timer </td>
+          <td>(</td>
+          <td class="paramtype">str &#160;</td>
+          <td class="paramname"><em>name</em> = <code>None</code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Context manager for recording the execution time of code blocks. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>Optional name for the timed block. If not provided, uses caller function name. Usage: with Log.timer(): </td></tr>
+  </table>
+  </dd>
+</dl>
+<h1><a class="anchor" id="autotoc_md6"></a>
+your code here</h1>
+
+</div>
+</div>
+<a id="aaf9197c56324ee2a9c1e794d0f0ae5c4" name="aaf9197c56324ee2a9c1e794d0f0ae5c4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaf9197c56324ee2a9c1e794d0f0ae5c4">&#9670;&#160;</a></span>warn()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -482,7 +1030,7 @@ Static Public Attributes</h2></td></tr>
           <td class="memname"> None warn </td>
           <td>(</td>
           <td class="paramtype">str &#160;</td>
-          <td class="paramname"><em>prefix</em> = <code>&quot;PASS&quot;</code>, </td>
+          <td class="paramname"><em>prefix</em> = <code>&quot;WARN:&#160;&quot;</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -522,6 +1070,28 @@ Static Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="a2ee00269d00c03b8daf845497b176b7b" name="a2ee00269d00c03b8daf845497b176b7b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ee00269d00c03b8daf845497b176b7b">&#9670;&#160;</a></span>_timing_results</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">list _timing_results = []</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a58760da226a11895319360e91f4c93f2" name="a58760da226a11895319360e91f4c93f2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a58760da226a11895319360e91f4c93f2">&#9670;&#160;</a></span>bad_addr</h2>
 
@@ -612,6 +1182,30 @@ Static Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="ad94e998c971750154793580207d739c0" name="ad94e998c971750154793580207d739c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad94e998c971750154793580207d739c0">&#9670;&#160;</a></span>CHART_COLOR</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">str CHART_COLOR = <a class="el" href="classsrc_1_1util_1_1Log.html#a1d9e5c5072c2265989c0222d068e219d">GRAY</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>ANSI color applied to the prefix of chart generation messages. </p>
+
+</div>
+</div>
 <a id="a62e0029b3b82db70e1bd9db6351b3de2" name="a62e0029b3b82db70e1bd9db6351b3de2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a62e0029b3b82db70e1bd9db6351b3de2">&#9670;&#160;</a></span>conn_abc</h2>
 
@@ -653,6 +1247,30 @@ Static Public Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a89ba134048042c3a249ec3b8815f4aa7" name="a89ba134048042c3a249ec3b8815f4aa7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89ba134048042c3a249ec3b8815f4aa7">&#9670;&#160;</a></span>CYAN</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">str CYAN = &quot;\033[96m&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>ANSI code for light blue. </p>
 
 </div>
 </div>
@@ -810,7 +1428,7 @@ Static Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>When printing the results of a query. </p>
+<p>Print the entire DataFrame to console. </p>
 
 </div>
 </div>
@@ -921,6 +1539,30 @@ Static Public Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1d9e5c5072c2265989c0222d068e219d" name="a1d9e5c5072c2265989c0222d068e219d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d9e5c5072c2265989c0222d068e219d">&#9670;&#160;</a></span>GRAY</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">str GRAY = &quot;\033[90m&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>ANSI code for light gray. </p>
 
 </div>
 </div>
@@ -1168,6 +1810,28 @@ Static Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a59e488100d55db60cd390e46a0f25229" name="a59e488100d55db60cd390e46a0f25229"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59e488100d55db60cd390e46a0f25229">&#9670;&#160;</a></span>msg_chart_saved</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">f msg_chart_saved = lambda title, filename&quot;Saved <a class="el" href="classsrc_1_1util_1_1Log.html#a44cfab896fba5059f7d542026790a922">chart</a> '{title}' to {filename}&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ad93949ca6338d1e0570c362cd9ddf7ca" name="ad93949ca6338d1e0570c362cd9ddf7ca"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad93949ca6338d1e0570c362cd9ddf7ca">&#9670;&#160;</a></span>MSG_COLOR</h2>
 
@@ -1291,6 +1955,28 @@ Static Public Attributes</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">f msg_db_not_found = lambda database_name, connection_string&quot;Could not find database '{database_name}' using connection '{connection_string}'&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aeec82a56803236751e087de779f92723" name="aeec82a56803236751e087de779f92723"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeec82a56803236751e087de779f92723">&#9670;&#160;</a></span>msg_elapsed_time</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">f msg_elapsed_time = lambda name, seconds&quot;{name} took {seconds:.3f}s&quot;</td>
         </tr>
       </table>
   </td>
@@ -1719,6 +2405,28 @@ Static Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a0879b98f1299d1d13b1b7fbd63461e92" name="a0879b98f1299d1d13b1b7fbd63461e92"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0879b98f1299d1d13b1b7fbd63461e92">&#9670;&#160;</a></span>msg_time_dump</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">f msg_time_dump = lambda file_path&quot;Saved <a class="el" href="classsrc_1_1util_1_1Log.html#a13f0ea9f194f9ca82e1f99dbcc150b58">time</a> records to '{file_path}'&quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a170f74571041349381da371dcaa2f325" name="a170f74571041349381da371dcaa2f325"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a170f74571041349381da371dcaa2f325">&#9670;&#160;</a></span>msg_unknown_error</h2>
 
@@ -1760,6 +2468,30 @@ Static Public Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a76bdb1955a1b2fdef4ee691bb6a0bb33" name="a76bdb1955a1b2fdef4ee691bb6a0bb33"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a76bdb1955a1b2fdef4ee691bb6a0bb33">&#9670;&#160;</a></span>RECORD_TIME</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool RECORD_TIME = True</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Enable time-logging with the 'Log.time' decorator. </p>
 
 </div>
 </div>
@@ -1820,6 +2552,28 @@ Static Public Attributes</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">str run_f = &quot;FILE EXEC: &quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="abcbc40e1d6304e85471d426d300c4799" name="abcbc40e1d6304e85471d426d300c4799"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abcbc40e1d6304e85471d426d300c4799">&#9670;&#160;</a></span>run_id</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int run_id = 1</td>
         </tr>
       </table>
   </td>
@@ -1943,6 +2697,28 @@ Static Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a90da0fe11c8255c20e317d583d671428" name="a90da0fe11c8255c20e317d583d671428"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a90da0fe11c8255c20e317d583d671428">&#9670;&#160;</a></span>t_dump</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">str t_dump = &quot;[DUMP] &quot;</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a056a01b055b084bc139d03ee0c6c873b" name="a056a01b055b084bc139d03ee0c6c873b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a056a01b055b084bc139d03ee0c6c873b">&#9670;&#160;</a></span>test_basic</h2>
 
@@ -2050,6 +2826,30 @@ Static Public Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a2a531630b6673d6a1c183a385ed456bd" name="a2a531630b6673d6a1c183a385ed456bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a531630b6673d6a1c183a385ed456bd">&#9670;&#160;</a></span>TIME_COLOR</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">str TIME_COLOR = <a class="el" href="classsrc_1_1util_1_1Log.html#a89ba134048042c3a249ec3b8815f4aa7">CYAN</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>ANSI color applied to the prefix of time-elapsed messages. </p>
 
 </div>
 </div>

@@ -152,6 +152,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:adbcd1de5a4df0cd0b68d2ab76c102482" id="r_adbcd1de5a4df0cd0b68d2ab76c102482"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#adbcd1de5a4df0cd0b68d2ab76c102482">database_exists</a> (self, str <a class="el" href="classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#aaa0ffd8cdad125c22be209e5cce9ee9c">database_name</a>)</td></tr>
 <tr class="memdesc:adbcd1de5a4df0cd0b68d2ab76c102482"><td class="mdescLeft">&#160;</td><td class="mdescRight">Search for an existing database using the provided name.  <br /></td></tr>
 <tr class="separator:adbcd1de5a4df0cd0b68d2ab76c102482"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3c5f430ba58922494cc7b22d0c7cb46" id="r_af3c5f430ba58922494cc7b22d0c7cb46"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#af3c5f430ba58922494cc7b22d0c7cb46">graph_exists</a> (self, str graph_name)</td></tr>
+<tr class="memdesc:af3c5f430ba58922494cc7b22d0c7cb46"><td class="mdescLeft">&#160;</td><td class="mdescRight">Search for an existing graph using the provided name.  <br /></td></tr>
+<tr class="separator:af3c5f430ba58922494cc7b22d0c7cb46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3798244ec02f8e5099d38652f4df960d" id="r_a3798244ec02f8e5099d38652f4df960d"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#a3798244ec02f8e5099d38652f4df960d">delete_dummy</a> (self)</td></tr>
 <tr class="memdesc:a3798244ec02f8e5099d38652f4df960d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Delete the initial dummy node from the database.  <br /></td></tr>
 <tr class="separator:a3798244ec02f8e5099d38652f4df960d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -935,6 +938,43 @@ Protected Attributes</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="af3c5f430ba58922494cc7b22d0c7cb46" name="af3c5f430ba58922494cc7b22d0c7cb46"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af3c5f430ba58922494cc7b22d0c7cb46">&#9670;&#160;</a></span>graph_exists()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> bool graph_exists </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>graph_name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Search for an existing graph using the provided name. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">graph_name</td><td>The name of a graph to search for. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Whether the graph is visible to this connector. </dd></dl>
 
 </div>
 </div>

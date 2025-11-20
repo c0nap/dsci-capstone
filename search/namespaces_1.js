@@ -1,22 +1,4 @@
 var searchData=
 [
-  ['src_0',['src',['../namespacesrc.html',1,'']]],
-  ['src_3a_3acomponents_1',['components',['../namespacesrc_1_1components.html',1,'src']]],
-  ['src_3a_3acomponents_3a_3abook_5fconversion_2',['book_conversion',['../namespacesrc_1_1components_1_1book__conversion.html',1,'src::components']]],
-  ['src_3a_3acomponents_3a_3acorpus_3',['corpus',['../namespacesrc_1_1components_1_1corpus.html',1,'src::components']]],
-  ['src_3a_3acomponents_3a_3afact_5fstorage_4',['fact_storage',['../namespacesrc_1_1components_1_1fact__storage.html',1,'src::components']]],
-  ['src_3a_3acomponents_3a_3ametrics_5',['metrics',['../namespacesrc_1_1components_1_1metrics.html',1,'src::components']]],
-  ['src_3a_3acomponents_3a_3arelation_5fextraction_6',['relation_extraction',['../namespacesrc_1_1components_1_1relation__extraction.html',1,'src::components']]],
-  ['src_3a_3aconnectors_7',['connectors',['../namespacesrc_1_1connectors.html',1,'src']]],
-  ['src_3a_3aconnectors_3a_3abase_8',['base',['../namespacesrc_1_1connectors_1_1base.html',1,'src::connectors']]],
-  ['src_3a_3aconnectors_3a_3adocument_9',['document',['../namespacesrc_1_1connectors_1_1document.html',1,'src::connectors']]],
-  ['src_3a_3aconnectors_3a_3agraph_10',['graph',['../namespacesrc_1_1connectors_1_1graph.html',1,'src::connectors']]],
-  ['src_3a_3aconnectors_3a_3allm_11',['llm',['../namespacesrc_1_1connectors_1_1llm.html',1,'src::connectors']]],
-  ['src_3a_3aconnectors_3a_3arelational_12',['relational',['../namespacesrc_1_1connectors_1_1relational.html',1,'src::connectors']]],
-  ['src_3a_3acore_13',['core',['../namespacesrc_1_1core.html',1,'src']]],
-  ['src_3a_3acore_3a_3aboss_14',['boss',['../namespacesrc_1_1core_1_1boss.html',1,'src::core']]],
-  ['src_3a_3acore_3a_3acontext_15',['context',['../namespacesrc_1_1core_1_1context.html',1,'src::core']]],
-  ['src_3a_3acore_3a_3aworker_16',['worker',['../namespacesrc_1_1core_1_1worker.html',1,'src::core']]],
-  ['src_3a_3amain_17',['main',['../namespacesrc_1_1main.html',1,'src']]],
-  ['src_3a_3autil_18',['util',['../namespacesrc_1_1util.html',1,'src']]]
+  ['conftest_0',['conftest',['../namespaceconftest.html',1,'']]]
 ];

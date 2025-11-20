@@ -1,9 +1,9 @@
 var searchData=
 [
-  ['fail_0',['fail',['../classsrc_1_1util_1_1Log.html#a80854a8419e07ddf1e37489092b8097f',1,'src::util::Log']]],
-  ['fail_5flegacy_1',['fail_legacy',['../classsrc_1_1util_1_1Log.html#a46b60225cbb56d19911e2d54d5003579',1,'src::util::Log']]],
-  ['find_5felement_5fnames_2',['find_element_names',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#aae2909a1535b6fa95c080c61bd6563ac',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['from_5fenv_3',['from_env',['../classsrc_1_1connectors_1_1relational_1_1RelationalConnector.html#a2562c919f6a23af071c95fc3353981ba',1,'src::connectors::relational::RelationalConnector']]],
-  ['full_5fpipeline_4',['full_pipeline',['../namespacesrc_1_1main.html#af48b0f82dc08ec4cf26dcbf5e406a1ed',1,'src::main']]],
-  ['fuzzy_5fmerge_5ftitles_5',['fuzzy_merge_titles',['../namespacesrc_1_1components_1_1corpus.html#ac657a976cc7207be75f1a9b04307cf4d',1,'src::components::corpus']]]
+  ['elapsed_5ftime_0',['elapsed_time',['../classsrc_1_1util_1_1Log.html#a5cc3a8b84f1850515565533d658159ab',1,'src::util::Log']]],
+  ['execute_5fcombined_1',['execute_combined',['../classsrc_1_1connectors_1_1base_1_1DatabaseConnector.html#a29c81ee9e9cdaa18fc2cc559fcf001b8',1,'src::connectors::base::DatabaseConnector']]],
+  ['execute_5ffile_2',['execute_file',['../classsrc_1_1connectors_1_1base_1_1Connector.html#a88807ddf666a9030c93c663b271c7ebb',1,'src.connectors.base.Connector.execute_file()'],['../classsrc_1_1connectors_1_1base_1_1DatabaseConnector.html#a88807ddf666a9030c93c663b271c7ebb',1,'src.connectors.base.DatabaseConnector.execute_file()'],['../classsrc_1_1connectors_1_1llm_1_1LLMConnector.html#a9c2165f9b42bcf48b8003371ba5134f8',1,'src.connectors.llm.LLMConnector.execute_file(self, str filename)']]],
+  ['execute_5ffull_5fquery_3',['execute_full_query',['../classsrc_1_1connectors_1_1llm_1_1LLMConnector.html#abbafff005fa747f14dc920184d259e9d',1,'src::connectors::llm::LLMConnector']]],
+  ['execute_5fquery_4',['execute_query',['../classsrc_1_1connectors_1_1base_1_1Connector.html#a9127708042e94d148b6d71f0b1a5418f',1,'src.connectors.base.Connector.execute_query()'],['../classsrc_1_1connectors_1_1base_1_1DatabaseConnector.html#a9127708042e94d148b6d71f0b1a5418f',1,'src.connectors.base.DatabaseConnector.execute_query()'],['../classsrc_1_1connectors_1_1document_1_1DocumentConnector.html#a9127708042e94d148b6d71f0b1a5418f',1,'src.connectors.document.DocumentConnector.execute_query()'],['../classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#ad6f718c839ea5b768868ff669b3c7262',1,'src.connectors.graph.GraphConnector.execute_query()'],['../classsrc_1_1connectors_1_1llm_1_1LLMConnector.html#aeb8c458ce18aefb4edc79be9bdb2adc1',1,'src.connectors.llm.LLMConnector.execute_query()'],['../classsrc_1_1connectors_1_1relational_1_1RelationalConnector.html#a9127708042e94d148b6d71f0b1a5418f',1,'src.connectors.relational.RelationalConnector.execute_query()']]],
+  ['extract_5',['extract',['../classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#a2bd9686e06005b3a014ad55460a116e6',1,'src::components::relation_extraction::RelationExtractor']]]
 ];

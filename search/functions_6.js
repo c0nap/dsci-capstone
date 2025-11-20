@@ -1,26 +1,10 @@
 var searchData=
 [
-  ['generate_5fdefault_5fmetrics_0',['generate_default_metrics',['../classsrc_1_1components_1_1metrics_1_1Metrics.html#a2266c9148b57f212649370b23258d695',1,'src::components::metrics::Metrics']]],
-  ['generate_5fexample_5fmetrics_1',['generate_example_metrics',['../classsrc_1_1components_1_1metrics_1_1Metrics.html#ab147a2386273db5eb1e0a5291cc918b6',1,'src::components::metrics::Metrics']]],
-  ['get_5fall_5ftriples_2',['get_all_triples',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#ad7705e1a657e9b8a8b5308bbe2aeea10',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['get_5fchunk_5fid_3',['get_chunk_id',['../classsrc_1_1components_1_1book__conversion_1_1Chunk.html#aae2bb866efe9f800fe7398360ed0db23',1,'src::components::book_conversion::Chunk']]],
-  ['get_5fcommunity_5fsubgraph_4',['get_community_subgraph',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a30b242830f1f919101712dbc323883d3',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['get_5fdataframe_5',['get_dataframe',['../classsrc_1_1connectors_1_1base_1_1DatabaseConnector.html#a218b884478643cc6caa05b9a5b336962',1,'src.connectors.base.DatabaseConnector.get_dataframe()'],['../classsrc_1_1connectors_1_1document_1_1DocumentConnector.html#a218b884478643cc6caa05b9a5b336962',1,'src.connectors.document.DocumentConnector.get_dataframe()'],['../classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#a218b884478643cc6caa05b9a5b336962',1,'src.connectors.graph.GraphConnector.get_dataframe()'],['../classsrc_1_1connectors_1_1relational_1_1RelationalConnector.html#a218b884478643cc6caa05b9a5b336962',1,'src.connectors.relational.RelationalConnector.get_dataframe()']]],
-  ['get_5fedge_5fcounts_6',['get_edge_counts',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a6dce8a16fdd5290fbb52fb299a4d6e07',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['get_5fneighborhood_7',['get_neighborhood',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a67b9c912d943f7d0b14552037995ebb9',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['get_5fnode_5fcontext_8',['get_node_context',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a08f4e78f4b5d6e7b24d0aa6154b19b22',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['get_5frandom_5fwalk_5fsample_9',['get_random_walk_sample',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a22e96793f24c38821b74199b53808c70',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['get_5frelation_5fsummary_10',['get_relation_summary',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#aeb98c51cb5385159bccd45daf995c9b2',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['get_5fsession_11',['get_session',['../namespacesrc_1_1core_1_1context.html#ae75f758f81e8c161c30af624e4c4a806',1,'src::core::context']]],
-  ['get_5fsubgraph_5fby_5fnodes_12',['get_subgraph_by_nodes',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a46ebf0ec70200ca70a4be35f4031dd7f',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['get_5fsummary_5fstats_13',['get_summary_stats',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#aa8cc38e8bb7023c13d2eed9eef236ee1',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['get_5ftask_5finfo_14',['get_task_info',['../namespacesrc_1_1core_1_1worker.html#ad1262cd955370afd5a474a5f1d6c1647',1,'src::core::worker']]],
-  ['get_5ftriple_5fproperties_15',['get_triple_properties',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a1f79caa60e52030861a5351b527425e7',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['get_5funique_16',['get_unique',['../classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#a501693a7bc060cfe87ad3e1bacdc753a',1,'src::connectors::graph::GraphConnector']]],
-  ['get_5funmanaged_5fhandle_17',['get_unmanaged_handle',['../classsrc_1_1connectors_1_1document_1_1DocumentConnector.html#a34b9616853851a130783f84720358ae5',1,'src::connectors::document::DocumentConnector']]],
-  ['getall_18',['GetAll',['../classBlazorApp_1_1Controllers_1_1MetricsController.html#a69a72678ffa13e14adb0ca3fe73a24c5',1,'BlazorApp::Controllers::MetricsController']]],
-  ['getdefault_19',['GetDefault',['../classBlazorApp_1_1Models_1_1SummaryMetrics.html#a7134edf500dd6bd6c2e27cfca80836e1',1,'BlazorApp::Models::SummaryMetrics']]],
-  ['getindex_20',['GetIndex',['../classBlazorApp_1_1Controllers_1_1MetricsController.html#a173681be77c5cdaef7727cd15acec369',1,'BlazorApp::Controllers::MetricsController']]],
-  ['graph_5fdb_21',['graph_db',['../namespacetests_1_1conftest.html#a69c6bdb5233b0ced1d6a999e73ef4864',1,'tests::conftest']]],
-  ['graph_5ftriple_5ffiles_22',['graph_triple_files',['../namespacesrc_1_1main.html#a9f66810d9f2dbbcffa9be20907860046',1,'src::main']]]
+  ['fail_0',['fail',['../classsrc_1_1util_1_1Log.html#a2b7a682a21937a08d6d3ab381e3ea480',1,'src::util::Log']]],
+  ['fail_5flegacy_1',['fail_legacy',['../classsrc_1_1util_1_1Log.html#a46b60225cbb56d19911e2d54d5003579',1,'src::util::Log']]],
+  ['find_5felement_5fnames_2',['find_element_names',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#aae2909a1535b6fa95c080c61bd6563ac',1,'src::components::fact_storage::KnowledgeGraph']]],
+  ['format_5fcall_5fchain_3',['format_call_chain',['../classsrc_1_1util_1_1Log.html#a11ae931f38fbcaf6d09f6ef86140346e',1,'src::util::Log']]],
+  ['from_5fenv_4',['from_env',['../classsrc_1_1connectors_1_1relational_1_1RelationalConnector.html#a2562c919f6a23af071c95fc3353981ba',1,'src::connectors::relational::RelationalConnector']]],
+  ['full_5fpipeline_5',['full_pipeline',['../namespacesrc_1_1main.html#af48b0f82dc08ec4cf26dcbf5e406a1ed',1,'src::main']]],
+  ['fuzzy_5fmerge_5ftitles_6',['fuzzy_merge_titles',['../namespacesrc_1_1components_1_1corpus.html#ac657a976cc7207be75f1a9b04307cf4d',1,'src::components::corpus']]]
 ];

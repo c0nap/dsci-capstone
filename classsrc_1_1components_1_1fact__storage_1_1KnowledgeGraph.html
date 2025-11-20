@@ -76,6 +76,7 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">KnowledgeGraph Class Reference</div></div>
 </div><!--header-->
@@ -91,6 +92,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a93a10363f73125f2d34d71a3b879754e" id="r_a93a10363f73125f2d34d71a3b879754e"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a93a10363f73125f2d34d71a3b879754e">add_triple</a> (self, str subject, str relation, str object_)</td></tr>
 <tr class="memdesc:a93a10363f73125f2d34d71a3b879754e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a semantic triple to the graph using raw Cypher.  <br /></td></tr>
 <tr class="separator:a93a10363f73125f2d34d71a3b879754e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac390d6edcd3b657fedbfbb8636a0a6b4" id="r_ac390d6edcd3b657fedbfbb8636a0a6b4"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#ac390d6edcd3b657fedbfbb8636a0a6b4">add_triples_json</a> (self, List[<a class="el" href="classsrc_1_1components_1_1fact__storage_1_1Triple.html">Triple</a>] triples_json)</td></tr>
+<tr class="memdesc:ac390d6edcd3b657fedbfbb8636a0a6b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add several semantic triples to the graph from pre-verified JSON.  <br /></td></tr>
+<tr class="separator:ac390d6edcd3b657fedbfbb8636a0a6b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7705e1a657e9b8a8b5308bbe2aeea10" id="r_ad7705e1a657e9b8a8b5308bbe2aeea10"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#ad7705e1a657e9b8a8b5308bbe2aeea10">get_all_triples</a> (self)</td></tr>
 <tr class="memdesc:ad7705e1a657e9b8a8b5308bbe2aeea10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return all triples in the specified graph as a pandas DataFrame.  <br /></td></tr>
 <tr class="separator:ad7705e1a657e9b8a8b5308bbe2aeea10"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -103,12 +107,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aae2909a1535b6fa95c080c61bd6563ac" id="r_aae2909a1535b6fa95c080c61bd6563ac"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#aae2909a1535b6fa95c080c61bd6563ac">find_element_names</a> (self, DataFrame df_ids, List[str] name_columns, List[str] id_columns, str element_type, str name_property, bool drop_ids=False, Optional[DataFrame] df_lookup=None)</td></tr>
 <tr class="memdesc:aae2909a1535b6fa95c080c61bd6563ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper function which maps element IDs to human-readable names.  <br /></td></tr>
 <tr class="separator:aae2909a1535b6fa95c080c61bd6563ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a46ebf0ec70200ca70a4be35f4031dd7f" id="r_a46ebf0ec70200ca70a4be35f4031dd7f"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a46ebf0ec70200ca70a4be35f4031dd7f">get_subgraph_by_nodes</a> (self, List[str] node_ids)</td></tr>
-<tr class="memdesc:a46ebf0ec70200ca70a4be35f4031dd7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return all triples where subject or object is in the specified node list.  <br /></td></tr>
-<tr class="separator:a46ebf0ec70200ca70a4be35f4031dd7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e9f405ab957ca79877d799afeb0d7af" id="r_a1e9f405ab957ca79877d799afeb0d7af"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a1e9f405ab957ca79877d799afeb0d7af">get_subgraph_by_nodes</a> (self, List[str] node_ids, List[str] id_columns=[&quot;subject_id&quot;, &quot;object_id&quot;])</td></tr>
+<tr class="memdesc:a1e9f405ab957ca79877d799afeb0d7af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return all triples where subject or object is in the specified node list.  <br /></td></tr>
+<tr class="separator:a1e9f405ab957ca79877d799afeb0d7af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67b9c912d943f7d0b14552037995ebb9" id="r_a67b9c912d943f7d0b14552037995ebb9"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a67b9c912d943f7d0b14552037995ebb9">get_neighborhood</a> (self, str node_id, int depth=1)</td></tr>
 <tr class="memdesc:a67b9c912d943f7d0b14552037995ebb9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get k-hop neighborhood around a central node.  <br /></td></tr>
 <tr class="separator:a67b9c912d943f7d0b14552037995ebb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6017e7e49204e9fa7b9f159efb9bf9e9" id="r_a6017e7e49204e9fa7b9f159efb9bf9e9"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a6017e7e49204e9fa7b9f159efb9bf9e9">get_degree_range</a> (self, int min_degree=1, int max_degree=-1, List[str] id_columns=[&quot;subject_id&quot;, &quot;object_id&quot;])</td></tr>
+<tr class="memdesc:a6017e7e49204e9fa7b9f159efb9bf9e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return triples associated with nodes whose degree lies within the specified bounds.  <br /></td></tr>
+<tr class="separator:a6017e7e49204e9fa7b9f159efb9bf9e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adecacf34639ce7b7fe5ad4f5fcb93269" id="r_adecacf34639ce7b7fe5ad4f5fcb93269"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#adecacf34639ce7b7fe5ad4f5fcb93269">get_by_ranked_degree</a> (self, int best_rank=1, int worst_rank=-1, bool enforce_count=False, List[str] id_columns=[&quot;subject_id&quot;, &quot;object_id&quot;])</td></tr>
+<tr class="memdesc:adecacf34639ce7b7fe5ad4f5fcb93269"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return triples associated with nodes whose degree rank lies in the specified range.  <br /></td></tr>
+<tr class="separator:adecacf34639ce7b7fe5ad4f5fcb93269"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a22e96793f24c38821b74199b53808c70" id="r_a22e96793f24c38821b74199b53808c70"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a22e96793f24c38821b74199b53808c70">get_random_walk_sample</a> (self, List[str] start_nodes, int walk_length, int num_walks=1)</td></tr>
 <tr class="memdesc:a22e96793f24c38821b74199b53808c70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sample subgraph using directed random walk traversal starting from specified nodes.  <br /></td></tr>
 <tr class="separator:a22e96793f24c38821b74199b53808c70"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -118,9 +128,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:adfa54a93709788560fc63a7a2850221b" id="r_adfa54a93709788560fc63a7a2850221b"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#adfa54a93709788560fc63a7a2850221b">detect_community_clusters</a> (self, str method=&quot;leiden&quot;, bool multi_level=False, int max_levels=10)</td></tr>
 <tr class="memdesc:adfa54a93709788560fc63a7a2850221b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run community detection on the graph as described by the GraphRAG paper.  <br /></td></tr>
 <tr class="separator:adfa54a93709788560fc63a7a2850221b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e214896870852fea1913ed2169c09a1" id="r_a4e214896870852fea1913ed2169c09a1"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a4e214896870852fea1913ed2169c09a1">to_triple_string</a> (self, Optional[DataFrame] triples_df=None, str format=&quot;natural&quot;)</td></tr>
-<tr class="memdesc:a4e214896870852fea1913ed2169c09a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert triples to string representation in various formats.  <br /></td></tr>
-<tr class="separator:a4e214896870852fea1913ed2169c09a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb18547c7d0e8f6e7cff15f0e50572ed" id="r_abb18547c7d0e8f6e7cff15f0e50572ed"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#abb18547c7d0e8f6e7cff15f0e50572ed">to_triples_string</a> (self, Optional[DataFrame] triple_names_df=None, str mode=&quot;triple&quot;)</td></tr>
+<tr class="memdesc:abb18547c7d0e8f6e7cff15f0e50572ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert triples to string representation in various formats.  <br /></td></tr>
+<tr class="separator:abb18547c7d0e8f6e7cff15f0e50572ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a612295bda572cc7983bea05bb52d1c6a" id="r_a612295bda572cc7983bea05bb52d1c6a"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a612295bda572cc7983bea05bb52d1c6a">to_contextualized_string</a> (self, Optional[List[str]] focus_nodes=None, int top_n=5)</td></tr>
 <tr class="memdesc:a612295bda572cc7983bea05bb52d1c6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert triples to contextualized string grouped by focus nodes.  <br /></td></tr>
 <tr class="separator:a612295bda572cc7983bea05bb52d1c6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -130,9 +140,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa8cc38e8bb7023c13d2eed9eef236ee1" id="r_aa8cc38e8bb7023c13d2eed9eef236ee1"><td class="memItemLeft" align="right" valign="top">Dict[str, Any]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#aa8cc38e8bb7023c13d2eed9eef236ee1">get_summary_stats</a> (self)</td></tr>
 <tr class="memdesc:aa8cc38e8bb7023c13d2eed9eef236ee1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return summary statistics about the graph structure.  <br /></td></tr>
 <tr class="separator:aa8cc38e8bb7023c13d2eed9eef236ee1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6dce8a16fdd5290fbb52fb299a4d6e07" id="r_a6dce8a16fdd5290fbb52fb299a4d6e07"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a6dce8a16fdd5290fbb52fb299a4d6e07">get_edge_counts</a> (self, int top_n=10)</td></tr>
-<tr class="memdesc:a6dce8a16fdd5290fbb52fb299a4d6e07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return node names and their edge counts, ordered by edge count descending.  <br /></td></tr>
-<tr class="separator:a6dce8a16fdd5290fbb52fb299a4d6e07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf8381f0af93961cb63f8cab680ef9ce" id="r_adf8381f0af93961cb63f8cab680ef9ce"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#adf8381f0af93961cb63f8cab680ef9ce">get_edge_counts</a> (self, int top_n=-1)</td></tr>
+<tr class="memdesc:adf8381f0af93961cb63f8cab680ef9ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return node names and their edge counts, ordered by edge count descending.  <br /></td></tr>
+<tr class="separator:adf8381f0af93961cb63f8cab680ef9ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08f4e78f4b5d6e7b24d0aa6154b19b22" id="r_a08f4e78f4b5d6e7b24d0aa6154b19b22"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a08f4e78f4b5d6e7b24d0aa6154b19b22">get_node_context</a> (self, str node_id, bool include_neighbors=True)</td></tr>
 <tr class="memdesc:a08f4e78f4b5d6e7b24d0aa6154b19b22"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return natural language description of a node and its relationships.  <br /></td></tr>
 <tr class="separator:a08f4e78f4b5d6e7b24d0aa6154b19b22"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -157,6 +167,12 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:aa9e289eddb591991c9bc7321dc5b186b" id="r_aa9e289eddb591991c9bc7321dc5b186b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#aa9e289eddb591991c9bc7321dc5b186b">verbose</a></td></tr>
 <tr class="memdesc:aa9e289eddb591991c9bc7321dc5b186b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether to print debug messages.  <br /></td></tr>
 <tr class="separator:aa9e289eddb591991c9bc7321dc5b186b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
+<tr class="memitem:abb54c42d92ac574fd6dd15125c18907a" id="r_abb54c42d92ac574fd6dd15125c18907a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#abb54c42d92ac574fd6dd15125c18907a">_first_insert</a></td></tr>
+<tr class="memdesc:abb54c42d92ac574fd6dd15125c18907a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flag to drop any existing graph when the first triple is added.  <br /></td></tr>
+<tr class="separator:abb54c42d92ac574fd6dd15125c18907a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Manages a single graph within Neo4j. </p>
@@ -257,6 +273,49 @@ Public Attributes</h2></td></tr>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">Log.Failure</td><td>If the triple cannot be added to our graph database. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac390d6edcd3b657fedbfbb8636a0a6b4" name="ac390d6edcd3b657fedbfbb8636a0a6b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac390d6edcd3b657fedbfbb8636a0a6b4">&#9670;&#160;</a></span>add_triples_json()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> None add_triples_json </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">List[<a class="el" href="classsrc_1_1components_1_1fact__storage_1_1Triple.html">Triple</a>]&#160;</td>
+          <td class="paramname"><em>triples_json</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Add several semantic triples to the graph from pre-verified JSON. </p>
+<dl class="section note"><dt>Note</dt><dd>JSONshould be pre-normalized using <a class="el" href="classsrc_1_1connectors_1_1llm_1_1LLMConnector.html#ae1f4d34569124c1120ec5b0fa98f94eb">src.connectors.llm.LLMConnector.normalize_triples</a>. </dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">triples_json</td><td>A list of Triple dictionaries containing keys: 's', 'r', and 'o'. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Log.Failure</td><td>If any triple cannot be added to the graph database. </td></tr>
   </table>
   </dd>
 </dl>
@@ -442,6 +501,76 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="adecacf34639ce7b7fe5ad4f5fcb93269" name="adecacf34639ce7b7fe5ad4f5fcb93269"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adecacf34639ce7b7fe5ad4f5fcb93269">&#9670;&#160;</a></span>get_by_ranked_degree()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> DataFrame get_by_ranked_degree </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int &#160;</td>
+          <td class="paramname"><em>best_rank</em> = <code>1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int &#160;</td>
+          <td class="paramname"><em>worst_rank</em> = <code>-1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool &#160;</td>
+          <td class="paramname"><em>enforce_count</em> = <code>False</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">List[str] &#160;</td>
+          <td class="paramname"><em>id_columns</em> = <code>[&quot;subject_id&quot;,&#160;&quot;object_id&quot;]</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Return triples associated with nodes whose degree rank lies in the specified range. </p>
+<ul>
+<li>Computes degree (edge count) for all nodes.</li>
+<li>Sorts nodes by degree descending, assigns ranks, and selects those with best_rank &lt;= rank &lt;= worst_rank.</li>
+<li>Returns all triples where subject_id or object_id matches a selected node. <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">best_rank</td><td>Minimum degree rank. Inclusive. </td></tr>
+    <tr><td class="paramname">worst_rank</td><td>Maximum degree rank (-1 = maximum degree) to include. Inclusive. </td></tr>
+    <tr><td class="paramname">enforce_count</td><td>Always return (worst_rank - best_rank + 1) rows (fallback to node_id order). </td></tr>
+    <tr><td class="paramname">id_columns</td><td>List of columns to compare against. Can be 'subject_id', 'object_id', or both. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>DataFrame containing the triples for ranked nodes; columns: subject_id, relation_id, object_id. </dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Log.Failure</td><td>If the graph cannot be queried. </td></tr>
+    <tr><td class="paramname">ValueError</td><td>If best_rank or worst_rank values are invalid. </td></tr>
+  </table>
+  </dd>
+</dl>
+</li>
+</ul>
+
+</div>
+</div>
 <a id="a30b242830f1f919101712dbc323883d3" name="a30b242830f1f919101712dbc323883d3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a30b242830f1f919101712dbc323883d3">&#9670;&#160;</a></span>get_community_subgraph()</h2>
 
@@ -490,8 +619,70 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a6dce8a16fdd5290fbb52fb299a4d6e07" name="a6dce8a16fdd5290fbb52fb299a4d6e07"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6dce8a16fdd5290fbb52fb299a4d6e07">&#9670;&#160;</a></span>get_edge_counts()</h2>
+<a id="a6017e7e49204e9fa7b9f159efb9bf9e9" name="a6017e7e49204e9fa7b9f159efb9bf9e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6017e7e49204e9fa7b9f159efb9bf9e9">&#9670;&#160;</a></span>get_degree_range()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> DataFrame get_degree_range </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int &#160;</td>
+          <td class="paramname"><em>min_degree</em> = <code>1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int &#160;</td>
+          <td class="paramname"><em>max_degree</em> = <code>-1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">List[str] &#160;</td>
+          <td class="paramname"><em>id_columns</em> = <code>[&quot;subject_id&quot;,&#160;&quot;object_id&quot;]</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Return triples associated with nodes whose degree lies within the specified bounds. </p>
+<ul>
+<li>Degree is defined as the number of relationships where a node appears as start_node_id or end_node_id.</li>
+<li>Selects all nodes satisfying min_degree &lt;= degree &lt;= max_degree and returns triples incident to those nodes. <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">max_degree</td><td>Maximum number of edges allowed for a node to be included (-1 = infer highest edge count). </td></tr>
+    <tr><td class="paramname">min_degree</td><td>Minimum number of edges required for a node to be included. </td></tr>
+    <tr><td class="paramname">id_columns</td><td>List of columns to compare against. Can be 'subject_id', 'object_id', or both. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>DataFrame containing an arbitrary number of triples for nodes in the specified degree range. </dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">Log.Failure</td><td>If the graph fails to load or degree computation fails. </td></tr>
+    <tr><td class="paramname">ValueError</td><td>If min_degree or max_degree values are invalid. </td></tr>
+  </table>
+  </dd>
+</dl>
+</li>
+</ul>
+
+</div>
+</div>
+<a id="adf8381f0af93961cb63f8cab680ef9ce" name="adf8381f0af93961cb63f8cab680ef9ce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf8381f0af93961cb63f8cab680ef9ce">&#9670;&#160;</a></span>get_edge_counts()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -506,7 +697,7 @@ Public Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int &#160;</td>
-          <td class="paramname"><em>top_n</em> = <code>10</code>&#160;</td>
+          <td class="paramname"><em>top_n</em> = <code>-1</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -519,7 +710,7 @@ Public Attributes</h2></td></tr>
 <p>Return node names and their edge counts, ordered by edge count descending. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">top_n</td><td>Number of top nodes to return (by edge count). Default is 10. </td></tr>
+    <tr><td class="paramname">top_n</td><td>Number of top nodes to return (by edge count). Default is -1 (all nodes). </td></tr>
   </table>
   </dd>
 </dl>
@@ -716,8 +907,8 @@ lives in City, and follows Dave." </p><dl class="params"><dt>Parameters</dt><dd>
 
 </div>
 </div>
-<a id="a46ebf0ec70200ca70a4be35f4031dd7f" name="a46ebf0ec70200ca70a4be35f4031dd7f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a46ebf0ec70200ca70a4be35f4031dd7f">&#9670;&#160;</a></span>get_subgraph_by_nodes()</h2>
+<a id="a1e9f405ab957ca79877d799afeb0d7af" name="a1e9f405ab957ca79877d799afeb0d7af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e9f405ab957ca79877d799afeb0d7af">&#9670;&#160;</a></span>get_subgraph_by_nodes()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -732,7 +923,13 @@ lives in City, and follows Dave." </p><dl class="params"><dt>Parameters</dt><dd>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">List[str]&#160;</td>
-          <td class="paramname"><em>node_ids</em>&#160;</td>
+          <td class="paramname"><em>node_ids</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">List[str] &#160;</td>
+          <td class="paramname"><em>id_columns</em> = <code>[&quot;subject_id&quot;,&#160;&quot;object_id&quot;]</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -746,6 +943,7 @@ lives in City, and follows Dave." </p><dl class="params"><dt>Parameters</dt><dd>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">node_ids</td><td>List of node element IDs to filter by. </td></tr>
+    <tr><td class="paramname">id_columns</td><td>List of columns to compare against. Can be 'subject_id', 'object_id', or both. </td></tr>
   </table>
   </dd>
 </dl>
@@ -753,6 +951,7 @@ lives in City, and follows Dave." </p><dl class="params"><dt>Parameters</dt><dd>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">Log.Failure</td><td>If the query fails to retrieve the requested DataFrame. </td></tr>
+    <tr><td class="paramname">KeyError</td><td>If the provided column names are invalid. </td></tr>
   </table>
   </dd>
 </dl>
@@ -1003,14 +1202,14 @@ lives in City, and follows Dave." </p><dl class="params"><dt>Parameters</dt><dd>
 
 </div>
 </div>
-<a id="a4e214896870852fea1913ed2169c09a1" name="a4e214896870852fea1913ed2169c09a1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4e214896870852fea1913ed2169c09a1">&#9670;&#160;</a></span>to_triple_string()</h2>
+<a id="abb18547c7d0e8f6e7cff15f0e50572ed" name="abb18547c7d0e8f6e7cff15f0e50572ed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abb18547c7d0e8f6e7cff15f0e50572ed">&#9670;&#160;</a></span>to_triples_string()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"> str to_triple_string </td>
+          <td class="memname"> str to_triples_string </td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname"><em>self</em>, </td>
@@ -1019,13 +1218,13 @@ lives in City, and follows Dave." </p><dl class="params"><dt>Parameters</dt><dd>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">Optional[DataFrame] &#160;</td>
-          <td class="paramname"><em>triples_df</em> = <code>None</code>, </td>
+          <td class="paramname"><em>triple_names_df</em> = <code>None</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">str &#160;</td>
-          <td class="paramname"><em>format</em> = <code>&quot;natural&quot;</code>&#160;</td>
+          <td class="paramname"><em>mode</em> = <code>&quot;triple&quot;</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1037,12 +1236,12 @@ lives in City, and follows Dave." </p><dl class="params"><dt>Parameters</dt><dd>
 
 <p>Convert triples to string representation in various formats. </p>
 <p>Supports multiple output formats for LLM consumption:</p><ul>
-<li>"natural": Human-readable sentences (e.g., "Alice knows Bob.")</li>
-<li>"triple": Raw triple format (e.g., "Alice KNOWS Bob")</li>
+<li>"natural": Human-readable sentences (e.g., "Alice employed by Bob.")</li>
+<li>"triple": Raw triple format (e.g., "Alice employedBy Bob")</li>
 <li>"json": JSON array of objects with s/r/o keys <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">triples_df</td><td>DataFrame with subject/relation/object columns. If None, uses all triples from this graph. </td></tr>
-    <tr><td class="paramname">format</td><td>Output format: "natural", "triple", or "json" (default: "natural"). </td></tr>
+    <tr><td class="paramname">triple_names_df</td><td>DataFrame with subject, relation, object columns. If None, uses all triples from this graph. </td></tr>
+    <tr><td class="paramname">mode</td><td>Output format: "natural", "triple", or "json" (default: "triple"). </td></tr>
   </table>
   </dd>
 </dl>
@@ -1120,6 +1319,30 @@ lives in City, and follows Dave." </p><dl class="params"><dt>Parameters</dt><dd>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="abb54c42d92ac574fd6dd15125c18907a" name="abb54c42d92ac574fd6dd15125c18907a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abb54c42d92ac574fd6dd15125c18907a">&#9670;&#160;</a></span>_first_insert</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">_first_insert</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Flag to drop any existing graph when the first triple is added. </p>
+
+</div>
+</div>
 <a id="a64dbaa3229ec575b68ec333442e10cee" name="a64dbaa3229ec575b68ec333442e10cee"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a64dbaa3229ec575b68ec333442e10cee">&#9670;&#160;</a></span>database</h2>
 

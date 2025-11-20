@@ -7,5 +7,6 @@ var searchData=
   ['gr_5frag_4',['gr_rag',['../classsrc_1_1util_1_1Log.html#a9906de3893a6bfca7123621b5845de5a',1,'src::util::Log']]],
   ['graph_5fdb_5',['graph_db',['../classsrc_1_1core_1_1context_1_1Session.html#ae5bee849733f293db1370cf241513a95',1,'src::core::context::Session']]],
   ['graph_5fname_6',['graph_name',['../classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a3323a9a6d1bacd1bf02e51e2b8ef5f4b',1,'src::components::fact_storage::KnowledgeGraph']]],
-  ['green_7',['GREEN',['../classsrc_1_1util_1_1Log.html#a50d6704e2a5f43eadb9abdf8a9eb0631',1,'src::util::Log']]]
+  ['gray_7',['GRAY',['../classsrc_1_1util_1_1Log.html#a1d9e5c5072c2265989c0222d068e219d',1,'src::util::Log']]],
+  ['green_8',['GREEN',['../classsrc_1_1util_1_1Log.html#a50d6704e2a5f43eadb9abdf8a9eb0631',1,'src::util::Log']]]
 ];

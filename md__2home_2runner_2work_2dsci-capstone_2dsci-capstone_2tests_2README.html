@@ -72,14 +72,13 @@ $(function() {
   <div class="headertitle"><div class="title">Test Suite Overview</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md7"></a> This project uses pytest with <code>pytest-order</code> and <code>pytest-dependency</code> to ensure deterministic test sequencing.</p>
+<div class="textblock"><p><a class="anchor" id="autotoc_md8"></a> This project uses pytest with <code>pytest-order</code> and <code>pytest-dependency</code> to ensure deterministic test sequencing.</p>
 <p>Test groups:</p><ul>
 <li><b>test_db_basic / test_db_files</b> — relational, document, and graph connector tests.</li>
 <li><b>test_kg_triples</b> — KnowledgeGraph parsing, ID to name mapping, and graph helpers.</li>
 <li><b>examples-db</b>, <b>examples-llm</b> — minimal deterministic datasets used by the tests.</li>
 </ul>
-<p>Run the suite with:</p>
-<div class="fragment"><div class="line">pytest .</div>
+<p>Run the suite with: </p><div class="fragment"><div class="line">pytest -m &quot;not smoke&quot; tests/</div>
 </div><!-- fragment --><p>Or (if Docker is set up): </p><div class="fragment"><div class="line">make docker-all-dbs</div>
 <div class="line">make docker-test</div>
 </div><!-- fragment --> </div></div><!-- contents -->
