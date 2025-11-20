@@ -106,8 +106,7 @@ docker-bookscore:
 
 
 docker-copy-logs:
-	mkdir -p ./logs
-	docker cp container-python:/pipeline/logs/ ./logs/
+	docker cp container-python:/pipeline/logs/ ./
 
 
 

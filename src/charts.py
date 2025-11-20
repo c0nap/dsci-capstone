@@ -8,7 +8,7 @@ class Plot:
     """Static plotting helpers for visualization."""
 
     @staticmethod
-    def time_elapsed_by_names(filename: str = "./logs/avg_runtime.png") -> None:
+    def time_elapsed_by_names(filename: str = "./logs/charts/avg_runtime.png") -> None:
         """Plot average elapsed time per function name, averaging across runs.
         @param filename  Where to save the generated chart
         """

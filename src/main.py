@@ -229,8 +229,8 @@ CHAPTER 12. THE END OF THE END\n
 
     # Write core function timing - Keyboard interrupt doesnt work
     Log.print_timing_summary()
-    Log.dump_timing_csv()  # Eventually updated by callback()
-    Plot.time_elapsed_by_names("./logs/avg_runtime.png")
+    Log.dump_timing_csv()  # TODO: Eventually updated by callback()
+    Plot.time_elapsed_by_names()
 
     # Hand off to Flask - keep main thread alive so daemon thread continues
     print("Initial processing complete. Server listening for additional requests from Blazor...")
