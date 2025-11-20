@@ -1,32 +1,119 @@
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python-dev
-[+] Building 1.1s (18/18) FINISHED                                                                       docker:default
+conanp@RPI-conanp:~$ cd /mnt/c/dsci-cap
+conanp@RPI-conanp:/mnt/c/dsci-cap$ cd capstone
+conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ sudo service docker start
+[sudo] password for conanp:
+ * Starting Docker: docker                                                                                       [ OK ]
+conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-workers-dev
+[+] Building 2.1s (19/19) FINISHED                                                                       docker:default
+ => [internal] load build definition from bookscore.dockerfile                                                     0.0s
+ => => transferring dockerfile: 2.30kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.10-slim                                                0.5s
+ => [internal] load .dockerignore                                                                                  0.1s
+ => => transferring context: 79B                                                                                   0.0s
+ => [ 1/14] FROM docker.io/library/python:3.10-slim@sha256:abca1478399019424da6d9f37888ea2842d82d624f2ca78078c92b  0.0s
+ => [internal] load build context                                                                                  0.3s
+ => => transferring context: 208.98kB                                                                              0.3s
+ => CACHED [ 2/14] WORKDIR /flask                                                                                  0.0s
+ => CACHED [ 3/14] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make git   0.0s
+ => CACHED [ 4/14] COPY deps/bookscore.txt .                                                                       0.0s
+ => CACHED [ 5/14] RUN pip install --no-cache-dir -r bookscore.txt                                                 0.0s
+ => CACHED [ 6/14] RUN python -m nltk.downloader punkt punkt_tab                                                   0.0s
+ => CACHED [ 7/14] RUN mkdir -p /usr/local/lib/python3.10/site-packages/booookscore/prompts &&     curl -sSL http  0.0s
+ => CACHED [ 8/14] RUN pip install --upgrade "openai>=1.35.0"                                                      0.0s
+ => CACHED [ 9/14] RUN python - <<'PY'                                                                             0.0s
+ => [10/14] COPY src/ src/                                                                                         0.1s
+ => [11/14] COPY Makefile ./                                                                                       0.0s
+ => [12/14] COPY .env .env                                                                                         0.0s
+ => [13/14] RUN make env-docker                                                                                    0.5s
+ => [14/14] RUN mv .env.docker .env                                                                                0.4s
+ => exporting to image                                                                                             0.1s
+ => => exporting layers                                                                                            0.1s
+ => => writing image sha256:aa9dd169f0eedb3e4dcf85ee02fca4b879337e1a0726565748dde3874a9e1d33                       0.0s
+ => => naming to docker.io/library/dsci-cap-img-bscore-dev:latest                                                  0.0s
+[+] Building 1.6s (20/20) FINISHED                                                                       docker:default
+ => [internal] load build definition from questeval.dockerfile                                                     0.0s
+ => => transferring dockerfile: 5.07kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.8-slim                                                 0.1s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 79B                                                                                   0.0s
+ => [ 1/15] FROM docker.io/library/python:3.8-slim@sha256:1d52838af602b4b5a831beb13a0e4d073280665ea7be7f69ce2382f  0.0s
+ => [internal] load build context                                                                                  0.2s
+ => => transferring context: 3.25kB                                                                                0.2s
+ => CACHED [ 2/15] WORKDIR /flask                                                                                  0.0s
+ => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make git   0.0s
+ => CACHED [ 4/15] COPY deps/questeval.txt .                                                                       0.0s
+ => CACHED [ 5/15] RUN pip install --no-cache-dir -r questeval.txt                                                 0.0s
+ => CACHED [ 6/15] RUN mkdir -p /root/.cache/huggingface/transformers/ThomasNLG &&     cd /root/.cache/huggingfac  0.0s
+ => CACHED [ 7/15] RUN cd /root/.cache/huggingface/transformers &&     git clone https://huggingface.co/bert-base  0.0s
+ => CACHED [ 8/15] RUN apt-get remove -y git git-lfs && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*       0.0s
+ => CACHED [ 9/15] RUN python3 << 'EOF'                                                                            0.0s
+ => CACHED [10/15] RUN python3 << 'EOF'                                                                            0.0s
+ => [11/15] COPY src/ src/                                                                                         0.1s
+ => [12/15] COPY Makefile ./                                                                                       0.0s
+ => [13/15] COPY .env .env                                                                                         0.0s
+ => [14/15] RUN make env-docker                                                                                    0.5s
+ => [15/15] RUN mv .env.docker .env                                                                                0.4s
+ => exporting to image                                                                                             0.1s
+ => => exporting layers                                                                                            0.1s
+ => => writing image sha256:cfcdfa2b87c0dbfcf70dd84aa0ddf09b82d23beb4bf9f10beb449a7d10d31619                       0.0s
+ => => naming to docker.io/library/dsci-cap-img-qeval-dev:latest                                                   0.0s
+container-qeval
+45d9f2ce6528b32bd98ebdbdf610fea7b5cfdd1f76ae5d4e09bf9180639f3c62
+Network 'capstone_default' already exists; continue...
+container-qeval
+container-bscore
+01ed8327b68a9e96de4ef959b4e1fd50e299687e62dcb47e02d88f9877049dca
+Network 'capstone_default' already exists; continue...
+container-bscore
+conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker compose down -v neo4j_service
+[+] Running 3/3
+ ✔ Container container-neo4j   Removed                                                                             0.0s
+ ! Network capstone_default    Resource is still in use                                                            0.0s
+ ✔ Volume capstone_neo4j_data  Removed                                                                             0.0s
+conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-all-dbs
+[+] Running 1/1
+ ✔ Container container-mongo  Started                                                                              0.3s
+[+] Running 2/2
+ ✔ Volume capstone_neo4j_data  Created                                                                             0.0s
+ ✔ Container container-neo4j   Started                                                                             0.5s
+[+] Running 1/1
+ ✔ Container container-postgres  Started                                                                           0.4s
+conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-blazor-silent
+container-blazor
+34f1acc1be816d7200be10f1d23a99c8a4d466f0aca3ac46d564d4adbc5dbc56
+Network 'capstone_default' already exists; continue...
+container-blazor
+conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python-dev
+[+] Building 3.7s (20/20) FINISHED                                                                       docker:default
  => [internal] load build definition from python.dockerfile                                                        0.0s
- => => transferring dockerfile: 1.21kB                                                                             0.0s
- => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.3s
+ => => transferring dockerfile: 1.31kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.2s
  => [internal] load .dockerignore                                                                                  0.1s
  => => transferring context: 79B                                                                                   0.1s
- => [internal] load build context                                                                                  0.6s
- => => transferring context: 4.05kB                                                                                0.6s
- => [ 1/13] FROM docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c205e18d  0.0s
- => => resolve docker.io/library/python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c205e18d98  0.0s
- => CACHED [ 2/13] WORKDIR /pipeline                                                                               0.0s
- => CACHED [ 3/13] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make pand  0.0s
- => CACHED [ 4/13] COPY deps/requirements.txt .                                                                    0.0s
- => CACHED [ 5/13] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
- => CACHED [ 6/13] COPY src/ src/                                                                                  0.0s
- => CACHED [ 7/13] COPY tests/ tests/                                                                              0.0s
- => CACHED [ 8/13] COPY datasets/ datasets/                                                                        0.0s
- => CACHED [ 9/13] COPY .env .env                                                                                  0.0s
- => CACHED [10/13] COPY Makefile .                                                                                 0.0s
- => CACHED [11/13] RUN make env-docker                                                                             0.0s
- => CACHED [12/13] RUN mv .env.docker .env                                                                         0.0s
- => CACHED [13/13] COPY pyproject.toml pytest.ini .                                                                0.0s
- => exporting to image                                                                                             0.0s
- => => exporting layers                                                                                            0.0s
- => => writing image sha256:4a4b19f30bdcc7187d1cca1aca3ab8c237f8259d997c180928d67ff27892c5cc                       0.0s
+ => [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:2e683fc3e18a248aa23b8022f2a3474b072b04fb851efe9b49f6b5  0.0s
+ => => resolve docker.io/library/python:3.12-slim@sha256:2e683fc3e18a248aa23b8022f2a3474b072b04fb851efe9b49f6b516  0.0s
+ => [internal] load build context                                                                                  1.0s
+ => => transferring context: 10.03MB                                                                               0.9s
+ => CACHED [ 2/15] WORKDIR /pipeline                                                                               0.0s
+ => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make pand  0.0s
+ => CACHED [ 4/15] COPY deps/requirements.txt .                                                                    0.0s
+ => CACHED [ 5/15] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
+ => [ 6/15] COPY src/ src/                                                                                         0.1s
+ => [ 7/15] COPY tests/ tests/                                                                                     0.1s
+ => [ 8/15] COPY smoke/ smoke/                                                                                     0.1s
+ => [ 9/15] COPY datasets/ datasets/                                                                               0.0s
+ => [10/15] COPY .env .env                                                                                         0.1s
+ => [11/15] COPY Makefile .                                                                                        0.1s
+ => [12/15] RUN make env-docker                                                                                    0.6s
+ => [13/15] RUN mv .env.docker .env                                                                                0.5s
+ => [14/15] COPY pyproject.toml pytest.ini conftest.py .                                                           0.1s
+ => [15/15] COPY logs/ logs/                                                                                       0.1s
+ => exporting to image                                                                                             0.3s
+ => => exporting layers                                                                                            0.2s
+ => => writing image sha256:c552afbdc4b5b50735bf516205c8c45ccf63ab20400a1f5323d181072724fae9                       0.0s
  => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                                  0.0s
 container-python
-13bf78a3f035bcbcc8028b5009219aa0191b8a37759b721df535a3f0036d1897
+33e177b68ad16017ac69ca77c5259c5815f97c728253d00697f09827ebdb354f
 Network 'capstone_default' already exists; continue...
 Deleted old chunks...
  * Serving Flask app 'src.core.boss'
@@ -37,135 +124,203 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://172.17.0.5:5054
 Press CTRL+C to quit
 [STATUS] Story 1: preprocessing -> in-progress
-127.0.0.1 - - [16/Nov/2025 13:36:43] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 01:13:10] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> in-progress
-127.0.0.1 - - [16/Nov/2025 13:36:43] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 01:13:10] "POST /status/story HTTP/1.1" 200 -
 
 ==================================================
-Processing: ./datasets/examples/trilogy-wishes-2.epub
+Processing: ./tests/examples-pipeline/epub/trilogy-wishes-2.epub
+[TIME] task_01_convert_epub took 1.869s
+[TIME] task_02_parse_chapters took 0.034s
+[TIME] task_03_chunk_story took 0.018s
 
 === STORY SUMMARY ===
 Total chunks: 254
+[TIME] pipeline_A took 1.968s
 [STATUS] Story 1: preprocessing -> completed
-127.0.0.1 - - [16/Nov/2025 13:36:45] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 01:13:12] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> completed
-127.0.0.1 - - [16/Nov/2025 13:36:45] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 01:13:12] "POST /status/story HTTP/1.1" 200 -
+[TIME] task_10_sample_chunks took 0.000s
+[TIME] task_10_random_chunk took 0.015s
 
 Chunk details:
-  index: Chunk(len=1450, book=2, chapter=12, story=1, lines=[3666,3688], story%=56.209, chapter%=32.590)
+  index: 129
 
-I wonder whether you know how to light a fire? I don’t mean how to strike a match and set fire to the corners of the paper in a fire someone has laid ready, but how to lay and light a fire all by yourself. I will tell you how Anthea did it, and if ever you have to light one yourself you may remember how it is done. First, she raked out the ashes of the fire that had burned there a week ago—for Eliza had actually never done this, though she had had plenty of time. In doing this Anthea knocked her knuckle and made it bleed. Then she laid the largest and handsomest cinders in the bottom of the grate. Then she took a sheet of old newspaper (you ought never to light a fire with to-day’s newspaper—it will not burn well, and there are other reasons against it), and tore it into four quarters, and screwed each of these into a loose ball, and put them on the cinders; then she got a bundle of wood and broke the string, and stuck the sticks in so that their front ends rested on the bars, and the back ends on the back of the paper balls. In doing this she cut her finger slightly with the string, and when she broke it, two of the sticks jumped up and hit her on the cheek. Then she put more cinders and some bits of coal—no dust. She put most of that on her hands, but there seemed to be enough left for her face. Then she lighted the edges of the paper balls, and waited till she heard the fizz-crack-crack-fizz of the wood as it began to burn.
-    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-12_p.32590]
+What every one admired was a little, little Christmas-tree, very green, and standing in a very red little flower-pot, and hung round with very bright little things made of tinsel and coloured paper. There were tiny candles on the tree, but they were not lighted yet.
+‘But yes—is it not that it is genteel?’ said the lady. ‘Sit down you then, and let us see.’
+The children sat down in a row on the stiff chairs against the wall, and the lady lighted a long, slim red taper at the wood flame, and then she drew the curtains and lit the little candles, and when they were all lighted the little French boy suddenly shouted, ‘Bravo, ma tante! Oh, que c’est gentil,’ and the English children shouted ‘Hooray!’
+Then there was a struggle in the breast of Robert, and out fluttered the Phoenix—spread his gold wings, flew to the top of the Christmas-tree, and perched there.
+‘Ah! catch it, then,’ cried the lady; ‘it will itself burn—your genteel parrakeet!’
+‘It won’t,’ said Robert, ‘thank you.’
+And the little French boy clapped his clean and tidy hands; but the lady was so anxious that the Phoenix fluttered down and walked up and down on the shiny walnut-wood table.
+‘Is it that it talks?’ asked the lady.
+And the Phoenix replied in excellent French. It said, ‘Parfaitement, madame!’
+‘Oh, the pretty parrakeet,’ said the lady. ‘Can it say still of other things?’
+And the Phoenix replied, this time in English, ‘Why are you sad so near Christmas-time?’
+[TIME] task_11_send_chunk took 0.021s
+    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-11_p.70080]
+[TIME] task_12_relation_extraction_rebel took 138.396s
 
 NLP output:
-('fire', 'has part', 'light')
-('match', 'use', 'light a fire')
-('light a fire', 'uses', 'match')
-('Anthea', 'notable work', 'I will tell you how Anthea did it')
-('I will tell you how Anthea did it', 'author', 'Anthea')
-('the fire that had burned there a week ago', 'participant', 'Eliza')
-('Knuckle', 'has effect', 'bleed')
-('bleed', 'has cause', 'Knuckle')
-('cinders', 'part of', 'grate')
-('grate', 'has part', 'cinders')
-('newspaper', 'different from', 'newspaper balls')
-('newspaper balls', 'different from', 'newspaper')
-("The Emperor's New Clothes", 'author', 'William Shakespeare')
-('William Shakespeare', 'notable work', "The Emperor's New Clothes")
-('The Merchant of Venice', 'The Merchant of Venice', 'notable work')
-('coal', 'has part', 'cinders')
-('Hercule Poirot', 'notable work', 'The Merchant of Venice')
-('The Merchant of Venice', 'author', 'Hercule Poirot')
-('lighted', 'has effect', 'burn')
-('burn', 'has cause', 'lighted')
+('tinsel', 'part of', 'Christmas-tree')
+('Candle', 'subclass of', 'lighted')
+('Genteel', 'said to be the same as', 'genteel')
+('genteel', 'said to be the same as', 'Genteel')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Let us see', 'has part', 'Sit down you then')
+('Let us see', 'Let us see', 'has part')
+('Sit down you then', 'Let us see', 'part of')
+('part of', 'Sit down you then', 'Let us see')
+('part of', 'part of', 'Let us see')
+('Louis XV', 'spouse', 'Marie Antoinette')
+('Marie Antoinette', 'spouse', 'Louis XV')
+('Oh, que c’est gentil', 'followed by', 'Hooray!')
+('Hooray!', 'follows', 'Oh, que c’est gentil')
+('Robert', 'owner of', 'Phoenix')
+('Phoenix', 'owned by', 'Robert')
+('Ah!', 'has part', 'Ah!')
+('Ah!', 'part of', 'Ah!')
+('the lady', 'owner of', 'genteel parrakeet')
+('genteel parrakeet', 'owned by', 'the lady')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('Paris', 'country', 'France')
+('France', 'capital', 'Paris')
+('Is it that it talks?', 'instance of', 'talks')
+('Mary, Queen of Scots', 'child', 'Queen Elizabeth II')
+('Queen Elizabeth II', 'mother', 'Mary, Queen of Scots')
+('And the Phoenix', 'language of work or name', 'French')
+('Parfaitement', 'said to be the same as', 'madame!')
+('madame!', 'said to be the same as', 'Parfaitement')
+('Oh, the pretty parrakeet', 'present in work', 'lady')
+('lady', 'characters', 'Oh, the pretty parrakeet')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Christmas-time', 'language of work or name', 'English')
 
+[TIME] task_13_concatenate_triples took 0.000s
+[TIME] task_14_relation_extraction_llm took 82.165s
 
     LLM prompt:
-You are a helpful assistant that converts semantic triples into structured JSON.
 Here are some semantic triples extracted from a story chunk:
-('fire', 'has part', 'light')
-('match', 'use', 'light a fire')
-('light a fire', 'uses', 'match')
-('Anthea', 'notable work', 'I will tell you how Anthea did it')
-('I will tell you how Anthea did it', 'author', 'Anthea')
-('the fire that had burned there a week ago', 'participant', 'Eliza')
-('Knuckle', 'has effect', 'bleed')
-('bleed', 'has cause', 'Knuckle')
-('cinders', 'part of', 'grate')
-('grate', 'has part', 'cinders')
-('newspaper', 'different from', 'newspaper balls')
-('newspaper balls', 'different from', 'newspaper')
-("The Emperor's New Clothes", 'author', 'William Shakespeare')
-('William Shakespeare', 'notable work', "The Emperor's New Clothes")
-('The Merchant of Venice', 'The Merchant of Venice', 'notable work')
-('coal', 'has part', 'cinders')
-('Hercule Poirot', 'notable work', 'The Merchant of Venice')
-('The Merchant of Venice', 'author', 'Hercule Poirot')
-('lighted', 'has effect', 'burn')
-('burn', 'has cause', 'lighted')
+('tinsel', 'part of', 'Christmas-tree')
+('Candle', 'subclass of', 'lighted')
+('Genteel', 'said to be the same as', 'genteel')
+('genteel', 'said to be the same as', 'Genteel')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Let us see', 'has part', 'Sit down you then')
+('Let us see', 'Let us see', 'has part')
+('Sit down you then', 'Let us see', 'part of')
+('part of', 'Sit down you then', 'Let us see')
+('part of', 'part of', 'Let us see')
+('Louis XV', 'spouse', 'Marie Antoinette')
+('Marie Antoinette', 'spouse', 'Louis XV')
+('Oh, que c’est gentil', 'followed by', 'Hooray!')
+('Hooray!', 'follows', 'Oh, que c’est gentil')
+('Robert', 'owner of', 'Phoenix')
+('Phoenix', 'owned by', 'Robert')
+('Ah!', 'has part', 'Ah!')
+('Ah!', 'part of', 'Ah!')
+('the lady', 'owner of', 'genteel parrakeet')
+('genteel parrakeet', 'owned by', 'the lady')
+('William Shakespeare', 'notable work', 'Cymbeline')
+('Cymbeline', 'author', 'William Shakespeare')
+('Paris', 'country', 'France')
+('France', 'capital', 'Paris')
+('Is it that it talks?', 'instance of', 'talks')
+('Mary, Queen of Scots', 'child', 'Queen Elizabeth II')
+('Queen Elizabeth II', 'mother', 'Mary, Queen of Scots')
+('And the Phoenix', 'language of work or name', 'French')
+('Parfaitement', 'said to be the same as', 'madame!')
+('madame!', 'said to be the same as', 'Parfaitement')
+('Oh, the pretty parrakeet', 'present in work', 'lady')
+('lady', 'characters', 'Oh, the pretty parrakeet')
+('John Milton', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'Paradise Lost', 'notable work')
+('John Milton', 'Milton', 'author')
+('author', 'Paradise Lost', 'Milton')
+('notable work', 'notable work', 'Paradise Lost')
+('Paradise Lost', 'author', 'John Milton')
+('Christmas-time', 'language of work or name', 'English')
 
 And here is the original text:
-I wonder whether you know how to light a fire? I don’t mean how to strike a match and set fire to the corners of the paper in a fire someone has laid ready, but how to lay and light a fire all by yourself. I will tell you how Anthea did it, and if ever you have to light one yourself you may remember how it is done. First, she raked out the ashes of the fire that had burned there a week ago—for Eliza had actually never done this, though she had had plenty of time. In doing this Anthea knocked her knuckle and made it bleed. Then she laid the largest and handsomest cinders in the bottom of the grate. Then she took a sheet of old newspaper (you ought never to light a fire with to-day’s newspaper—it will not burn well, and there are other reasons against it), and tore it into four quarters, and screwed each of these into a loose ball, and put them on the cinders; then she got a bundle of wood and broke the string, and stuck the sticks in so that their front ends rested on the bars, and the back ends on the back of the paper balls. In doing this she cut her finger slightly with the string, and when she broke it, two of the sticks jumped up and hit her on the cheek. Then she put more cinders and some bits of coal—no dust. She put most of that on her hands, but there seemed to be enough left for her face. Then she lighted the edges of the paper balls, and waited till she heard the fizz-crack-crack-fizz of the wood as it began to burn.
+What every one admired was a little, little Christmas-tree, very green, and standing in a very red little flower-pot, and hung round with very bright little things made of tinsel and coloured paper. There were tiny candles on the tree, but they were not lighted yet.
+‘But yes—is it not that it is genteel?’ said the lady. ‘Sit down you then, and let us see.’
+The children sat down in a row on the stiff chairs against the wall, and the lady lighted a long, slim red taper at the wood flame, and then she drew the curtains and lit the little candles, and when they were all lighted the little French boy suddenly shouted, ‘Bravo, ma tante! Oh, que c’est gentil,’ and the English children shouted ‘Hooray!’
+Then there was a struggle in the breast of Robert, and out fluttered the Phoenix—spread his gold wings, flew to the top of the Christmas-tree, and perched there.
+‘Ah! catch it, then,’ cried the lady; ‘it will itself burn—your genteel parrakeet!’
+‘It won’t,’ said Robert, ‘thank you.’
+And the little French boy clapped his clean and tidy hands; but the lady was so anxious that the Phoenix fluttered down and walked up and down on the shiny walnut-wood table.
+‘Is it that it talks?’ asked the lady.
+And the Phoenix replied in excellent French. It said, ‘Parfaitement, madame!’
+‘Oh, the pretty parrakeet,’ said the lady. ‘Can it say still of other things?’
+And the Phoenix replied, this time in English, ‘Why are you sad so near Christmas-time?’
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s":"Anthea","r":"performed","o":"lay and light a fire"},
-  {"s":"Anthea","r":"raked out","o":"ashes of the fire that had burned there a week ago"},
-  {"s":"Eliza","r":"had not done","o":"raking the ashes"},
-  {"s":"Anthea","r":"knocked","o":"her knuckle"},
-  {"s":"knuckle","r":"bled","o":"as a result of the knock"},
-  {"s":"Anthea","r":"laid","o":"the largest and handsomest cinders in the bottom of the grate"},
-  {"s":"paper balls","r":"made from","o":"old newspaper torn into four quarters and screwed into four loose balls"},
-  {"s":"Anthea","r":"placed","o":"paper balls on the cinders"},
-  {"s":"Anthea","r":"took","o":"a bundle of wood and broke the string"},
-  {"s":"wood","r":"rested on","o":"the bars (front ends) and on the back of the paper balls"},
-  {"s":"Anthea","r":"cut","o":"her finger slightly with the string"},
-  {"s":"sticks","r":"jumped","o":"up and hit her on the cheek"},
-  {"s":"Anthea","r":"added","o":"more cinders and some bits of coal"},
-  {"s":"Anthea","r":"put","o":"coal on her hands and some on her face"},
-  {"s":"Anthea","r":"lighted","o":"the edges of the paper balls"},
-  {"s":"Anthea","r":"heard","o":"the fizz-crack-crack-fizz of the wood as it began to burn"},
-  {"s":"fizz-crack-crack-fizz","r":"describes","o":"sound of burning wood"},
-  {"s":"newspaper","r":"warned","o":"not to light a fire with today’s newspaper"},
-  {"s":"Anthea","r":"avoided","o":"using today’s newspaper to light the fire"}
+  {"s": "tinsel", "r": "part of", "o": "Christmas-tree"},
+  {"s": "the lady", "r": "lit", "o": "taper"},
+  {"s": "the lady", "r": "lit", "o": "little candles"},
+  {"s": "Oh, que c’est gentil", "r": "followed by", "o": "Hooray!"},
+  {"s": "Hooray!", "r": "follows", "o": "Oh, que c’est gentil"},
+  {"s": "the lady", "r": "owner of", "o": "genteel parrakeet"},
+  {"s": "genteel parrakeet", "r": "owned by", "o": "the lady"},
+  {"s": "French boy", "r": "shouted", "o": "Bravo, ma tante!"},
+  {"s": "French boy", "r": "shouted", "o": "Oh, que c’est gentil"},
+  {"s": "English children", "r": "shouted", "o": "Hooray!"},
+  {"s": "Phoenix", "r": "perched on", "o": "top of the Christmas-tree"},
+  {"s": "lady", "r": "asked", "o": "Is it that it talks?"},
+  {"s": "Phoenix", "r": "spoke language", "o": "French"},
+  {"s": "Phoenix", "r": "replied in", "o": "French"},
+  {"s": "Phoenix", "r": "replied", "o": "Parfaitement, madame!"},
+  {"s": "Phoenix", "r": "spoke language", "o": "English"}
 ]
 
 ==================================================
 
+[TIME] task_15_sanitize_triples_llm took 0.000s
 
 Valid JSON
-[STATUS] Chunk story-1_book-2_chapter-12_p.32590: relation_extraction -> in-progress
-127.0.0.1 - - [16/Nov/2025 13:39:00] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.32590: llm_inference -> in-progress
-127.0.0.1 - - [16/Nov/2025 13:39:00] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.32590: relation_extraction -> completed
-127.0.0.1 - - [16/Nov/2025 13:39:00] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.32590: llm_inference -> completed
-127.0.0.1 - - [16/Nov/2025 13:39:00] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.32590: graph_verbalization -> in-progress
-127.0.0.1 - - [16/Nov/2025 13:39:00] "POST /status/chunk HTTP/1.1" 200 -
-Anthea performed lay and light a fire
-Anthea raked out ashes of the fire that had burned there a week ago
-Eliza had not done raking the ashes
-Anthea knocked her knuckle
-knuckle bled as a result of the knock
-Anthea laid the largest and handsomest cinders in the bottom of the grate
-paper balls made from old newspaper torn into four quarters and screwed into four loose balls
-Anthea placed paper balls on the cinders
-Anthea took a bundle of wood and broke the string
-wood rested on the bars (front ends) and on the back of the paper balls
-Anthea cut her finger slightly with the string
-sticks jumped up and hit her on the cheek
-Anthea added more cinders and some bits of coal
-Anthea put coal on her hands and some on her face
-Anthea lighted the edges of the paper balls
-Anthea heard the fizz-crack-crack-fizz of the wood as it began to burn
-fizz-crack-crack-fizz describes sound of burning wood
-newspaper warned not to light a fire with today’s newspaper
-Anthea avoided using today’s newspaper to light the fire
+[TIME] pipeline_B took 220.804s
+Checkpoint saved to ./datasets/checkpoint.pkl
+[STATUS] Chunk story-1_book-2_chapter-11_p.70080: relation_extraction -> in-progress
+127.0.0.1 - - [20/Nov/2025 01:16:53] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-11_p.70080: llm_inference -> in-progress
+127.0.0.1 - - [20/Nov/2025 01:16:53] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-11_p.70080: relation_extraction -> completed
+127.0.0.1 - - [20/Nov/2025 01:16:53] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-11_p.70080: llm_inference -> completed
+127.0.0.1 - - [20/Nov/2025 01:16:53] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-11_p.70080: graph_verbalization -> in-progress
+127.0.0.1 - - [20/Nov/2025 01:16:53] "POST /status/chunk HTTP/1.1" 200 -
+tinsel part of Christmas-tree
+the lady lit taper
+the lady lit little candles
+Oh, que c’est gentil followed by Hooray!
+Hooray! follows Oh, que c’est gentil
+the lady owner of genteel parrakeet
+genteel parrakeet owned by the lady
+French boy shouted Bravo, ma tante!
+French boy shouted Oh, que c’est gentil
+English children shouted Hooray!
+Phoenix perched on top of the Christmas-tree
+lady asked Is it that it talks?
+Phoenix spoke language French
+Phoenix replied in French
+Phoenix replied Parfaitement, madame!
+Phoenix spoke language English
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: kg)} {position: line: 2, column: 21, offset: 30} for query: "MATCH (n)\n            WHERE n.kg = 'main'\n            RETURN count(n) AS count"
+[TIME] task_20_send_triples took 2.868s
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 41, offset: 98} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 22, offset: 421} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 22, offset: 79} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
@@ -178,12 +333,13 @@ Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNot
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 41, offset: 440} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 22, offset: 250} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 41, offset: 269} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+[TIME] group_21_1_describe_graph took 0.317s
 
 Most relevant nodes:
-   edge_count                              node_name
-0          12                                 Anthea
-1           1                                  Eliza
-2           1  a bundle of wood and broke the string
+   edge_count             node_name
+0           5               Phoenix
+1           4              the lady
+2           3  Oh_ que c_est gentil
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 41, offset: 98} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 22, offset: 421} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 22, offset: 79} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
@@ -202,88 +358,132 @@ Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNot
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 41, offset: 440} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 22, offset: 250} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
 Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 41, offset: 269} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 41, offset: 98} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 22, offset: 421} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 3, column: 22, offset: 79} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 11, column: 41, offset: 440} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 22, offset: 250} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+Received notification from DBMS server: {severity: WARNING} {code: Neo.ClientNotification.Statement.UnknownPropertyKeyWarning} {category: UNRECOGNIZED} {title: The provided property key is not in the database} {description: One of the property names in your query is not available in the database, make sure you didn't misspell it or that the label is available when you run this statement in your application (the missing property name is: _init)} {position: line: 7, column: 41, offset: 269} for query: "\n            MATCH (n {db: 'conan_capstone', kg: 'main'})\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN n AS element\n            UNION\n            MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m)\n            WHERE (n._init IS NULL OR n._init = false)\n            RETURN r AS element\n            UNION\n            MATCH (n)-[r]->(m {db: 'conan_capstone', kg: 'main'})\n            WHERE (m._init IS NULL OR m._init = false)\n            RETURN r AS element\n            "
+[TIME] task_22_verbalize_triples took 0.215s
 
 Triples which best represent the graph:
-Anthea PERFORMED lay and light a fire
-Anthea PLACED paper balls on the cinders
-Anthea TOOK a bundle of wood and broke the string
-Anthea CUT her finger slightly with the string
-Anthea ADDED more cinders and some bits of coal
-Anthea PUT coal on her hands and some on her face
-Anthea RAKED_OUT ashes of the fire that had burned there a week ago
-Anthea LIGHTED the edges of the paper balls
-Anthea HEARD the fizz_crack_crack_fizz of the wood as it began to burn
-Anthea AVOIDED using today_s newspaper to light the fire
-Anthea KNOCKED her knuckle
-Anthea LAID the largest and handsomest cinders in the bottom of the grate
-Eliza HAD_NOT_DONE raking the ashes
+Phoenix PERCHED_ON top of the Christmas_tree
+Phoenix REPLIED_IN French
+Phoenix SPOKE_LANGUAGE French
+Phoenix REPLIED Parfaitement_ madame
+Phoenix SPOKE_LANGUAGE English
+the lady LIT taper
+the lady LIT little candles
+Oh_ que c_est gentil FOLLOWED_BY Hooray
+the lady OWNER_OF genteel parrakeet
 
-[STATUS] Chunk story-1_book-2_chapter-12_p.32590: graph_verbalization -> completed
-127.0.0.1 - - [16/Nov/2025 13:39:04] "POST /status/chunk HTTP/1.1" 200 -
+[TIME] pipeline_C took 3.485s
+[STATUS] Chunk story-1_book-2_chapter-11_p.70080: graph_verbalization -> completed
+127.0.0.1 - - [20/Nov/2025 01:16:57] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Story 1: summarization -> in-progress
-127.0.0.1 - - [16/Nov/2025 13:39:04] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.32590: summarization -> in-progress
-127.0.0.1 - - [16/Nov/2025 13:39:04] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 01:16:57] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-11_p.70080: summarization -> in-progress
+127.0.0.1 - - [20/Nov/2025 01:16:57] "POST /status/chunk HTTP/1.1" 200 -
+[TIME] task_30_summarize_llm took 10.296s
 
 Generated summary:
-Anthea attempted to light a fire, laying paper balls on the cinders and bringing a bundle of wood after breaking its string. She cut her finger slightly and some coal got on her hands and face. She added more cinders and coal, raked out ashes from a fire burned there a week ago, and lit the edges of the paper balls as the wood began to fizz and crackle. She avoided using today’s newspaper to light the fire, and she knocked her knuckle. She laid the largest and handsomest cinders in the bottom of the grate. Eliza had not raked the ashes.
-    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-12_p.32590]
+A phoenix perched atop a Christmas tree and spoke in both French and English, replying in French with “Parfaitement, madame.” The lady, owner of a genteel parakeet, lit a taper and small candles and exclaimed, “Oh, que c'est gentil,” followed by “Hooray.”
+[TIME] task_31_send_summary took 0.002s
+    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-11_p.70080]
+[TIME] pipeline_D took 10.352s
 [STATUS] Story 1: summarization -> completed
-127.0.0.1 - - [16/Nov/2025 13:39:13] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.32590: summarization -> completed
-127.0.0.1 - - [16/Nov/2025 13:39:13] "POST /status/chunk HTTP/1.1" 200 -
-[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.32590' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.32590, task=questeval, status=started
-
-127.0.0.1 - - [16/Nov/2025 13:39:13] "POST /process_story HTTP/1.1" 200 -
-Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}172.18.0.4 - - [16/Nov/2025 13:39:13] "POST /callback HTTP/1.1" 200 -
-
-[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.32590' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [16/Nov/2025 13:39:14] "POST /process_story HTTP/1.1" 200 -
+127.0.0.1 - - [20/Nov/2025 01:17:07] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-11_p.70080: summarization -> completed
+127.0.0.1 - - [20/Nov/2025 01:17:07] "POST /status/chunk HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-11_p.70080' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [20/Nov/2025 01:17:07] "POST /process_story HTTP/1.1" 200 -
+Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
+[CALLBACK] chunk_id=story-1_book-2_chapter-11_p.70080, task=questeval, status=started
+172.18.0.2 - - [20/Nov/2025 01:17:07] "POST /callback HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-11_p.70080' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [20/Nov/2025 01:17:07] "POST /process_story HTTP/1.1" 200 -
 Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}
+
+=== TIMING SUMMARY ===
+                                   calls       total         avg         min         max
+function
+group_21_1_describe_graph              1    0.317088    0.317088    0.317088    0.317088
+pipeline_A                             1    1.967624    1.967624    1.967624    1.967624
+pipeline_B                             1  220.804412  220.804412  220.804412  220.804412
+pipeline_C                             1    3.485276    3.485276    3.485276    3.485276
+pipeline_D                             1   10.351787   10.351787   10.351787   10.351787
+task_01_convert_epub                   1    1.869003    1.869003    1.869003    1.869003
+task_02_parse_chapters                 1    0.033553    0.033553    0.033553    0.033553
+task_03_chunk_story                    1    0.017558    0.017558    0.017558    0.017558
+task_10_random_chunk                   1    0.015239    0.015239    0.015239    0.015239
+task_10_sample_chunks                  1    0.000030    0.000030    0.000030    0.000030
+task_11_send_chunk                     1    0.021448    0.021448    0.021448    0.021448
+task_12_relation_extraction_rebel      1  138.396466  138.396466  138.396466  138.396466
+task_13_concatenate_triples            1    0.000081    0.000081    0.000081    0.000081
+task_14_relation_extraction_llm        1   82.165340   82.165340   82.165340   82.165340
+task_15_sanitize_triples_llm           1    0.000062    0.000062    0.000062    0.000062
+task_20_send_triples                   1    2.868024    2.868024    2.868024    2.868024
+task_22_verbalize_triples              1    0.215225    0.215225    0.215225    0.215225
+task_30_summarize_llm                  1   10.296112   10.296112   10.296112   10.296112
+task_31_send_summary                   1    0.001530    0.001530    0.001530    0.001530
+
+Total execution time: 472.826s
+[CALLBACK] chunk_id=story-1_book-2_chapter-11_p.70080, task=bookscore, status=started
+172.18.0.3 - - [20/Nov/2025 01:17:07] "POST /callback HTTP/1.1" 200 -
+[DUMP] Saved time records to './logs/elapsed_time.csv'
+[CHART] Saved chart 'Average Function Runtime Across Runs' to ./logs/avg_runtime.png
 Initial processing complete. Server listening for additional requests from Blazor...
 Press Ctrl+C to stop.
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.32590, task=bookscore, status=started
-172.18.0.6 - - [16/Nov/2025 13:39:14] "POST /callback HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.32590, task=bookscore, status=completed
+[CALLBACK] chunk_id=story-1_book-2_chapter-11_p.70080, task=bookscore, status=completed
 [STORY COMPLETE] All chunks completed metric_bookscore for story 1
-172.18.0.6 - - [16/Nov/2025 13:39:31] "POST /callback HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.32590, task=questeval, status=completed
+172.18.0.3 - - [20/Nov/2025 01:17:16] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-11_p.70080, task=questeval, status=completed
 [STORY COMPLETE] All chunks completed metric_questeval for story 1
-Downloading builder script: 6.14kB [00:00, 2.47MB/s]
-Downloading builder script: 7.95kB [00:00, 16.0MB/s]
+Downloading builder script: 6.14kB [00:00, 1.86MB/s]
+Downloading builder script: 7.95kB [00:00, 14.9MB/s]
 Some weights of RobertaModel were not initialized from the model checkpoint at roberta-large and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Anthea attempted to light a fire, laying paper balls on the cinders and bringing a bundle of wood after breaking its string. She cut her finger slightly and some coal got on her hands and face. She added more cinders and coal, raked out ashes from a fire burned there a week ago, and lit the edges of the paper balls as the wood began to fizz and crackle. She avoided using today’s newspaper to light the fire, and she knocked her knuckle. She laid the largest and handsomest cinders in the bottom of the grate. Eliza had not raked the ashes.', 'goldSummaryText': 'I wonder whether you know how to light a fire? I don’t mean how to strike a match and set fire to the corners of the paper in a fire someone has laid ready, but how to lay and light a fire all by yourself. I will tell you how Anthea did it, and if ever you have to light one yourself you may remember how it is done. First, she raked out the ashes of the fire that had burned there a week ago—for Eliza had actually never done this, though she had had plenty of time. In doing this Anthea knocked her knuckle and made it bleed. Then she laid the largest and handsomest cinders in the bottom of the grate. Then she took a sheet of old newspaper (you ought never to light a fire with to-day’s newspaper—it will not burn well, a', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8804895877838135, 'recall': 0.8546651601791382, 'f1Score': 0.86738520860672}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0.16666666666666663}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.18986892931206692}, {'name': 'ROUGE-1', 'value': 0.4330708661417323}, {'name': 'ROUGE-2', 'value': 0.2380952380952381}, {'name': 'ROUGE-L', 'value': 0.28346456692913385}, {'name': 'ROUGE-Lsum', 'value': 0.28346456692913385}]}, 'qaResults': []}
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': "A phoenix perched atop a Christmas tree and spoke in both French and English, replying in French with “Parfaitement, madame.” The lady, owner of a genteel parakeet, lit a taper and small candles and exclaimed, “Oh, que c'est gentil,” followed by “Hooray.”", 'goldSummaryText': 'What every one admired was a little, little Christmas-tree, very green, and standing in a very red little flower-pot, and hung round with very bright little things made of tinsel and coloured paper. There were tiny candles on the tree, but they were not lighted yet.\n‘But yes—is it not that it is genteel?’ said the lady. ‘Sit down you then, and let us see.’\nThe children sat down in a row on the stiff chairs against the wall, and the lady lighted a long, slim red taper at the wood flame, and then she drew the curtains and lit the little candles, and when they were all lighted the little French boy suddenly shouted, ‘Bravo, ma tante! Oh, que c’est gentil,’ and the English children shouted ‘Hooray!’\nThen there was a st', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8704848289489746, 'recall': 0.836180567741394, 'f1Score': 0.8529879450798035}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.2736208976916205}, {'name': 'ROUGE-1', 'value': 0.3111111111111111}, {'name': 'ROUGE-2', 'value': 0.07865168539325841}, {'name': 'ROUGE-L', 'value': 0.23333333333333334}, {'name': 'ROUGE-Lsum', 'value': 0.25555555555555554}]}, 'qaResults': []}
+[TIME] task_40_post_payload took 31.504s
 
 Output sent to web app.
+[TIME] pipeline_E took 31.509s
 [PIPELINE FINALIZED] Story 1 fully processed
-172.18.0.4 - - [16/Nov/2025 13:45:58] "POST /callback HTTP/1.1" 200 -
-INFO:werkzeug:172.18.0.4 - - [16/Nov/2025 13:45:58] "POST /callback HTTP/1.1" 200 -
+172.18.0.2 - - [20/Nov/2025 01:20:21] "POST /callback HTTP/1.1" 200 -
+INFO:werkzeug:172.18.0.2 - - [20/Nov/2025 01:20:21] "POST /callback HTTP/1.1" 200 -
 ^Cmake[2]: *** [Makefile:77: docker-start] Interrupt
 make[1]: *** [Makefile:89: docker-python] Interrupt
-make: *** [Makefile:124: docker-python-dev] Interrupt
+make: *** [Makefile:130: docker-python-dev] Interrupt
 
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-bscore
+conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-copy-logs
+Successfully copied 139kB to /mnt/c/dsci-cap/capstone/logs/
+
+
+
+
+
+
+conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-bscore
  * Serving Flask app 'worker'
  * Debug mode: off
 WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
  * Running on all addresses (0.0.0.0)
  * Running on http://127.0.0.1:5002
- * Running on http://172.17.0.4:5002
+ * Running on http://172.17.0.3:5002
 Press CTRL+C to quit
-[QUEUED] chunk 'story-1_book-2_chapter-12_p.32590' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-172.18.0.8 - - [16/Nov/2025 13:39:14] "POST /tasks/queue HTTP/1.1" 202 -
-FINISHED: chunk ID: story-1_book-2_chapter-12_p.32590, result:
-{'value': 0.16666666666666663, 'annotations': {'Anthea attempted to light a fire, laying paper balls on the cinders and bringing a bundle of wood after breaking its string.': {'questions': 'What does "breaking its string" refer to? What is the significance of laying paper balls on the cinders?', 'types': ['entity omission', 'causal omission']}, 'She cut her finger slightly and some coal got on her hands and face.': {'questions': 'What caused her to cut her finger? How did the coal get on her hands and face? Is this detail significant to the main narrative?', 'types': ['entity omission', 'event omission', 'salience']}, 'She added more cinders and coal, raked out ashes from a fire burned there a week ago, and lit the edges of the paper balls as the wood began to fizz and crackle.': {'questions': None, 'types': None}, 'She avoided using today’s newspaper to light the fire, and she knocked her knuckle.': {'questions': 'Why did she avoid using today’s newspaper? What does knocking her knuckle signify in the context of the fire-making process?', 'types': ['causal omission', 'entity omission']}, 'She laid the largest and handsomest cinders in the bottom of the grate.': {'questions': 'What is the significance of the largest and handsomest cinders? Why is this detail included?', 'types': ['salience']}, 'Eliza had not raked the ashes.': {'questions': 'Who is Eliza? What is her relationship to Anthea? Why is it significant that she did not rake the ashes?', 'types': ['entity omission', 'causal omission']}}, 'model_used': 'openai-model_gpt-4o-mini'}
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-qeval
-Downloading: 6.81kB [00:00, 8.47MB/s]
+[QUEUED] chunk 'story-1_book-2_chapter-11_p.70080' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+172.18.0.8 - - [20/Nov/2025 01:17:07] "POST /tasks/queue HTTP/1.1" 202 -
+FINISHED: chunk ID: story-1_book-2_chapter-11_p.70080, result:
+{'value': 0.0, 'annotations': {"A phoenix perched atop a Christmas tree and spoke in both French and English, replying in French with “Parfaitement, madame.” The lady, owner of a genteel parakeet, lit a taper and small candles and exclaimed, “Oh, que c'est gentil,” followed by “Hooray.”": {'questions': 'What is the significance of the phoenix? Why is it speaking in both French and English? Who is the lady, and what is her relationship to the phoenix? What role does the parakeet play in the narrative?', 'types': ['entity omission', 'event omission', 'causal omission', 'salience']}}, 'model_used': 'openai-model_gpt-4o-mini'}
+conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-qeval
+Downloading: 6.81kB [00:00, 8.37MB/s]
 WARNING:root:Downloading language model for the spaCy model.
 DEPRECATION: https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl#egg=en_core_web_sm==3.0.0 contains an egg fragment with a non-PEP 508 name. pip 25.1 will enforce this behaviour change. A possible replacement is to use the req @ url syntax, and remove the egg fragment. Discussion can be found at https://github.com/pypa/pip/issues/13157
 Collecting en-core-web-sm==3.0.0
   Downloading https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl (13.7 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 20.5 MB/s eta 0:00:00
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 40.0 MB/s eta 0:00:00
 Requirement already satisfied: spacy<3.1.0,>=3.0.0 in /usr/local/lib/python3.8/site-packages (from en-core-web-sm==3.0.0) (3.0.6)
 Requirement already satisfied: spacy-legacy<3.1.0,>=3.0.4 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.0.12)
 Requirement already satisfied: murmurhash<1.1.0,>=0.28.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.0.13)
@@ -312,8 +512,8 @@ Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.8/si
 Requirement already satisfied: click<7.2.0,>=7.1.1 in /usr/local/lib/python3.8/site-packages (from typer<0.4.0,>=0.3.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (7.1.2)
 Requirement already satisfied: MarkupSafe>=0.23 in /usr/local/lib/python3.8/site-packages (from jinja2->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.1.1)
 Installing collected packages: en-core-web-sm
-Successfully installed en-core-web-sm-3.0.0
 WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+Successfully installed en-core-web-sm-3.0.0
 ✔ Download and installation successful
 You can now load the package via spacy.load('en_core_web_sm')
 
@@ -329,11 +529,11 @@ You can now load the package via spacy.load('en_core_web_sm')
    Use a production WSGI server instead.
  * Debug mode: off
 INFO:werkzeug: * Running on http://0.0.0.0:5001/ (Press CTRL+C to quit)
-[QUEUED] chunk 'story-1_book-2_chapter-12_p.32590' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-INFO:werkzeug:172.18.0.8 - - [16/Nov/2025 13:39:13] "POST /tasks/queue HTTP/1.1" 202 -
-Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.seq_relationship.weight', 'cls.predictions.bias', 'cls.predictions.transform.dense.bias', 'cls.predictions.transform.dense.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.seq_relationship.bias', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.weight']
+[QUEUED] chunk 'story-1_book-2_chapter-11_p.70080' from Boss: using database 'conan_capstone' and collection 'story_chunks'
+INFO:werkzeug:172.18.0.8 - - [20/Nov/2025 01:17:07] "POST /tasks/queue HTTP/1.1" 202 -
+Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.predictions.transform.dense.bias', 'cls.seq_relationship.weight', 'cls.predictions.bias', 'cls.predictions.transform.LayerNorm.bias', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.bias', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.decoder.weight']
 - This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
 - This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-FINISHED: chunk ID: story-1_book-2_chapter-12_p.32590, result:
-{'value': 0.18986892931206692, 'has_reference': False}
+FINISHED: chunk ID: story-1_book-2_chapter-11_p.70080, result:
+{'value': 0.2736208976916205, 'has_reference': False}
 Failed to notify boss: HTTPConnectionPool(host='python_service', port=5054): Read timed out. (read timeout=5)
