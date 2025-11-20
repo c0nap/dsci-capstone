@@ -105,6 +105,12 @@ docker-bookscore:
 
 
 
+docker-copy-logs:
+	docker cp container-python:/pipeline/logs/ ./
+docker-copy-checkpoint:
+	docker cp container-python:/pipeline/datasets/checkpoint.pkl ./datasets
+
+
 ###############################################################################
 # Starts container detached (no output) so we can continue using shell
 ###############################################################################
@@ -135,25 +141,27 @@ docker-workers-dev:
 ###############################################################################
 .PHONY: docker-test docker-test-dev docker-test-raw docker-all-tests docker-all-main
 
+PTARGS ?=
+
 # Run pytests using existing container images.
 # Default to VERBY=0 and COLOR=1.
 docker-test:
 	make docker-python CMD="pytest \
 		$(if $(filter 1,$(VERBY)),--log-success) \
-		$(if $(filter 1,$(COLOR)),,--no-log-colors)  ."
+		$(if $(filter 1,$(COLOR)),,--no-log-colors) $(PTARGS)"
 
 # Recompiles docker images to test the latest source code
 # Pytest will capture all console output - see non-capturing targets below.
 docker-test-dev:
 	make docker-build-dev-python
-	make docker-test
+	make docker-test PTARGS="$(PTARGS)"
 
 # Default to NOT verbose, and NO colors in messages from the Log class.
 docker-test-raw:
 	make docker-build-dev-python
 	make docker-python CMD="python -m pytest -s \
 		$(if $(filter 1,$(VERBY)),--log-success) \
-		$(if $(filter 1,$(COLOR)),,--no-log-colors) ."
+		$(if $(filter 1,$(COLOR)),,--no-log-colors) $(PTARGS)"
 
 # Shows Python print statements, but pytest output is messy.
 # Default to verbose and colorful.
@@ -161,14 +169,14 @@ docker-test-fancy:
 	make docker-build-dev-python
 	make docker-python CMD="python -m pytest -s \
 		$(if $(filter 0,$(VERBY)),,--log-success) \
-		$(if $(filter 0,$(COLOR)),--no-log-colors) ."
+		$(if $(filter 0,$(COLOR)),--no-log-colors) $(PTARGS)"
 	
 # Deploy everything to docker, but only run pytests
 docker-all-tests:
 	make docker-all-dbs
 	make docker-blazor-silent
 	sleep 15   # extra time needed for neo4j
-	make docker-test
+	make docker-test PTARGS="$(PTARGS)"
 
 # Deploy everything to docker and run the full pipeline
 docker-all-main:
@@ -177,6 +185,16 @@ docker-all-main:
 	sleep 5   # extra time needed for neo4j, but pipeline setup takes time too
 	make docker-python
 
+
+SMARGS ?= -m smoke
+
+# Run expensive smoke tests
+docker-smoke:
+	make docker-python CMD="pytest $(SMARGS) smoke/"
+
+docker-smoke-dev:
+	make docker-build-dev-python
+	make docker-smoke SMARGS="$(SMARGS)"
 
 
 ###############################################################################
@@ -377,11 +395,11 @@ docker-push-dev-blazor:
 .PHONY: docker-network
 docker-network:
 	if ! docker network inspect capstone_default >/dev/null 2>&1; then
-	    docker network create \
-	        --label com.docker.compose.network=default \
-	        --label com.docker.compose.project=capstone \
-	        capstone_default
-	    echo "Created new network 'capstone_default'"
+		docker network create \
+			--label com.docker.compose.network=default \
+			--label com.docker.compose.project=capstone \
+			capstone_default
+		echo "Created new network 'capstone_default'"
 	else
 		echo "Network 'capstone_default' already exists; continue..."
 	fi
@@ -422,10 +440,10 @@ docker-full-reset:
 ###############################################################################
 docker-python-size:
 	 docker run --rm dsci-cap-img-python-dev:latest sh -c "
-	  	echo '=== Largest packages ===' && \
-	  	du -sh /usr/local/lib/python3.12/site-packages/* 2>/dev/null | sort -hr | head -15 && \
-	  	echo '=== Torch version ===' && \
-	  	python -c \"import torch; print(f'Torch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')\""
+		echo '=== Largest packages ===' && \
+		du -sh /usr/local/lib/python3.12/site-packages/* 2>/dev/null | sort -hr | head -15 && \
+		echo '=== Torch version ===' && \
+		python -c \"import torch; print(f'Torch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')\""
 
 
 

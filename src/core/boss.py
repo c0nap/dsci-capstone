@@ -18,21 +18,6 @@ from typing import Any, Dict, Generator, List, Optional, Tuple
 MongoHandle = Generator["Database[Any]", None, None]
 
 
-# TODO: reconcile duplicate with main.py
-def pipeline_5b(
-    summary: str, book_title: str, book_id: str, chunk: str, gold_summary: str = "", bookscore: float = None, questeval: float = None
-) -> None:
-    """Send metrics to Blazor
-    - Compute basic metrics (ROUGE, BERTScore)
-    - Wait for advanced metrics (QuestEval, BooookScore)
-    - Post to Blazor metrics page"""
-    from src.components.metrics import Metrics
-
-    m = Metrics()
-    m.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
-    print("\nOutput sent to web app.")
-
-
 def load_worker_config(task_types: List[str]) -> Dict[str, str]:
     """Load worker service URLs from environment variables.
     @param task_types  List of valid task keys to use when searching the .env
@@ -251,6 +236,8 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         """Receive status notifications from worker services.
         Handles started, completed, and failed statuses.
         @return Simple acknowledgment response."""
+        from src.main import pipeline_E
+
         data = request.json
 
         chunk_id = data.get("chunk_id")
@@ -312,7 +299,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     gold_summary = chunk.get("gold_summary", text[: len(text) // 2])
                     bookscore = float(chunk["bookscore"]["result"]["value"])
                     questeval = float(chunk["questeval"]["result"]["value"])
-                    pipeline_5b(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
+                    pipeline_E(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
 
                     print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")
 

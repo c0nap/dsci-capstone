@@ -3,7 +3,13 @@ import random
 import re
 from src.connectors.graph import GraphConnector
 from src.util import Log
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, TypedDict
+
+
+class Triple(TypedDict):
+    s: str
+    r: str
+    o: str
 
 
 class KnowledgeGraph:
@@ -20,6 +26,8 @@ class KnowledgeGraph:
         self.database = database
         ## Whether to print debug messages.
         self.verbose = verbose
+        ## Flag to drop any existing graph when the first triple is added.
+        self._first_insert = True
 
     def add_triple(self, subject: str, relation: str, object_: str) -> None:
         """Add a semantic triple to the graph using raw Cypher.
@@ -29,6 +37,10 @@ class KnowledgeGraph:
         @note  LLM output should be pre-normalized using @ref src.connectors.llm.LLMConnector.normalize_triples.
         @throws Log.Failure  If the triple cannot be added to our graph database.
         """
+        if self._first_insert:
+            self._first_insert = False
+            if self.database.graph_exists(self.graph_name):
+                self.database.drop_graph(self.graph_name)
 
         # Normalize already-cleaned inputs for extra Cypher safety
         relation = re.sub(r"[^A-Za-z0-9_]", "_", relation).upper().strip("_")
@@ -50,6 +62,18 @@ class KnowledgeGraph:
                 Log.success(Log.kg, f"Added triple: ({subject})-[:{relation}]->({object_})", self.verbose)
         except Exception as e:
             raise Log.Failure(Log.kg, f"Failed to add triple: ({subject})-[:{relation}]->({object_})") from e
+
+    def add_triples_json(self, triples_json: List[Triple]) -> None:
+        """Add several semantic triples to the graph from pre-verified JSON.
+        @note  JSONshould be pre-normalized using @ref src.connectors.llm.LLMConnector.normalize_triples.
+        @param triples_json  A list of Triple dictionaries containing keys: 's', 'r', and 'o'.
+        @throws Log.Failure  If any triple cannot be added to the graph database.
+        """
+        for triple in triples_json:
+            subj = triple["s"]
+            rel = triple["r"]
+            obj = triple["o"]
+            self.add_triple(subj, rel, obj)
 
     def get_all_triples(self) -> DataFrame:
         """Return all triples in the specified graph as a pandas DataFrame.
@@ -169,19 +193,30 @@ class KnowledgeGraph:
     # ------------------------------------------------------------------------
     # Subgraph Selection
     # ------------------------------------------------------------------------
+    # TODO: add to_names and drop_ids flags to each of these
+    # user can avoid calling triples_to_names each time
+    # TODO: better approach to id_columns for unidirectional vs bidirectional, fan-in vs fan-out
 
-    def get_subgraph_by_nodes(self, node_ids: List[str]) -> DataFrame:
+    def get_subgraph_by_nodes(self, node_ids: List[str], id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
         """Return all triples where subject or object is in the specified node list.
         @param node_ids  List of node element IDs to filter by.
+        @param id_columns  List of columns to compare against. Can be 'subject_id', 'object_id', or both.
         @return  DataFrame with columns: subject_id, relation_id, object_id
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
+        @throws KeyError  If the provided column names are invalid.
         """
+        # TODO: Update pytest for id_columns
         triples_df = self.get_all_triples()
         if triples_df is None or triples_df.empty:
             raise Log.Failure(Log.kg + Log.sub_gr, Log.msg_bad_triples(self.graph_name))
 
+        missing = [k for k in id_columns if k not in triples_df.columns]
+        if missing:
+            raise KeyError(f"The provided key columns are not in triples_df: {missing}")
+
         # Filter triples where either endpoint is in node_ids
-        sub_df = triples_df[triples_df["subject_id"].isin(node_ids) | triples_df["object_id"].isin(node_ids)].reset_index(drop=True)
+        mask = triples_df[id_columns].isin(node_ids).any(axis=1)
+        sub_df = triples_df[mask].reset_index(drop=True)
 
         Log.success(Log.kg + Log.sub_gr, f"Found {len(sub_df)} triples for given nodes.", self.verbose)
         return sub_df
@@ -218,6 +253,72 @@ class KnowledgeGraph:
 
         Log.success(Log.kg + Log.sub_gr, f"Found {len(result_df)} triples in {depth}-hop neighborhood.", self.verbose)
         return result_df
+
+    def get_degree_range(self, min_degree: int = 1, max_degree: int = -1, id_columns: List[str] = ["subject_id", "object_id"]) -> DataFrame:
+        """Return triples associated with nodes whose degree lies within the specified bounds.
+        @details
+            - Degree is defined as the number of relationships where a node appears as
+              start_node_id or end_node_id.
+            - Selects all nodes satisfying min_degree <= degree <= max_degree
+              and returns triples incident to those nodes.
+        @param max_degree  Maximum number of edges allowed for a node to be included (-1 = infer highest edge count).
+        @param min_degree  Minimum number of edges required for a node to be included.
+        @param id_columns  List of columns to compare against. Can be 'subject_id', 'object_id', or both.
+        @return  DataFrame containing an arbitrary number of triples for nodes in the specified degree range.
+        @throws Log.Failure  If the graph fails to load or degree computation fails.
+        @throws ValueError   If min_degree or max_degree values are invalid.
+        """
+        pass
+
+    def get_by_ranked_degree(
+        self, best_rank: int = 1, worst_rank: int = -1, enforce_count: bool = False, id_columns: List[str] = ["subject_id", "object_id"]
+    ) -> DataFrame:
+        """Return triples associated with nodes whose degree rank lies in the specified range.
+        @details
+            - Computes degree (edge count) for all nodes.
+            - Sorts nodes by degree descending, assigns ranks, and selects those with
+              best_rank <= rank <= worst_rank.
+            - Returns all triples where subject_id or object_id matches a selected node.
+        @param best_rank  Minimum degree rank. Inclusive.
+        @param worst_rank  Maximum degree rank (-1 = maximum degree) to include. Inclusive.
+        @param enforce_count  Always return (worst_rank - best_rank + 1) rows (fallback to node_id order).
+        @param id_columns  List of columns to compare against. Can be 'subject_id', 'object_id', or both.
+        @return  DataFrame containing the triples for ranked nodes; columns:
+                 subject_id, relation_id, object_id.
+        @throws Log.Failure  If the graph cannot be queried.
+        @throws ValueError   If best_rank or worst_rank values are invalid.
+        """
+        if best_rank < 1:
+            raise ValueError("best_rank must be >= 1")
+        if worst_rank != -1 and worst_rank < best_rank:
+            raise ValueError("worst_rank must be >= best_rank, or -1 for no upper bound")
+
+        edge_df = self.get_edge_counts()
+        if edge_df is None or edge_df.empty:
+            raise Log.Failure(Log.kg, "Failed to compute edge counts.")
+        # Sort and assign rank (1 = highest degree)
+        edge_df = edge_df.sort_values(["edge_count", "node_id"], ascending=[False, True]).reset_index(drop=True)
+
+        if enforce_count:
+            # Take exact number of nodes by position, ignoring rank gaps
+            start_idx = best_rank - 1  # Convert 1-indexed rank to 0-indexed position
+            end_idx = worst_rank if worst_rank != -1 else len(edge_df)
+            ranked_nodes = edge_df.iloc[start_idx:end_idx]
+        else:
+            # Dense ranking: tied nodes get same rank, next rank is consecutive
+            edge_df["rank"] = edge_df["edge_count"].rank(method="dense", ascending=False).astype(int)
+            # Determine actual worst_rank
+            if worst_rank == -1:
+                worst_rank = int(edge_df["rank"].max())
+            # Filter nodes by rank
+            ranked_nodes = edge_df[(edge_df["rank"] >= best_rank) & (edge_df["rank"] <= worst_rank)]
+
+        if ranked_nodes.empty:
+            return DataFrame(columns=["subject_id", "relation_id", "object_id"])
+        node_ids = ranked_nodes["node_id"].tolist()
+
+        triples_df = self.get_subgraph_by_nodes(node_ids, id_columns=id_columns)
+        return triples_df
 
     def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
         """Sample subgraph using directed random walk traversal starting from specified nodes.
@@ -378,18 +479,36 @@ class KnowledgeGraph:
     # Verbalization Formats
     # ------------------------------------------------------------------------
 
-    def to_triple_string(self, triples_df: Optional[DataFrame] = None, format: str = "natural") -> str:
+    def to_triples_string(self, triple_names_df: Optional[DataFrame] = None, mode: str = "triple") -> str:
         """Convert triples to string representation in various formats.
         @details  Supports multiple output formats for LLM consumption:
-        - "natural": Human-readable sentences (e.g., "Alice knows Bob.")
-        - "triple": Raw triple format (e.g., "Alice KNOWS Bob")
+        - "natural": Human-readable sentences (e.g., "Alice employed by Bob.")
+        - "triple": Raw triple format (e.g., "Alice employedBy Bob")
         - "json": JSON array of objects with s/r/o keys
-        @param triples_df  DataFrame with subject/relation/object columns. If None, uses all triples from this graph.
-        @param format  Output format: "natural", "triple", or "json" (default: "natural").
+        @param triple_names_df  DataFrame with subject, relation, object columns. If None, uses all triples from this graph.
+        @param mode  Output format: "natural", "triple", or "json" (default: "triple").
         @return  String representation of triples in the specified format.
         @throws ValueError  If format is not recognized.
         """
-        pass
+        accepted_modes = ["natural", "triple", "json"]
+        if mode not in accepted_modes:
+            raise ValueError(f"Invalid triple string format {mode}; expected {accepted_modes}")
+
+        if triple_names_df is None:
+            triples_df = self.get_all_triples()
+            triple_names_df = self.triples_to_names(triples_df, drop_ids=True)
+
+        # TODO: Simplify & add other modes
+        if mode != "triple":
+            return "TODO"
+
+        triples_string = ""
+        for _, triple in triple_names_df.iterrows():
+            subj = triple["subject"]
+            rel = triple["relation"]
+            obj = triple["object"]
+            triples_string += f"{subj} {rel} {obj}\n"
+        return triples_string
 
     def to_contextualized_string(self, focus_nodes: Optional[List[str]] = None, top_n: int = 5) -> str:
         """Convert triples to contextualized string grouped by focus nodes.
@@ -438,9 +557,9 @@ class KnowledgeGraph:
         """
         pass
 
-    def get_edge_counts(self, top_n: int = 10) -> DataFrame:
+    def get_edge_counts(self, top_n: int = -1) -> DataFrame:
         """Return node names and their edge counts, ordered by edge count descending.
-        @param top_n  Number of top nodes to return (by edge count). Default is 10.
+        @param top_n  Number of top nodes to return (by edge count). Default is -1 (all nodes).
         @return  DataFrame with columns: node_id, edge_count
         @throws Log.Failure  If the query fails to retrieve the requested DataFrame.
         """
@@ -465,7 +584,9 @@ class KnowledgeGraph:
         # Convert to DataFrame and sort
         result_df = DataFrame(list(edge_counts.items()), columns=["element_id", "edge_count"])
         result_df = result_df.rename(columns={"element_id": "node_id"})
-        result_df = result_df.sort_values("edge_count", ascending=False).head(top_n)
+        result_df = result_df.sort_values("edge_count", ascending=False).reset_index(drop=True)
+        if top_n > 0:
+            result_df = result_df.head(top_n)
 
         Log.success(Log.kg, f"Found top-{top_n} most popular nodes.", self.verbose)
         return result_df

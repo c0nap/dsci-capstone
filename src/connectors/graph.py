@@ -386,6 +386,20 @@ class GraphConnector(DatabaseConnector):
         count = result.iloc[0, 0]
         return count > 0
 
+    def graph_exists(self, graph_name: str) -> bool:
+        """Search for an existing graph using the provided name.
+        @param graph_name  The name of a graph to search for.
+        @return  Whether the graph is visible to this connector."""
+        query = f"""MATCH (n)
+            WHERE n.kg = '{graph_name}'
+            RETURN count(n) AS count"""
+        # Result includes multiple collections & any dummy nodes
+        result = self.execute_query(query, _filter_results=False)
+        if result is None:
+            return False
+        count = result.iloc[0, 0]
+        return count > 0
+
     def delete_dummy(self) -> None:
         """Delete the initial dummy node from the database.
         @note  Never use this. Enables the existence of an "empty" database."""

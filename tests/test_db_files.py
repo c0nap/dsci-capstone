@@ -14,7 +14,7 @@ from typing import Generator, List, Optional
 # ------------------------------------------------------------------------------
 # DATABASE FILE TESTS: Run execute_file with example scripts.
 # ------------------------------------------------------------------------------
-@pytest.fixture(scope="module")
+@pytest.fixture
 def load_examples_relational(relational_db: RelationalConnector) -> Generator[None, None, None]:
     """Fixture to create relational tables using engine-specific syntax."""
     if relational_db.db_type == "MYSQL":
@@ -29,6 +29,7 @@ def load_examples_relational(relational_db: RelationalConnector) -> Generator[No
         raise Exception(f"Unknown database engine '{relational_db.db_type}'")
 
 
+@pytest.mark.db
 @pytest.mark.relational
 @pytest.mark.order(7)
 @pytest.mark.dependency(name="rel_example_1", depends=["rel_minimal", "rel_comprehensive"], scope="session")
@@ -43,6 +44,7 @@ def test_sql_example_1(relational_db: RelationalConnector, load_examples_relatio
     assert df.loc[1, 'name'] == 'Fluffy'
 
 
+@pytest.mark.db
 @pytest.mark.relational
 @pytest.mark.order(8)
 @pytest.mark.dependency(name="rel_example_2", depends=["rel_minimal", "rel_comprehensive"], scope="session")
@@ -57,6 +59,7 @@ def test_sql_example_2(relational_db: RelationalConnector, load_examples_relatio
     assert df.iloc[-1]['value'] == 'Timber'
 
 
+@pytest.mark.db
 @pytest.mark.document
 @pytest.mark.order(9)
 @pytest.mark.dependency(name="docs_example_1", depends=["docs_minimal", "docs_comprehensive"], scope="session")
@@ -72,6 +75,7 @@ def test_mongo_example_1(docs_db: DocumentConnector) -> None:
     docs_db.execute_query('{"drop": "books"}')
 
 
+@pytest.mark.db
 @pytest.mark.document
 @pytest.mark.order(10)
 @pytest.mark.dependency(name="docs_example_2", depends=["docs_minimal", "docs_comprehensive"], scope="session")
@@ -87,6 +91,7 @@ def test_mongo_example_2(docs_db: DocumentConnector) -> None:
     docs_db.execute_query('{"drop": "qa_exam"}')
 
 
+@pytest.mark.db
 @pytest.mark.document
 @pytest.mark.order(11)
 @pytest.mark.dependency(name="docs_example_3", depends=["docs_minimal", "docs_comprehensive"], scope="session")
@@ -106,6 +111,7 @@ def test_mongo_example_3(docs_db: DocumentConnector) -> None:
     docs_db.execute_query('{"drop": "potions"}')
 
 
+@pytest.mark.db
 @pytest.mark.graph
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="graph_example_1", depends=["graph_minimal", "graph_comprehensive"], scope="session")
@@ -127,6 +133,7 @@ def test_cypher_example_1(graph_db: GraphConnector) -> None:
     graph_db.drop_graph("pets")
 
 
+@pytest.mark.db
 @pytest.mark.graph
 @pytest.mark.order(13)
 @pytest.mark.dependency(name="graph_example_2", depends=["graph_minimal", "graph_comprehensive"], scope="session")
@@ -188,6 +195,7 @@ def test_cypher_example_2(graph_db: GraphConnector) -> None:
     graph_db.drop_graph("social")
 
 
+@pytest.mark.db
 @pytest.mark.graph
 @pytest.mark.order(14)
 @pytest.mark.dependency(name="graph_example_3", depends=["graph_minimal", "graph_comprehensive"], scope="session")
@@ -310,6 +318,7 @@ def test_cypher_example_3(graph_db: GraphConnector) -> None:
         graph_db.drop_graph(kg_name)
 
 
+@pytest.mark.db
 @pytest.mark.graph
 @pytest.mark.order(15)
 @pytest.mark.dependency(name="graph_example_4", depends=["graph_minimal", "graph_comprehensive"], scope="session")

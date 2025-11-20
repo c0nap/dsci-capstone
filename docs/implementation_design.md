@@ -119,3 +119,21 @@ Write directly to MongoDB
 
 TODO - Metrics: run_bookscore, run_questeval, etc
 
+### Pipeline Staged Design
+
+We balance two usages for every pipeline stage:
+1. Callable by main() without shuffling intermediate variables to different functions
+2. Testable: keep functions performing 1 minimal action
+
+We prioritize readability by implementing both.
+1. Main() can use the letter-incremented high-level stages, like `pipeline_A` which take lots of inputs 
+2. PyTest can use the number-incremented low-level, linear tasks, like `task_01_do_something` or parallel groups like `group_02_do_half_1` or `group_02_do_half_2`.
+
+These are orchestrated by main and boss still - we do not implement a DAG.
+
+In the future, main() can improve performance by assigning these in parallel.
+
+### Smoke Tests
+
+TODO
+

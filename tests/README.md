@@ -9,9 +9,8 @@ Test groups:
 - **examples-db**, **examples-llm** — minimal deterministic datasets used by the tests.
 
 Run the suite with:
-
 ```bash
-pytest .
+pytest -m "not smoke" tests/
 ```
 
 Or (if Docker is set up):

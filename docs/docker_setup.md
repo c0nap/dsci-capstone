@@ -160,9 +160,9 @@ docker run --name container-python -it dsci-cap-img-python-dev:latest
 - `--name container-python` → gives the container an alias for convenience.
 - `-it` → interactive terminal (python output will print to this console).
 
-To run tests instead of the full pipeline, append your command to the end to override the entry point. Use `pytest .` to run pytests instead of the full pipeline, or `/bin/sh` to enter the container and run your own commands.
+To run tests instead of the full pipeline, append your command to the end to override the entry point. Use just `pytest` to run pytests instead of the full pipeline, or `/bin/sh` to enter the container and run your own commands.
 ```bash
-docker run --name container-python -it dsci-cap-img-python-dev:latest pytest .
+docker run --name container-python -it dsci-cap-img-python-dev:latest pytest
 ```
 - `-p 5055:5055` → must be used if the container wants to listen on a specific port.
 - `-d` → detach the container from the current shell (no logs).

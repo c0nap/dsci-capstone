@@ -3,12 +3,14 @@ import pytest
 from src.components.fact_storage import KnowledgeGraph
 from src.connectors.graph import GraphConnector
 from src.util import Log
+from typing import Generator
 
 
 @pytest.mark.kg
 @pytest.mark.order(16)
 @pytest.mark.dependency(name="knowledge_graph_triples", depends=["graph_minimal", "graph_comprehensive"], scope="session")
-def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
+@pytest.mark.parametrize("main_graph", ["social_kg"], indirect=True)
+def test_knowledge_graph_triples(main_graph: KnowledgeGraph) -> None:
     """Test KnowledgeGraph triple operations using add_triple and get_all_triples.
     @details  Validates the KnowledgeGraph wrapper for semantic triple management:
     - add_triple() creates nodes and relationships
@@ -16,11 +18,7 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     - get_triple_properties() constructs a DataFrame with element properties as columns
     - triples_to_names() maps IDs to human-readable names
     """
-    graph_db.drop_graph("social_kg")
-
-    # Create a KnowledgeGraph instance
-    kg = KnowledgeGraph("social_kg", graph_db)
-
+    kg = main_graph
     # Add triples using the simplified API
     kg.add_triple("Alice", "KNOWS", "Bob")
     kg.add_triple("Bob", "KNOWS", "Charlie")
@@ -55,7 +53,7 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     assert any((triples_df["subject"] == "Bob") & (triples_df["relation"] == "FOLLOWS") & (triples_df["object"] == "Alice"))
 
     # Verify nodes were created (should be 3 unique: Alice, Bob, Charlie)
-    df = graph_db.get_dataframe("social_kg")
+    df = kg.database.get_dataframe("social_kg")
     assert not df.empty
     df_nodes = df[df["element_type"] == "node"]
     assert len(df_nodes) == 3
@@ -66,7 +64,7 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     assert node_names == {"Alice", "Bob", "Charlie"}
 
     # Test triples_to_names with pre-fetched lookup DataFrame
-    elements_df = graph_db.get_dataframe("social_kg")
+    elements_df = kg.database.get_dataframe("social_kg")
     triples_df_cached = kg.triples_to_names(triples_ids_df, drop_ids=True, df_lookup=elements_df)
     assert triples_df_cached is not None
     assert len(triples_df_cached) == 5
@@ -98,11 +96,9 @@ def test_knowledge_graph_triples(graph_db: GraphConnector) -> None:
     alice_knows_bob = props_df[(props_df["n1.name"] == "Alice") & (props_df["r.rel_type"] == "KNOWS") & (props_df["n2.name"] == "Bob")]
     assert len(alice_knows_bob) == 1
 
-    graph_db.drop_graph("social_kg")
 
-
-@pytest.fixture
-def nature_scene_graph(graph_db: GraphConnector) -> KnowledgeGraph:
+@pytest.fixture(params=["nature_scene"])
+def nature_scene_graph(main_graph: KnowledgeGraph) -> Generator[KnowledgeGraph, None, None]:
     """Create a scene graph with multiple location-based communities for testing.
     @details  Graph structure represents a park with distinct areas:
     - Playground: swings, slide, kids
@@ -111,8 +107,7 @@ def nature_scene_graph(graph_db: GraphConnector) -> KnowledgeGraph:
     - School building: doors, windows, classroom
     Each area forms a natural community for GraphRAG testing.
     """
-    graph_db.drop_graph("nature_scene")
-    kg = KnowledgeGraph("nature_scene", graph_db)
+    kg = main_graph
 
     # Playground community
     kg.add_triple("Kid1", "PLAYS_ON", "Swings")
@@ -148,8 +143,6 @@ def nature_scene_graph(graph_db: GraphConnector) -> KnowledgeGraph:
     kg.add_triple("School", "NEAR", "Playground")
 
     yield kg
-
-    graph_db.drop_graph("nature_scene")
 
 
 @pytest.mark.kg
@@ -556,10 +549,11 @@ def test_detect_community_clusters_comprehensive(nature_scene_graph: KnowledgeGr
 
     # Test 6: Empty community handling (valid - communities can have no internal edges)
     # Just verify that calling with any integer doesn't crash
-    result = kg.get_community_subgraph(999999)
+    result = kg.get_community_subgraph(-1)
     assert result is not None
     assert isinstance(result, DataFrame)
     assert list(result.columns) == ["subject_id", "relation_id", "object_id"]
+    assert len(result) == 0
 
     # Test 7: Louvain with multi-level (should work but may not produce hierarchy)
     kg.detect_community_clusters(method="louvain", multi_level=True)
@@ -569,3 +563,64 @@ def test_detect_community_clusters_comprehensive(nature_scene_graph: KnowledgeGr
     has_community_id = "community_id" in nodes_louvain_ml.columns and nodes_louvain_ml["community_id"].notna().any()
     has_community_list = "community_list" in nodes_louvain_ml.columns and nodes_louvain_ml["community_list"].notna().any()
     assert has_community_id or has_community_list, "Louvain multi-level should assign either community_id or community_list"
+
+
+@pytest.mark.kg
+@pytest.mark.order(24)
+@pytest.mark.dependency(name="degree_rank", depends=["subgraph_by_nodes"], scope="session")
+def test_ranked_degree(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test filtering triples by ranked node degree.
+    @details  Validates that get_by_ranked_degree correctly returns triples
+    whose endpoints belong to nodes within the specified degree rank range.
+    """
+    kg = nature_scene_graph
+
+    # Compute all node degrees
+    degree_df = kg.get_edge_counts()
+    assert not degree_df.empty
+
+    # Grab the top-ranked node (rank 1)
+    top_node_id = degree_df.sort_values("edge_count", ascending=False)["node_id"].iloc[0]
+
+    # Fetch triples for rank 1 only
+    subgraph = kg.get_by_ranked_degree(best_rank=1, worst_rank=1)
+    assert subgraph is not None
+    assert len(subgraph) > 0
+
+    # All triples must involve the top-ranked node
+    endpoints = set(subgraph["subject_id"]).union(set(subgraph["object_id"]))
+    assert top_node_id in endpoints
+
+    # Optional: verify degree ordering consistency
+    # (rank=1 node must have >= every other degree)
+    top_degree = degree_df[degree_df["node_id"] == top_node_id]["edge_count"].iloc[0]
+    assert all(top_degree >= degree_df["edge_count"])
+
+
+@pytest.mark.kg
+@pytest.mark.order(25)
+@pytest.mark.dependency(name="degree_rank_ties", depends=["degree_rank"], scope="session")
+def test_ranked_degree_ties(main_graph: KnowledgeGraph) -> None:
+    """Test that degree ranking correctly handles ties with minimal data.
+    @details  Verifies that nodes with equal degrees receive the same rank
+              and querying for non-existent ranks returns empty DataFrame.
+    """
+    kg = main_graph
+
+    # Add two isolated nodes (each with degree 1)
+    kg.add_triple("node_a", "relates_to", "node_b")
+    kg.add_triple("node_c", "relates_to", "node_d")
+
+    degree_df = kg.get_edge_counts()
+    assert len(degree_df) == 4  # 4 nodes total
+
+    # Both isolated pairs should have same degree and rank
+    # Ranks should be: all nodes have degree=1, so all should be rank 1
+    degree_df = degree_df.sort_values("edge_count", ascending=False).reset_index(drop=True)
+    degree_df["rank"] = degree_df["edge_count"].rank(method="dense", ascending=False).astype(int)
+    assert degree_df["rank"].nunique() == 1  # All same rank
+    assert degree_df["rank"].iloc[0] == 1
+
+    # Querying for rank 2 should return empty (no rank 2 exists)
+    empty_result = kg.get_by_ranked_degree(best_rank=2, worst_rank=2)
+    assert empty_result.empty, "No rank-2 nodes exist, should return empty"
