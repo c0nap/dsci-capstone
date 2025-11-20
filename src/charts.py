@@ -12,7 +12,7 @@ class Plot:
         """Plot average elapsed time per function name, averaging across runs.
         @param filename  Where to save the generated chart
         """
-        df = Log.get_timing_summary()  # DataFrame with columns ['function', 'elapsed', 'call_chain', 'run_id']
+        df = Log.get_merged_timing()  # DataFrame with columns ['function', 'elapsed', 'call_chain', 'run_id']
         # 1. Average per-run per-function (handles multiple calls in a run)
         per_run_avg = df.groupby(['run_id', 'function'])['elapsed'].mean().reset_index()
         

@@ -271,6 +271,27 @@ class Log:
         return df
 
     @staticmethod
+    def get_merged_timing(file_path: str = "./logs/elapsed_time.csv") -> DataFrame:
+        """Reads the existing file, deletes rows matching this run_id, and adds current data.
+        @return  DataFrame with columns: function, elapsed, call_chain, run_id
+        """
+        # Current run timing as DataFrame
+        current_df = Log.get_timing_summary()
+
+        # Read existing file if it exists
+        if os.path.exists(file_path):
+            existing_df = pd.read_csv(file_path)
+            # Remove rows with the current run_id
+            existing_df = existing_df[existing_df['run_id'] != Log._current_run_id]
+        else:
+            # No file yet
+            existing_df = DataFrame(columns=['function', 'elapsed', 'call_chain', "run_id"])
+
+        # Merge existing with current
+        merged_df = pd.concat([existing_df, current_df], ignore_index=True)
+        return merged_df
+
+    @staticmethod
     def dump_timing_csv(file_path: str = "./logs/elapsed_time.csv") -> None:
         """Save timing results to a CSV file, appending if it already exists.
         @param file_path  Where the saved CSV will be located.
@@ -281,7 +302,7 @@ class Log:
         # Check if file exists to decide whether to write header
         file_exists = os.path.exists(file_path)
 
-        df = Log.get_timing_summary()
+        df = Log.get_merged_timing()
         df.to_csv(file_path, mode="a", index=False, header=not file_exists)
         Log.time_message(prefix=Log.t_dump, msg=Log.msg_time_dump(file_path))
     
