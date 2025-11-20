@@ -172,8 +172,8 @@ if __name__ == "__main__":
     book_title = "The Phoenix and the Carpet"
 
     if load_from_checkpoint:
-        with open(checkpoint_path, "rb") as f:
-            data = pickle.load(f)
+        with open(checkpoint_path, "rb") as f_read:
+            data = pickle.load(f_read)
         triples = data["triples"]
         chunk = data["chunk"]
         print(f"Checkpoint loaded from {checkpoint_path}")
@@ -205,8 +205,8 @@ CHAPTER 12. THE END OF THE END\n
         post_story_status(BOSS_PORT, story_id, 'chunking', 'completed')
         triples, chunk = pipeline_B(COLLECTION, chunks, book_title)
 
-        with open(checkpoint_path, "wb") as f:
-            pickle.dump({"triples": triples, "chunk": chunk}, f)
+        with open(checkpoint_path, "wb") as f_write:
+            pickle.dump({"triples": triples, "chunk": chunk}, f_write)
         print(f"Checkpoint saved to {checkpoint_path}")
 
     chunk_id = chunk.get_chunk_id()

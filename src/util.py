@@ -2,7 +2,7 @@ from contextlib import contextmanager
 import functools
 import inspect
 from inspect import FrameInfo
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, read_csv, concat
 import sys
 import os
 import time
@@ -167,7 +167,7 @@ class Log:
         @param filename  Where the chart was saved to.
         @param verbose  Whether to actually print. Saves space and reduces nested if statements.
         """
-        msg = Log.msg_chart_saved(name, seconds)
+        msg = Log.msg_chart_saved(title, filename)
         Log.chart_message(msg=msg, verbose=verbose)
 
     msg_chart_saved = lambda title, filename: f"Saved chart '{title}'' to {filename}"
@@ -307,15 +307,15 @@ class Log:
 
         # Read existing file if it exists
         if os.path.exists(file_path):
-            existing_df = pd.read_csv(file_path)
+            existing_df = read_csv(file_path)
             # Remove rows with the current run_id
-            existing_df = existing_df[existing_df['run_id'] != Log._current_run_id]
+            existing_df = existing_df[existing_df['run_id'] != Log.run_id]
         else:
             # No file yet
             existing_df = DataFrame(columns=['function', 'elapsed', 'call_chain', "run_id"])
 
         # Merge existing with current
-        merged_df = pd.concat([existing_df, current_df], ignore_index=True)
+        merged_df = concat([existing_df, current_df], ignore_index=True)
         return merged_df
 
     @staticmethod
