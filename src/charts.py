@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import os
 import pandas as pd
 import seaborn as sns
 from src.util import Log
@@ -29,6 +30,7 @@ class Plot:
         plt.tight_layout()
 
         # 4. Save the figure
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         plt.savefig(filename)
         plt.close()
         Log.chart(title, filename)

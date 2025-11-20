@@ -107,7 +107,8 @@ docker-bookscore:
 
 docker-copy-logs:
 	docker cp container-python:/pipeline/logs/ ./
-
+docker-copy-checkpoint:
+	docker cp container-python:/pipeline/datasets/checkpoint.pkl ./datasets
 
 
 ###############################################################################
