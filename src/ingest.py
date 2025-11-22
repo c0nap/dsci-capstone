@@ -180,7 +180,7 @@ class BookSumLoader(DatasetLoader):
             text_path = self._save_text(book_id, title, text)
             
             # Extract original BookSum ID (if available, otherwise use count)
-            booksum_id = raw.get("id", count)
+            booksum_id = raw.get("bid", count)
             
             # Metadata row
             metadata_row = {
@@ -427,10 +427,13 @@ class LitBankLoader(DatasetLoader):
         new_stem = f"{book_id:05d}_{title.replace(' ', '_')}_brat"
         annotation_paths = self._copy_annotations(stem, new_stem)
         
+        # Extract LitBank ID
+        lb_id = int(stem.split("_")[0])
+
         # Build metadata row
         metadata_row = {
             "book_id": book_id,
-            "litbank_id": stem,
+            "litbank_id": lb_id,
             "title": title,
             "author": author,
             "gutenberg_id": gutenberg_id,
@@ -447,7 +450,7 @@ class LitBankLoader(DatasetLoader):
             "booksum_path": None,
             "nqa_id": None,
             "nqa_path": None,
-            "litbank_id": stem,
+            "litbank_id": lb_id,
             "litbank_path": self.metadata_file
         }
         self._append_to_index(index_row)
