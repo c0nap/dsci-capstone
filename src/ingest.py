@@ -855,6 +855,9 @@ def download_and_index(n_booksum: int = None,
         loader.download(n=n_litbank)
         print(f"✓ LitBank processed\n")
     
+    # Clean up any ghost entries from existing index.csv
+    reindex()
+
     print("=== Global Index Summary ===")
     if os.path.exists(DatasetLoader.INDEX_FILE):
         index = read_csv(DatasetLoader.INDEX_FILE)
@@ -863,6 +866,39 @@ def download_and_index(n_booksum: int = None,
         print(f"Texts directory: {DatasetLoader.TEXTS_DIR}")
     else:
         print("No index file created (no data downloaded)")
+
+
+def reindex() -> None:
+    """Prune global index of entries with missing text files.
+    @details
+    Checks 'text_path' for every row in index.csv. If the file does not exist,
+    the row is removed. This cleans up 'ghost' entries from previous runs.
+    """
+    index_file = DatasetLoader.INDEX_FILE
+    if not os.path.exists(index_file):
+        return
+
+    print("Verifying index integrity...")
+    df = read_csv(index_file)
+    initial_count = len(df)
+
+    # Define validation logic
+    def file_exists(path):
+        # We only care if the path is non-empty and exists
+        return isinstance(path, str) and os.path.exists(path)
+
+    # Filter: Keep rows where text_path exists
+    # (We assume text_path is the source of truth for a book's existence)
+    valid_rows = df[df['text_path'].apply(file_exists)]
+    
+    final_count = len(valid_rows)
+    removed_count = initial_count - final_count
+
+    if removed_count > 0:
+        valid_rows.to_csv(index_file, index=False)
+        print(f"✓ Reindexing complete: Removed {removed_count} broken entries.\n")
+    else:
+        print("✓ Reindexing complete: No broken entries found.\n")
 
 
 # --------------------------------------
