@@ -5,7 +5,7 @@ Alignment functions handle fuzzy matching across datasets.
 """
 
 from abc import ABC, abstractmethod
-from typing import Iterator
+from typing import Iterator, Optional
 from pandas import DataFrame, read_csv
 from datasets import load_dataset, DatasetDict  # type: ignore
 from rapidfuzz import fuzz, process
@@ -13,6 +13,8 @@ import shutil
 import re
 import os
 import subprocess
+import requests
+import time
 
 
 # --------------------------------------
@@ -22,13 +24,14 @@ import subprocess
 class DatasetLoader(ABC):
     """Base loader for book datasets from various sources.
     @details
-    Handles streaming for large datasets and normalizes output to a 
-    common schema (title, author, text, summary, etc.)
+    Handles streaming for large datasets, normalizes output to a 
+    common schema, and provides shared utilities for Gutenberg lookups.
     """
     
     TEXTS_DIR = "./datasets/texts"
     INDEX_FILE = "./datasets/index.csv"
     NEXT_ID_FILE = "./datasets/next_id.txt"
+    GUTENDEX_API = "https://gutendex.com/books"
     
     @abstractmethod
     def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
@@ -45,6 +48,65 @@ class DatasetLoader(ABC):
         """
         pass
     
+    def fetch_gutenberg_metadata(self, query: str = None, gutenberg_id: str | int = None) -> Optional[dict]:
+        """Search or lookup metadata from Gutendex.
+        @param query  General search string (title/author). Used if gutenberg_id is None.
+        @param gutenberg_id  Specific Gutenberg ID. If provided, performs direct lookup.
+        @return  Normalized dict with keys: title, author, language, gutenberg_id, text_url.
+                 Returns None if not found or on error.
+        """
+        if not query and not gutenberg_id:
+            return None
+
+        try:
+            # 1. Direct ID Lookup
+            if gutenberg_id:
+                url = f"{self.GUTENDEX_API}/{gutenberg_id}"
+                params = {}
+            # 2. Search Query
+            else:
+                url = self.GUTENDEX_API
+                params = {"search": query}
+
+            response = requests.get(url, params=params, timeout=10)
+            
+            # Rate limit politeness
+            if response.status_code == 429:
+                time.sleep(2)
+                response = requests.get(url, params=params, timeout=10)
+
+            response.raise_for_status()
+            data = response.json()
+
+            # Handle search results vs direct object return
+            result = None
+            if gutenberg_id:
+                result = data  # Direct ID returns the object
+            elif data.get("count", 0) > 0:
+                result = data["results"][0]  # Search returns list, take top match
+
+            if not result:
+                return None
+
+            # Normalize output
+            authors = [a.get("name", "") for a in result.get("authors", [])]
+            
+            # Find text URL (prefer plain text)
+            formats = result.get("formats", {})
+            text_url = formats.get("text/plain; charset=utf-8") or formats.get("text/plain")
+
+            return {
+                "gutenberg_id": result.get("id"),
+                "title": result.get("title", ""),
+                "author": ", ".join(authors) if authors else "",
+                "language": result.get("languages", [""])[0],
+                "text_url": text_url
+            }
+
+        except Exception as e:
+            print(f"Warning: Gutendex lookup failed for {gutenberg_id or query}: {e}")
+            return None
+
     def _calculate_subset_size(self, total: int, n: int = None, fraction: float = None) -> int:
         """Calculate number of items to download.
         @param total  Total number of items available.
@@ -107,9 +169,9 @@ class DatasetLoader(ABC):
         # Create index with headers if doesn't exist
         if not os.path.exists(self.INDEX_FILE):
             headers = ["book_id", "title", "gutenberg_id", "text_path", 
-                      "booksum_id", "booksum_path", 
-                      "nqa_id", "nqa_path", 
-                      "litbank_id", "litbank_path"]
+                       "booksum_id", "booksum_path", 
+                       "nqa_id", "nqa_path", 
+                       "litbank_id", "litbank_path"]
             df = DataFrame(columns=headers)
             df.to_csv(self.INDEX_FILE, index=False)
         
@@ -358,7 +420,6 @@ class LitBankLoader(DatasetLoader):
         self.repo_path = repo_path
         self.cache_dir = cache_dir
         self.metadata_file = f"{cache_dir}/metadata.csv"
-        self.gutendex_url = "https://gutendex.com/books"
     
     def download(self, n: int = None, fraction: float = None) -> None:
         """Process LitBank files and copy annotations.
@@ -412,12 +473,20 @@ class LitBankLoader(DatasetLoader):
         # Get new book ID
         book_id = self._get_next_id()
         
-        # Fetch metadata from Gutendex
-        metadata = self._fetch_gutenberg_metadata(gutenberg_id)
-        title = metadata.get("title", "").strip().lower()
+        # Fetch metadata from Gutendex using base class Helper
+        # This now uses the centralized logic
+        metadata = self.fetch_gutenberg_metadata(gutenberg_id=gutenberg_id)
+        
+        # Fallback to file parsing if API fails
+        if metadata:
+            title = metadata.get("title", "").strip().lower()
+            author = metadata.get("author", "").strip().lower()
+        else:
+            title = original_title.lower()
+            author = ""
+        
         if not title:
             title = original_title.lower()
-        author = metadata.get("author", "").strip().lower()
         
         # Read and save main text
         entities_brat_path = os.path.join(self.repo_path, "entities/brat", fname)
@@ -538,29 +607,6 @@ class LitBankLoader(DatasetLoader):
         else:
             paths_dict[key] = None
     
-    def _fetch_gutenberg_metadata(self, gutenberg_id: str) -> dict:
-        """Fetch metadata from Gutendex API.
-        @param gutenberg_id  Project Gutenberg ID number.
-        @return  Dict with keys: title, author, language.
-        """
-        import requests
-        
-        try:
-            url = f"{self.gutendex_url}/{gutenberg_id}"
-            response = requests.get(url, timeout=10)
-            response.raise_for_status()
-            data = response.json()
-            
-            authors = [a.get("name", "") for a in data.get("authors", [])]
-            
-            return {
-                "title": data.get("title", ""),
-                "author": ", ".join(authors) if authors else "",
-                "language": data.get("languages", [""])[0],
-            }
-        except Exception:
-            return {"title": "", "author": "", "language": ""}
-    
     def load(self, streaming: bool = False) -> DataFrame:
         """Load dataset from cache.
         @param streaming  Ignored - always loads full DataFrame from cache.
@@ -581,7 +627,6 @@ class LitBankLoader(DatasetLoader):
                 "entities_brat_txt", "entities_brat_ann", "entities_tsv",
                 "events_tsv", "coref_brat_txt", "coref_brat_ann", "coref_conll",
                 "quotations_brat_txt", "quotations_brat_ann"]
-    
 
 
 # --------------------------------------
