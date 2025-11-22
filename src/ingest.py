@@ -820,21 +820,33 @@ def download_and_index(n_booksum: int = None,
     print("=== Downloading Datasets ===\n")
     
     # Download BookSum
-    if n_booksum is not None or n_booksum != 0:
+    if n_booksum is None or n_booksum == 0:
+        print(f"Skipping BookSum (n=0)...\n")
+    else:
+        if n_booksum == -1:
+            n_booksum = None
         print(f"Downloading BookSum (n={n_booksum or 'all'})...")
         loader = BookSumLoader()
         loader.download(n=n_booksum)
         print(f"✓ BookSum downloaded\n")
-    
+
     # Download NarrativeQA
-    if n_nqa is not None or n_nqa != 0:
+    if n_nqa is None or n_nqa == 0:
+        print(f"Skipping NarrativeQA (n=0)...\n")
+    else:
+        if n_nqa == -1:
+            n_nqa = None
         print(f"Downloading NarrativeQA (n={n_nqa or 'all'})...")
         loader = NarrativeQALoader()
         loader.download(n=n_nqa)
         print(f"✓ NarrativeQA downloaded\n")
     
     # Download LitBank
-    if n_litbank is not None or n_litbank != 0:
+    if n_litbank is None or n_litbank == 0:
+        print(f"Skipping LitBank (n=0)...\n")
+    else:
+        if n_litbank == -1:
+            n_litbank = None
         print(f"Processing LitBank (n={n_litbank or 'all'})...")
         loader = LitBankLoader(repo_path=litbank_repo)
         loader.download(n=n_litbank)
@@ -876,21 +888,21 @@ Examples:
     parser.add_argument(
         "--n-booksum",
         type=int,
-        default=None,
+        default=-1,
         help="Number of BookSum books to download (default: all)"
     )
     
     parser.add_argument(
         "--n-nqa",
         type=int,
-        default=None,
+        default=-1,
         help="Number of NarrativeQA books to download (default: all)"
     )
     
     parser.add_argument(
         "--n-litbank",
         type=int,
-        default=None,
+        default=-1,
         help="Number of LitBank books to process (default: all)"
     )
     
