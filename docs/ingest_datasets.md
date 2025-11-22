@@ -1,7 +1,10 @@
 # Dataset Loading System
 
-## Core Concept
+## Core Concepts
+
 Separate **downloading** (fetch and cache) from **loading** (read from cache).
+
+`load()` will fail if `ingest.py` has not yet been run, or if the datasets folder is empty.
 
 
 ## File Structure
@@ -27,69 +30,81 @@ ingest.py
 └── litbank/                          # Mirror the structure of LitBank repository
     ├── metadata.csv                  # Contains: entities_path, coref_path, etc.
     ├── entities/
-    │   └── tsv/                      # Supplemental files: also reindexed by ingest.py
+    │   ├── brat/                     # Supplemental files: also reindexed by ingest.py
+    │   │   ├── 00003_bleak_house_brat.txt
+    │   │   └── 00003_bleak_house_brat.ann
+    │   └── tsv/
     │       └── 00003_bleak_house_brat.tsv
-    ├── coref/
-    │   └── conll/
-    │       └── 00003_bleak_house_brat.conll
     ├── events/
     │   └── tsv/
     │       └── 00003_bleak_house_brat.tsv
+    ├── coref/
+    │   ├── brat/
+    │   │   ├── 00003_bleak_house_brat.txt
+    │   │   └── 00003_bleak_house_brat.ann
+    │   └── conll/
+    │       └── 00003_bleak_house_brat.conll
     └── quotations/
-        └── tsv/
-            └── 00003_bleak_house_brat.tsv
+        └── brat/
+            ├── 00003_bleak_house_brat.txt
+            └── 00003_bleak_house_brat.ann
 ```
 
 ## Book Indexing
 
 **Global ID tracking:** `./datasets/next_id.txt` increments atomically. Each book gets unique ID during `download()`, saved as `./datasets/texts/{id}_{title}.txt`. 
 
-**Global index:** ABC maintains `./datasets/index.csv` as a unified registry. When any loader downloads books, it appends rows with book_id, title, gutenberg_id (when available), text_path, and a column for that dataset's metadata path (booksum_metadata_path, narrativeqa_metadata_path, or litbank_metadata_path). This allows cross-dataset lookups - find a book by ID, see which datasets have metadata for it, and locate all associated files.
+**Global index:** ABC maintains `./datasets/index.csv` as a unified registry. When any loader downloads books, it appends rows with book_id, title, gutenberg_id (when available), text_path, and a column for that dataset's metadata path (booksum_path, nqa_path, or litbank_path). This allows cross-dataset lookups - find a book by ID, see which datasets have metadata for it, and locate all associated files.
 
 ## Dataset Schemas
 
 ```
 booksum/metadata.csv
-├── book_id
+├── book_id               # Our global ID
+├── booksum_id            # Original BookSum ID
 ├── title
 └── summary
 
 narrativeqa/metadata.csv
-├── book_id
+├── book_id               # Our global ID
+├── nqa_id                # Original NarrativeQA document.id
 ├── title
 ├── author
-├── nqa_id
 └── summary
 
 litbank/metadata.csv
-├── book_id
+├── book_id               # Our global ID
+├── litbank_id            # Original filename stem (e.g., "1342_pride_and_prejudice")
 ├── title
-├── events_path           # → ./datasets/litbank/events/tsv/{id}_{title}.tsv
-├── entities_path         # → ./datasets/litbank/entities/tsv/{id}_{title}.tsv
-├── coref_path            # → ./datasets/litbank/coref/conll/{id}_{title}.conll
-└── quotations_path       # → ./datasets/litbank/quotations/tsv/{id}_{title}.tsv
+├── author
+├── gutenberg_id
+├── entities_brat_txt     # → ./datasets/litbank/entities/brat/{id}_{title}_brat.txt
+├── entities_brat_ann     # → ./datasets/litbank/entities/brat/{id}_{title}_brat.ann
+├── entities_tsv          # → ./datasets/litbank/entities/tsv/{id}_{title}_brat.tsv
+├── events_tsv            # → ./datasets/litbank/events/tsv/{id}_{title}_brat.tsv
+├── coref_brat_txt        # → ./datasets/litbank/coref/brat/{id}_{title}_brat.txt
+├── coref_brat_ann        # → ./datasets/litbank/coref/brat/{id}_{title}_brat.ann
+├── coref_conll           # → ./datasets/litbank/coref/conll/{id}_{title}_brat.conll
+├── quotations_brat_txt   # → ./datasets/litbank/quotations/brat/{id}_{title}_brat.txt
+└── quotations_brat_ann   # → ./datasets/litbank/quotations/brat/{id}_{title}_brat.ann
 
-litbank/.../{id}_{title}.tsv
-├── tokens                # One token per row
-├── events                # Second column: O | EVENT
-├── entities              # Multiple columns: O | B-FAC | I-LOC | ...
+litbank annotation formats:
+├── entities/tsv          # Token per row, columns for entity types (O, B-PER, I-FAC, etc.)
+├── events/tsv            # Token per row, second column for EVENT labels (O or EVENT)
+├── coref/conll           # CoNLL format for coreference chains
+└── *.brat.txt/.brat.ann  # Brat standoff format (entities, coref, quotations)
 
-litbank/.../{id}_{title}_brat.ann
-├── tokens                # 
-├── coref                 # 
-└── quotations            #
-
-index.csv                 # Keeps track of global indexing and alignment
-├── book_id
+index.csv
+├── book_id               # Our global ID
 ├── title
 ├── gutenberg_id
 ├── text_path             # → ./datasets/texts/{id}_{title}.txt
-├── booksum_id
-├── booksum_path          # → ./datasets/booksum/metadata.csv (if book in BookSum)
-├── nqa_id
-├── nqa_path              # → ./datasets/narrativeqa/metadata.csv (if book in NarrativeQA)
-├── litbank_id
-└── litbank_path          # → ./datasets/litbank/metadata.csv (if book in LitBank)
+├── booksum_id            # Original BookSum ID (if in BookSum)
+├── booksum_path          # → ./datasets/booksum/metadata.csv
+├── nqa_id                # Original NarrativeQA document.id (if in NarrativeQA)
+├── nqa_path              # → ./datasets/narrativeqa/metadata.csv
+├── litbank_id            # Original LitBank filename stem (if in LitBank)
+└── litbank_path          # → ./datasets/litbank/metadata.csv
 ```
 
 
@@ -102,7 +117,7 @@ git clone https://github.com/dbamman/litbank ./datasets/litbank
 
 BookSum and NarrativeQA require no external setup.
 
-Run the setup script to clean the `datasets` folder and download / allign datasets before the first run.
+Run the setup script to clean the `datasets` folder and download / align datasets before the first run.
 ```bash
 python -m src.components.ingest
 ```
@@ -134,7 +149,7 @@ bs = BookSumLoader().load()
 nqa = NarrativeQALoader().load()
 lit = LitBankLoader("./litbank").load()
 
-# Align
+# Align by book title
 merged = fuzzy_merge(bs, nqa, "_bs", "_nqa", key="title", threshold=70)
 
 # Read full text only when needed
@@ -155,7 +170,6 @@ text = load_text_from_path(lit.loc[0, 'text_path'])
 **Separation of concerns:**
 - `download()` = I/O and external APIs
 - `load()` = Cache management
-- `_normalize_row()` = Data transformation
 
 **Cache-first:**
 - Download once, load many times
