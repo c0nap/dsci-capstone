@@ -9,6 +9,7 @@ from typing import Iterator
 from pandas import DataFrame, read_csv
 from datasets import load_dataset, DatasetDict  # type: ignore
 from rapidfuzz import fuzz, process
+import shutil
 import re
 import os
 
@@ -858,7 +859,7 @@ def download_and_index(n_booksum: int = None,
 
 def print_index():
     """Inspects the cross-dataset book registry, and prints a helpful summary."""
-    print("=== Global Index Summary ===")
+    print("\n=== Global Index Summary ===")
     if os.path.exists(DatasetLoader.INDEX_FILE):
         index = read_csv(DatasetLoader.INDEX_FILE)
         print(f"Total books indexed: {len(index)}")
@@ -926,9 +927,9 @@ def hard_reset() -> None:
     
     print("Renumbering files...")
     for new_id_int, (idx, row) in enumerate(df.iterrows(), start=1):
-        old_path = row['text_path']
-        old_id = row['book_id']
-        title = row['title']
+        old_path = str(row['text_path'])
+        old_id = int(row['book_id'])
+        title = str(row['title'])
         
         # Generate new path
         # Format: datasets/texts/00001_title.txt
