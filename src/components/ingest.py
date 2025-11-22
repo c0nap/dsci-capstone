@@ -24,6 +24,10 @@ class DatasetLoader(ABC):
     common schema (title, author, text, summary, etc.)
     """
     
+    TEXTS_DIR = "./datasets/texts"
+    INDEX_FILE = "./datasets/index.csv"
+    NEXT_ID_FILE = "./datasets/next_id.txt"
+    
     @abstractmethod
     def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
         """Load dataset.
@@ -51,6 +55,71 @@ class DatasetLoader(ABC):
         elif n is None:
             return total
         return min(n, total)
+    
+    def _get_next_id(self) -> int:
+        """Get next available book ID and increment counter.
+        @return  Next book ID as integer.
+        @details
+        Atomically reads and increments the global ID counter in next_id.txt.
+        Creates the file with ID 1 if it doesn't exist.
+        """
+        os.makedirs(os.path.dirname(self.NEXT_ID_FILE), exist_ok=True)
+        
+        if not os.path.exists(self.NEXT_ID_FILE):
+            with open(self.NEXT_ID_FILE, "w") as f:
+                f.write("1")
+            return 1
+        
+        with open(self.NEXT_ID_FILE, "r") as f:
+            current_id = int(f.read().strip())
+        
+        with open(self.NEXT_ID_FILE, "w") as f:
+            f.write(str(current_id + 1))
+        
+        return current_id
+    
+    def _save_text(self, book_id: int, title: str, text: str) -> str:
+        """Save text to global texts directory.
+        @param book_id  Global book ID.
+        @param title  Normalized book title.
+        @param text  Full text content.
+        @return  Path to saved text file.
+        """
+        os.makedirs(self.TEXTS_DIR, exist_ok=True)
+        
+        # Normalize title for filename
+        filename = f"{book_id:05d}_{title.replace(' ', '_')}.txt"
+        filepath = os.path.join(self.TEXTS_DIR, filename)
+        
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(text)
+        
+        return filepath
+    
+    def _append_to_index(self, row: dict) -> None:
+        """Append book entry to global index.
+        @param row  Dict with keys: book_id, title, gutenberg_id, text_path, and dataset-specific fields.
+        @details
+        Creates index.csv if it doesn't exist. Appends row to existing index.
+        """
+        # Create index with headers if doesn't exist
+        if not os.path.exists(self.INDEX_FILE):
+            headers = ["book_id", "title", "gutenberg_id", "text_path", 
+                      "booksum_id", "booksum_path", 
+                      "nqa_id", "nqa_path", 
+                      "litbank_id", "litbank_path"]
+            df = DataFrame(columns=headers)
+            df.to_csv(self.INDEX_FILE, index=False)
+        
+        # Read existing index
+        index_df = read_csv(self.INDEX_FILE)
+        
+        # Append new row
+        new_row = DataFrame([row])
+        index_df = DataFrame(list(index_df.to_dict('records')) + list(new_row.to_dict('records')))
+        
+        # Save updated index
+        index_df.to_csv(self.INDEX_FILE, index=False)
 
 
 class BookSumLoader(DatasetLoader):
@@ -65,224 +134,388 @@ class BookSumLoader(DatasetLoader):
         self.subset = "books"
         self.split = split
         self.cache_dir = cache_dir
+        self.metadata_file = f"{cache_dir}/metadata.csv"
     
     def download(self, n: int = None, fraction: float = None) -> None:
         """Download dataset to local cache.
         @param n  Number of books to download. If None, downloads all.
         @param fraction  Fraction of dataset to download (0.0-1.0). Overrides n if set.
         @details
-        Downloads HuggingFace dataset and saves as CSV to cache_dir.
-        Subsequent loads will use the cached version.
-        
-        Examples:
-        - download() - Download full dataset
-        - download(n=1) - Download 1 book (minimal)
-        - download(n=10) - Download 10 books
-        - download(fraction=0.1) - Download 10% of dataset
+        Downloads HuggingFace dataset, saves text to global texts dir,
+        saves metadata as CSV, and appends to global index.
         """
         os.makedirs(self.cache_dir, exist_ok=True)
         
         ds = load_dataset(self.dataset_name, self.subset, split=self.split)
         
+        # Debug: print available columns
+        print(f"BookSum columns: {ds.column_names}")
+        
         # Calculate subset size
         total = len(ds)
         num_to_download = self._calculate_subset_size(total, n, fraction)
         
-        # Take subset
-        rows = [self._normalize_row(ds[i]) for i in range(num_to_download)]
+        # Process each book
+        rows = []
+        for i in range(num_to_download):
+            book_id = self._get_next_id()
+            raw = ds[i]
+            
+            # Normalize title
+            title = raw.get("title", "")
+            if isinstance(title, str):
+                title = title.lower().strip()
+                title = re.sub(r"[\W_]+", " ", title).strip()
+            else:
+                title = ""
+            
+            # Save full text
+            text = raw.get("text", "")
+            text_path = self._save_text(book_id, title, text)
+            
+            # Extract original BookSum ID (if available, otherwise use index)
+            booksum_id = raw.get("id", i)  # Will verify from debug print
+            
+            # Metadata row
+            metadata_row = {
+                "book_id": book_id,
+                "booksum_id": booksum_id,
+                "title": title,
+                "summary": raw.get("summary", "")
+            }
+            rows.append(metadata_row)
+            
+            # Append to global index
+            index_row = {
+                "book_id": book_id,
+                "title": title,
+                "gutenberg_id": None,
+                "text_path": text_path,
+                "booksum_id": booksum_id,
+                "booksum_path": self.metadata_file,
+                "nqa_id": None,
+                "nqa_path": None,
+                "litbank_id": None,
+                "litbank_path": None
+            }
+            self._append_to_index(index_row)
+        
+        # Save metadata
         df = DataFrame(rows)
-        df.to_csv(f"{self.cache_dir}/{self.split}.csv", index=False)
+        df.to_csv(self.metadata_file, index=False)
     
-    def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
-        cache_file = f"{self.cache_dir}/{self.split}.csv"
-        
-        # Load from cache if available
-        if os.path.exists(cache_file):
-            return read_csv(cache_file)
-        
-        # Otherwise fetch from HuggingFace
-        ds = load_dataset(self.dataset_name, self.subset, split=self.split, streaming=streaming)
-        
-        if streaming:
-            return (self._normalize_row(row) for row in ds)
-        
-        return DataFrame([self._normalize_row(row) for row in ds])
-    
-    def _normalize_row(self, row: dict) -> dict:
-        """Map BookSum fields to common schema with cleaned title.
-        @param row  Raw row from HuggingFace dataset.
-        @return  Normalized dict with keys: title, text, summary.
+    def load(self, streaming: bool = False) -> DataFrame:
+        """Load dataset from cache.
+        @param streaming  Ignored - always loads full DataFrame from cache.
+        @return  DataFrame with metadata.
+        @details
+        Raises FileNotFoundError if cache doesn't exist. No fallback to download.
         """
-        title = row.get("title", "")
-        if isinstance(title, str):
-            title = title.lower().strip()
-            title = re.sub(r"[\W_]+", " ", title).strip()
-        else:
-            title = ""
+        if not os.path.exists(self.metadata_file):
+            raise FileNotFoundError(
+                f"BookSum cache not found at {self.metadata_file}. "
+                f"Run download() first."
+            )
         
-        return {
-            "title": title,
-            "text": row.get("text", ""),
-            "summary": row.get("summary", ""),
-        }
+        return read_csv(self.metadata_file)
     
     def get_schema(self) -> list[str]:
-        return ["title", "text", "summary"]
+        return ["book_id", "booksum_id", "title", "summary"]
 
 
 class NarrativeQALoader(DatasetLoader):
     """Loads NarrativeQA dataset from HuggingFace.
     @details
-    Provides book metadata (title, author, ID) without full text.
-    Useful for aligning with other sources that have full text.
+    Provides book metadata (title, author, ID) with full text and summary.
     """
     
     def __init__(self, cache_dir: str = "./datasets/narrativeqa", split: str = "train"):
         self.dataset_name = "narrativeqa"
         self.split = split
         self.cache_dir = cache_dir
+        self.metadata_file = f"{cache_dir}/metadata.csv"
     
     def download(self, n: int = None, fraction: float = None) -> None:
         """Download dataset to local cache.
         @param n  Number of books to download. If None, downloads all.
         @param fraction  Fraction of dataset to download (0.0-1.0). Overrides n if set.
         @details
-        Downloads HuggingFace dataset and saves as CSV to cache_dir.
-        
-        Examples:
-        - download() - Download full dataset
-        - download(n=1) - Download 1 book (minimal)
-        - download(n=10) - Download 10 books
-        - download(fraction=0.1) - Download 10% of dataset
+        Downloads HuggingFace dataset, saves text to global texts dir,
+        saves metadata as CSV, and appends to global index.
         """
         os.makedirs(self.cache_dir, exist_ok=True)
         
         ds = load_dataset(self.dataset_name, split=self.split)
         
+        # Debug: print available columns
+        print(f"NarrativeQA columns: {ds.column_names}")
+        print(f"Sample document keys: {list(ds[0]['document'].keys())}")
+        
         # Calculate subset size
         total = len(ds)
         num_to_download = self._calculate_subset_size(total, n, fraction)
         
-        # Take subset
-        rows = [self._normalize_row(ds[i]) for i in range(num_to_download)]
+        # Process each book
+        rows = []
+        for i in range(num_to_download):
+            book_id = self._get_next_id()
+            raw = ds[i]
+            doc = raw.get("document", {})
+            
+            # Extract fields
+            title = doc.get("title", "").strip().lower()
+            author = doc.get("author", "").strip().lower()
+            nqa_id = doc.get("id", "")
+            text = doc.get("text", "")
+            summary = doc.get("summary", {}).get("text", "")
+            
+            # Save full text
+            text_path = self._save_text(book_id, title, text)
+            
+            # Metadata row
+            metadata_row = {
+                "book_id": book_id,
+                "nqa_id": nqa_id,
+                "title": title,
+                "author": author,
+                "summary": summary
+            }
+            rows.append(metadata_row)
+            
+            # Append to global index
+            index_row = {
+                "book_id": book_id,
+                "title": title,
+                "gutenberg_id": None,
+                "text_path": text_path,
+                "booksum_id": None,
+                "booksum_path": None,
+                "nqa_id": nqa_id,
+                "nqa_path": self.metadata_file,
+                "litbank_id": None,
+                "litbank_path": None
+            }
+            self._append_to_index(index_row)
+        
+        # Save metadata
         df = DataFrame(rows)
-        df.to_csv(f"{self.cache_dir}/{self.split}.csv", index=False)
+        df.to_csv(self.metadata_file, index=False)
     
-    def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
-        cache_file = f"{self.cache_dir}/{self.split}.csv"
-        
-        # Load from cache if available
-        if os.path.exists(cache_file):
-            return read_csv(cache_file)
-        
-        # Otherwise fetch from HuggingFace
-        ds = load_dataset(self.dataset_name, split=self.split, streaming=streaming)
-        
-        if streaming:
-            return (self._normalize_row(row) for row in ds)
-        
-        return DataFrame([self._normalize_row(row) for row in ds])
-    
-    def _normalize_row(self, row: dict) -> dict:
-        """Extract document metadata from NarrativeQA format.
-        @param row  Raw row from HuggingFace dataset containing nested 'document' dict.
-        @return  Normalized dict with keys: title, author, nqa_id.
+    def load(self, streaming: bool = False) -> DataFrame:
+        """Load dataset from cache.
+        @param streaming  Ignored - always loads full DataFrame from cache.
+        @return  DataFrame with metadata.
+        @details
+        Raises FileNotFoundError if cache doesn't exist. No fallback to download.
         """
-        doc = row.get("document", {})
-        return {
-            "title": doc.get("title", "").strip().lower(),
-            "author": doc.get("author", "").strip().lower(),
-            "nqa_id": doc.get("id", ""),
-        }
+        if not os.path.exists(self.metadata_file):
+            raise FileNotFoundError(
+                f"NarrativeQA cache not found at {self.metadata_file}. "
+                f"Run download() first."
+            )
+        
+        return read_csv(self.metadata_file)
     
     def get_schema(self) -> list[str]:
-        return ["title", "author", "nqa_id"]
+        return ["book_id", "nqa_id", "title", "author", "summary"]
 
 
 class LitBankLoader(DatasetLoader):
     """Loads LitBank dataset from local GitHub repository.
     @details
-    LitBank contains ~2,000 word excerpts from 100 works of fiction.
-    Text files are in brat format within the repo. Full text is saved to
-    a separate directory, and metadata is fetched from Gutendex API.
-    
-    This approach keeps memory overhead low by not storing full text in
-    the DataFrame. Instead, we save text files and reference their paths.
+    Processes LitBank's ~2,000 word excerpts from 100 works of fiction.
+    Copies and renames all annotation files (entities, events, coref, quotations).
     """
     
-    def __init__(self, repo_path: str, text_output_dir: str = "./datasets/litbank_texts"):
+    def __init__(self, repo_path: str = "./datasets/litbank", cache_dir: str = "./datasets/litbank"):
         """Initialize LitBank loader.
         @param repo_path  Path to cloned litbank repository.
-        @param text_output_dir  Directory to save full text files.
+        @param cache_dir  Output directory for renamed files and metadata.
         """
         self.repo_path = repo_path
-        self.text_dir = "entities/brat"
-        self.text_output_dir = text_output_dir
+        self.cache_dir = cache_dir
+        self.metadata_file = f"{cache_dir}/metadata.csv"
         self.gutendex_url = "https://gutendex.com/books"
-        self.cache_file = f"{text_output_dir}/metadata.csv"
     
     def download(self, n: int = None, fraction: float = None) -> None:
-        """Download metadata and save text files.
+        """Process LitBank files and copy annotations.
         @param n  Number of books to process. If None, processes all.
         @param fraction  Fraction of books to process (0.0-1.0). Overrides n if set.
         @details
-        Processes text files from repo, fetches metadata from Gutendex,
-        saves text to output directory, and caches metadata as CSV.
-        
-        Examples:
-        - download() - Process all books
-        - download(n=1) - Process 1 book (minimal)
-        - download(n=10) - Process 10 books
-        - download(fraction=0.1) - Process 10% of books
+        Reads original LitBank files, fetches Gutenberg metadata,
+        copies and renames all annotation files with book IDs,
+        saves text to global texts directory, and updates global index.
         """
-        text_path = os.path.join(self.repo_path, self.text_dir)
-        if not os.path.exists(text_path):
-            raise FileNotFoundError(f"LitBank text directory not found: {text_path}")
+        # Check original repo exists
+        entities_path = os.path.join(self.repo_path, "entities/brat")
+        if not os.path.exists(entities_path):
+            raise FileNotFoundError(
+                f"LitBank repository not found at {self.repo_path}. "
+                f"Clone it first: git clone https://github.com/dbamman/litbank {self.repo_path}"
+            )
         
-        os.makedirs(self.text_output_dir, exist_ok=True)
-        
-        # Get all files and calculate subset size
-        all_files = [f for f in os.listdir(text_path) if f.endswith("_brat.txt")]
+        # Get all books from entities/brat (has all books)
+        all_files = [f for f in os.listdir(entities_path) if f.endswith("_brat.txt")]
         total = len(all_files)
         num_to_process = self._calculate_subset_size(total, n, fraction)
         
         files_to_process = all_files[:num_to_process]
         
-        # Process subset of files
+        # Process each book
         rows = []
         for fname in files_to_process:
-            row = self._process_file(text_path, fname)
+            row = self._process_book(fname)
             if row:
                 rows.append(row)
         
+        # Save metadata
         df = DataFrame(rows)
-        df.to_csv(self.cache_file, index=False)
+        df.to_csv(self.metadata_file, index=False)
     
-    def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
-        # Load from cache if available
-        if os.path.exists(self.cache_file):
-            return read_csv(self.cache_file)
+    def _process_book(self, fname: str) -> dict:
+        """Process a single LitBank book.
+        @param fname  Original filename (e.g., "1342_pride_and_prejudice_brat.txt")
+        @return  Metadata dict with all annotation paths.
+        """
+        # Parse original filename
+        stem = fname.replace("_brat.txt", "")  # "1342_pride_and_prejudice"
+        parts = stem.split("_", 1)
+        if len(parts) < 2:
+            return None
         
-        # Otherwise process files
-        text_path = os.path.join(self.repo_path, self.text_dir)
-        if not os.path.exists(text_path):
-            raise FileNotFoundError(f"LitBank text directory not found: {text_path}")
+        gutenberg_id = parts[0]
+        original_title = parts[1].replace("_", " ")
         
-        os.makedirs(self.text_output_dir, exist_ok=True)
+        # Get new book ID
+        book_id = self._get_next_id()
         
-        if streaming:
-            return self._iter_files(text_path)
+        # Fetch metadata from Gutendex
+        metadata = self._fetch_gutenberg_metadata(gutenberg_id)
+        title = metadata.get("title", "").strip().lower()
+        if not title:
+            title = original_title.lower()
+        author = metadata.get("author", "").strip().lower()
         
-        rows = list(self._iter_files(text_path))
-        return DataFrame(rows)
+        # Read and save main text
+        entities_brat_path = os.path.join(self.repo_path, "entities/brat", fname)
+        with open(entities_brat_path, encoding="utf-8") as f:
+            text = f.read()
+        text_path = self._save_text(book_id, title, text)
+        
+        # Copy and rename all annotation files
+        new_stem = f"{book_id:05d}_{title.replace(' ', '_')}_brat"
+        annotation_paths = self._copy_annotations(stem, new_stem)
+        
+        # Build metadata row
+        metadata_row = {
+            "book_id": book_id,
+            "litbank_id": stem,
+            "title": title,
+            "author": author,
+            "gutenberg_id": gutenberg_id,
+            **annotation_paths
+        }
+        
+        # Append to global index
+        index_row = {
+            "book_id": book_id,
+            "title": title,
+            "gutenberg_id": gutenberg_id,
+            "text_path": text_path,
+            "booksum_id": None,
+            "booksum_path": None,
+            "nqa_id": None,
+            "nqa_path": None,
+            "litbank_id": stem,
+            "litbank_path": self.metadata_file
+        }
+        self._append_to_index(index_row)
+        
+        return metadata_row
+    
+    def _copy_annotations(self, old_stem: str, new_stem: str) -> dict:
+        """Copy and rename all LitBank annotation files.
+        @param old_stem  Original filename stem (e.g., "1342_pride_and_prejudice")
+        @param new_stem  New filename stem with book ID (e.g., "00001_pride_and_prejudice")
+        @return  Dict mapping annotation types to new file paths.
+        """
+        paths = {}
+        
+        # Entities: brat (.txt, .ann) and tsv
+        self._copy_file_if_exists(
+            os.path.join(self.repo_path, "entities/brat", f"{old_stem}_brat.txt"),
+            os.path.join(self.cache_dir, "entities/brat", f"{new_stem}.txt"),
+            "entities_brat_txt", paths
+        )
+        self._copy_file_if_exists(
+            os.path.join(self.repo_path, "entities/brat", f"{old_stem}_brat.ann"),
+            os.path.join(self.cache_dir, "entities/brat", f"{new_stem}.ann"),
+            "entities_brat_ann", paths
+        )
+        self._copy_file_if_exists(
+            os.path.join(self.repo_path, "entities/tsv", f"{old_stem}_brat.tsv"),
+            os.path.join(self.cache_dir, "entities/tsv", f"{new_stem}.tsv"),
+            "entities_tsv", paths
+        )
+        
+        # Events: tsv only
+        self._copy_file_if_exists(
+            os.path.join(self.repo_path, "events/tsv", f"{old_stem}_brat.tsv"),
+            os.path.join(self.cache_dir, "events/tsv", f"{new_stem}.tsv"),
+            "events_tsv", paths
+        )
+        
+        # Coref: brat (.txt, .ann) and conll
+        self._copy_file_if_exists(
+            os.path.join(self.repo_path, "coref/brat", f"{old_stem}_brat.txt"),
+            os.path.join(self.cache_dir, "coref/brat", f"{new_stem}.txt"),
+            "coref_brat_txt", paths
+        )
+        self._copy_file_if_exists(
+            os.path.join(self.repo_path, "coref/brat", f"{old_stem}_brat.ann"),
+            os.path.join(self.cache_dir, "coref/brat", f"{new_stem}.ann"),
+            "coref_brat_ann", paths
+        )
+        self._copy_file_if_exists(
+            os.path.join(self.repo_path, "coref/conll", f"{old_stem}_brat.conll"),
+            os.path.join(self.cache_dir, "coref/conll", f"{new_stem}.conll"),
+            "coref_conll", paths
+        )
+        
+        # Quotations: brat (.txt, .ann) only
+        self._copy_file_if_exists(
+            os.path.join(self.repo_path, "quotations/brat", f"{old_stem}_brat.txt"),
+            os.path.join(self.cache_dir, "quotations/brat", f"{new_stem}.txt"),
+            "quotations_brat_txt", paths
+        )
+        self._copy_file_if_exists(
+            os.path.join(self.repo_path, "quotations/brat", f"{old_stem}_brat.ann"),
+            os.path.join(self.cache_dir, "quotations/brat", f"{new_stem}.ann"),
+            "quotations_brat_ann", paths
+        )
+        
+        return paths
+    
+    def _copy_file_if_exists(self, src: str, dst: str, key: str, paths_dict: dict) -> None:
+        """Copy file if it exists and record path.
+        @param src  Source file path.
+        @param dst  Destination file path.
+        @param key  Key to store in paths_dict.
+        @param paths_dict  Dict to update with file path.
+        """
+        import shutil
+        
+        if os.path.exists(src):
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(src, dst)
+            paths_dict[key] = dst
+        else:
+            paths_dict[key] = None
     
     def _fetch_gutenberg_metadata(self, gutenberg_id: str) -> dict:
         """Fetch metadata from Gutendex API.
         @param gutenberg_id  Project Gutenberg ID number.
-        @return  Dict with keys: title, authors, subjects, language, download_url
-        @details
-        Uses the public Gutendex API (https://gutendex.com) which provides
-        Project Gutenberg catalog metadata in JSON format.
+        @return  Dict with keys: title, author, language.
         """
         import requests
         
@@ -292,105 +525,37 @@ class LitBankLoader(DatasetLoader):
             response.raise_for_status()
             data = response.json()
             
-            # Extract relevant fields
             authors = [a.get("name", "") for a in data.get("authors", [])]
             
             return {
                 "title": data.get("title", ""),
-                "authors": authors,
                 "author": ", ".join(authors) if authors else "",
-                "subjects": data.get("subjects", []),
                 "language": data.get("languages", [""])[0],
-                "download_url": data.get("formats", {}).get("text/plain", ""),
             }
-        except Exception as e:
-            # Return empty metadata on error
-            return {
-                "title": "",
-                "authors": [],
-                "author": "",
-                "subjects": [],
-                "language": "",
-                "download_url": "",
-            }
+        except Exception:
+            return {"title": "", "author": "", "language": ""}
     
-    def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
-        text_path = os.path.join(self.repo_path, self.text_dir)
-        
-        if not os.path.exists(text_path):
-            raise FileNotFoundError(f"LitBank text directory not found: {text_path}")
-        
-        os.makedirs(self.text_output_dir, exist_ok=True)
-        
-        if streaming:
-            return self._iter_files(text_path)
-        
-        rows = list(self._iter_files(text_path))
-        return DataFrame(rows)
-    
-    def _process_file(self, text_path, fname: str) -> dict:
-        """Process a single text file.
-        @param text_path  Path to directory containing text files.
-        @param fname  Filename to process.
-        @return  Normalized dict with metadata and text path, or None if malformed.
-        """
-        # Parse filename: {gutenberg_id}_{title}_brat.txt
-        stem = fname.replace("_brat.txt", "")
-        parts = stem.split("_", 1)
-        
-        if len(parts) < 2:
-            return None
-        
-        gutenberg_id = parts[0]
-        filename_title = parts[1].replace("_", " ").strip().lower()
-        
-        # Read text from LitBank excerpt
-        input_path = os.path.join(text_path, fname)
-        with open(input_path, encoding="utf-8") as f:
-            text = f.read()
-        
-        # Save text to separate file
-        output_filename = f"{gutenberg_id}_{filename_title.replace(' ', '_')}.txt"
-        output_path = os.path.join(self.text_output_dir, output_filename)
-        
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(text)
-        
-        # Fetch metadata from Gutendex
-        metadata = self._fetch_gutenberg_metadata(gutenberg_id)
-        
-        # Use Gutendex title if available, otherwise use filename title
-        title = metadata.get("title", "").strip().lower()
-        if not title:
-            title = filename_title
-        
-        return {
-            "gutenberg_id": gutenberg_id,
-            "title": title,
-            "author": metadata.get("author", "").strip().lower(),
-            "language": metadata.get("language", ""),
-            "text_path": output_path,
-            "download_url": metadata.get("download_url", ""),
-        }
-    
-    def _iter_files(self, text_path) -> Iterator[dict]:
-        """Stream text files from disk, save full text separately.
-        @param text_path  Path to directory containing .txt files.
-        @return  Iterator of normalized dicts with file paths instead of text.
+    def load(self, streaming: bool = False) -> DataFrame:
+        """Load dataset from cache.
+        @param streaming  Ignored - always loads full DataFrame from cache.
+        @return  DataFrame with metadata.
         @details
-        Extracts gutenberg_id from filename, fetches metadata from Gutendex,
-        saves full text to separate file, returns metadata + file path.
+        Raises FileNotFoundError if cache doesn't exist. No fallback to download.
         """
-        for fname in os.listdir(text_path):
-            if not fname.endswith("_brat.txt"):
-                continue
-            
-            row = self._process_file(text_path, fname)
-            if row:
-                yield row
+        if not os.path.exists(self.metadata_file):
+            raise FileNotFoundError(
+                f"LitBank cache not found at {self.metadata_file}. "
+                f"Run download() first."
+            )
+        
+        return read_csv(self.metadata_file)
     
     def get_schema(self) -> list[str]:
-        return ["gutenberg_id", "title", "author", "language", "text_path", "download_url"]
+        return ["book_id", "litbank_id", "title", "author", "gutenberg_id",
+                "entities_brat_txt", "entities_brat_ann", "entities_tsv",
+                "events_tsv", "coref_brat_txt", "coref_brat_ann", "coref_conll",
+                "quotations_brat_txt", "quotations_brat_ann"]
+    
 
 
 # --------------------------------------
