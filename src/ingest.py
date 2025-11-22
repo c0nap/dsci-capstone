@@ -854,10 +854,10 @@ def download_and_index(n_booksum: int = None,
         loader = LitBankLoader(repo_path=litbank_repo)
         loader.download(n=n_litbank)
         print(f"✓ LitBank processed\n")
-    
-    # Clean up any ghost entries from existing index.csv
-    reindex()
 
+
+def print_index():
+    """Inspects the cross-dataset book registry, and prints a helpful summary."""
     print("=== Global Index Summary ===")
     if os.path.exists(DatasetLoader.INDEX_FILE):
         index = read_csv(DatasetLoader.INDEX_FILE)
@@ -868,11 +868,11 @@ def download_and_index(n_booksum: int = None,
         print("No index file created (no data downloaded)")
 
 
-def reindex() -> None:
-    """Prune global index of entries with missing text files.
+def prune_index() -> None:
+    """Remove entries from global index if text file is missing.
     @details
     Checks 'text_path' for every row in index.csv. If the file does not exist,
-    the row is removed. This cleans up 'ghost' entries from previous runs.
+    the row is removed.
     """
     index_file = DatasetLoader.INDEX_FILE
     if not os.path.exists(index_file):
@@ -882,23 +882,77 @@ def reindex() -> None:
     df = read_csv(index_file)
     initial_count = len(df)
 
-    # Define validation logic
+    # Validation: Path must exist
     def file_exists(path):
-        # We only care if the path is non-empty and exists
         return isinstance(path, str) and os.path.exists(path)
 
-    # Filter: Keep rows where text_path exists
-    # (We assume text_path is the source of truth for a book's existence)
+    # Filter rows
     valid_rows = df[df['text_path'].apply(file_exists)]
     
-    final_count = len(valid_rows)
-    removed_count = initial_count - final_count
-
-    if removed_count > 0:
+    # Write back if changes needed
+    if len(valid_rows) < initial_count:
         valid_rows.to_csv(index_file, index=False)
-        print(f"✓ Reindexing complete: Removed {removed_count} broken entries.\n")
+        print(f"✓ Pruned index: {initial_count} -> {len(valid_rows)} entries.\n")
     else:
-        print("✓ Reindexing complete: No broken entries found.\n")
+        print("✓ Index integrity check passed.\n")
+
+
+def hard_reset() -> None:
+    """Renumber all existing datasets starting from ID 00001.
+    @details
+    1. Prunes invalid entries first.
+    2. Scans valid text files.
+    3. Renames files sequentially (00001, 00002...).
+    4. Updates global index and next_id counter.
+    """
+    print("\n=== Hard Reset (Renumbering) ===")
+    
+    # 1. Clean up dead links first
+    prune_index()
+    
+    if not os.path.exists(DatasetLoader.INDEX_FILE):
+        print("No index to reset.")
+        return
+
+    df = read_csv(DatasetLoader.INDEX_FILE)
+    if df.empty:
+        return
+
+    # Sort by current book_id to maintain relative order
+    df = df.sort_values('book_id')
+    
+    # Track mapping from old_id -> new_id for logging/debugging
+    id_map = {}
+    
+    print("Renumbering files...")
+    for new_id_int, (idx, row) in enumerate(df.iterrows(), start=1):
+        old_path = row['text_path']
+        old_id = row['book_id']
+        title = row['title']
+        
+        # Generate new path
+        # Format: datasets/texts/00001_title.txt
+        new_filename = f"{new_id_int:05d}_{title.replace(' ', '_')}.txt"
+        new_path = os.path.join(DatasetLoader.TEXTS_DIR, new_filename)
+        
+        # Rename file on disk
+        if old_path != new_path:
+            shutil.move(old_path, new_path)
+            
+        # Update DataFrame
+        df.at[idx, 'book_id'] = new_id_int
+        df.at[idx, 'text_path'] = new_path
+        id_map[old_id] = new_id_int
+
+    # Save updated index
+    df.to_csv(DatasetLoader.INDEX_FILE, index=False)
+    
+    # Update next_id file
+    with open(DatasetLoader.NEXT_ID_FILE, "w") as f:
+        f.write(str(len(df) + 1))
+        
+    print(f"✓ Renumbered {len(df)} books (IDs 1 to {len(df)})")
+    print(f"✓ Next ID set to {len(df) + 1}\n")
 
 
 # --------------------------------------
@@ -951,6 +1005,12 @@ Examples:
         default="./datasets/litbank",
         help="Path to cloned LitBank repository (default: ./datasets/litbank)"
     )
+
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Renumber all downloaded books starting from ID 1"
+    )
     
     args = parser.parse_args()
     
@@ -961,3 +1021,9 @@ Examples:
         n_litbank=args.n_litbank,
         litbank_repo=args.litbank_repo
     )
+    # Always prune index.csv to remove ghost entries
+    prune_index()
+    # Renumber if requested
+    if args.reset:
+        hard_reset()
+    print_index()
