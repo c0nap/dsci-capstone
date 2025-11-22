@@ -6,10 +6,11 @@ Alignment functions handle fuzzy matching across datasets.
 
 from abc import ABC, abstractmethod
 from typing import Iterator
-import pandas as pd
+from pandas import DataFrame, read_csv
 from datasets import load_dataset, DatasetDict  # type: ignore
 from rapidfuzz import fuzz, process
 import re
+import os
 
 
 # --------------------------------------
@@ -24,7 +25,7 @@ class DatasetLoader(ABC):
     """
     
     @abstractmethod
-    def load(self, streaming: bool = False) -> pd.DataFrame | Iterator[dict]:
+    def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
         """Load dataset.
         @param streaming  If True, return an iterator; if False, return a DataFrame.
         @return  Either a pandas DataFrame or an iterator of dict records.
@@ -37,6 +38,19 @@ class DatasetLoader(ABC):
         @return  List of column names that will be present in the output DataFrame.
         """
         pass
+    
+    def _calculate_subset_size(self, total: int, n: int = None, fraction: float = None) -> int:
+        """Calculate number of items to download.
+        @param total  Total number of items available.
+        @param n  Number of items to download. If None, downloads all.
+        @param fraction  Fraction of dataset to download (0.0-1.0). Overrides n if set.
+        @return  Number of items to download.
+        """
+        if fraction is not None:
+            return int(total * fraction)
+        elif n is None:
+            return total
+        return min(n, total)
 
 
 class BookSumLoader(DatasetLoader):
@@ -52,25 +66,39 @@ class BookSumLoader(DatasetLoader):
         self.split = split
         self.cache_dir = cache_dir
     
-    def download(self) -> None:
+    def download(self, n: int = None, fraction: float = None) -> None:
         """Download dataset to local cache.
+        @param n  Number of books to download. If None, downloads all.
+        @param fraction  Fraction of dataset to download (0.0-1.0). Overrides n if set.
         @details
         Downloads HuggingFace dataset and saves as CSV to cache_dir.
         Subsequent loads will use the cached version.
+        
+        Examples:
+        - download() - Download full dataset
+        - download(n=1) - Download 1 book (minimal)
+        - download(n=10) - Download 10 books
+        - download(fraction=0.1) - Download 10% of dataset
         """
-        import os
         os.makedirs(self.cache_dir, exist_ok=True)
+        
         ds = load_dataset(self.dataset_name, self.subset, split=self.split)
-        df = pd.DataFrame([self._normalize_row(row) for row in ds])
+        
+        # Calculate subset size
+        total = len(ds)
+        num_to_download = self._calculate_subset_size(total, n, fraction)
+        
+        # Take subset
+        rows = [self._normalize_row(ds[i]) for i in range(num_to_download)]
+        df = DataFrame(rows)
         df.to_csv(f"{self.cache_dir}/{self.split}.csv", index=False)
     
-    def load(self, streaming: bool = False) -> pd.DataFrame | Iterator[dict]:
-        import os
+    def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
         cache_file = f"{self.cache_dir}/{self.split}.csv"
         
         # Load from cache if available
         if os.path.exists(cache_file):
-            return pd.read_csv(cache_file)
+            return read_csv(cache_file)
         
         # Otherwise fetch from HuggingFace
         ds = load_dataset(self.dataset_name, self.subset, split=self.split, streaming=streaming)
@@ -78,7 +106,7 @@ class BookSumLoader(DatasetLoader):
         if streaming:
             return (self._normalize_row(row) for row in ds)
         
-        return pd.DataFrame([self._normalize_row(row) for row in ds])
+        return DataFrame([self._normalize_row(row) for row in ds])
     
     def _normalize_row(self, row: dict) -> dict:
         """Map BookSum fields to common schema with cleaned title.
@@ -114,24 +142,38 @@ class NarrativeQALoader(DatasetLoader):
         self.split = split
         self.cache_dir = cache_dir
     
-    def download(self) -> None:
+    def download(self, n: int = None, fraction: float = None) -> None:
         """Download dataset to local cache.
+        @param n  Number of books to download. If None, downloads all.
+        @param fraction  Fraction of dataset to download (0.0-1.0). Overrides n if set.
         @details
         Downloads HuggingFace dataset and saves as CSV to cache_dir.
+        
+        Examples:
+        - download() - Download full dataset
+        - download(n=1) - Download 1 book (minimal)
+        - download(n=10) - Download 10 books
+        - download(fraction=0.1) - Download 10% of dataset
         """
-        import os
         os.makedirs(self.cache_dir, exist_ok=True)
+        
         ds = load_dataset(self.dataset_name, split=self.split)
-        df = pd.DataFrame([self._normalize_row(row) for row in ds])
+        
+        # Calculate subset size
+        total = len(ds)
+        num_to_download = self._calculate_subset_size(total, n, fraction)
+        
+        # Take subset
+        rows = [self._normalize_row(ds[i]) for i in range(num_to_download)]
+        df = DataFrame(rows)
         df.to_csv(f"{self.cache_dir}/{self.split}.csv", index=False)
     
-    def load(self, streaming: bool = False) -> pd.DataFrame | Iterator[dict]:
-        import os
+    def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
         cache_file = f"{self.cache_dir}/{self.split}.csv"
         
         # Load from cache if available
         if os.path.exists(cache_file):
-            return pd.read_csv(cache_file)
+            return read_csv(cache_file)
         
         # Otherwise fetch from HuggingFace
         ds = load_dataset(self.dataset_name, split=self.split, streaming=streaming)
@@ -139,7 +181,7 @@ class NarrativeQALoader(DatasetLoader):
         if streaming:
             return (self._normalize_row(row) for row in ds)
         
-        return pd.DataFrame([self._normalize_row(row) for row in ds])
+        return DataFrame([self._normalize_row(row) for row in ds])
     
     def _normalize_row(self, row: dict) -> dict:
         """Extract document metadata from NarrativeQA format.
@@ -179,36 +221,51 @@ class LitBankLoader(DatasetLoader):
         self.gutendex_url = "https://gutendex.com/books"
         self.cache_file = f"{text_output_dir}/metadata.csv"
     
-    def download(self) -> None:
+    def download(self, n: int = None, fraction: float = None) -> None:
         """Download metadata and save text files.
+        @param n  Number of books to process. If None, processes all.
+        @param fraction  Fraction of books to process (0.0-1.0). Overrides n if set.
         @details
-        Processes all text files from repo, fetches metadata from Gutendex,
+        Processes text files from repo, fetches metadata from Gutendex,
         saves text to output directory, and caches metadata as CSV.
-        """
-        import os
-        from pathlib import Path
         
-        text_path = Path(self.repo_path) / self.text_dir
-        if not text_path.exists():
+        Examples:
+        - download() - Process all books
+        - download(n=1) - Process 1 book (minimal)
+        - download(n=10) - Process 10 books
+        - download(fraction=0.1) - Process 10% of books
+        """
+        text_path = os.path.join(self.repo_path, self.text_dir)
+        if not os.path.exists(text_path):
             raise FileNotFoundError(f"LitBank text directory not found: {text_path}")
         
         os.makedirs(self.text_output_dir, exist_ok=True)
         
-        rows = list(self._iter_files(text_path))
-        df = pd.DataFrame(rows)
+        # Get all files and calculate subset size
+        all_files = [f for f in os.listdir(text_path) if f.endswith("_brat.txt")]
+        total = len(all_files)
+        num_to_process = self._calculate_subset_size(total, n, fraction)
+        
+        files_to_process = all_files[:num_to_process]
+        
+        # Process subset of files
+        rows = []
+        for fname in files_to_process:
+            row = self._process_file(text_path, fname)
+            if row:
+                rows.append(row)
+        
+        df = DataFrame(rows)
         df.to_csv(self.cache_file, index=False)
     
-    def load(self, streaming: bool = False) -> pd.DataFrame | Iterator[dict]:
-        import os
-        from pathlib import Path
-        
+    def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
         # Load from cache if available
         if os.path.exists(self.cache_file):
-            return pd.read_csv(self.cache_file)
+            return read_csv(self.cache_file)
         
         # Otherwise process files
-        text_path = Path(self.repo_path) / self.text_dir
-        if not text_path.exists():
+        text_path = os.path.join(self.repo_path, self.text_dir)
+        if not os.path.exists(text_path):
             raise FileNotFoundError(f"LitBank text directory not found: {text_path}")
         
         os.makedirs(self.text_output_dir, exist_ok=True)
@@ -217,7 +274,7 @@ class LitBankLoader(DatasetLoader):
             return self._iter_files(text_path)
         
         rows = list(self._iter_files(text_path))
-        return pd.DataFrame(rows)
+        return DataFrame(rows)
     
     def _fetch_gutenberg_metadata(self, gutenberg_id: str) -> dict:
         """Fetch metadata from Gutendex API.
@@ -258,15 +315,11 @@ class LitBankLoader(DatasetLoader):
             }
     
     def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
-        import os
-        from pathlib import Path
+        text_path = os.path.join(self.repo_path, self.text_dir)
         
-        text_path = Path(self.repo_path) / self.text_dir
-        
-        if not text_path.exists():
+        if not os.path.exists(text_path):
             raise FileNotFoundError(f"LitBank text directory not found: {text_path}")
         
-        # Create output directory for text files
         os.makedirs(self.text_output_dir, exist_ok=True)
         
         if streaming:
@@ -274,6 +327,51 @@ class LitBankLoader(DatasetLoader):
         
         rows = list(self._iter_files(text_path))
         return DataFrame(rows)
+    
+    def _process_file(self, text_path, fname: str) -> dict:
+        """Process a single text file.
+        @param text_path  Path to directory containing text files.
+        @param fname  Filename to process.
+        @return  Normalized dict with metadata and text path, or None if malformed.
+        """
+        # Parse filename: {gutenberg_id}_{title}_brat.txt
+        stem = fname.replace("_brat.txt", "")
+        parts = stem.split("_", 1)
+        
+        if len(parts) < 2:
+            return None
+        
+        gutenberg_id = parts[0]
+        filename_title = parts[1].replace("_", " ").strip().lower()
+        
+        # Read text from LitBank excerpt
+        input_path = os.path.join(text_path, fname)
+        with open(input_path, encoding="utf-8") as f:
+            text = f.read()
+        
+        # Save text to separate file
+        output_filename = f"{gutenberg_id}_{filename_title.replace(' ', '_')}.txt"
+        output_path = os.path.join(self.text_output_dir, output_filename)
+        
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(text)
+        
+        # Fetch metadata from Gutendex
+        metadata = self._fetch_gutenberg_metadata(gutenberg_id)
+        
+        # Use Gutendex title if available, otherwise use filename title
+        title = metadata.get("title", "").strip().lower()
+        if not title:
+            title = filename_title
+        
+        return {
+            "gutenberg_id": gutenberg_id,
+            "title": title,
+            "author": metadata.get("author", "").strip().lower(),
+            "language": metadata.get("language", ""),
+            "text_path": output_path,
+            "download_url": metadata.get("download_url", ""),
+        }
     
     def _iter_files(self, text_path) -> Iterator[dict]:
         """Stream text files from disk, save full text separately.
@@ -283,50 +381,13 @@ class LitBankLoader(DatasetLoader):
         Extracts gutenberg_id from filename, fetches metadata from Gutendex,
         saves full text to separate file, returns metadata + file path.
         """
-        import os
-        
         for fname in os.listdir(text_path):
             if not fname.endswith("_brat.txt"):
                 continue
             
-            # Parse filename: {gutenberg_id}_{title}_brat.txt
-            stem = fname.replace("_brat.txt", "")
-            parts = stem.split("_", 1)
-            
-            if len(parts) < 2:
-                continue
-            
-            gutenberg_id = parts[0]
-            filename_title = parts[1].replace("_", " ").strip().lower()
-            
-            # Read text from LitBank excerpt
-            input_path = os.path.join(text_path, fname)
-            with open(input_path, encoding="utf-8") as f:
-                text = f.read()
-            
-            # Save text to separate file
-            output_filename = f"{gutenberg_id}_{filename_title.replace(' ', '_')}.txt"
-            output_path = os.path.join(self.text_output_dir, output_filename)
-            
-            with open(output_path, "w", encoding="utf-8") as f:
-                f.write(text)
-            
-            # Fetch metadata from Gutendex
-            metadata = self._fetch_gutenberg_metadata(gutenberg_id)
-            
-            # Use Gutendex title if available, otherwise use filename title
-            title = metadata.get("title", "").strip().lower()
-            if not title:
-                title = filename_title
-            
-            yield {
-                "gutenberg_id": gutenberg_id,
-                "title": title,
-                "author": metadata.get("author", "").strip().lower(),
-                "language": metadata.get("language", ""),
-                "text_path": output_path,
-                "download_url": metadata.get("download_url", ""),
-            }
+            row = self._process_file(text_path, fname)
+            if row:
+                yield row
     
     def get_schema(self) -> list[str]:
         return ["gutenberg_id", "title", "author", "language", "text_path", "download_url"]
@@ -357,9 +418,9 @@ def normalize_title(t: str) -> str:
     return t.strip()
 
 
-def exact_merge(df1: pd.DataFrame, df2: pd.DataFrame, 
+def exact_merge(df1: DataFrame, df2: DataFrame, 
                 suffix1: str, suffix2: str, 
-                key_columns: list[str]) -> pd.DataFrame:
+                key_columns: list[str]) -> DataFrame:
     """Merge dataframes on exact key matches.
     @details
     Normalizes keys before merging. Use for high-confidence matches
@@ -371,6 +432,8 @@ def exact_merge(df1: pd.DataFrame, df2: pd.DataFrame,
     @param key_columns  List of column names to match on (will be normalized before merge).
     @return  A new pandas DataFrame containing only rows with exact matches on normalized keys.
     """
+    from pandas import merge
+    
     df1 = df1.copy()
     df2 = df2.copy()
     
@@ -378,15 +441,15 @@ def exact_merge(df1: pd.DataFrame, df2: pd.DataFrame,
         df1[key] = df1[key].map(normalize_title)
         df2[key] = df2[key].map(normalize_title)
     
-    return pd.merge(df1, df2, on=key_columns, how="inner", 
+    return merge(df1, df2, on=key_columns, how="inner", 
                     suffixes=(suffix1, suffix2))
 
 
-def fuzzy_merge(df1: pd.DataFrame, df2: pd.DataFrame, 
+def fuzzy_merge(df1: DataFrame, df2: DataFrame, 
                 suffix1: str, suffix2: str, 
                 key: str = "title", 
                 threshold: int = 90,
-                scorer=fuzz.token_sort_ratio) -> pd.DataFrame:
+                scorer=fuzz.token_sort_ratio) -> DataFrame:
     """Perform a two-way fuzzy merge between two DataFrames on a text column (e.g., book titles).
     @details
     - For each row in the left DataFrame, the function searches the right DataFrame for the most
@@ -432,7 +495,7 @@ def fuzzy_merge(df1: pd.DataFrame, df2: pd.DataFrame,
             
             matches.append(merged_row)
     
-    return pd.DataFrame(matches)
+    return DataFrame(matches)
 
 
 # --------------------------------------
