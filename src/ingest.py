@@ -600,6 +600,7 @@ def normalize_title(t: str) -> str:
     @param t  The title string to normalize.
     @return  Normalized title with punctuation removed and whitespace collapsed.
     """
+    t = t.lower()
     t = re.sub(r"[\W_]+", " ", t)
     return t.strip()
 
@@ -611,6 +612,7 @@ def exact_merge(df1: DataFrame, df2: DataFrame,
     @details
     Normalizes keys before merging. Use for high-confidence matches
     where titles are expected to be identical after normalization.
+    All columns (except keys) are suffixed for consistency with other merge functions.
     @param df1  The left-hand DataFrame.
     @param df2  The right-hand DataFrame.
     @param suffix1  Suffix for df1 columns in output.
@@ -623,12 +625,45 @@ def exact_merge(df1: DataFrame, df2: DataFrame,
     df1 = df1.copy()
     df2 = df2.copy()
     
+    # Normalize keys
     for key in key_columns:
         df1[key] = df1[key].map(normalize_title)
         df2[key] = df2[key].map(normalize_title)
     
-    return merge(df1, df2, on=key_columns, how="inner", 
-                    suffixes=(suffix1, suffix2))
+    # Merge on normalized keys
+    # Use temporary suffixes since we'll rename everything anyway
+    merged = merge(df1, df2, on=key_columns, how="inner", suffixes=("_tmp_left", "_tmp_right"))
+    
+    # Manually reconstruct with proper suffixes for ALL columns
+    result_rows = []
+    for _, row in merged.iterrows():
+        new_row = {}
+        
+        # Keep key columns as-is (these don't get suffixed by pandas)
+        for key in key_columns:
+            new_row[key] = row[key]
+        
+        # Add suffixed columns from df1
+        for col in df1.columns:
+            if col not in key_columns:
+                # Column might be suffixed or not depending on if it conflicted
+                if col in merged.columns:
+                    new_row[f"{col}{suffix1}"] = row[col]
+                elif f"{col}_tmp_left" in merged.columns:
+                    new_row[f"{col}{suffix1}"] = row[f"{col}_tmp_left"]
+        
+        # Add suffixed columns from df2
+        for col in df2.columns:
+            if col not in key_columns:
+                # Column might be suffixed or not depending on if it conflicted
+                if col in merged.columns:
+                    new_row[f"{col}{suffix2}"] = row[col]
+                elif f"{col}_tmp_right" in merged.columns:
+                    new_row[f"{col}{suffix2}"] = row[f"{col}_tmp_right"]
+        
+        result_rows.append(new_row)
+    
+    return DataFrame(result_rows)
 
 
 def fuzzy_merge(df1: DataFrame, df2: DataFrame, 
