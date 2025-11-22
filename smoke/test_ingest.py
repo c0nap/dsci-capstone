@@ -6,6 +6,7 @@ from pandas import DataFrame, read_csv
 from src.ingest import BookSumLoader, NarrativeQALoader, LitBankLoader
 
 
+@pytest.mark.smoke
 @pytest.mark.ingest
 @pytest.mark.order(1)
 @pytest.mark.dependency(name="ingest_booksum_minimal", scope="session")
@@ -42,6 +43,7 @@ def test_ingest_booksum_minimal():
     print(f"✓ Text file created: {text_path}")
 
 
+@pytest.mark.smoke
 @pytest.mark.ingest
 @pytest.mark.order(2)
 @pytest.mark.dependency(name="ingest_narrativeqa_minimal", scope="session")
@@ -75,6 +77,7 @@ def test_ingest_narrativeqa_minimal():
     assert "summary" in df.columns
 
 
+@pytest.mark.smoke
 @pytest.mark.ingest
 @pytest.mark.order(3)
 @pytest.mark.dependency(name="ingest_litbank_minimal", scope="session")
@@ -119,6 +122,7 @@ def test_ingest_litbank_minimal():
         print(f"✓ Annotation file created: {entities_tsv}")
 
 
+@pytest.mark.smoke
 @pytest.mark.ingest
 @pytest.mark.order(4)
 @pytest.mark.dependency(depends=["ingest_booksum_minimal", "ingest_narrativeqa_minimal"], scope="session")
@@ -145,6 +149,7 @@ def test_ingest_global_index():
     assert "nqa_id" in index.columns
 
 
+@pytest.mark.smoke
 @pytest.mark.ingest
 @pytest.mark.order(5)
 @pytest.mark.dependency(name="ingest_strict_separation", scope="session")
