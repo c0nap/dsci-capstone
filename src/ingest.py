@@ -905,7 +905,7 @@ def download_and_index(n_booksum: int = None,
         print(f"✓ LitBank processed\n")
 
 
-def print_index():
+def print_index() -> None:
     """Inspects the cross-dataset book registry, and prints a helpful summary."""
     print("\n=== Global Index Summary ===")
     if os.path.exists(DatasetLoader.INDEX_FILE):
@@ -918,10 +918,12 @@ def print_index():
 
 
 def prune_index() -> None:
-    """Remove entries from global index if text file is missing.
+    """Remove invalid entries: missing files AND duplicates.
     @details
-    Checks 'text_path' for every row in index.csv. If the file does not exist,
-    the row is removed.
+    1. Removes rows where 'text_path' file is missing.
+    2. Deduplicates based on ['gutenberg_id', 'title'].
+       - If GID matches, it's a duplicate.
+       - If GID is missing (NaN), it relies on Title matching.
     """
     index_file = DatasetLoader.INDEX_FILE
     if not os.path.exists(index_file):
@@ -931,17 +933,30 @@ def prune_index() -> None:
     df = read_csv(index_file)
     initial_count = len(df)
 
-    # Validation: Path must exist
+    # --- Step 1: Remove rows with missing text files ---
     def file_exists(path):
         return isinstance(path, str) and os.path.exists(path)
 
-    # Filter rows
-    valid_rows = df[df['text_path'].apply(file_exists)]
+    df = df[df['text_path'].apply(file_exists)]
+
+    # --- Step 2: Deduplicate (Gutenberg ID > Title) ---
+    # We use both columns. Pandas treats (NaN, Title) == (NaN, Title) as a duplicate,
+    # which correctly handles datasets like BookSum that lack Gutenberg IDs.
+    dedup_keys = ['title']
+    if 'gutenberg_id' in df.columns:
+        dedup_keys.append('gutenberg_id')
+        
+    # keep='first' ensures we keep the existing entry and drop the new duplicate
+    df = df.drop_duplicates(subset=dedup_keys, keep='first')
+
+    # Sort by book_id to keep things tidy
+    df = df.sort_values('book_id')
     
     # Write back if changes needed
-    if len(valid_rows) < initial_count:
-        valid_rows.to_csv(index_file, index=False)
-        print(f"✓ Pruned index: {initial_count} -> {len(valid_rows)} entries.\n")
+    final_count = len(df)
+    if final_count < initial_count:
+        df.to_csv(index_file, index=False)
+        print(f"✓ Pruned index: {initial_count} -> {final_count} entries (removed duplicates/missing).\n")
     else:
         print("✓ Index integrity check passed.\n")
 
