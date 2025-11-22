@@ -12,7 +12,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Copy dependency list first to leverage build cache
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential make pandoc \
+    build-essential make git pandoc \
  && pip install --upgrade pip setuptools wheel build \
  && rm -rf /var/lib/apt/lists/*
 

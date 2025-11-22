@@ -12,6 +12,7 @@ from rapidfuzz import fuzz, process
 import shutil
 import re
 import os
+import subprocess
 
 
 # --------------------------------------
@@ -851,8 +852,10 @@ def download_and_index(n_booksum: int = None,
     else:
         if n_litbank == -1:
             n_litbank = None
+        # Auto-resolve repo path
+        resolved_repo = ensure_github_repo(litbank_url, "litbank")
         print(f"Processing LitBank (n={n_litbank or 'all'})...")
-        loader = LitBankLoader(repo_path=litbank_repo)
+        loader = LitBankLoader(repo_path=resolved_repo)
         loader.download(n=n_litbank)
         print(f"✓ LitBank processed\n")
 
@@ -908,9 +911,6 @@ def hard_reset() -> None:
     """
     print("\n=== Hard Reset (Renumbering) ===")
     
-    # 1. Clean up dead links first
-    prune_index()
-    
     if not os.path.exists(DatasetLoader.INDEX_FILE):
         print("No index to reset.")
         return
@@ -954,6 +954,62 @@ def hard_reset() -> None:
         
     print(f"✓ Renumbered {len(df)} books (IDs 1 to {len(df)})")
     print(f"✓ Next ID set to {len(df) + 1}\n")
+
+
+
+litbank_url = "https://github.com/dbamman/litbank.git"
+
+def ensure_github_repo(repo_url: str, repo_name: str, user_path: str = None) -> str:
+    """Find or clone a GitHub repository.
+    @param repo_url   The .git URL to clone.
+    @param repo_name  A short name/keyword for the repo (e.g., "litbank").
+    @param user_path  Optional specific path provided by user.
+    @return           Absolute path to the repository.
+    @details
+    1. Checks user_path if provided.
+    2. If no path provided, searches ./datasets for folder matching repo_name.
+    3. If not found, clones to ./datasets/{repo_name}.
+    """
+    base_dir = "./datasets"
+    default_target = os.path.join(base_dir, repo_name)
+
+    # --- Strategy 1: Check explicit user path ---
+    if user_path:
+        if os.path.exists(user_path):
+            return user_path
+        # If provided but missing, we clone THERE
+        clone_target = user_path
+        print(f"Path '{user_path}' not found. Will clone {repo_name} there.")
+
+    # --- Strategy 2: Search / Default Path ---
+    else:
+        # Check exact default
+        if os.path.exists(default_target):
+            return default_target
+
+        # Fuzzy search in ./datasets (e.g., finds "litbank-master" when looking for "litbank")
+        if os.path.exists(base_dir):
+            for item in os.listdir(base_dir):
+                full_path = os.path.join(base_dir, item)
+                if repo_name.lower() in item.lower() and os.path.isdir(full_path):
+                    print(f"Found existing {repo_name} repo at: {full_path}")
+                    return full_path
+
+        clone_target = default_target
+
+    # --- Strategy 3: Execute Clone ---
+    print(f"Cloning {repo_name} from GitHub to {clone_target}...")
+    
+    try:
+        os.makedirs(os.path.dirname(clone_target), exist_ok=True)
+        subprocess.check_call(["git", "clone", repo_url, clone_target])
+        print(f"✓ {repo_name} cloned successfully.\n")
+        return clone_target
+        
+    except FileNotFoundError:
+        raise RuntimeError("Error: 'git' command not found. Please install git.")
+    except subprocess.CalledProcessError:
+        raise RuntimeError(f"Error: Failed to clone {repo_url}. Check connection/permissions.")
 
 
 # --------------------------------------
@@ -1003,7 +1059,7 @@ Examples:
     parser.add_argument(
         "--litbank-repo",
         type=str,
-        default="./datasets/litbank",
+        default=None,
         help="Path to cloned LitBank repository (default: ./datasets/litbank)"
     )
 
