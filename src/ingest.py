@@ -141,25 +141,31 @@ class BookSumLoader(DatasetLoader):
         @param n  Number of books to download. If None, downloads all.
         @param fraction  Fraction of dataset to download (0.0-1.0). Overrides n if set.
         @details
-        Downloads HuggingFace dataset, saves text to global texts dir,
-        saves metadata as CSV, and appends to global index.
+        Downloads HuggingFace dataset in streaming mode for efficiency,
+        saves text to global texts dir, saves metadata as CSV, and appends to global index.
         """
         os.makedirs(self.cache_dir, exist_ok=True)
         
-        ds = load_dataset(self.dataset_name, self.subset, split=self.split)
+        # Stream dataset for efficiency
+        ds = load_dataset(self.dataset_name, self.subset, split=self.split, streaming=True)
         
-        # Debug: print available columns
-        print(f"BookSum columns: {ds.column_names}")
+        # Debug: print available columns from first item
+        first_item = next(iter(ds))
+        print(f"BookSum columns: {list(first_item.keys())}")
         
-        # Calculate subset size
-        total = len(ds)
-        num_to_download = self._calculate_subset_size(total, n, fraction)
+        # Calculate how many to download
+        # Note: with streaming, we don't know total size upfront unless we iterate once
+        # So we just use n directly or default to all
+        num_to_download = n if n is not None else float('inf')
         
         # Process each book
         rows = []
-        for i in range(num_to_download):
+        count = 0
+        for raw in ds:
+            if count >= num_to_download:
+                break
+            
             book_id = self._get_next_id()
-            raw = ds[i]
             
             # Normalize title
             title = raw.get("title", "")
@@ -173,8 +179,8 @@ class BookSumLoader(DatasetLoader):
             text = raw.get("text", "")
             text_path = self._save_text(book_id, title, text)
             
-            # Extract original BookSum ID (if available, otherwise use index)
-            booksum_id = raw.get("id", i)  # Will verify from debug print
+            # Extract original BookSum ID (if available, otherwise use count)
+            booksum_id = raw.get("id", count)
             
             # Metadata row
             metadata_row = {
@@ -199,6 +205,11 @@ class BookSumLoader(DatasetLoader):
                 "litbank_path": None
             }
             self._append_to_index(index_row)
+            
+            count += 1
+            print(f"Downloaded {count}/{num_to_download if num_to_download != float('inf') else '?'} books", end='\r')
+        
+        print()  # New line after progress
         
         # Save metadata
         df = DataFrame(rows)
@@ -240,26 +251,31 @@ class NarrativeQALoader(DatasetLoader):
         @param n  Number of books to download. If None, downloads all.
         @param fraction  Fraction of dataset to download (0.0-1.0). Overrides n if set.
         @details
-        Downloads HuggingFace dataset, saves text to global texts dir,
-        saves metadata as CSV, and appends to global index.
+        Downloads HuggingFace dataset in streaming mode for efficiency,
+        saves text to global texts dir, saves metadata as CSV, and appends to global index.
         """
         os.makedirs(self.cache_dir, exist_ok=True)
         
-        ds = load_dataset(self.dataset_name, split=self.split)
+        # Stream dataset for efficiency
+        ds = load_dataset(self.dataset_name, split=self.split, streaming=True)
         
-        # Debug: print available columns
-        print(f"NarrativeQA columns: {ds.column_names}")
-        print(f"Sample document keys: {list(ds[0]['document'].keys())}")
+        # Debug: print available columns from first item
+        first_item = next(iter(ds))
+        print(f"NarrativeQA columns: {list(first_item.keys())}")
+        if 'document' in first_item:
+            print(f"Sample document keys: {list(first_item['document'].keys())}")
         
-        # Calculate subset size
-        total = len(ds)
-        num_to_download = self._calculate_subset_size(total, n, fraction)
+        # Calculate how many to download
+        num_to_download = n if n is not None else float('inf')
         
         # Process each book
         rows = []
-        for i in range(num_to_download):
+        count = 0
+        for raw in ds:
+            if count >= num_to_download:
+                break
+            
             book_id = self._get_next_id()
-            raw = ds[i]
             doc = raw.get("document", {})
             
             # Extract fields
@@ -296,6 +312,11 @@ class NarrativeQALoader(DatasetLoader):
                 "litbank_path": None
             }
             self._append_to_index(index_row)
+            
+            count += 1
+            print(f"Downloaded {count}/{num_to_download if num_to_download != float('inf') else '?'} books", end='\r')
+        
+        print()  # New line after progress
         
         # Save metadata
         df = DataFrame(rows)
