@@ -800,46 +800,113 @@ def _load_text_if_path(value: str) -> str:
 
 
 # --------------------------------------
+# Main Helper Functions
+# --------------------------------------
+
+def download_and_index(n_booksum: int = None, 
+                       n_nqa: int = None, 
+                       n_litbank: int = None,
+                       litbank_repo: str = "./datasets/litbank") -> None:
+    """Download datasets and build global index.
+    @details
+    Downloads specified number of books from each dataset,
+    saves texts to global directory, and constructs unified index.
+    This helper can be swapped out for alternative indexing strategies.
+    @param n_booksum  Number of BookSum books to download. None = all.
+    @param n_nqa  Number of NarrativeQA books to download. None = all.
+    @param n_litbank  Number of LitBank books to download. None = all.
+    @param litbank_repo  Path to cloned LitBank repository.
+    """
+    print("=== Downloading Datasets ===\n")
+    
+    # Download BookSum
+    if n_booksum is not None or n_booksum != 0:
+        print(f"Downloading BookSum (n={n_booksum or 'all'})...")
+        loader = BookSumLoader()
+        loader.download(n=n_booksum)
+        print(f"✓ BookSum downloaded\n")
+    
+    # Download NarrativeQA
+    if n_nqa is not None or n_nqa != 0:
+        print(f"Downloading NarrativeQA (n={n_nqa or 'all'})...")
+        loader = NarrativeQALoader()
+        loader.download(n=n_nqa)
+        print(f"✓ NarrativeQA downloaded\n")
+    
+    # Download LitBank
+    if n_litbank is not None or n_litbank != 0:
+        print(f"Processing LitBank (n={n_litbank or 'all'})...")
+        loader = LitBankLoader(repo_path=litbank_repo)
+        loader.download(n=n_litbank)
+        print(f"✓ LitBank processed\n")
+    
+    print("=== Global Index Summary ===")
+    if os.path.exists(DatasetLoader.INDEX_FILE):
+        index = read_csv(DatasetLoader.INDEX_FILE)
+        print(f"Total books indexed: {len(index)}")
+        print(f"Index location: {DatasetLoader.INDEX_FILE}")
+        print(f"Texts directory: {DatasetLoader.TEXTS_DIR}")
+    else:
+        print("No index file created (no data downloaded)")
+
+
+# --------------------------------------
 # Main
 # --------------------------------------
 
 if __name__ == "__main__":
-    from src.components.metrics import Metrics
+    import argparse
     
-    # Load datasets
-    booksum = BookSumLoader().load()
-    nqa = NarrativeQALoader().load()
+    parser = argparse.ArgumentParser(
+        description="Download and index book datasets for text processing pipeline.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Download 10 books from each dataset
+  python ingest.py --n-booksum 10 --n-nqa 10 --n-litbank 10
+  
+  # Download all BookSum and NarrativeQA, skip LitBank
+  python ingest.py --n-booksum 0 --n-nqa 0
+  
+  # Download only LitBank with custom repo path
+  python ingest.py --n-litbank 5 --litbank-repo ./data/litbank
+        """
+    )
     
-    # Load LitBank - saves text to files, fetches metadata from Gutendex
-    # litbank = LitBankLoader("./datasets/litbank", text_output_dir="./datasets/litbank_texts").load()
-    # print(f"LitBank rows: {len(litbank)}")
-    # print(f"Sample: {litbank.iloc[0]}")
+    parser.add_argument(
+        "--n-booksum",
+        type=int,
+        default=None,
+        help="Number of BookSum books to download (default: all)"
+    )
     
-    # To read full text later:
-    # text = load_text_from_path(litbank.loc[0, 'text_path'])
+    parser.add_argument(
+        "--n-nqa",
+        type=int,
+        default=None,
+        help="Number of NarrativeQA books to download (default: all)"
+    )
     
-    # Align using fuzzy matching
-    merged = fuzzy_merge(booksum, nqa, "_booksum", "_nqa", 
-                         key="title", threshold=70)
+    parser.add_argument(
+        "--n-litbank",
+        type=int,
+        default=None,
+        help="Number of LitBank books to process (default: all)"
+    )
     
-    # Example: align BookSum with LitBank on title
-    # merged_litbank = fuzzy_merge(booksum, litbank, "_booksum", "_litbank",
-    #                               key="title", threshold=75)
+    parser.add_argument(
+        "--litbank-repo",
+        type=str,
+        default="./datasets/litbank",
+        help="Path to cloned LitBank repository (default: ./datasets/litbank)"
+    )
     
-    # Save outputs
-    booksum.to_csv("./datasets/metrics/booksum.csv", index=False)
-    nqa.to_csv("./datasets/metrics/nqa.csv", index=False)
-    merged.to_csv("./datasets/metrics/merged.csv", index=False)
+    args = parser.parse_args()
     
-    print(f"BookSum rows: {len(booksum)}")
-    print(f"NarrativeQA rows: {len(nqa)}")
-    print(f"Fuzzy matches: {len(merged)}")
-    
-    # Example metric computation
-    m = Metrics()
-    m.post_basic_metrics(
-        "1", 
-        merged.loc[0, 'title_nqa'], 
-        merged.loc[0, 'summary_booksum'], 
-        merged.loc[0, 'summary_booksum']
+    # Call the helper function with parsed arguments
+    download_and_index(
+        n_booksum=args.n_booksum,
+        n_nqa=args.n_nqa,
+        n_litbank=args.n_litbank,
+        litbank_repo=args.litbank_repo
     )
