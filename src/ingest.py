@@ -663,12 +663,92 @@ def fuzzy_merge(df1: DataFrame, df2: DataFrame,
     return DataFrame(matches)
 
 
+def text_similarity_merge(df1: DataFrame, df2: DataFrame,
+                          suffix1: str, suffix2: str,
+                          text_col1: str = "text_path",
+                          text_col2: str = "text_path",
+                          threshold: float = 0.85,
+                          method: str = "jaccard") -> DataFrame:
+    """Merge dataframes by comparing full text similarity.
+    @details
+    For each row in df1, compares full text against all texts in df2.
+    Uses set-based similarity metrics (Jaccard, overlap coefficient).
+    Only includes matches above similarity threshold.
+    @param df1  The left-hand DataFrame.
+    @param df2  The right-hand DataFrame.
+    @param suffix1  Suffix for df1 columns in output.
+    @param suffix2  Suffix for df2 columns in output.
+    @param text_col1  Column in df1 containing text or text_path.
+    @param text_col2  Column in df2 containing text or text_path.
+    @param threshold  Minimum similarity score (0.0-1.0). Defaults to 0.85.
+    @param method  Similarity method: "jaccard" or "overlap".
+    @return  DataFrame with matched rows and similarity scores.
+    @note
+        This is computationally expensive for large datasets.
+        Consider using on already title-matched subsets.
+    """
+    matches = []
+    
+    for _, row1 in df1.iterrows():
+        # Load text from path or use directly
+        text1 = _load_text_if_path(row1[text_col1])
+        tokens1 = set(text1.lower().split())
+        
+        best_match = None
+        best_score = 0.0
+        
+        for idx2, row2 in df2.iterrows():
+            text2 = _load_text_if_path(row2[text_col2])
+            tokens2 = set(text2.lower().split())
+            
+            # Calculate similarity
+            if method == "jaccard":
+                score = len(tokens1 & tokens2) / len(tokens1 | tokens2) if tokens1 or tokens2 else 0
+            elif method == "overlap":
+                score = len(tokens1 & tokens2) / min(len(tokens1), len(tokens2)) if tokens1 and tokens2 else 0
+            else:
+                raise ValueError(f"Unknown method: {method}")
+            
+            if score > best_score:
+                best_score = score
+                best_match = (idx2, row2)
+        
+        # Only include if above threshold
+        if best_match and best_score >= threshold:
+            idx2, row2 = best_match
+            
+            merged_row = {
+                "similarity_score": best_score,
+            }
+            
+            # Add all columns with suffixes
+            for col in df1.columns:
+                merged_row[f"{col}{suffix1}"] = row1[col]
+            
+            for col in df2.columns:
+                merged_row[f"{col}{suffix2}"] = row2[col]
+            
+            matches.append(merged_row)
+    
+    return DataFrame(matches)
+
+
+def _load_text_if_path(value: str) -> str:
+    """Helper to load text from file path or return value directly.
+    @param value  Either text content or path to text file.
+    @return  Text content as string.
+    """
+    if isinstance(value, str) and os.path.exists(value):
+        return load_text_from_path(value)
+    return str(value)
+
+
 # --------------------------------------
 # Main
 # --------------------------------------
 
 if __name__ == "__main__":
-    from components.metrics import Metrics
+    from src.components.metrics import Metrics
     
     # Load datasets
     booksum = BookSumLoader().load()
