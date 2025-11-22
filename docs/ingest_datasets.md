@@ -3,50 +3,112 @@
 ## Core Concept
 Separate **downloading** (fetch and cache) from **loading** (read from cache).
 
+
 ## File Structure
 
 ```
 ingest.py
-├── DatasetLoader (ABC)               # Base class and ID manager
+├── DatasetLoader (ABC)               # Base class, ID manager, global index
 ├── BookSumLoader                     # HuggingFace dataset
 ├── NarrativeQALoader                 # HuggingFace dataset  
-├── LitBankLoader                     # Local repo
-└── Alignment functions               # fuzzy_merge, exact_merge, TODO
+├── LitBankLoader                     # GitHub repository
+└── Alignment functions               # fuzzy_merge, exact_merge
 
 ./datasets/
 ├── texts/
-│   ├── 00001_moby_dick.txt          # Global incrementing IDs
+│   ├── 00001_moby_dick.txt
 │   ├── 00002_pride_and_prejudice.txt
-│   ├── 00003_adventures_of_sherlock_holmes.txt
 │   └── ...
+├── index.csv                         # Global: book_id, title, gutenberg_id, text_path, {dataset}_metadata_path
 ├── booksum/
-│   └── metadata.csv                     # book_id, title, summary, text_path
+│   └── metadata.csv
 ├── narrativeqa/
-│   └── metadata.csv                     # book_id, title, author, nqa_id, text_path, summary_path
-└── litbank/
-    └── metadata.csv                  # book_id, title, author, text_path
+│   └── metadata.csv
+└── litbank/                          # Mirror the structure of LitBank repository
+    ├── metadata.csv                  # Contains: entities_path, coref_path, etc.
+    ├── entities/
+    │   └── tsv/                      # Supplemental files: also reindexed by ingest.py
+    │       └── 00003_bleak_house_brat.tsv
+    ├── coref/
+    │   └── conll/
+    │       └── 00003_bleak_house_brat.conll
+    ├── events/
+    │   └── tsv/
+    │       └── 00003_bleak_house_brat.tsv
+    └── quotations/
+        └── tsv/
+            └── 00003_bleak_house_brat.tsv
+```
+
+## Book Indexing
+
+**Global ID tracking:** `./datasets/next_id.txt` increments atomically. Each book gets unique ID during `download()`, saved as `./datasets/texts/{id}_{title}.txt`. 
+
+**Global index:** ABC maintains `./datasets/index.csv` as a unified registry. When any loader downloads books, it appends rows with book_id, title, gutenberg_id (when available), text_path, and a column for that dataset's metadata path (booksum_metadata_path, narrativeqa_metadata_path, or litbank_metadata_path). This allows cross-dataset lookups - find a book by ID, see which datasets have metadata for it, and locate all associated files.
+
+## Dataset Schemas
+
+```
+booksum/metadata.csv
+├── book_id
+├── title
+└── summary
+
+narrativeqa/metadata.csv
+├── book_id
+├── title
+├── author
+├── nqa_id
+└── summary
+
+litbank/metadata.csv
+├── book_id
+├── title
+├── events_path           # → ./datasets/litbank/events/tsv/{id}_{title}.tsv
+├── entities_path         # → ./datasets/litbank/entities/tsv/{id}_{title}.tsv
+├── coref_path            # → ./datasets/litbank/coref/conll/{id}_{title}.conll
+└── quotations_path       # → ./datasets/litbank/quotations/tsv/{id}_{title}.tsv
+
+litbank/.../{id}_{title}.tsv
+├── tokens                # One token per row
+├── events                # Second column: O | EVENT
+├── entities              # Multiple columns: O | B-FAC | I-LOC | ...
+
+litbank/.../{id}_{title}_brat.ann
+├── tokens                # 
+├── coref                 # 
+└── quotations            #
+
+index.csv                 # Keeps track of global indexing and alignment
+├── book_id
+├── title
+├── gutenberg_id
+├── text_path             # → ./datasets/texts/{id}_{title}.txt
+├── booksum_id
+├── booksum_path          # → ./datasets/booksum/metadata.csv (if book in BookSum)
+├── nqa_id
+├── nqa_path              # → ./datasets/narrativeqa/metadata.csv (if book in NarrativeQA)
+├── litbank_id
+└── litbank_path          # → ./datasets/litbank/metadata.csv (if book in LitBank)
 ```
 
 
-TODO: 3 components in LitBank - event annotation, dialogue annotationm, coreference annotation
-litbank/original/x.txt - full text of each book
-litbank/events/tsv/x.tsv - each row is a token, and the 2nd column says O normally, or EVENT if event
-litbank/entities/tsv/x.tsv - each row is a token, and several other columns saying the type of entity (B-PER I-FAC etc)
-litbank/quotations/tsv/x.tsv - each row is a token, and several other columns saying the type of entity (B-PER I-FAC etc)
+## Setup
 
+LitBank is not available on HuggingFace, and must be manually cloned into the `datasets` folder.
+```bash
+git clone https://github.com/dbamman/litbank ./datasets/litbank
 ```
-Quotation annotations
-Annotations are contained in .tsv files, which have two components (quote annotations and speaker attribution annotations); each type has its own structure:
 
-Label   Quote ID    Start sentence ID   Start token ID (within sentence)    End sentence ID End token ID (within sentence)  Quotation
-QUOTE   Q342    54  0   54  13  “ Of course , we ’ll take over your furniture , mother , ”
-Label   Quote ID    Speaker ID
-ATTRIB  Q342    Winnie_Verloc-3
-Sentence IDs correspond to the row of the sentence in the corresponding .txt file; token IDs correspond to index of the token within that sentence.
+BookSum and NarrativeQA require no external setup.
+
+Run the setup script to clean the `datasets` folder and download / allign datasets before the first run.
+```bash
+python -m src.components.ingest
 ```
 
 
-## Data Flow
+## Usage
 
 ### 1. First Time (Download)
 ```python
@@ -54,70 +116,13 @@ loader = BookSumLoader(cache_dir="./datasets/booksum")
 loader.download(n=10)  # Fetch 10 books from HuggingFace, save to cache
 ```
 
-**What happens:**
-- Fetches from HuggingFace API
-- Normalizes rows via `_normalize_row()`
-- Saves as CSV to `./datasets/booksum/train.csv`
-
 ### 2. Subsequent Times (Load)
 ```python
 loader = BookSumLoader(cache_dir="./datasets/booksum")
 df = loader.load()  # Reads from cache, no download
 ```
 
-**What happens:**
-- Checks if `./datasets/booksum/train.csv` exists
-- If yes: reads CSV with pandas `read_csv()`
-- If no: falls back to download from HuggingFace
-
-## Key Classes
-
-### DatasetLoader (ABC)
-```python
-def _calculate_subset_size(total, n, fraction) -> int
-    # Helper: converts n/fraction to actual number
-    # Used by all loaders to handle download(n=10) or download(fraction=0.1)
-```
-
-
-
-
-
-### BookSumLoader / NarrativeQALoader
-**HuggingFace datasets - same pattern:**
-- `download()` - Fetches via `load_dataset()`, saves CSV
-- `load()` - Reads CSV cache or fetches if missing
-- `_normalize_row()` - Maps HF format to common schema
-
-**Cache location:** `{cache_dir}/{split}.csv`
-
-### LitBankLoader
-**Local repo with API metadata - different pattern:**
-
-1. **download()** - Processes local files:
-   - Reads text from `{repo_path}/entities/brat/*.txt`
-   - Saves text to `{text_output_dir}/{gutenberg_id}_{title}.txt`
-   - Fetches metadata from Gutendex API
-   - Saves metadata to `{text_output_dir}/metadata.csv`
-
-2. **load()** - Reads metadata CSV cache
-
-**Why separate text files?**
-- DataFrame only stores paths, not full text (memory efficient)
-- Use `load_text_from_path()` to read when needed
-
-**Cache location:** `{text_output_dir}/metadata.csv`
-
-## Alignment Functions
-
-**Module-level functions (not methods):**
-- `fuzzy_merge(df1, df2, ...)` - RapidFuzz string matching
-- `exact_merge(df1, df2, ...)` - Exact key matching after normalization
-- `normalize_title(t)` - Remove punctuation, lowercase
-- `load_text_from_path(path)` - Read saved text file
-
-## Usage Pattern
-
+### Full code example
 ```python
 # Download once
 BookSumLoader().download(n=1)          # Minimal
@@ -136,6 +141,15 @@ merged = fuzzy_merge(bs, nqa, "_bs", "_nqa", key="title", threshold=70)
 text = load_text_from_path(lit.loc[0, 'text_path'])
 ```
 
+
+## Alignment Functions
+
+**Module-level functions (not methods):**
+- `fuzzy_merge(df1, df2, ...)` - RapidFuzz string matching
+- `exact_merge(df1, df2, ...)` - Exact key matching after normalization
+- `normalize_title(t)` - Remove punctuation, lowercase
+- `load_text_from_path(path)` - Read saved text file
+
 ## Why This Design?
 
 **Separation of concerns:**
@@ -151,4 +165,3 @@ text = load_text_from_path(lit.loc[0, 'text_path'])
 **Flexible subsets:**
 - `download(n=1)` for quick testing
 - `download()` for full dataset
-- Helper in ABC avoids code duplication
