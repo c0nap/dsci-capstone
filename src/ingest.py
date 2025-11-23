@@ -239,6 +239,13 @@ class BookSumLoader(DatasetLoader):
             else:
                 title = ""
             
+            # Gutenberg Lookup (BookSum has no ID, so search by title)
+            gutenberg_id = None
+            if title:
+                meta = self.fetch_gutenberg_metadata(query=title)
+                if meta:
+                    gutenberg_id = meta.get("gutenberg_id")
+
             # Save full text
             text = raw.get("text", "")
             text_path = self._save_text(book_id, title, text)
@@ -259,7 +266,7 @@ class BookSumLoader(DatasetLoader):
             index_row = {
                 "book_id": book_id,
                 "title": title,
-                "gutenberg_id": None,
+                "gutenberg_id": gutenberg_id,
                 "text_path": text_path,
                 "booksum_id": booksum_id,
                 "booksum_path": self.metadata_file,
@@ -349,6 +356,20 @@ class NarrativeQALoader(DatasetLoader):
             text = doc.get("text", "")
             summary = doc.get("summary", {}).get("text", "")
             
+            # Gutenberg Lookup (Try URL first, then Search fallback)
+            gutenberg_id = None
+            url = doc.get("url", "")
+            # Fast path: extract from URL
+            gid_match = re.search(r'gutenberg\.org/ebooks/(\d+)', url)
+            if gid_match:
+                gutenberg_id = gid_match.group(1)
+            # Slow path: search by title
+            elif title:
+                query = f"{title} {author}".strip()
+                meta = self.fetch_gutenberg_metadata(query=query)
+                if meta:
+                    gutenberg_id = meta.get("gutenberg_id")
+
             # Save full text
             text_path = self._save_text(book_id, title, text)
             
@@ -366,7 +387,7 @@ class NarrativeQALoader(DatasetLoader):
             index_row = {
                 "book_id": book_id,
                 "title": title,
-                "gutenberg_id": None,
+                "gutenberg_id": gutenberg_id,
                 "text_path": text_path,
                 "booksum_id": None,
                 "booksum_path": None,
