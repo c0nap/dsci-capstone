@@ -15,6 +15,7 @@ import os
 import subprocess
 import requests
 import time
+from urllib.parse import unquote
 
 
 # --------------------------------------
@@ -342,35 +343,50 @@ class NarrativeQALoader(DatasetLoader):
         # Process each book
         rows = []
         count = 0
+        seen_ids = set() # Track processed NQA IDs
+
         for raw in ds:
             if count >= num_to_download:
                 break
             
-            book_id = self._get_next_id()
             doc = raw.get("document", {})
-            
-            # Extract fields
-            title = doc.get("title", "").strip().lower()
-            author = doc.get("author", "").strip().lower()
             nqa_id = doc.get("id", "")
-            text = doc.get("text", "")
-            summary = doc.get("summary", {}).get("text", "")
             
-            # Gutenberg Lookup (Try URL first, then Search fallback)
-            gutenberg_id = None
+            # --- Fix: Deduplicate by NQA ID ---
+            if not nqa_id or nqa_id in seen_ids:
+                continue
+            seen_ids.add(nqa_id)
+            
+            # --- Fix: Resolve Title & ID ---
+            title = ""
             url = doc.get("url", "")
-            # Fast path: extract from URL
+            author = doc.get("author", "").strip().lower()
+            gutenberg_id = None
+
+            # 1. Try regex from URL
             gid_match = re.search(r'gutenberg\.org/ebooks/(\d+)', url)
             if gid_match:
                 gutenberg_id = gid_match.group(1)
             # Slow path: search by title
-            elif title:
-                query = f"{title} {author}".strip()
-                meta = self.fetch_gutenberg_metadata(query=query)
+                meta = self.fetch_gutenberg_metadata(gutenberg_id=gutenberg_id)
                 if meta:
-                    gutenberg_id = meta.get("gutenberg_id")
+                    title = meta.get("title", "").lower()
+            
+            # 2. Fallback: Extract title from URL slug
+            if not title and url:
+                slug = url.split('/')[-1].replace('.html', '').replace('.htm', '')
+                try:
+                    title = unquote(slug).replace('_', ' ').replace('-', ' ').lower()
+                except:
+                    title = slug.replace('_', ' ').replace('-', ' ').lower()
+            
+            # Clean title
+            title = re.sub(r"[\W_]+", " ", title).strip()
 
             # Save full text
+            book_id = self._get_next_id()
+            text = doc.get("text", "")
+            summary = doc.get("summary", {}).get("text", "")
             text_path = self._save_text(book_id, title, text)
             
             # Metadata row
@@ -648,6 +664,24 @@ class LitBankLoader(DatasetLoader):
                 "entities_brat_txt", "entities_brat_ann", "entities_tsv",
                 "events_tsv", "coref_brat_txt", "coref_brat_ann", "coref_conll",
                 "quotations_brat_txt", "quotations_brat_ann"]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # --------------------------------------
