@@ -187,3 +187,16 @@ class DatasetLoader(ABC):
         row.update(kwargs)
         return row
 
+
+
+def load_text_from_path(text_path: str) -> str:
+    """Load full text from saved file path.
+    @param text_path  Path to text file.
+    @return  Full text content as string.
+    @details
+    Use this helper to retrieve full text when needed for processing,
+    without keeping it in memory in the DataFrame.
+    """
+    with open(text_path, "r", encoding="utf-8") as f:
+        return f.read()
+

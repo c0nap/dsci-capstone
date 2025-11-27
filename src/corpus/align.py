@@ -2,21 +2,10 @@ from pandas import DataFrame
 from rapidfuzz import fuzz, process
 import os
 import re
-
-
-def load_text_from_path(text_path: str) -> str:
-    """Load full text from saved file path.
-    @param text_path  Path to text file.
-    @return  Full text content as string.
-    @details
-    Use this helper to retrieve full text when needed for processing,
-    without keeping it in memory in the DataFrame.
-    """
-    with open(text_path, "r", encoding="utf-8") as f:
-        return f.read()
+from src.corpus.base import load_text_from_path
 
 # --------------------------------------------------
-# Helper Functions - Text Similarity
+# Helper Functions - Text Similarity & Title Matching
 # --------------------------------------------------
 
 def normalize_title(t: str) -> str:
@@ -171,14 +160,14 @@ def text_similarity_merge(df1: DataFrame, df2: DataFrame,
     
     for _, row1 in df1.iterrows():
         # Load text from path or use directly
-        text1 = _load_text_if_path(row1[text_col1])
+        text1 = load_text_from_path(row1[text_col1])
         tokens1 = set(text1.lower().split())
         
         best_match = None
         best_score = 0.0
         
         for idx2, row2 in df2.iterrows():
-            text2 = _load_text_if_path(row2[text_col2])
+            text2 = load_text_from_path(row2[text_col2])
             tokens2 = set(text2.lower().split())
             
             # Calculate similarity
@@ -213,12 +202,4 @@ def text_similarity_merge(df1: DataFrame, df2: DataFrame,
     return DataFrame(matches)
 
 
-def _load_text_if_path(value: str) -> str:
-    """Helper to load text from file path or return value directly.
-    @param value  Either text content or path to text file.
-    @return  Text content as string.
-    """
-    if isinstance(value, str) and os.path.exists(value):
-        return load_text_from_path(value)
-    return str(value)
 
