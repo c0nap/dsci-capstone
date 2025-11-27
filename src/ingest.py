@@ -2,6 +2,9 @@ from pandas import read_csv
 import os
 from src.corpus.read import ensure_github_repo
 from src.corpus.base import DatasetLoader
+from src.corpus.hf import BookSumLoader, NarrativeQALoader
+from src.corpus.read import LitBankLoader
+import shutil
 
 # --------------------------------------------------
 # Helper Functions - Corpus Index Orchestration

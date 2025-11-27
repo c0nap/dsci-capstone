@@ -2,6 +2,7 @@ from pandas import DataFrame, read_csv
 import subprocess
 import os
 from src.corpus.base import DatasetLoader
+import shutil
 
 
 # --------------------------------------
@@ -254,8 +255,6 @@ class LitBankLoader(DatasetLoader):
         @param key  Key to store in paths_dict.
         @param paths_dict  Dict to update with file path.
         """
-        import shutil
-        
         if os.path.exists(src):
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             shutil.copy2(src, dst)
