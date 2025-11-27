@@ -1,6 +1,7 @@
 from pandas import DataFrame, read_csv
 import subprocess
 import os
+from src.corpus.base import DatasetLoader
 
 
 # --------------------------------------
@@ -46,7 +47,7 @@ def ensure_github_repo(repo_url: str, repo_name: str, user_path: str = None) -> 
         clone_target = default_target
 
     # --- Strategy 3: Execute Clone ---
-    print(f"Cloning {repo_name} from GitHub to {clone_target}...")
+    print(f"Downloading repository '{repo_name}' from GitHub to {clone_target}...")
     
     try:
         os.makedirs(os.path.dirname(clone_target), exist_ok=True)

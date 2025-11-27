@@ -3,6 +3,7 @@ from urllib.parse import unquote
 from datasets import load_dataset, DatasetDict  # type: ignore
 import os
 import re
+from src.corpus.base import DatasetLoader
 
 
 class BookSumLoader(DatasetLoader):

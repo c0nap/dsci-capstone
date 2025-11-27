@@ -1,5 +1,7 @@
 from pandas import read_csv
 import os
+from src.corpus.read import ensure_github_repo
+from src.corpus.base import DatasetLoader
 
 # --------------------------------------------------
 # Helper Functions - Corpus Index Orchestration
@@ -122,9 +124,9 @@ def prune_index() -> None:
     final_count = len(df)
     if final_count < initial_count:
         df.to_csv(index_file, index=False)
-        print(f"✓ Pruned index: {initial_count} -> {final_count} entries (removed {initial_count - final_count} invalid/duplicate).\n")
+        print(f"✓ Pruned index: {initial_count} -> {final_count} entries (removed {initial_count - final_count} invalid/duplicate).")
     else:
-        print("✓ Index integrity check passed.\n")
+        print("✓ Index integrity check passed.")
 
 
 def hard_reset() -> None:
@@ -151,7 +153,7 @@ def hard_reset() -> None:
     # Track mapping from old_id -> new_id for logging/debugging
     id_map = {}
     
-    print("Renumbering files...")
+    print("Indexing text files...")
     for new_id_int, (idx, row) in enumerate(df.iterrows(), start=1):
         old_path = str(row['text_path'])
         old_id = int(row['book_id'])
