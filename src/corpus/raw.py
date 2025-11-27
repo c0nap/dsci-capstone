@@ -164,18 +164,14 @@ class LitBankLoader(DatasetLoader):
         }
         
         # Append to global index
-        index_row = {
-            "book_id": book_id,
-            "title": title,
-            "gutenberg_id": gutenberg_id,
-            "text_path": text_path,
-            "booksum_id": None,
-            "booksum_path": None,
-            "nqa_id": None,
-            "nqa_path": None,
-            "litbank_id": lb_id,
-            "litbank_path": self.metadata_file
-        }
+        index_row = DatasetLoader.make_index_row(
+            book_id = book_id,
+            title = title,
+            text_path = text_path,
+            gutenberg_id = gutenberg_id,
+            litbank_id = lb_id,
+            litbank_path = self.metadata_file,
+        )
         self._append_to_index(index_row)
         
         return metadata_row

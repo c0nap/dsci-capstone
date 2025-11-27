@@ -112,18 +112,11 @@ class WikipediaLoader(DatasetLoader):
             }
             rows.append(metadata_row)
             # Append to global index (single path for Wikipedia stored in wiki_path)
-            index_row = {
-                "book_id": book_id,
-                "title": norm_title,
-                "gutenberg_id": None,
-                "text_path": text_path,
-                "booksum_id": None,
-                "booksum_path": None,
-                "nqa_id": None,
-                "nqa_path": None,
-                "litbank_id": None,
-                "litbank_path": None
-            }
+            index_row = DatasetLoader.make_index_row(
+                book_id = book_id,
+            	title = norm_title,
+            	text_path = text_path,
+            )
             self._append_to_index(index_row)
             print(f"Downloaded Wikipedia: {wiki_title}", end="\r")
             time.sleep(0.35)  # polite pacing
@@ -250,18 +243,11 @@ class FandomLoader(DatasetLoader):
             }
             rows.append(metadata_row)
 
-            index_row = {
-                "book_id": book_id,
-                "title": norm_title,
-                "gutenberg_id": None,
-                "text_path": text_path,
-                "booksum_id": None,
-                "booksum_path": None,
-                "nqa_id": None,
-                "nqa_path": None,
-                "litbank_id": None,
-                "litbank_path": None
-            }
+            index_row = DatasetLoader.make_index_row(
+                book_id = book_id,
+            	title = norm_title,
+            	text_path = text_path,
+            )
             self._append_to_index(index_row)
             print(f"Downloaded Fandom: {subdomain}/{page_title}", end="\r")
             time.sleep(0.35)
@@ -411,18 +397,11 @@ class WikidataLoader(DatasetLoader):
             rows.append(metadata_row)
 
             # Append to global index
-            index_row = {
-                "book_id": book_id,
-                "title": norm_title,
-                "gutenberg_id": None,
-                "text_path": text_path,
-                "booksum_id": None,
-                "booksum_path": None,
-                "nqa_id": None,
-                "nqa_path": None,
-                "litbank_id": None,
-                "litbank_path": None
-            }
+            index_row = DatasetLoader.make_index_row(
+                book_id = book_id,
+            	title = norm_title,
+            	text_path = text_path,
+            )
             self._append_to_index(index_row)
             print(f"Downloaded Wikidata characters for {resolved_qid} ({len(labels)} chars)", end="\r")
             time.sleep(0.35)

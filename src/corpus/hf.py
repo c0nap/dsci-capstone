@@ -82,18 +82,14 @@ class BookSumLoader(DatasetLoader):
             rows.append(metadata_row)
             
             # Append to global index
-            index_row = {
-                "book_id": book_id,
-                "title": title,
-                "gutenberg_id": gutenberg_id,
-                "text_path": text_path,
-                "booksum_id": booksum_id,
-                "booksum_path": self.metadata_file,
-                "nqa_id": None,
-                "nqa_path": None,
-                "litbank_id": None,
-                "litbank_path": None
-            }
+            index_row = DatasetLoader.make_index_row(
+                book_id = book_id,
+                title = title,
+                text_path = text_path,
+                gutenberg_id = gutenberg_id,
+                booksum_id = booksum_id,
+                booksum_path = self.metadata_file,
+            )
             self._append_to_index(index_row)
             
             count += 1
@@ -218,18 +214,14 @@ class NarrativeQALoader(DatasetLoader):
             rows.append(metadata_row)
             
             # Append to global index
-            index_row = {
-                "book_id": book_id,
-                "title": title,
-                "gutenberg_id": gutenberg_id,
-                "text_path": text_path,
-                "booksum_id": None,
-                "booksum_path": None,
-                "nqa_id": nqa_id,
-                "nqa_path": self.metadata_file,
-                "litbank_id": None,
-                "litbank_path": None
-            }
+            index_row = DatasetLoader.make_index_row(
+                book_id = book_id,
+                title = title,
+                text_path = text_path,
+                gutenberg_id = gutenberg_id,
+                nqa_id = nqa_id,
+                nqa_path = self.metadata_file,
+            )
             self._append_to_index(index_row)
             
             count += 1

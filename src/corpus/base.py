@@ -32,6 +32,7 @@ class DatasetLoader(ABC):
         @return  List of column names that will be present in the output DataFrame.
         """
         pass
+
     
     def fetch_gutenberg_metadata(self, query: str = None, gutenberg_id: str | int = None) -> Optional[dict]:
         """Search or lookup metadata from Gutendex.
@@ -169,3 +170,20 @@ class DatasetLoader(ABC):
         
         # Save updated index
         index_df.to_csv(self.INDEX_FILE, index=False)
+
+    def make_index_row(**kwargs):
+        row = {
+            "book_id": None,
+            "title": None,
+            "text_path": None,
+            "gutenberg_id": None,
+            "booksum_id": None,
+            "booksum_path": None,
+            "nqa_id": None,
+            "nqa_path": None,
+            "litbank_id": None,
+            "litbank_path": None,
+        }
+        row.update(kwargs)
+        return row
+
