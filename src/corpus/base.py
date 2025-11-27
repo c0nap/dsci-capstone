@@ -188,6 +188,9 @@ class DatasetLoader(ABC):
         return row
 
 
+# --------------------------------------------------
+# Helper Functions - Index Management
+# --------------------------------------------------
 
 def load_text_from_path(text_path: str) -> str:
     """Load full text from saved file path.
@@ -200,3 +203,48 @@ def load_text_from_path(text_path: str) -> str:
     with open(text_path, "r", encoding="utf-8") as f:
         return f.read()
 
+
+def hard_reset() -> int:
+    """Renumber all existing datasets starting from ID 00001.
+    @details
+    1. Scans valid text files.
+    2. Renames files sequentially (00001, 00002...).
+    3. Updates global index and next_id counter.
+    @return  The number of books in the index, now equivalent to the maximum book ID.
+    """
+    if not os.path.exists(DatasetLoader.INDEX_FILE):
+        return 0
+    df = read_csv(DatasetLoader.INDEX_FILE)
+    if df.empty:
+        return 0
+
+    # Sort by current book_id to maintain relative order
+    df = df.sort_values('book_id')
+    
+    id_map = {}  # Track mapping from old_id -> new_id for logging and debugging
+    for new_id_int, (idx, row) in enumerate(df.iterrows(), start=1):
+        old_path = str(row['text_path'])
+        old_id = int(row['book_id'])
+        title = str(row['title'])
+        
+        # Generate new path
+        # Format: datasets/texts/00001_title.txt
+        new_filename = f"{new_id_int:05d}_{title.replace(' ', '_')}.txt"
+        new_path = os.path.join(DatasetLoader.TEXTS_DIR, new_filename)
+        
+        # Rename file on disk
+        if old_path != new_path:
+            shutil.move(old_path, new_path)
+            
+        # Update DataFrame
+        df.at[idx, 'book_id'] = new_id_int
+        df.at[idx, 'text_path'] = new_path
+        id_map[old_id] = new_id_int
+
+    # Save updated index
+    df.to_csv(DatasetLoader.INDEX_FILE, index=False)
+    
+    # Update next_id file
+    with open(DatasetLoader.NEXT_ID_FILE, "w") as f:
+        f.write(str(len(df) + 1))
+    return len(df)

@@ -1,10 +1,9 @@
 from pandas import read_csv
 import os
-from src.corpus.read import ensure_github_repo
 from src.corpus.base import DatasetLoader
 from src.corpus.hf import BookSumLoader, NarrativeQALoader
 from src.corpus.read import LitBankLoader
-from src.corpus.align import prune_index
+import src.corpus
 import shutil
 
 # --------------------------------------------------
@@ -56,7 +55,7 @@ def download_by_counts(n_booksum: int = None,
         if n_litbank == -1:
             n_litbank = None
         # Auto-resolve repo path
-        resolved_repo = ensure_github_repo(litbank_url, "litbank")
+        resolved_repo = read.ensure_github_repo(litbank_url, "litbank")
         print(f"Processing LitBank (n={n_litbank or 'all'})...")
         loader = LitBankLoader(repo_path=resolved_repo)
         loader.download(n=n_litbank)
@@ -75,79 +74,33 @@ def print_index() -> None:
         print("No index file created (no data downloaded)")
 
 
-def hard_reset() -> None:
-    """Renumber all existing datasets starting from ID 00001.
-    @details
-    1. Prunes invalid entries first.
-    2. Scans valid text files.
-    3. Renames files sequentially (00001, 00002...).
-    4. Updates global index and next_id counter.
-    """
-    print("\n=== Hard Reset (Renumbering) ===")
-    
-    if not os.path.exists(DatasetLoader.INDEX_FILE):
-        print("No index to reset.")
-        return
-
-    df = read_csv(DatasetLoader.INDEX_FILE)
-    if df.empty:
-        return
-
-    # Sort by current book_id to maintain relative order
-    df = df.sort_values('book_id')
-    
-    # Track mapping from old_id -> new_id for logging/debugging
-    id_map = {}
-    
-    print("Indexing text files...")
-    for new_id_int, (idx, row) in enumerate(df.iterrows(), start=1):
-        old_path = str(row['text_path'])
-        old_id = int(row['book_id'])
-        title = str(row['title'])
-        
-        # Generate new path
-        # Format: datasets/texts/00001_title.txt
-        new_filename = f"{new_id_int:05d}_{title.replace(' ', '_')}.txt"
-        new_path = os.path.join(DatasetLoader.TEXTS_DIR, new_filename)
-        
-        # Rename file on disk
-        if old_path != new_path:
-            shutil.move(old_path, new_path)
-            
-        # Update DataFrame
-        df.at[idx, 'book_id'] = new_id_int
-        df.at[idx, 'text_path'] = new_path
-        id_map[old_id] = new_id_int
-
-    # Save updated index
-    df.to_csv(DatasetLoader.INDEX_FILE, index=False)
-    
-    # Update next_id file
-    with open(DatasetLoader.NEXT_ID_FILE, "w") as f:
-        f.write(str(len(df) + 1))
-        
-    print(f"✓ Renumbered {len(df)} books (IDs 1 to {len(df)})")
-    print(f"✓ Next ID set to {len(df) + 1}\n")
-
-
-
 def clean_index(reindex: bool = False) -> None:
     """
-    @details 
+    @param reindex  Whether to recursively rename all dataset files to start at ID 1.
+    @details
     Since the individual DatasetLoaders simply append new rows to the index file, a manual
-    post-processing step is required for the following objectives:
+    post-processing step is required to perform the following cleaning steps.
     1. Ensure each path corresponds to a valid file (ghost rows).
     2. (Optional) Ensure a clean number sequence for book IDs, i.e. book 1 ... book N."""
     print("Verifying index integrity...")
-    # Remove ghost entries from previous runs.
+    
+    # 1. Remove ghost entries from previous runs.
     final_count, initial_count = align.prune_index()
     if final_count < initial_count:
         print(f"✓ Pruned index: {initial_count} -> {final_count} entries (removed {initial_count - final_count} invalid/duplicate).")
     else:
         print("✓ Index integrity check passed.")
-    # Renumber if requested
+    
+    # 2. Renumber if requested
     if args.reset:
-        hard_reset()
+        print("\n=== Hard Reset (Renumbering) ===")
+        print("Indexing text files...")
+        n_bks = base.hard_reset()
+        if n_bks > 0:
+            print(f"✓ Renumbered {len(df)} books (IDs 1 to {len(df)})")
+            print(f"✓ Next ID set to {len(df) + 1}\n")
+        else:
+            print("No index to reset.")
 
 
 litbank_url = "https://github.com/dbamman/litbank.git"
