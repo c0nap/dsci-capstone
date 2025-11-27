@@ -3,6 +3,10 @@ import subprocess
 import os
 
 
+# --------------------------------------
+# Helper Functions - Dataset Download
+# --------------------------------------
+
 def ensure_github_repo(repo_url: str, repo_name: str, user_path: str = None) -> str:
     """Find or clone a GitHub repository.
     @param repo_url   The .git URL to clone.
@@ -56,6 +60,9 @@ def ensure_github_repo(repo_url: str, repo_name: str, user_path: str = None) -> 
         raise RuntimeError(f"Error: Failed to clone {repo_url}. Check connection/permissions.")
 
 
+# --------------------------------------
+# Data Loader Classes (1 per dataset)
+# --------------------------------------
 
 class LitBankLoader(DatasetLoader):
     """Loads LitBank dataset from local GitHub repository.

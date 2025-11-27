@@ -15,6 +15,9 @@ def load_text_from_path(text_path: str) -> str:
     with open(text_path, "r", encoding="utf-8") as f:
         return f.read()
 
+# --------------------------------------------------
+# Helper Functions - Text Similarity
+# --------------------------------------------------
 
 def normalize_title(t: str) -> str:
     """Remove punctuation and extra whitespace from title.

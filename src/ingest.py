@@ -1,11 +1,9 @@
 from pandas import read_csv
 import os
 
-
-
-# --------------------------------------
-# Main Helper Functions
-# --------------------------------------
+# --------------------------------------------------
+# Helper Functions - Corpus Index Orchestration
+# --------------------------------------------------
 
 def download_and_index(n_booksum: int = None, 
                        n_nqa: int = None, 
