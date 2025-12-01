@@ -19,9 +19,18 @@ RETRY_DELAY=5
 # --- SET INITIAL SETTINGS ---
 echo "$ECHO_PREFIX Setting Neo4j initial password..."
 neo4j-admin dbms set-initial-password "$NEO4J_PASSWORD"
+
 # Docker Compose settings will not propagate since Neo4j is no longer the primary process
-echo "server.bolt.listen_address=0.0.0.0:$NEO4J_PORT" >> /var/lib/neo4j/conf/neo4j.conf
-echo "server.http.listen_address=0.0.0.0:$NEO4J_HTTP_PORT" >> /var/lib/neo4j/conf/neo4j.conf
+CONFIG=/var/lib/neo4j/conf/neo4j.conf
+# Edit config safely (prevent duplicate lines on restart)
+if ! grep -q "^server.bolt.listen_address=" "$CONFIG"; then
+    echo "server.bolt.listen_address=0.0.0.0:$NEO4J_PORT" >> "$CONFIG"
+fi
+if ! grep -q "^server.http.listen_address=" "$CONFIG"; then
+    echo "server.http.listen_address=0.0.0.0:$NEO4J_HTTP_PORT" >> "$CONFIG"
+fi
+# Fix permissions so Neo4j can read config
+chown -R neo4j:neo4j /var/lib/neo4j
 
 
 # --- INSTALL PLUGINS ---

@@ -159,6 +159,7 @@ if __name__ == "__main__":
 
     # TODO - PIPELINE HERE
     load_from_checkpoint = False
+    compute_worker_metrics = True
     checkpoint_path = "./datasets/checkpoint.pkl"
     os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
 
@@ -220,19 +221,22 @@ CHAPTER 12. THE END OF THE END\n
     post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
     # pipeline_E is moved to callback() to finalize asynchronously
-    # alternative: pipeline_E(summary, book_title, book_id)
 
     # Post chunk - this will enqueue worker processing
-    for task_type in ["questeval", "bookscore"]:
-        response = post_process_full_story(BOSS_PORT, story_id, task_type)
-        print(f"Triggered {task_type}: {response.json()}")
+    if compute_worker_metrics:
+        for task_type in ["questeval", "bookscore"]:
+            response = post_process_full_story(BOSS_PORT, story_id, task_type)
+            print(f"Triggered {task_type}: {response.json()}")
+        pipeline_E(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
+    else:
+        pipeline_E(summary, book_title, book_id)
 
     # Write core function timing - Keyboard interrupt doesnt work
     Log.print_timing_summary()
     Log.dump_timing_csv()  # TODO: Eventually updated by callback()
     Plot.time_elapsed_by_names()
 
-    # Hand off to Flask - keep main thread alive so daemon thread continues
+    # Hand off to Flask - keep main thread alive so boss thread continues
     print("Initial processing complete. Server listening for additional requests from Blazor...")
     print("Press Ctrl+C to stop.")
     try:
