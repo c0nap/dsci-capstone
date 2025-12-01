@@ -147,7 +147,7 @@ def test_job_12_extraction_chunk(book_data, relation_extractor):
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_tuples", scope="session", depends=["job_12_extraction_chunk"])
 @pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
-def test_job_12_extraction_tuples(book_data, relation_extractor):
+def test_job_12_extraction_tuples(book_data, relation_extraction_task):
     """Runs all extractors with tuple parsing on realistic data."""
     extracted = relation_extraction_task(book_data["chunk_text"], parse_tuples=True)
 
@@ -168,7 +168,7 @@ def test_job_12_extraction_tuples(book_data, relation_extractor):
 @pytest.mark.order(14)
 @pytest.mark.dependency(name="job_14_llm_minimal", scope="session")
 @pytest.mark.parametrize("llm_prompt_task", ["langchain", "openai"], indirect=True)
-def test_job_14_llm_minimal(book_data):
+def test_job_14_llm_minimal(book_data, llm_prompt_task):
     """Test LLM-based triple sanitization with realistic data."""
     triples_string = "\n".join(book_data["rebel_triples"])
 
