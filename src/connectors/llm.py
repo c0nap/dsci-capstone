@@ -89,7 +89,7 @@ class OpenAIConnector(LLMConnector):
     def configure(self) -> None:
         """Initialize the OpenAI client."""
         self._load_env()
-        self.client = OpenAI()
+        self.client = OpenAI(timeout=30.0)
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
         """Send a single prompt using the OpenAI client directly for speed.
@@ -103,7 +103,6 @@ class OpenAIConnector(LLMConnector):
                 {"role": "user", "content": human_prompt},
             ],
             temperature=self.temperature,
-            timeout=30,
         )
         return resp.choices[0].message.content
 
@@ -144,6 +143,13 @@ class LangChainConnector(LLMConnector):
 
 
 
+@staticmethod
+def clean_json_block(s: str) -> str:
+    # Remove leading/trailing triple backticks and optional "json" label
+    s = s.strip()
+    s = re.sub(r"^```json\s*", "", s, flags=re.IGNORECASE)
+    s = re.sub(r"\s*```$", "", s)
+    return s
 
 
 @staticmethod

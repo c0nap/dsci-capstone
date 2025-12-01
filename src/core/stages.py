@@ -3,7 +3,7 @@ import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from src.core.context import session
 from src.util import Log
-from src.connectors.llm import normalize_to_dict
+from src.connectors.llm import normalize_to_dict, clean_json_block
 
 # unused?
 import traceback
@@ -230,14 +230,14 @@ def task_14_relation_extraction_llm_langchain(triples_string, text):
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
         prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
         llm_output = llm.execute_query(prompt)
-        # TODO - move retry logic to LLMConnector
-        # Enforce valid JSON
-        attempts = 10
-        while not json.loads(llm_output) and attempts > 0:
-            llm_output = llm.execute_query(prompt)
-            attempts -= 1
-        if attempts == 0:
-            raise Log.Failure()
+        # # TODO - move retry logic to LLMConnector
+        # # Enforce valid JSON
+        # attempts = 10
+        # while not json.loads(llm_output) and attempts > 0:
+        #     llm_output = llm.execute_query(prompt)
+        #     attempts -= 1
+        # if attempts == 0:
+        #     raise Log.Failure()
         return (prompt, llm_output)
 
 
@@ -247,7 +247,7 @@ def task_14_relation_extraction_llm_openai(triples_string, text):
 
         # TODO: move to session.llm
         llm = OpenAIConnector(
-            temperature=0,
+            temperature=1,  # gpt-5-nano only supports temperature 1
             system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
         )
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
@@ -255,24 +255,25 @@ def task_14_relation_extraction_llm_openai(triples_string, text):
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
         prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
         llm_output = llm.execute_query(prompt)
-        # TODO - move retry logic to LLMConnector
-        # Enforce valid JSON
-        attempts = 10
-        while not json.loads(llm_output) and attempts > 0:
-            llm_output = llm.execute_query(prompt)
-            attempts -= 1
-        if attempts == 0:
-            raise Log.Failure()
+        # # TODO - move retry logic to LLMConnector
+        # # Enforce valid JSON
+        # attempts = 10
+        # while not json.loads(llm_output) and attempts > 0:
+        #     llm_output = llm.execute_query(prompt)
+        #     attempts -= 1
+        # if attempts == 0:
+        #     raise Log.Failure()
         return (prompt, llm_output)
 
 
 def task_15_sanitize_triples_llm(llm_output: str) -> str:
     with Log.timer():
         # TODO: rely on robust LLM connector logic to assume json
-        llm_output = json.loads(llm_output)
+        llm_output = clean_json_block(llm_output)
+        json_triples = json.loads(llm_output)
         # TODO: should LLM connector run sanitization internally?
-        json_triples = normalize_to_dict(llm_output, keys=["s", "r", "o"])
-        return json_triples
+        norm_triples = normalize_to_dict(json_triples, keys=["s", "r", "o"])
+        return norm_triples
 
 
 # PIPELINE STAGE C - ENRICHMENT / TRIPLES -> GRAPH
