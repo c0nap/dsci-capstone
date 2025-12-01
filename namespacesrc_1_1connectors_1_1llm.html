@@ -74,7 +74,8 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">src.connectors.llm Namespace Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -84,7 +85,63 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1connectors_1_1llm_1_1LLMConnector.html">LLMConnector</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connector for prompting and returning LLM output (raw text/JSON) via LangChain.  <a href="classsrc_1_1connectors_1_1llm_1_1LLMConnector.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ad057a83f31691d2927fedfb7abd1eefa" id="r_ad057a83f31691d2927fedfb7abd1eefa"><td class="memItemLeft" align="right" valign="top">List[Dict[str, Any]]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1connectors_1_1llm.html#ad057a83f31691d2927fedfb7abd1eefa">normalize_to_dict</a> (Dict[str, Any]|List[Dict[str, Any]] data, List[str] keys)</td></tr>
+<tr class="memdesc:ad057a83f31691d2927fedfb7abd1eefa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Normalize nested/compacted LLM output into flat dicts.  <br /></td></tr>
+<tr class="separator:ad057a83f31691d2927fedfb7abd1eefa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="ad057a83f31691d2927fedfb7abd1eefa" name="ad057a83f31691d2927fedfb7abd1eefa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad057a83f31691d2927fedfb7abd1eefa">&#9670;&#160;</a></span>normalize_to_dict()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> List[Dict[str, Any]] normalize_to_dict </td>
+          <td>(</td>
+          <td class="paramtype">Dict[str, Any] | List[Dict[str, Any]]&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">List[str]&#160;</td>
+          <td class="paramname"><em>keys</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Normalize nested/compacted LLM output into flat dicts. </p>
+<p>Handles token-saving patterns:</p><ul>
+<li>Nested relation-object pairs: {"s":"X", [{"r":"R1","o":"O1"}, ...]}</li>
+<li>List subjects with nested r-o: {"s":["X","Y"], [{"r":"R","o":"O"}, ...]}</li>
+<li>Cartesian products: {"s":["X","Y"], "r":["R1","R2"], "o":["O1","O2"]} Assumes input is already parsed (json.loads called by caller). <dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">data</td><td>Parsed LLM output (dict or list of dicts) </td></tr>
+    <tr><td class="paramname">keys</td><td>Expected keys (e.g., ["s", "r", "o"]) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>List of flat dicts with all keys present </dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">ValueError</td><td>If input format cannot be parsed </td></tr>
+  </table>
+  </dd>
+</dl>
+</li>
+</ul>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

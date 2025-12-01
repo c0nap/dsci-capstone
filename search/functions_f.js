@@ -1,13 +1,15 @@
 var searchData=
 [
   ['same_5fdb_5fkg_5f_0',['SAME_DB_KG_',['../classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#a9a8e59fbfee3a34b85d30a2b2e8f4514',1,'src::connectors::graph::GraphConnector']]],
-  ['save_5ftask_5fresult_1',['save_task_result',['../namespacesrc_1_1core_1_1worker.html#a5ab9032ca53ff65285d4dd3bdfe58208',1,'src::core::worker']]],
-  ['session_2',['session',['../namespaceconftest.html#a50d77fa6c75d8ec50af8749c6d02b6ad',1,'conftest']]],
-  ['stream_5fchapters_3',['stream_chapters',['../classsrc_1_1components_1_1book__conversion_1_1Book.html#a905dbc735d14d7cf2ea66a71a1825245',1,'src::components::book_conversion::Book']]],
-  ['stream_5fchunks_4',['stream_chunks',['../classsrc_1_1components_1_1book__conversion_1_1Story.html#ae40c902ace95f036a1e3dc95b4be5899',1,'src::components::book_conversion::Story']]],
-  ['stream_5fparagraphs_5',['stream_paragraphs',['../classsrc_1_1components_1_1book__conversion_1_1StoryStreamAdapter.html#a265216d0c0265c83f59669715bca225f',1,'src::components::book_conversion::StoryStreamAdapter']]],
-  ['stream_5fsegments_6',['stream_segments',['../classsrc_1_1components_1_1book__conversion_1_1StoryStreamAdapter.html#a6879fafe908769f1b81e3fd0ec85a619',1,'src.components.book_conversion.StoryStreamAdapter.stream_segments()'],['../classsrc_1_1components_1_1book__conversion_1_1ParagraphStreamTEI.html#a6879fafe908769f1b81e3fd0ec85a619',1,'src.components.book_conversion.ParagraphStreamTEI.stream_segments()'],['../classsrc_1_1components_1_1book__conversion_1_1BookStream.html#a6879fafe908769f1b81e3fd0ec85a619',1,'src.components.book_conversion.BookStream.stream_segments()']]],
-  ['stream_5fsentences_7',['stream_sentences',['../classsrc_1_1components_1_1book__conversion_1_1StoryStreamAdapter.html#ab59da82008dd00b4b728b9ea9673b7f1',1,'src::components::book_conversion::StoryStreamAdapter']]],
-  ['success_8',['success',['../classsrc_1_1util_1_1Log.html#afa1d0618e0fc4800b28a072a89c4fc46',1,'src::util::Log']]],
-  ['success_5flegacy_9',['success_legacy',['../classsrc_1_1util_1_1Log.html#a552911d9a772019b1a64654e119fae79',1,'src::util::Log']]]
+  ['sanitize_5fnode_1',['sanitize_node',['../namespacesrc_1_1components_1_1fact__storage.html#a6fd7e5f580336c96b53da2cd70994777',1,'src::components::fact_storage']]],
+  ['sanitize_5frelation_2',['sanitize_relation',['../namespacesrc_1_1components_1_1fact__storage.html#ae0bcff290c59ee7c2a039e55c4747777',1,'src::components::fact_storage']]],
+  ['save_5ftask_5fresult_3',['save_task_result',['../namespacesrc_1_1core_1_1worker.html#a5ab9032ca53ff65285d4dd3bdfe58208',1,'src::core::worker']]],
+  ['session_4',['session',['../namespaceconftest.html#a50d77fa6c75d8ec50af8749c6d02b6ad',1,'conftest']]],
+  ['stream_5fchapters_5',['stream_chapters',['../classsrc_1_1components_1_1book__conversion_1_1Book.html#a905dbc735d14d7cf2ea66a71a1825245',1,'src::components::book_conversion::Book']]],
+  ['stream_5fchunks_6',['stream_chunks',['../classsrc_1_1components_1_1book__conversion_1_1Story.html#ae40c902ace95f036a1e3dc95b4be5899',1,'src::components::book_conversion::Story']]],
+  ['stream_5fparagraphs_7',['stream_paragraphs',['../classsrc_1_1components_1_1book__conversion_1_1StoryStreamAdapter.html#a265216d0c0265c83f59669715bca225f',1,'src::components::book_conversion::StoryStreamAdapter']]],
+  ['stream_5fsegments_8',['stream_segments',['../classsrc_1_1components_1_1book__conversion_1_1StoryStreamAdapter.html#a6879fafe908769f1b81e3fd0ec85a619',1,'src.components.book_conversion.StoryStreamAdapter.stream_segments()'],['../classsrc_1_1components_1_1book__conversion_1_1ParagraphStreamTEI.html#a6879fafe908769f1b81e3fd0ec85a619',1,'src.components.book_conversion.ParagraphStreamTEI.stream_segments()'],['../classsrc_1_1components_1_1book__conversion_1_1BookStream.html#a6879fafe908769f1b81e3fd0ec85a619',1,'src.components.book_conversion.BookStream.stream_segments()']]],
+  ['stream_5fsentences_9',['stream_sentences',['../classsrc_1_1components_1_1book__conversion_1_1StoryStreamAdapter.html#ab59da82008dd00b4b728b9ea9673b7f1',1,'src::components::book_conversion::StoryStreamAdapter']]],
+  ['success_10',['success',['../classsrc_1_1util_1_1Log.html#afa1d0618e0fc4800b28a072a89c4fc46',1,'src::util::Log']]],
+  ['success_5flegacy_11',['success_legacy',['../classsrc_1_1util_1_1Log.html#a552911d9a772019b1a64654e119fae79',1,'src::util::Log']]]
 ];

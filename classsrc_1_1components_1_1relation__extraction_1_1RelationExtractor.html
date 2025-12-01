@@ -75,43 +75,74 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
+<a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">RelationExtractor Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Abstract base class for Relation Extraction (RE) models.  
+ <a href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#details">More...</a></p>
+<div class="dynheader">
+Inheritance diagram for RelationExtractor:</div>
+<div class="dyncontent">
+<div class="center"><img src="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor__inherit__graph.png" border="0" usemap="#aRelationExtractor_inherit__map" alt="Inheritance graph"/></div>
+<map name="aRelationExtractor_inherit__map" id="aRelationExtractor_inherit__map">
+<area shape="rect" title="Abstract base class for Relation Extraction (RE) models." alt="" coords="231,79,366,104"/>
+<area shape="rect" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractorOpenIE.html" title="Wrapper for Stanford OpenIE using the Stanza library." alt="" coords="5,152,187,177"/>
+<area shape="poly" title=" " alt="" coords="254,111,130,154,128,149,253,106"/>
+<area shape="rect" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractorREBEL.html" title="Relation Extractor using the REBEL generative model (Seq2Seq)." alt="" coords="211,152,387,177"/>
+<area shape="poly" title=" " alt="" coords="301,118,301,152,296,152,296,118"/>
+<area shape="rect" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractorTextacy.html" title="Lightweight extraction using Spacy and Textacy (SVO)." alt="" coords="411,152,597,177"/>
+<area shape="poly" title=" " alt="" coords="345,106,472,149,470,154,344,111"/>
+<area shape="rect" title=" " alt="" coords="274,5,323,31"/>
+<area shape="poly" title=" " alt="" coords="301,44,301,79,296,79,296,44"/>
+</map>
+<center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
+<div class="dynheader">
+Collaboration diagram for RelationExtractor:</div>
+<div class="dyncontent">
+<div class="center"><img src="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor__coll__graph.png" border="0" usemap="#aRelationExtractor_coll__map" alt="Collaboration graph"/></div>
+<map name="aRelationExtractor_coll__map" id="aRelationExtractor_coll__map">
+<area shape="rect" title="Abstract base class for Relation Extraction (RE) models." alt="" coords="5,79,140,104"/>
+<area shape="rect" title=" " alt="" coords="48,5,97,31"/>
+<area shape="poly" title=" " alt="" coords="75,44,75,79,70,79,70,44"/>
+</map>
+<center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae6a7886cb622650a58eefbcaf2be50d2" id="r_ae6a7886cb622650a58eefbcaf2be50d2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#ae6a7886cb622650a58eefbcaf2be50d2">__init__</a> (self, model_name=&quot;Babelscape/rebel-large&quot;, <a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#adb3f4bcbc2a95ff57ddab44a7ea22628">max_tokens</a>=1024)</td></tr>
-<tr class="separator:ae6a7886cb622650a58eefbcaf2be50d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2bd9686e06005b3a014ad55460a116e6" id="r_a2bd9686e06005b3a014ad55460a116e6"><td class="memItemLeft" align="right" valign="top">List[Tuple[str, str, str]|str]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#a2bd9686e06005b3a014ad55460a116e6">extract</a> (self, str text, bool parse_tuples=False)</td></tr>
-<tr class="separator:a2bd9686e06005b3a014ad55460a116e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55ed039884e954741cd56f87b3a07cbb" id="r_a55ed039884e954741cd56f87b3a07cbb"><td class="memItemLeft" align="right" valign="top">List[Union[Tuple[str, str, str], str]]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#a55ed039884e954741cd56f87b3a07cbb">extract</a> (self, str text, bool parse_tuples=True)</td></tr>
+<tr class="memdesc:a55ed039884e954741cd56f87b3a07cbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract relations from the provided text.  <br /></td></tr>
+<tr class="separator:a55ed039884e954741cd56f87b3a07cbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:ae4da58908fdf601e762be19c30d1e336" id="r_ae4da58908fdf601e762be19c30d1e336"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#ae4da58908fdf601e762be19c30d1e336">nlp</a></td></tr>
-<tr class="separator:ae4da58908fdf601e762be19c30d1e336"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79395f8d543141932acc2bc200d18de2" id="r_a79395f8d543141932acc2bc200d18de2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#a79395f8d543141932acc2bc200d18de2">sentencizer</a></td></tr>
-<tr class="separator:a79395f8d543141932acc2bc200d18de2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7eba82286618be7e8f6b01b2ea4fa813" id="r_a7eba82286618be7e8f6b01b2ea4fa813"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#a7eba82286618be7e8f6b01b2ea4fa813">tokenizer</a></td></tr>
-<tr class="separator:a7eba82286618be7e8f6b01b2ea4fa813"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a508cc3106d2c29fe07dc87cbe3ea6927" id="r_a508cc3106d2c29fe07dc87cbe3ea6927"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#a508cc3106d2c29fe07dc87cbe3ea6927">model</a></td></tr>
-<tr class="separator:a508cc3106d2c29fe07dc87cbe3ea6927"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb3f4bcbc2a95ff57ddab44a7ea22628" id="r_adb3f4bcbc2a95ff57ddab44a7ea22628"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#adb3f4bcbc2a95ff57ddab44a7ea22628">max_tokens</a></td></tr>
-<tr class="separator:adb3f4bcbc2a95ff57ddab44a7ea22628"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3eebd15ac62146ee1af0f0061f62bb5" id="r_aa3eebd15ac62146ee1af0f0061f62bb5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#aa3eebd15ac62146ee1af0f0061f62bb5">tuple_delim</a></td></tr>
-<tr class="separator:aa3eebd15ac62146ee1af0f0061f62bb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
+Static Public Attributes</h2></td></tr>
+<tr class="memitem:ab7a079c845abf12a3534642f10e8fd02" id="r_ab7a079c845abf12a3534642f10e8fd02"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#ab7a079c845abf12a3534642f10e8fd02">TUPLE_DELIM</a> = &quot; &quot;</td></tr>
+<tr class="separator:ab7a079c845abf12a3534642f10e8fd02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
+Protected Member Functions</h2></td></tr>
+<tr class="memitem:a7a32bfaa5d35d26aa00b172254738320" id="r_a7a32bfaa5d35d26aa00b172254738320"><td class="memItemLeft" align="right" valign="top">List[str]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#a7a32bfaa5d35d26aa00b172254738320">_format_triples_to_strings</a> (self, List[Tuple[str, str, str]] triples)</td></tr>
+<tr class="memdesc:a7a32bfaa5d35d26aa00b172254738320"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper to convert native tuples to standardized raw strings.  <br /></td></tr>
+<tr class="separator:a7a32bfaa5d35d26aa00b172254738320"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ae6a7886cb622650a58eefbcaf2be50d2" name="ae6a7886cb622650a58eefbcaf2be50d2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae6a7886cb622650a58eefbcaf2be50d2">&#9670;&#160;</a></span>__init__()</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Abstract base class for Relation Extraction (RE) models. </p>
+<p>Derived classes must implement the extract method to process text and return a list of triples or raw strings. Backends (Spacy, Stanza, Transformers) should be lazy-loaded. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a7a32bfaa5d35d26aa00b172254738320" name="a7a32bfaa5d35d26aa00b172254738320"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a32bfaa5d35d26aa00b172254738320">&#9670;&#160;</a></span>_format_triples_to_strings()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">__init__ </td>
+          <td class="memname"> List[str] _format_triples_to_strings </td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname"><em>self</em>, </td>
@@ -119,14 +150,8 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>model_name</em> = <code>&quot;Babelscape/rebel-large&quot;</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>max_tokens</em> = <code>1024</code>&#160;</td>
+          <td class="paramtype">List[Tuple[str, str, str]]&#160;</td>
+          <td class="paramname"><em>triples</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -134,19 +159,25 @@ Public Attributes</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
+
+<p>Helper to convert native tuples to standardized raw strings. </p>
 
 </div>
 </div>
-<h2 class="groupheader">Member Function Documentation</h2>
-<a id="a2bd9686e06005b3a014ad55460a116e6" name="a2bd9686e06005b3a014ad55460a116e6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2bd9686e06005b3a014ad55460a116e6">&#9670;&#160;</a></span>extract()</h2>
+<a id="a55ed039884e954741cd56f87b3a07cbb" name="a55ed039884e954741cd56f87b3a07cbb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a55ed039884e954741cd56f87b3a07cbb">&#9670;&#160;</a></span>extract()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"> List[Tuple[str, str, str] | str] extract </td>
+          <td class="memname"> List[Union[Tuple[str, str, str], str]] extract </td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname"><em>self</em>, </td>
@@ -161,7 +192,7 @@ Public Attributes</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool &#160;</td>
-          <td class="paramname"><em>parse_tuples</em> = <code>False</code>&#160;</td>
+          <td class="paramname"><em>parse_tuples</em> = <code>True</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -171,89 +202,39 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Extract relations from the provided text. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">text</td><td>The raw input text to process. </td></tr>
+    <tr><td class="paramname">parse_tuples</td><td>If False, returns a formatted string 'Subj Rel Obj'. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A list of triples (subj, rel, obj) or raw string outputs. </dd></dl>
+
+<p>Reimplemented in <a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractorREBEL.html#ac4c252ed273d90ae51c922a66f962357">RelationExtractorREBEL</a>, <a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractorOpenIE.html#a55ed039884e954741cd56f87b3a07cbb">RelationExtractorOpenIE</a>, and <a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1RelationExtractorTextacy.html#a55ed039884e954741cd56f87b3a07cbb">RelationExtractorTextacy</a>.</p>
+
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="adb3f4bcbc2a95ff57ddab44a7ea22628" name="adb3f4bcbc2a95ff57ddab44a7ea22628"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adb3f4bcbc2a95ff57ddab44a7ea22628">&#9670;&#160;</a></span>max_tokens</h2>
+<a id="ab7a079c845abf12a3534642f10e8fd02" name="ab7a079c845abf12a3534642f10e8fd02"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab7a079c845abf12a3534642f10e8fd02">&#9670;&#160;</a></span>TUPLE_DELIM</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">max_tokens</td>
+          <td class="memname">str TUPLE_DELIM = &quot; &quot;</td>
         </tr>
       </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a508cc3106d2c29fe07dc87cbe3ea6927" name="a508cc3106d2c29fe07dc87cbe3ea6927"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a508cc3106d2c29fe07dc87cbe3ea6927">&#9670;&#160;</a></span>model</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">model</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ae4da58908fdf601e762be19c30d1e336" name="ae4da58908fdf601e762be19c30d1e336"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae4da58908fdf601e762be19c30d1e336">&#9670;&#160;</a></span>nlp</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">nlp</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a79395f8d543141932acc2bc200d18de2" name="a79395f8d543141932acc2bc200d18de2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a79395f8d543141932acc2bc200d18de2">&#9670;&#160;</a></span>sentencizer</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">sentencizer</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a7eba82286618be7e8f6b01b2ea4fa813" name="a7eba82286618be7e8f6b01b2ea4fa813"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7eba82286618be7e8f6b01b2ea4fa813">&#9670;&#160;</a></span>tokenizer</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">tokenizer</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="aa3eebd15ac62146ee1af0f0061f62bb5" name="aa3eebd15ac62146ee1af0f0061f62bb5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa3eebd15ac62146ee1af0f0061f62bb5">&#9670;&#160;</a></span>tuple_delim</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">tuple_delim</td>
-        </tr>
-      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>

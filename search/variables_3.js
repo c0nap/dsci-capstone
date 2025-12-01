@@ -11,6 +11,7 @@ var searchData=
   ['collection_8',['COLLECTION',['../namespacesrc_1_1main.html#a9a5638fb24d63ec9d0f166d025331cef',1,'src::main']]],
   ['conn_5fabc_9',['conn_abc',['../classsrc_1_1util_1_1Log.html#a62e0029b3b82db70e1bd9db6351b3de2',1,'src::util::Log']]],
   ['connection_5fstring_10',['connection_string',['../classsrc_1_1connectors_1_1relational_1_1RelationalConnector.html#af687e8c8c8ee35024630bcec03fa5c54',1,'src.connectors.relational.RelationalConnector.connection_string'],['../classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#af687e8c8c8ee35024630bcec03fa5c54',1,'src.connectors.graph.GraphConnector.connection_string'],['../classsrc_1_1connectors_1_1document_1_1DocumentConnector.html#af687e8c8c8ee35024630bcec03fa5c54',1,'src.connectors.document.DocumentConnector.connection_string'],['../classsrc_1_1connectors_1_1base_1_1DatabaseConnector.html#af687e8c8c8ee35024630bcec03fa5c54',1,'src.connectors.base.DatabaseConnector.connection_string']]],
-  ['create_5fdb_11',['create_db',['../classsrc_1_1util_1_1Log.html#a5df0f9f19e634c2a75f955a41778a982',1,'src::util::Log']]],
-  ['cyan_12',['CYAN',['../classsrc_1_1util_1_1Log.html#a89ba134048042c3a249ec3b8815f4aa7',1,'src::util::Log']]]
+  ['corenlpclient_11',['CoreNLPClient',['../classsrc_1_1components_1_1relation__extraction_1_1RelationExtractorOpenIE.html#a915b83653e30e4a2b844cd59dee4c6e2',1,'src::components::relation_extraction::RelationExtractorOpenIE']]],
+  ['create_5fdb_12',['create_db',['../classsrc_1_1util_1_1Log.html#a5df0f9f19e634c2a75f955a41778a982',1,'src::util::Log']]],
+  ['cyan_13',['CYAN',['../classsrc_1_1util_1_1Log.html#a89ba134048042c3a249ec3b8815f4aa7',1,'src::util::Log']]]
 ];
