@@ -3,9 +3,6 @@ import os
 from typing import List, Tuple, Union, Optional
 from abc import ABC, abstractmethod
 
-# Load environment variables once at module level, or defer to init if preferred
-load_dotenv(".env")
-
 class RelationExtractor(ABC):
     """Abstract base class for Relation Extraction (RE) models.
     @details
@@ -46,8 +43,8 @@ class RelationExtractorREBEL(RelationExtractor):
         self.sentencizer = self.nlp.add_pipe("sentencizer")
 
         # 3. Load Environment and Model
-        # Ensure HF token is available for gated models if necessary
-        os.environ["HF_HUB_TOKEN"] = os.getenv("HF_HUB_TOKEN", "")
+        # Ensure HF_HUB_TOKEN is available for gated models if necessary
+        load_dotenv(".env")
         
         print(f"Loading REBEL model: {model_name}...")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -181,7 +178,7 @@ class RelationExtractorOpenIE(RelationExtractor):
         return out
 
 
-class TextacyExtractor(RelationExtractor):
+class RelationExtractorTextacy(RelationExtractor):
     """Lightweight extraction using Spacy and Textacy (SVO).
     @note  Requires 'spacy' and 'textacy'.
     @details

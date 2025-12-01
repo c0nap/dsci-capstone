@@ -186,6 +186,26 @@ def task_12_relation_extraction_rebel(text, max_tokens=1024, parse_tuples=True):
         return extracted
 
 
+def task_12_relation_extraction_openie(text, memory='4G'):
+    with Log.timer():
+        from src.components.relation_extraction import RelationExtractorOpenIE
+
+        # Initialize OpenIE wrapper (handles CoreNLP server internally)
+        nlp = RelationExtractorOpenIE(memory=memory)
+        extracted = nlp.extract(text)
+        return extracted
+
+
+def task_12_relation_extraction_textacy(text):
+    with Log.timer():
+        from src.components.relation_extraction import RelationExtractorTextacy
+
+        # Initialize Textacy wrapper (pure Python backup)
+        nlp = RelationExtractorTextacy()
+        extracted = nlp.extract(text)
+        return extracted
+
+
 def task_13_concatenate_triples(extracted):
     with Log.timer():
         # TODO: to_triples_string in RelationExtractor?
