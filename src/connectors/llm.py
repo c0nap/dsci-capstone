@@ -20,6 +20,12 @@ class LLMConnector(Connector, ABC):
         We prefer creating a separate wrapper instance for reusable hard-coded configurations.
     """
 
+    def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant."):
+        """Initialize common LLM connector properties."""
+        self.temperature = temperature
+        self.system_prompt = system_prompt
+        self.model_name = None
+
     def test_operations(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the database, and test full functionality.
         @details  Can be configured to fail silently, which enables retries or external handling.
@@ -39,6 +45,12 @@ class LLMConnector(Connector, ABC):
         if not success and raise_error:
             raise Log.Failure(f"{log_source}: Connection check failed")
         return success
+
+    def _load_env(self) -> None:
+        """Load environment variables and set model name.
+        @details Called by subclasses during configure() to ensure consistent env loading."""
+        load_dotenv(".env")
+        self.model_name = os.environ["LLM_MODEL"]
 
     @abstractmethod
     def configure(self) -> None:
@@ -70,16 +82,13 @@ class OpenAIConnector(LLMConnector):
     def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant."):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
-        self.temperature = temperature
-        self.system_prompt = system_prompt
-        self.model_name = None
+        super().__init__(temperature, system_prompt)
         self.client = None
         self.configure()
 
     def configure(self) -> None:
         """Initialize the OpenAI client."""
-        load_dotenv(".env")
-        self.model_name = os.environ["LLM_MODEL"]
+        self._load_env()
         self.client = OpenAI()
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
@@ -105,9 +114,7 @@ class LangChainConnector(LLMConnector):
     def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant."):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
-        self.temperature = temperature
-        self.system_prompt = system_prompt
-        self.model_name = None
+        super().__init__(temperature, system_prompt)
         self.llm = None
         self.configure()
 
@@ -117,11 +124,10 @@ class LangChainConnector(LLMConnector):
             Reads:
                 - OPENAI_API_KEY from .env for authentication
                 - LLM_MODEL and LLM_TEMPERATURE to override defaults"""
-        load_dotenv(".env")
-        self.model_name = os.environ["LLM_MODEL"]
+        self._load_env()
         self.llm = ChatOpenAI(
             model=self.model_name,
-            temperature=self.temperature
+            temperature=self.temperature,
         )
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
