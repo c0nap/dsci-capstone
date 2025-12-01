@@ -5,6 +5,7 @@ from langchain_core.prompts import (
     SystemMessagePromptTemplate,
 )
 from langchain_openai import ChatOpenAI
+from openai import OpenAI
 import os
 import re
 from src.connectors.base import Connector
@@ -12,8 +13,8 @@ from typing import Any, List, Tuple, Dict
 from abc import ABC, abstractmethod
 
 
-class LLMConnector(Connector):
-    """Connector for prompting and returning LLM output (raw text/JSON) via LangChain.
+class LLMConnector(Connector, ABC):
+    """Connector for prompting and returning LLM output (raw text/JSON) via LLMs.
     @note  The method @ref src.connectors.llm.LLMConnector.execute_query simplifies the prompt process.
     @details  To implement various configurations, either set properties directly or create another LLMConnector instance.
         Useful config options: temperature, system_prompt, llm, model_name.
@@ -40,7 +41,6 @@ class LLMConnector(Connector):
 
     @abstractmethod
     def configure(self) -> None:
-        """Initialize the LangChain LLM using environment credentials."""
         pass
 
     @abstractmethod
@@ -64,21 +64,47 @@ class LLMConnector(Connector):
         return self.execute_query(content)
 
 
-
 class OpenAIConnector(LLMConnector):
     """Lightweight LLM interface for faster response times."""
+
+    def __init__(self, temperature: float = 0):
+        """Initialize the connector.
+        @note  Model name is specified in the .env file."""
+        load_dotenv(".env")
+        self.temperature = temperature
+        self.system_prompt = "You are a helpful assistant."
+        self.model_name = os.environ.get("LLM_MODEL", "gpt-5-nano")
+        self.client = None
+        self.configure()
+
+    def configure(self) -> None:
+        """Initialize the OpenAI client."""
+        self.client = OpenAI()
+
+    def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
+        """Send a single prompt using the OpenAI client directly for speed.
+        @param system_prompt  Instructions for the LLM.
+        @param human_prompt  The user input or query.
+        @return Raw LLM response as a string."""
+        self.system_prompt = system_prompt
+        resp = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": human_prompt},
+            ],
+            temperature=self.temperature,
+            timeout=30,  # short timeout for fast failure
+        )
+        return resp.choices[0].message.content
 
 
 class LangChainConnector(LLMConnector):
     """Fully-featured API to prompt across various LLM providers."""
-    def __init__(
-        self,
-        temperature: float = 0,
-        system_prompt: str = "You are a helpful assistant.",
-    ) -> None:
+
+    def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant."):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
-        # Read environment variables at runtime
         load_dotenv(".env")
         self.model_name: str = None
         self.temperature: float = temperature
@@ -93,23 +119,29 @@ class LangChainConnector(LLMConnector):
                 - OPENAI_API_KEY from .env for authentication
                 - LLM_MODEL and LLM_TEMPERATURE to override defaults"""
         self.model_name = os.environ["LLM_MODEL"]
-        self.llm = ChatOpenAI(model=self.model_name, temperature=self.temperature)
+        self.llm = ChatOpenAI(
+            model=self.model_name,
+            temperature=self.temperature,
+            max_retries=0,       # disable retries for speed
+            request_timeout=30,  # short timeout to prevent long hangs
+        )
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
-        """Send a single prompt to the LLM with separate system and human instructions."""
+        """Send a single prompt to the LLM with separate system and human instructions.
+        @param system_prompt  Instructions for the LLM.
+        @param human_prompt  The user input or query.
+        @return Raw LLM response as a string."""
         self.system_prompt = system_prompt
-
-        # Build prompt template
         prompt = ChatPromptTemplate.from_messages(
             [
                 SystemMessagePromptTemplate.from_template(system_prompt),
                 HumanMessagePromptTemplate.from_template(human_prompt),
             ]
         )
-
-        formatted_prompt = prompt.format_prompt()  # <-- returns ChatPromptValue
-        response = self.llm.invoke(formatted_prompt.to_messages())  # <-- to_messages() returns list of BaseMessage
+        formatted_prompt = prompt.format_prompt()
+        response = self.llm.invoke(formatted_prompt.to_messages())
         return str(response.content)
+
 
 
 
