@@ -6,7 +6,7 @@ from src.util import Log
 from typing import Any, Dict, List, Optional, Tuple, TypedDict
 import spacy
 
-_nlp = None  # module-level cache for lazy-loaded NLP model (used by sanitize_node)
+nlp = None  # module-level cache for lazy-loaded NLP model (used by sanitize_node)
 
 class Triple(TypedDict):
     s: str
@@ -45,11 +45,9 @@ class KnowledgeGraph:
                 self.database.drop_graph(self.graph_name)
 
         # Normalize already-cleaned inputs for extra Cypher safety
-        relation = re.sub(r"[^A-Za-z0-9_]", "_", relation).upper().strip("_")
-        subject = re.sub(r"[^A-Za-z0-9_ ]", "_", subject).strip("_ ")
-        object_ = re.sub(r"[^A-Za-z0-9_ ]", "_", object_).strip("_ ")
-        if not relation or not subject or not object_:
-            raise Log.Failure(Log.kg, f"Invalid triple: ({subject})-[:{relation}]->({object_})")
+        relation = sanitize_relation(relation)
+        subject = sanitize_node(subject)
+        object_ = sanitize_node(object_)
 
         # Merge subject/object and connect via relation
         query = f"""
@@ -650,10 +648,17 @@ def sanitize_node(label: str) -> str:
     @throws ValueError  If result is empty after sanitization
     """
     # NLP-based cleaning: remove determiners, pronouns, particles
-    global _nlp
-    if _nlp is None:
-        _nlp = spacy.load("en_core_web_sm")
-    doc = _nlp(label)
+    global nlp
+    if nlp is None:
+        # Auto-download if missing (Self-healing)
+        try:
+            nlp = spacy.load("en_core_web_sm")
+        except OSError:
+            print("Spacy model 'en_core_web_sm' not found. Downloading...")
+            spacy.cli.download("en_core_web_sm")
+            nlp = spacy.load("en_core_web_sm")
+
+    doc = nlp(label)
     tokens = [
         token.text for token in doc 
         if token.pos_ not in {"DET", "PRON", "PART"}  # determiners, pronouns, particles
