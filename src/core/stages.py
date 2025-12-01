@@ -191,7 +191,7 @@ def task_12_relation_extraction_openie(text, memory='4G', parse_tuples=True):
         from src.components.relation_extraction import RelationExtractorOpenIE
 
         # Initialize OpenIE wrapper (handles CoreNLP server internally)
-        nlp = RelationExtractorOpenIE(memory=memory)
+        nlp = RelationExtractorOpenIE(memory=memory, parse_tuples=parse_tuples)
         extracted = nlp.extract(text)
         return extracted
 
@@ -201,7 +201,7 @@ def task_12_relation_extraction_textacy(text, parse_tuples=True):
         from src.components.relation_extraction import RelationExtractorTextacy
 
         # Initialize Textacy wrapper (pure Python backup)
-        nlp = RelationExtractorTextacy()
+        nlp = RelationExtractorTextacy(parse_tuples=parse_tuples)
         extracted = nlp.extract(text)
         return extracted
 

@@ -227,9 +227,9 @@ class RelationExtractorTextacy(RelationExtractor):
         out = []
 
         # Extract SVO (Subject-Verb-Object)
-        # This relies on Spacy's dependency parser
+        # Textacy returns Spacy Spans/Tokens. Convert to .text strings immediately.
         for svo in self.textacy.extract.subject_verb_object_triples(doc):
-            out.append((svo.subject, svo.verb, svo.object))
+            out.append((svo.subject.text, svo.verb.text, svo.object.text))
             
         # Delegate to base helper if raw strings are requested
         return out if parse_tuples else self._format_triples_to_strings(out)
