@@ -14,9 +14,10 @@ from typing import Any, List, Tuple
 class LLMConnector(Connector):
     """Connector for prompting and returning LLM output (raw text/JSON) via LangChain.
     @note  The method @ref src.connectors.llm.LLMConnector.execute_query simplifies the prompt process.
+    @details  To implement various configurations, either set properties directly or create another LLMConnector instance.
+    	Useful config options: temperature, system_prompt, llm, model_name.
+    	We prefer creating a separate wrapper instance for reusable hard-coded configurations.
     """
-
-    # TODO: we may want various models with different configurations
 
     def __init__(
         self,
