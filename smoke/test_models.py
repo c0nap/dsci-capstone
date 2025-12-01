@@ -49,11 +49,26 @@ def book_data():
     }
 
 
+@pytest.fixture
+def relation_extractor(request):
+    return request.getfixturevalue(request.param)
+
+@pytest.fixture
+def rebel():
+    return task_12_relation_extraction_rebel
+
+@pytest.fixture
+def openie():
+    return task_12_relation_extraction_openie
+
+
+
 @pytest.mark.task
 @pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_rebel_minimal", scope="session")
+@pytest.mark.parametrize("relation_extractor", ["rebel", "openie", "textacy"], indirect=True)
 def test_job_12_rebel_minimal():
     """Runs REBEL on a basic example."""
     sample_text = "Alice met Bob in the forest. Bob then went to the village."
