@@ -67,7 +67,7 @@ def textacy():
     return task_12_relation_extraction_textacy
 
 @pytest.fixture
-def relation_extractor(request):
+def relation_extraction_task(request):
     """Meta-fixture that returns the backend function specified by the parameter."""
     return request.getfixturevalue(request.param)
 
@@ -76,6 +76,22 @@ PARAMS_RELATION_EXTRACTORS: List[pytest.param] = [
     optional_param("openie", "stanza"),
     pytest.param("textacy"),     # test always runs (no dependency)
 ]
+
+
+@pytest.fixture
+def langchain():
+    """Fixture returning the LangChain LLM API."""
+    return task_14_relation_extraction_llm_langchain
+
+@pytest.fixture
+def openai():
+    """Fixture returning the OpenAI LLM API."""
+    return task_14_relation_extraction_llm_openai
+
+@pytest.fixture
+def llm_prompt_task(request):
+    """Meta-fixture that returns the backend function specified by the parameter."""
+    return request.getfixturevalue(request.param)
 
 
 @pytest.mark.task
@@ -130,10 +146,10 @@ def test_job_12_extraction_chunk(book_data, relation_extractor):
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_tuples", scope="session", depends=["job_12_extraction_chunk"])
-@pytest.mark.parametrize("relation_extractor", PARAMS_RELATION_EXTRACTORS, indirect=True)
+@pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
 def test_job_12_extraction_tuples(book_data, relation_extractor):
     """Runs all extractors with tuple parsing on realistic data."""
-    extracted = relation_extractor(book_data["chunk_text"], parse_tuples=True)
+    extracted = relation_extraction_task(book_data["chunk_text"], parse_tuples=True)
 
     assert isinstance(extracted, list)
     assert len(extracted) >= 5
@@ -151,11 +167,12 @@ def test_job_12_extraction_tuples(book_data, relation_extractor):
 @pytest.mark.smoke
 @pytest.mark.order(14)
 @pytest.mark.dependency(name="job_14_llm_minimal", scope="session")
+@pytest.mark.parametrize("llm_prompt_task", ["langchain", "openai"], indirect=True)
 def test_job_14_llm_minimal(book_data):
     """Test LLM-based triple sanitization with realistic data."""
     triples_string = "\n".join(book_data["rebel_triples"])
 
-    prompt, llm_output = task_14_relation_extraction_llm(triples_string, book_data["chunk_text"])
+    prompt, llm_output = llm_prompt_task(triples_string, book_data["chunk_text"])
 
     assert isinstance(prompt, str)
     assert triples_string in prompt
