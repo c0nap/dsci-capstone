@@ -201,10 +201,18 @@ class RelationExtractorTextacy(RelationExtractor):
         """
         import spacy
         import textacy
+        from spacy.cli import download
+
+        # Auto-download if missing (Self-healing)
+        try:
+            self.nlp = spacy.load("en_core_web_sm")
+        except OSError:
+            print("Spacy model 'en_core_web_sm' not found. Downloading...")
+            download("en_core_web_sm")
+            self.nlp = spacy.load("en_core_web_sm")
         
         # Attach textacy to self to avoid import errors later
         self.textacy = textacy
-        self.nlp = spacy.load("en_core_web_sm")
         
     def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Tuple[str, str, str], str]]:
         """Extract SVO triples.
