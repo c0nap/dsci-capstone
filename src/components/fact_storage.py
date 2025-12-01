@@ -55,7 +55,7 @@ class KnowledgeGraph:
         MERGE (o {{name: '{object_}', kg: '{self.graph_name}'}})
         MERGE (s)-[r:{relation}]->(o)
         RETURN s, r, o
-        """  # NOTE: this query has a DIRECTED relationship! And in error messages
+        """  # NOTE: this query has a DIRECTED relationship! And in log messages.
         try:
             df = self.database.execute_query(query)
             if df is not None:
@@ -65,7 +65,7 @@ class KnowledgeGraph:
 
     def add_triples_json(self, triples_json: List[Triple]) -> None:
         """Add several semantic triples to the graph from pre-verified JSON.
-        @note  JSONshould be pre-normalized using @ref src.connectors.llm.LLMConnector.normalize_triples.
+        @note  JSON should be pre-normalized using @ref src.connectors.llm.normalize_triples.
         @param triples_json  A list of Triple dictionaries containing keys: 's', 'r', and 'o'.
         @throws Log.Failure  If any triple cannot be added to the graph database.
         """
@@ -632,3 +632,74 @@ class KnowledgeGraph:
         with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
             print(f"Graph triples ({len(triples_df)} total):")
             print(triples_df)
+
+
+
+
+def sanitize_node(value: Any) -> str:
+    """Clean node name for Cypher safety.
+    @details
+        - Joins lists/tuples into single string
+        - Replaces invalid characters with underscores
+        - Trims leading/trailing underscores and spaces
+        Used by KG systems before inserting nodes.
+    @param value  Raw node name (subject/object)
+    @return  Sanitized string suitable for node property
+    @throws ValueError  If result is empty after sanitization
+    """
+    if isinstance(value, (list, tuple)):
+        value = " ".join(map(str, value))
+    elif not isinstance(value, str):
+        value = str(value)
+    
+    sanitized = re.sub(r"[^A-Za-z0-9_ ]", "_", value).strip("_ ")
+    if not sanitized:
+        raise ValueError(f"Node name cannot be empty after sanitization: {value}")
+    return sanitized
+
+
+def sanitize_relation(value: Any, mode: str = "UPPER_CASE") -> str:
+    """Clean and normalize relation label for knowledge graphs.
+    @details
+        Supports two output modes:
+        - UPPER_CASE: Neo4j convention (e.g., RELATED_TO)
+        - camelCase: OWL/RDF convention (e.g., relatedTo)
+        
+        Process:
+        - Joins lists/tuples into single string
+        - Replaces invalid characters with underscores
+        - Applies mode-specific casing rules
+        - Falls back to default if empty or invalid start
+        
+        Relations must start with alphabetic character.
+    @param value  Raw relation value
+    @param mode  Output format: "UPPER_CASE" or "camelCase"
+    @return  Sanitized relation label in specified mode
+    @throws ValueError  If mode is invalid
+    """
+    if isinstance(value, (list, tuple)):
+        value = " ".join(map(str, value))
+    elif not isinstance(value, str):
+        value = str(value)
+    
+    # Replace invalid chars, split on underscores/spaces for word extraction
+    cleaned = re.sub(r"[^A-Za-z0-9_ ]", "_", value)
+    words = [w for w in re.split(r"[_ ]+", cleaned) if w]
+    
+    if not words:
+        return "RELATED_TO" if mode == "UPPER_CASE" else "relatedTo"
+    
+    if mode == "UPPER_CASE":
+        # Neo4j convention: SCREAMING_SNAKE_CASE
+        sanitized = "_".join(w.upper() for w in words)
+        if not sanitized or not sanitized[0].isalpha():
+            sanitized = "RELATED_TO"
+    elif mode == "camelCase":
+        # OWL convention: lowerCamelCase
+        sanitized = words[0].lower() + "".join(w.capitalize() for w in words[1:])
+        if not sanitized or not sanitized[0].isalpha():
+            sanitized = "relatedTo"
+    else:
+        raise ValueError(f"Invalid mode: {mode}. Must be 'UPPER_CASE' or 'camelCase'")
+    
+    return sanitized
