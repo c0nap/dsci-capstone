@@ -3,6 +3,7 @@ import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from src.core.context import session
 from src.util import Log
+from src.components.LLMConnector import normalize_to_dict
 
 # unused?
 import traceback
@@ -229,12 +230,22 @@ def task_14_relation_extraction_llm(triples_string, text):
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
         prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
         llm_output = llm.execute_query(prompt)
+        # TODO - move retry logic to LLMConnector
+        # Enforce valid JSON
+        attempts = 10
+        while not json.loads(llm_output) and attempts > 0:
+            llm_output = llm.execute_query(prompt)
+            attempts -= 1
+        if attempts == 0:
+            raise Log.Failure()
         return (prompt, llm_output)
 
 
 def task_15_sanitize_triples_llm(llm_output: str) -> str:
     with Log.timer():
-        # TODO: call LLM.normalize_triples
+        # TODO: rely on robust LLM connector logic
+        llm_output = json.loads(llm_output)
+        normalize_to_dict(llm_output)
         json_triples = json.loads(llm_output)
         return json_triples
 
