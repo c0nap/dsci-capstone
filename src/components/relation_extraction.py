@@ -94,11 +94,13 @@ class RelationExtractorREBEL(RelationExtractor):
                 # REBEL output format is specific; we split by the delimiter
                 parts = [str(element).strip() for element in decoded.split(self.tuple_delim)]
                 # group 3 at a time using zip to form (subj, obj, rel)
-                # Note: REBEL often outputs Subj, Obj, Rel order in its raw decoding
+                # Note: REBEL outputs Subj, Obj, Rel order in its raw decoding
                 for subj, obj, rel in zip(parts[0::3], parts[1::3], parts[2::3]):
-                    out.append((subj, rel, obj))
+                    # Filter out empty strings or malformed triples
+                    if subj and obj and rel:
+                        out.append((subj, rel, obj))
             else:
-                # Return raw REBEL text: 'subj obj rel'
+                # Return raw REBEL text: 'subj  obj  rel'
                 out.append(str(decoded))
                 
         return out
