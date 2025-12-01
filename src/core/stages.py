@@ -174,14 +174,14 @@ def task_11_send_chunk(c, collection_name, book_title):
 
 def task_12_relation_extraction_rebel(text, max_tokens=1024, parse_tuples=True):
     with Log.timer():
-        from src.components.relation_extraction import RelationExtractor
+        from src.components.relation_extraction import RelationExtractorREBEL
 
         # TODO: move to session.rel_extract
         re_rebel = "Babelscape/rebel-large"
         # TODO: different models
         # re_rst = "GAIR/rst-information-extraction-11b"
         # ner_renard = "compnet-renard/bert-base-cased-literary-NER"
-        nlp = RelationExtractor(model_name=re_rebel, max_tokens=max_tokens)
+        nlp = RelationExtractorREBEL(model_name=re_rebel, max_tokens=max_tokens)
         extracted = nlp.extract(text, parse_tuples=parse_tuples)
         return extracted
 

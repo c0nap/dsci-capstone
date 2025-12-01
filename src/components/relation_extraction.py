@@ -5,7 +5,7 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from typing import List, Tuple
 
 
-class RelationExtractor:
+class RelationExtractorREBEL:
     def __init__(self, model_name="Babelscape/rebel-large", max_tokens=1024):
         self.nlp = spacy.blank("en")  # blank English model, no pipeline
         self.sentencizer = self.nlp.add_pipe("sentencizer")
