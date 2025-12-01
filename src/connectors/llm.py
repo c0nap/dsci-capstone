@@ -9,6 +9,7 @@ import os
 import re
 from src.connectors.base import Connector
 from typing import Any, List, Tuple, Dict
+from abc import ABC, abstractmethod
 
 
 class LLMConnector(Connector):
@@ -19,6 +20,57 @@ class LLMConnector(Connector):
         We prefer creating a separate wrapper instance for reusable hard-coded configurations.
     """
 
+    def test_operations(self, raise_error: bool = True) -> bool:
+        """Establish a basic connection to the database, and test full functionality.
+        @details  Can be configured to fail silently, which enables retries or external handling.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the prompt executed successfully.
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
+        self.check_connection(Log.test_ops, raise_error=True)
+        # TODO
+
+    def check_connection(self, log_source: str, raise_error: bool) -> bool:
+        """Send a trivial prompt to verify LLM connectivity.
+        @param log_source  The Log class prefix indicating which method is performing the check.
+        @param raise_error  Whether to raise an error on connection failure.
+        @return  Whether the prompt executed successfully.
+        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
+        result = self.execute_full_query("You are a helpful assistant.", "ping")
+        return result.strip() == "pong"
+
+    @abstractmethod
+    def configure(self) -> None:
+        """Initialize the LangChain LLM using environment credentials."""
+        pass
+
+    @abstractmethod
+    def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
+        """Send a single prompt to the LLM with separate system and human instructions."""
+        pass
+
+    def execute_query(self, query: str) -> str:
+        """Send a single prompt through the connection and return raw LLM output.
+        @param query  A single string prompt to send to the LLM.
+        @return Raw LLM response as a string."""
+        return self.execute_full_query(self.system_prompt, query)
+
+    def execute_file(self, filename: str) -> str:  # type: ignore[override]
+        """Run a single prompt from a file.
+        @details  Reads the entire file as a single string and sends it to execute_query.
+        @param filename  Path to the prompt file (.txt)
+        @return  Raw LLM response as a string."""
+        with open(filename, "r", encoding="utf-8") as f:
+            content = f.read()
+        return self.execute_query(content)
+
+
+
+class OpenAIConnector(LLMConnector):
+    """Lightweight LLM interface for faster response times."""
+
+
+class LangChainConnector(LLMConnector):
+    """Fully-featured API to prompt across various LLM providers."""
     def __init__(
         self,
         temperature: float = 0,
@@ -43,25 +95,6 @@ class LLMConnector(Connector):
         self.model_name = os.environ["LLM_MODEL"]
         self.llm = ChatOpenAI(model=self.model_name, temperature=self.temperature)
 
-    def test_operations(self, raise_error: bool = True) -> bool:
-        """Establish a basic connection to the database, and test full functionality.
-        @details  Can be configured to fail silently, which enables retries or external handling.
-        @param raise_error  Whether to raise an error on connection failure.
-        @return  Whether the prompt executed successfully.
-        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
-        result = self.execute_full_query("You are a helpful assistant.", "ping")
-        return result.strip() == "pong"
-        # TODO
-
-    def check_connection(self, log_source: str, raise_error: bool) -> bool:
-        """Send a trivial prompt to verify LLM connectivity.
-        @param log_source  The Log class prefix indicating which method is performing the check.
-        @param raise_error  Whether to raise an error on connection failure.
-        @return  Whether the prompt executed successfully.
-        @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
-        result = self.execute_full_query("You are a helpful assistant.", "ping")
-        return result.strip() == "pong"
-
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
         """Send a single prompt to the LLM with separate system and human instructions."""
         self.system_prompt = system_prompt
@@ -78,20 +111,6 @@ class LLMConnector(Connector):
         response = self.llm.invoke(formatted_prompt.to_messages())  # <-- to_messages() returns list of BaseMessage
         return str(response.content)
 
-    def execute_query(self, query: str) -> str:
-        """Send a single prompt through the connection and return raw LLM output.
-        @param query  A single string prompt to send to the LLM.
-        @return Raw LLM response as a string."""
-        return self.execute_full_query(self.system_prompt, query)
-
-    def execute_file(self, filename: str) -> str:  # type: ignore[override]
-        """Run a single prompt from a file.
-        @details  Reads the entire file as a single string and sends it to execute_query.
-        @param filename  Path to the prompt file (.txt)
-        @return  Raw LLM response as a string."""
-        with open(filename, "r", encoding="utf-8") as f:
-            content = f.read()
-        return self.execute_query(content)
 
 
 @staticmethod
