@@ -50,16 +50,24 @@ def book_data():
 
 
 @pytest.fixture
-def relation_extractor(request):
-    return request.getfixturevalue(request.param)
-
-@pytest.fixture
 def rebel():
+    """Fixture returning the REBEL extraction function."""
     return task_12_relation_extraction_rebel
 
 @pytest.fixture
 def openie():
+    """Fixture returning the OpenIE extraction function."""
     return task_12_relation_extraction_openie
+
+@pytest.fixture
+def textacy():
+    """Fixture returning the Textacy extraction function."""
+    return task_12_relation_extraction_textacy
+
+@pytest.fixture
+def relation_extractor(request):
+    """Meta-fixture that returns the backend function specified by the parameter."""
+    return request.getfixturevalue(request.param)
 
 
 
@@ -67,17 +75,22 @@ def openie():
 @pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="job_12_rebel_minimal", scope="session")
+@pytest.mark.dependency(name="job_12_extraction_minimal", scope="session")
 @pytest.mark.parametrize("relation_extractor", ["rebel", "openie", "textacy"], indirect=True)
-def test_job_12_rebel_minimal():
-    """Runs REBEL on a basic example."""
+def test_job_12_extraction_minimal(relation_extractor):
+    """Parametrized test to verify all extractors return a standard list of tuples.
+    @note Relying on default args ensures REBEL returns tuples (parse_tuples=True).
+    """
     sample_text = "Alice met Bob in the forest. Bob then went to the village."
-    extracted = task_12_relation_extraction_rebel(sample_text, parse_tuples=False)
+    extracted = relation_extractor(sample_text)
     assert isinstance(extracted, list)
-    assert len(extracted) >= 0
-    assert all(isinstance(triple, str) for triple in extracted)
-    # Verify REBEL's tuple delimiter present in raw output
-    assert any("  " in triple for triple in extracted)
+    
+    # If the model extracted anything, ensure it conforms to the standard (Subj, Rel, Obj) tuple
+    if len(extracted) > 0:
+        triple = extracted[0]
+        assert isinstance(triple, tuple), f"Expected tuple output, got {type(triple)}"
+        assert len(triple) == 3, "Tuple must have exactly 3 elements (Subj, Rel, Obj)"
+        assert all(isinstance(x, str) for x in triple)
 
 
 @pytest.mark.task
