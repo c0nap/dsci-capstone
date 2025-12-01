@@ -1,35 +1,79 @@
 from dotenv import load_dotenv
 import os
-from typing import List, Tuple
+from typing import List, Tuple, Union, Optional
 from abc import ABC, abstractmethod
 
+# Load environment variables once at module level, or defer to init if preferred
+load_dotenv(".env")
 
 class RelationExtractor(ABC):
+    """Abstract base class for Relation Extraction (RE) models.
+    @details
+        Derived classes must implement the extract method to process text
+        and return a list of triples or raw strings.
+        Backends (Spacy, Stanza, Transformers) should be lazy-loaded.
+    """
+
+    @abstractmethod
+    def extract(self, text: str) -> List[Union[Tuple[str, str, str], str]]:
+        """Extract relations from the provided text.
+        @param text  The raw input text to process.
+        @return  A list of triples (subj, rel, obj) or raw string outputs.
+        """
+        pass
 
 
-class RelationExtractorREBEL(RelationExtractor)
+class RelationExtractorREBEL(RelationExtractor):
+    """Relation Extractor using the REBEL generative model (Seq2Seq).
+    @note  Requires 'torch', 'transformers', and 'spacy' installed.
+    @details
+        REBEL treats RE as a translation task (Text -> Triples).
+        It is powerful but can hallucinate or normalize entities (non-literal).
+    """
+
     def __init__(self, model_name="Babelscape/rebel-large", max_tokens=1024):
+        """Initialize the REBEL model and tokenizer.
+        @note  Lazy imports are used to prevent heavy libraries from loading unless this class is instantiated.
+        @param model_name  The HuggingFace hub path for the model.
+        @param max_tokens  The maximum sequence length for the tokenizer.
+        """
+        # 1. Lazy Imports
         import spacy
         from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-        self.nlp = spacy.blank("en")  # blank English model, no pipeline
+        # 2. Setup Spacy for basic sentence segmentation (faster than Transformers for splitting)
+        self.nlp = spacy.blank("en") 
         self.sentencizer = self.nlp.add_pipe("sentencizer")
-        # Read environment variables at runtime
-        load_dotenv(".env")
-        os.environ["HF_HUB_TOKEN"] = os.environ["HF_HUB_TOKEN"]
+
+        # 3. Load Environment and Model
+        # Ensure HF token is available for gated models if necessary
+        os.environ["HF_HUB_TOKEN"] = os.getenv("HF_HUB_TOKEN", "")
+        
+        print(f"Loading REBEL model: {model_name}...")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        
         self.max_tokens = max_tokens
-        self.tuple_delim = "  "
+        self.tuple_delim = " "
 
-    def extract(self, text: str, parse_tuples: bool = False) -> List[Tuple[str, str, str] | str]:
-        # Split into sentences: RE models generally output 1 relation per input.
+    def extract(self, text: str, parse_tuples: bool = False) -> List[Union[Tuple[str, str, str], str]]:
+        """Perform extraction on the text using the generative model.
+        @details 
+            The text is first segmented into sentences because RE models degrade 
+            in performance on long, multi-sentence paragraphs.
+        @param text  The input narrative text.
+        @param parse_tuples  If True, parses the generated string into structured tuples.
+        @return  A list of extracted relations.
+        """
+        # Split into sentences: RE models generally output 1 relation set per input sequence.
+        # Cleaning newlines prevents tokenization artifacts.
         text = text.replace("\n", " ").strip()
         doc = self.nlp(text)
         sentences = [sent.text for sent in doc.sents]
 
+        out: List[Union[Tuple[str, str, str], str]] = []
+
         # Perform RE on each sentence individually
-        out: List[Tuple[str, str, str] | str] = []
         for sentence in sentences:
             inputs = self.tokenizer(
                 sentence,
@@ -37,20 +81,40 @@ class RelationExtractorREBEL(RelationExtractor)
                 truncation=True,
                 max_length=self.max_tokens,
             )
+            
+            # Generate the linearized triples
             outputs = self.model.generate(**inputs)
             decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
             if parse_tuples:
+                # REBEL output format is specific; we split by the delimiter
                 parts = [str(element).strip() for element in decoded.split(self.tuple_delim)]
-                # group 3 at a time using zip
+                # group 3 at a time using zip to form (subj, obj, rel)
+                # Note: REBEL often outputs Subj, Obj, Rel order in its raw decoding
                 for subj, obj, rel in zip(parts[0::3], parts[1::3], parts[2::3]):
                     out.append((subj, rel, obj))
-            else:  # raw REBEL text: 'subj  obj  rel'
+            else:
+                # Return raw REBEL text: 'subj obj rel'
                 out.append(str(decoded))
+                
         return out
 
 
-class RelationExtractorOpenIE:
+class RelationExtractorOpenIE(RelationExtractor):
+    """Wrapper for Stanford OpenIE using the Stanza library.
+    @note  Requires Java (JDK 8+) and 'stanza' python package.
+    @details
+        Ideal for "Exhaustive" and "Literal" extraction. Unlike generative models,
+        this extracts spans directly from the text and handles coreference resolution internally.
+    """
+
     def __init__(self, memory='4G'):
+        """Initialize the Stanza CoreNLP client interface.
+        @details 
+            Checks for the existence of the CoreNLP backend and installs it if missing.
+            This is a blocking operation on the first run.
+        @param memory  Java heap size string (e.g., '4G', '8G').
+        """
         # 1. Lazy Imports: Only happen when you instantiate THIS class
         import stanza
         from stanza.server import CoreNLPClient
@@ -62,30 +126,42 @@ class RelationExtractorOpenIE:
         # 3. Download CoreNLP backend if not present (Automatic Setup)
         # This saves the jar files to ~/stanza_corenlp by default
         print("Ensuring CoreNLP backend is installed...")
-        stanza.install_corenlp()
+        self.stanza.install_corenlp()
         
         self.memory = memory
 
     def _get_client(self):
-        # Configuration for "Exhaustive" and "Coref-Resolved" extraction
-        # openie.resolve_coref: Uses the coref graph to replace pronouns in triples
-        # openie.triple.strict: False allows for more loose/exhaustive extractions
+        """Configure and instantiate the CoreNLP Client.
+        @details
+            Configuration targets "Exhaustive" and "Coref-Resolved" extraction:
+            - openie.resolve_coref: Uses the coref graph to replace pronouns (He -> Harry).
+            - openie.triple.strict: False allows for more loose/exhaustive extractions.
+            - openie.max_entailments_per_clause: Maximizes variations of triples returned.
+        @return  An instance of stanza.server.CoreNLPClient.
+        """
         properties = {
             'openie.resolve_coref': True,
             'openie.triple.strict': False,
             'openie.max_entailments_per_clause': 500
         }
         
-        # Use self.CoreNLPClient
+        # Use self.CoreNLPClient (lazy loaded)
         return self.CoreNLPClient(
             annotators=['tokenize', 'ssplit', 'pos', 'lemma', 'ner', 'parse', 'coref', 'openie'],
             properties=properties,
             timeout=30000,
             memory=self.memory,
-            be_quiet=False
+            be_quiet=True # Set to False for debugging Java output
         )
 
-    def extract(self, text: str) -> list[tuple[str, str, str]]:
+    def extract(self, text: str) -> List[Tuple[str, str, str]]:
+        """Extract triples using the Stanford OpenIE pipeline.
+        @details
+            Uses a context manager to spin up the Java server, process the text, 
+            and tear it down immediately to free resources.
+        @param text  The raw narrative text.
+        @return  A list of tuples formatted as (Subject, Relation, Object).
+        """
         text = text.replace("\n", " ").strip()
         out = []
 
@@ -105,37 +181,37 @@ class RelationExtractorOpenIE:
         return out
 
 
-        
-        
-# --- Usage Example ---
-if __name__ == "__main__":
-    extractor = OpenIERelationExtractor()
-    
-    # Narrative example with Coref requirement
-    text = "Harry picked up his wand. He pointed it at the door and whispered a spell."
-    
-    triples = extractor.extract(text)
-    
-    print(f"Input: {text}\n")
-    print("Extracted Triples:")
-    for subj, rel, obj in triples:
-        print(f"  ({subj}) -> [{rel}] -> ({obj})")
+class TextacyExtractor(RelationExtractor):
+    """Lightweight extraction using Spacy and Textacy (SVO).
+    @note  Requires 'spacy' and 'textacy'.
+    @details
+        A pure-Python backup. Less exhaustive than OpenIE but faster and setup-free.
+        Extracts Subject-Verb-Object patterns based on dependency parsing.
+    """
 
-
-
-
-class TextacyExtractor:
     def __init__(self):
+        """Initialize Spacy model for dependency parsing.
+        @note  Defaults to 'en_core_web_sm'. Ensure this model is downloaded via `python -m spacy download en_core_web_sm`.
+        """
         import spacy
         import textacy
-
+        
+        # Attach textacy to self to avoid import errors later
+        self.textacy = textacy
         self.nlp = spacy.load("en_core_web_sm")
     
-    def extract(self, text):
+    def extract(self, text: str) -> List[Tuple[str, str, str]]:
+        """Extract SVO triples.
+        @param text  The raw input text.
+        @return  A list of (Subject, Verb, Object) tuples.
+        """
         doc = self.nlp(text)
         triples = []
+        
         # Extract SVO (Subject-Verb-Object)
-        for svo in textacy.extract.subject_verb_object_triples(doc):
+        # This relies on Spacy's dependency parser
+        for svo in self.textacy.extract.subject_verb_object_triples(doc):
             triples.append((svo.subject, svo.verb, svo.object))
+            
         return triples
 
