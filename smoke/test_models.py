@@ -44,7 +44,7 @@ def book_data():
             "carpet  takes_to  anywhere",
             "Phoenix  recommends  Egypt",
             "children  want  adventures",
-        ],
+        ],  # used to test LLM triple sanitization
         "llm_triples_json": llm_triples_json,
     }
 
@@ -97,15 +97,21 @@ def test_job_12_extraction_minimal(relation_extractor):
 @pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="job_12_rebel_chunk", scope="session", depends=["job_12_rebel_minimal"])
-def test_job_12_rebel_chunk(book_data):
-    """Runs REBEL on realistic pipeline data. Do not convert to tuples yet."""
-    extracted = task_12_relation_extraction_rebel(book_data["chunk_text"], parse_tuples=False)
+@pytest.mark.dependency(name="job_12_extraction_chunk", scope="session", depends=["job_12_extraction_minimal"])
+@pytest.mark.parametrize("relation_extractor", ["rebel", "openie", "textacy"], indirect=True)
+def test_job_12_extraction_chunk(book_data, relation_extractor):
+    """Runs all extractors on realistic pipeline data in RAW mode.
+    @details  Now validates that OpenIE/Textacy can produce stringified output consistent with REBEL.
+    """
+    # parse_tuples=False forces the class to return strings
+    extracted = relation_extractor(book_data["chunk_text"], parse_tuples=False)
 
     assert isinstance(extracted, list)
     assert len(extracted) >= 5  # Realistic chunk should yield multiple triples
     assert all(isinstance(triple, str) for triple in extracted)
-    # Verify REBEL's tuple delimiter present in raw output
+    
+    # Verify the standardized delimiter is present (defined in Base Class)
+    # This ensures downstream parsers don't break regardless of which model was used
     assert any("  " in triple for triple in extracted)
 
 
@@ -113,15 +119,16 @@ def test_job_12_rebel_chunk(book_data):
 @pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="job_12_rebel_tuples", scope="session", depends=["job_12_rebel_minimal", "job_12_rebel_chunk"])
-def test_job_12_rebel_tuples(book_data):
-    """Runs REBEL with tuple parsing on realistic data."""
-    extracted = task_12_relation_extraction_rebel(book_data["chunk_text"], parse_tuples=True)
+@pytest.mark.dependency(name="job_12_extraction_tuples", scope="session", depends=["job_12_extraction_chunk"])
+@pytest.mark.parametrize("relation_extractor", ["rebel", "openie", "textacy"], indirect=True)
+def test_job_12_extraction_tuples(book_data, relation_extractor):
+    """Runs all extractors with tuple parsing on realistic data."""
+    extracted = relation_extractor(book_data["chunk_text"], parse_tuples=True)
 
     assert isinstance(extracted, list)
     assert len(extracted) >= 5
     assert all(isinstance(triple, tuple) and len(triple) == 3 for triple in extracted)
-    # Verify tuple structure: (subject, relation, object)
+    
     for subj, rel, obj in extracted:
         assert isinstance(subj, str) and len(subj) > 0
         assert isinstance(rel, str) and len(rel) > 0

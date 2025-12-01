@@ -10,14 +10,21 @@ class RelationExtractor(ABC):
         and return a list of triples or raw strings.
         Backends (Spacy, Stanza, Transformers) should be lazy-loaded.
     """
+    # Unified delimiter for "raw" string representation
+    TUPLE_DELIM = "  "
 
     @abstractmethod
-    def extract(self, text: str) -> List[Union[Tuple[str, str, str], str]]:
+    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Tuple[str, str, str], str]]:
         """Extract relations from the provided text.
         @param text  The raw input text to process.
+        @param parse_tuples  If False, returns a formatted string 'Subj  Rel  Obj'.
         @return  A list of triples (subj, rel, obj) or raw string outputs.
         """
         pass
+
+    def _format_triples_to_strings(self, triples: List[Tuple[str, str, str]]) -> List[str]:
+        """Helper to convert native tuples to standardized raw strings."""
+        return [f"{s}{self.TUPLE_DELIM}{r}{self.TUPLE_DELIM}{o}" for s, r, o in triples]
 
 
 class RelationExtractorREBEL(RelationExtractor):
@@ -127,7 +134,7 @@ class RelationExtractorOpenIE(RelationExtractor):
         
         self.memory = memory
 
-    def _get_client(self):
+    def _get_client(self) -> stanza.server.CoreNLPClient:
         """Configure and instantiate the CoreNLP Client.
         @details
             Configuration targets "Exhaustive" and "Coref-Resolved" extraction:
@@ -151,19 +158,20 @@ class RelationExtractorOpenIE(RelationExtractor):
             be_quiet=True # Set to False for debugging Java output
         )
 
-    def extract(self, text: str) -> List[Tuple[str, str, str]]:
+    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Tuple[str, str, str], str]]:
         """Extract triples using the Stanford OpenIE pipeline.
         @details
             Uses a context manager to spin up the Java server, process the text, 
             and tear it down immediately to free resources.
+            For production / batch processing, you might want to keep the client alive longer
         @param text  The raw narrative text.
-        @return  A list of tuples formatted as (Subject, Relation, Object).
+        @param parse_tuples  If False, concatenates the triples into a multi-line string.
+        @return  A list of extracted relations.
         """
         text = text.replace("\n", " ").strip()
         out = []
 
         # We use a context manager to ensure the server spins up/down cleanly
-        # For production/batch processing, you might want to keep the client alive longer
         with self._get_client() as client:
             # Submit annotation request
             ann = client.annotate(text)
@@ -175,7 +183,8 @@ class RelationExtractorOpenIE(RelationExtractor):
                     # We create a tuple for easy consumption
                     t = (triple.subject, triple.relation, triple.object)
                     out.append(t)
-        return out
+        # Delegate to base helper if raw strings are requested
+        return out if parse_tuples else self._format_triples_to_strings(out)
 
 
 class RelationExtractorTextacy(RelationExtractor):
@@ -196,19 +205,21 @@ class RelationExtractorTextacy(RelationExtractor):
         # Attach textacy to self to avoid import errors later
         self.textacy = textacy
         self.nlp = spacy.load("en_core_web_sm")
-    
-    def extract(self, text: str) -> List[Tuple[str, str, str]]:
+        
+    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Tuple[str, str, str], str]]:
         """Extract SVO triples.
         @param text  The raw input text.
-        @return  A list of (Subject, Verb, Object) tuples.
+        @param parse_tuples  If False, concatenates the triples into a multi-line string.
+        @return  A list of extracted relations.
         """
         doc = self.nlp(text)
-        triples = []
-        
+        out = []
+
         # Extract SVO (Subject-Verb-Object)
         # This relies on Spacy's dependency parser
         for svo in self.textacy.extract.subject_verb_object_triples(doc):
-            triples.append((svo.subject, svo.verb, svo.object))
+            out.append((svo.subject, svo.verb, svo.object))
             
-        return triples
+        # Delegate to base helper if raw strings are requested
+        return out if parse_tuples else self._format_triples_to_strings(out)
 
