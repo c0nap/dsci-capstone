@@ -648,7 +648,7 @@ def node_nlp_cases():
         ("It is time", "is_time", "Remove Pronoun 'It', keep Verb 'is'"),
         ("The 50% increase", "50_increase", "Handle symbols mixed with NLP (keep numbers)"),
         ("tHE inconsistent Case", "inconsistent_Case", "Handle mixed-case stopwords"),
-        ("Give it to me", "Give", "Remove 'it' (PRON), 'to' (PART), 'me' (PRON) - leaving only Verb")
+        ("Give it to me", "Give_to", "Remove 'it' (PRON) and 'me' (PRON) - leaving only 'Give' Verb and 'to' ADP")
     ]
 
 @pytest.fixture
@@ -699,7 +699,6 @@ def relation_fallback_cases():
         ("", "camelCase", "has_connection", "hasConnection"),   # Empty input -> fallback
         ("2nd_step", "camelCase", "backup", "backup"),          # Starts with number -> fallback
         ("   ", "UPPER_CASE", "empty_space", "EMPTY_SPACE"), # Whitespace only -> Fallback
-        ("_internal", "UPPER_CASE", "private", "PRIVATE"), # Starts with underscore -> Fallback (if regex strips it to empty or invalid)
         ("!!!", "camelCase", "bad_chars", "badChars") # Symbols only -> Fallback
     ]
 

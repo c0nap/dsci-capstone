@@ -692,8 +692,12 @@ def sanitize_relation(label: str, mode: str = "UPPER_CASE", default_relation: st
     @return  Sanitized relation label in specified mode
     @throws ValueError  If mode is invalid
     """
-    # Replace invalid chars, split on underscores/spaces for word extraction
-    cleaned = re.sub(r"[^A-Za-z0-9_ ]", "_", label)
+    # 1. PRE-PROCESS: Inject underscores between CamelCase (e.g., "hasPart" -> "has_Part")
+    # This ensures re.split below sees distinct words.
+    pre_split = re.sub(r'([a-z])([A-Z])', r'\1_\2', label)
+
+    # 2. CLEAN: Replace invalid chars, split on underscores/spaces
+    cleaned = re.sub(r"[^A-Za-z0-9_ ]", "_", pre_split)
     words = [w for w in re.split(r"[_ ]+", cleaned) if w]
     
     # Normalize default_relation according to mode
