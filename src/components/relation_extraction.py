@@ -35,7 +35,7 @@ class RelationExtractorREBEL(RelationExtractor):
         It is powerful but can hallucinate or normalize entities (non-literal).
     """
 
-    def __init__(self, model_name="Babelscape/rebel-large", max_tokens=1024):
+    def __init__(self, model_name="Babelscape/rebel-large", max_tokens=1024) -> None:
         """Initialize the REBEL model and tokenizer.
         @note  Lazy imports are used to prevent heavy libraries from loading unless this class is instantiated.
         @param model_name  The HuggingFace hub path for the model.
@@ -112,7 +112,7 @@ class RelationExtractorOpenIE(RelationExtractor):
         this extracts spans directly from the text and handles coreference resolution internally.
     """
 
-    def __init__(self, memory='4G'):
+    def __init__(self, memory='4G') -> None:
         """Initialize the Stanza CoreNLP client interface.
         @details 
             Checks for the existence of the CoreNLP backend and installs it if missing.
@@ -134,7 +134,7 @@ class RelationExtractorOpenIE(RelationExtractor):
         
         self.memory = memory
 
-    def _get_client(self) -> stanza.server.CoreNLPClient:
+    def _get_client(self) -> "CoreNLPClient":
         """Configure and instantiate the CoreNLP Client.
         @details
             Configuration targets "Exhaustive" and "Coref-Resolved" extraction:
@@ -195,7 +195,7 @@ class RelationExtractorTextacy(RelationExtractor):
         Extracts Subject-Verb-Object patterns based on dependency parsing.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Spacy model for dependency parsing.
         @note  Defaults to 'en_core_web_sm'. Ensure this model is downloaded via `python -m spacy download en_core_web_sm`.
         """

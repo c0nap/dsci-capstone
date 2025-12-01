@@ -31,6 +31,8 @@ spacy
 transformers
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch
+stanza
+textacy
 
 # Visualization
 matplotlib
