@@ -658,7 +658,7 @@ def sanitize_node(value: Any) -> str:
     return sanitized
 
 
-def sanitize_relation(value: Any, mode: str = "UPPER_CASE") -> str:
+def sanitize_relation(value: str, mode: str = "UPPER_CASE", default_relation: str = "RELATED_TO") -> str:
     """Clean and normalize relation label for knowledge graphs.
     @details
         Supports two output modes:
@@ -666,40 +666,48 @@ def sanitize_relation(value: Any, mode: str = "UPPER_CASE") -> str:
         - camelCase: OWL/RDF convention (e.g., relatedTo)
         
         Process:
-        - Joins lists/tuples into single string
         - Replaces invalid characters with underscores
         - Applies mode-specific casing rules
-        - Falls back to default if empty or invalid start
+        - Falls back to normalized default if empty or invalid start
         
         Relations must start with alphabetic character.
-    @param value  Raw relation value
+        Default relation is automatically normalized to match mode.
+    @param value  Raw relation value (string)
     @param mode  Output format: "UPPER_CASE" or "camelCase"
+    @param default_relation  Fallback relation name (auto-normalized to mode)
     @return  Sanitized relation label in specified mode
     @throws ValueError  If mode is invalid
     """
-    if isinstance(value, (list, tuple)):
-        value = " ".join(map(str, value))
-    elif not isinstance(value, str):
-        value = str(value)
-    
     # Replace invalid chars, split on underscores/spaces for word extraction
     cleaned = re.sub(r"[^A-Za-z0-9_ ]", "_", value)
     words = [w for w in re.split(r"[_ ]+", cleaned) if w]
     
-    if not words:
-        return "RELATED_TO" if mode == "UPPER_CASE" else "relatedTo"
+    # Normalize default_relation according to mode
+    default_cleaned = re.sub(r"[^A-Za-z0-9_ ]", "_", default_relation)
+    default_words = [w for w in re.split(r"[_ ]+", default_cleaned) if w]
     
     if mode == "UPPER_CASE":
         # Neo4j convention: SCREAMING_SNAKE_CASE
+        normalized_default = "_".join(w.upper() for w in default_words) if default_words else "RELATED_TO"
+        if not words:
+            return normalized_default
+        
         sanitized = "_".join(w.upper() for w in words)
         if not sanitized or not sanitized[0].isalpha():
-            sanitized = "RELATED_TO"
+            sanitized = normalized_default
+            
     elif mode == "camelCase":
         # OWL convention: lowerCamelCase
+        normalized_default = (
+            default_words[0].lower() + "".join(w.capitalize() for w in default_words[1:])
+            if default_words else "relatedTo"
+        )
+        if not words:
+            return normalized_default
+
         sanitized = words[0].lower() + "".join(w.capitalize() for w in words[1:])
         if not sanitized or not sanitized[0].isalpha():
-            sanitized = "relatedTo"
+            sanitized = normalized_default
     else:
         raise ValueError(f"Invalid mode: {mode}. Must be 'UPPER_CASE' or 'camelCase'")
-    
     return sanitized
