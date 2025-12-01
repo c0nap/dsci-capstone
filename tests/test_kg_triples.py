@@ -4,6 +4,9 @@ from src.components.fact_storage import KnowledgeGraph
 from src.connectors.graph import GraphConnector
 from src.util import Log
 from typing import Generator
+import re
+from src.components.fact_storage import sanitize_node, sanitize_relation
+
 
 
 @pytest.mark.kg
@@ -624,3 +627,152 @@ def test_ranked_degree_ties(main_graph: KnowledgeGraph) -> None:
     # Querying for rank 2 should return empty (no rank 2 exists)
     empty_result = kg.get_by_ranked_degree(best_rank=2, worst_rank=2)
     assert empty_result.empty, "No rank-2 nodes exist, should return empty"
+
+
+# ==========================================
+# NODE AND EDGE LABEL SANITIZATION
+# ==========================================
+
+@pytest.fixture
+def node_nlp_cases():
+    """Fixtures focusing on spaCy NLP cleaning (Stopword/Part-of-speech removal)."""
+    return [
+        # (input_label, expected_output, description)
+        ("The Apple", "Apple", "Remove Determiner (DET) 'The'"),
+        ("He runs", "runs", "Remove Pronoun (PRON) 'He'"),
+        ("walk to school", "walk school", "Remove Particle (PART) 'to'"),
+        ("A very big dog", "very big dog", "Remove 'A' (DET), keep Adverbs/Adj"),
+        ("The user and the system", "user and system", "Remove multiple DETs, keep CCONJ 'and'")
+    ]
+
+@pytest.fixture
+def node_regex_cases():
+    """Fixtures focusing on Regex replacement and stripping."""
+    return [
+        ("User-Name", "User_Name", "Replace hyphen with underscore"),
+        ("User@Name!", "User_Name_", "Replace special chars, allow trailing underscore pre-strip"),
+        ("  Spaces  ", "Spaces", "Trim whitespace"),
+        ("___Underscores___", "Underscores", "Trim leading/trailing underscores"),
+        ("Node 123", "Node 123", "Allow numbers"),
+        ("C++ Developer", "C_Developer", "Handle special symbols like +")
+    ]
+
+@pytest.fixture
+def node_error_cases():
+    """Fixtures that should result in ValueErrors."""
+    return [
+        ("", "Empty string"),
+        ("   ", "Whitespace only"),
+        ("The", "Only stop words (Result becomes empty)"),
+        ("!!!", "Only special chars (Result becomes empty or underscores which get stripped)")
+    ]
+
+@pytest.fixture
+def relation_casing_cases():
+    """Fixtures for testing UPPER_CASE vs camelCase modes."""
+    return [
+        # (input, mode, default, expected)
+        ("related to", "UPPER_CASE", "RELATED_TO", "RELATED_TO"),
+        ("related to", "camelCase", "relatedTo", "relatedTo"),
+        ("has part", "UPPER_CASE", "RELATED_TO", "HAS_PART"),
+        ("has part", "camelCase", "relatedTo", "hasPart"),
+        ("works_with", "camelCase", "relatedTo", "worksWith"),
+        ("  messy  input  ", "UPPER_CASE", "RELATED_TO", "MESSY_INPUT"),
+    ]
+
+@pytest.fixture
+def relation_fallback_cases():
+    """Fixtures specifically testing the fallback logic (when input is invalid/numeric)."""
+    return [
+        # (input, mode, default_raw, expected_final)
+        ("123", "UPPER_CASE", "default_rel", "DEFAULT_REL"),  # Starts with number -> fallback
+        ("->", "UPPER_CASE", "generic_link", "GENERIC_LINK"),   # Special chars only -> fallback
+        ("", "camelCase", "has_connection", "hasConnection"),   # Empty input -> fallback
+        ("2nd_step", "camelCase", "backup", "backup"),          # Starts with number -> fallback
+    ]
+
+@pytest.mark.kg
+@pytest.mark.nlp
+def test_sanitize_node_nlp_capabilities(node_nlp_cases):
+    """Test that NLP logic correctly strips POS tags (DET, PRON, PART).
+    @details
+        Validates that 'sanitize_node' loads the global _nlp object
+        and correctly filters linguistic tokens.
+    """
+    for raw, expected, reason in node_nlp_cases:
+        result = sanitize_node(raw)
+        assert result == expected, f"Failed on: {reason}"
+
+@pytest.mark.kg
+def test_sanitize_node_regex_cleaning(node_regex_cases):
+    """Test that Regex logic handles symbols and whitespace correctly.
+    @details
+        Ensures strict node naming conventions:
+        - No non-alphanumeric chars (except underscore/space)
+        - No leading/trailing garbage
+    """
+    for raw, expected, reason in node_regex_cases:
+        result = sanitize_node(raw)
+        assert result == expected, f"Failed on: {reason}"
+
+@pytest.mark.kg
+def test_sanitize_node_limits(node_error_cases):
+    """Test boundaries where node sanitization should raise exceptions.
+    @details
+        If a node label is reduced to an empty string (either because it was empty
+        or contained only stop-words/symbols), it is invalid for the Graph.
+    """
+    for raw, reason in node_error_cases:
+        with pytest.raises(ValueError) as excinfo:
+            sanitize_node(raw)
+        assert "Node name cannot be empty" in str(excinfo.value), f"Failed to raise on: {reason}"
+
+@pytest.mark.kg
+@pytest.mark.parametrize("mode", ["UPPER_CASE", "camelCase"])
+def test_sanitize_relation_modes(relation_casing_cases, mode):
+    """Test standard relation normalization for both supported modes.
+    @details
+        Filters the fixture data to match the parameterized mode and verifies
+        string transformation logic.
+    """
+    for raw, test_mode, default, expected in relation_casing_cases:
+        if test_mode == mode:
+            result = sanitize_relation(raw, mode=mode, default_relation=default)
+            assert result == expected
+
+@pytest.mark.kg
+def test_sanitize_relation_fallbacks(relation_fallback_cases):
+    """Test the 'safety net' fallback logic for relations.
+    @details
+        The function requires relations to start with an alphabetic character.
+        If the input is garbage (e.g., '123' or '>>'), it must revert to the 
+        default_relation, and that default relation *must* also be normalized 
+        to the requested mode.
+    """
+    for raw, mode, default_raw, expected in relation_fallback_cases:
+        result = sanitize_relation(raw, mode=mode, default_relation=default_raw)
+        assert result == expected, \
+            f"Failed fallback logic. Input: '{raw}', Mode: {mode}, Default: '{default_raw}'"
+
+@pytest.mark.kg
+def test_sanitize_relation_invalid_mode():
+    """Test developer error handling for invalid modes."""
+    with pytest.raises(ValueError, match="Invalid mode"):
+        sanitize_relation("some_relation", mode="snake_case")
+
+@pytest.mark.kg
+def test_sanitize_relation_default_normalization():
+    """Edge case: Ensure the default_relation itself is sanitized if used.
+    @details
+        If the input is empty, we return the default. 
+        But if the default provided is 'bad input', the function must clean 
+        the default before returning it.
+    """
+    # Case: Input is empty, forcing fallback.
+    # Fallback is "bad @ default", should become "BAD_DEFAULT" in UPPER_CASE
+    result = sanitize_relation("", mode="UPPER_CASE", default_relation="bad @ default")
+    assert result == "BAD_DEFAULT"
+
+    # Case: Fallback is "bad @ default", should become "badDefault" in camelCase
+    result_camel = sanitize_relation("", mode="camelCase", default_relation="bad @ default")
+    assert result_camel == "badDefault"
