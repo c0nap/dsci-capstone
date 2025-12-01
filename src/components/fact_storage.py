@@ -664,11 +664,13 @@ def sanitize_node(label: str) -> str:
         if token.pos_ not in {"DET", "PRON", "PART"}  # determiners, pronouns, particles
     ]
     cleaned = " ".join(tokens)
+    if not cleaned:  # Revert back to input: a messy label is better than nothing.
+    	cleaned = label
     
     # Regex: collapse consecutive non-alphanumeric to single underscore, strip edges
     sanitized = re.sub(r"[^A-Za-z0-9]+", "_", cleaned).strip("_")
     if not sanitized:
-        raise ValueError(f"Node name cannot be empty after sanitization: '{label}' -> '{label_clean}'")
+        raise ValueError(f"Node name cannot be empty after sanitization: '{label}' -> '{cleaned}'")
     return sanitized
 
 

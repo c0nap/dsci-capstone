@@ -42,7 +42,7 @@ def pipeline_B(collection_name, chunks, book_title):
     stages.task_11_send_chunk(c, collection_name, book_title)
     print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
 
-    extracted = stages.task_12_relation_extraction_rebel(c.text)
+    extracted = stages.task_12_relation_extraction_textacy(c.text)
     print(f"\nNLP output:")
     for triple in extracted:
         print(triple)
