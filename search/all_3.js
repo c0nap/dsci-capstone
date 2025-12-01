@@ -33,13 +33,12 @@ var searchData=
   ['context_2epy_30',['context.py',['../context_8py.html',1,'']]],
   ['convert_5fto_5ftei_31',['convert_to_tei',['../classsrc_1_1components_1_1book__conversion_1_1EPUBToTEI.html#a610e7ae3639c8f1f88df63766e320d76',1,'src::components::book_conversion::EPUBToTEI']]],
   ['core_20module_20overview_32',['Core Module Overview',['../md__2home_2runner_2work_2dsci-capstone_2dsci-capstone_2src_2core_2README.html',1,'']]],
-  ['corenlpclient_33',['CoreNLPClient',['../classsrc_1_1components_1_1relation__extraction_1_1RelationExtractorOpenIE.html#a915b83653e30e4a2b844cd59dee4c6e2',1,'src::components::relation_extraction::RelationExtractorOpenIE']]],
-  ['corpus_2epy_34',['corpus.py',['../corpus_8py.html',1,'']]],
-  ['create_5fapp_35',['create_app',['../namespacesrc_1_1core_1_1boss.html#a5d5fae9aeaf2bcd4c9d8f677910a7f47',1,'src.core.boss.create_app()'],['../namespacesrc_1_1core_1_1worker.html#a2e60db094150c2c7b199afae47855b96',1,'src.core.worker.create_app()']]],
-  ['create_5fbook_36',['create_book',['../classsrc_1_1components_1_1book__conversion_1_1BookFactory.html#a914f55585d21eeade6029677c84f1257',1,'src::components::book_conversion::BookFactory']]],
-  ['create_5fboss_5fthread_37',['create_boss_thread',['../namespacesrc_1_1core_1_1boss.html#a12f79b617c8e04f4bf5168f317e35e4d',1,'src::core::boss']]],
-  ['create_5fdatabase_38',['create_database',['../classsrc_1_1connectors_1_1document_1_1DocumentConnector.html#a041a20ab44e098f9eeb4f34fd802b61b',1,'src.connectors.document.DocumentConnector.create_database()'],['../classsrc_1_1connectors_1_1base_1_1DatabaseConnector.html#a041a20ab44e098f9eeb4f34fd802b61b',1,'src.connectors.base.DatabaseConnector.create_database()'],['../classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#a041a20ab44e098f9eeb4f34fd802b61b',1,'src.connectors.graph.GraphConnector.create_database()'],['../classsrc_1_1connectors_1_1relational_1_1RelationalConnector.html#a041a20ab44e098f9eeb4f34fd802b61b',1,'src.connectors.relational.RelationalConnector.create_database()']]],
-  ['create_5fdb_39',['create_db',['../classsrc_1_1util_1_1Log.html#a5df0f9f19e634c2a75f955a41778a982',1,'src::util::Log']]],
-  ['create_5fsummary_5fpayload_40',['create_summary_payload',['../classsrc_1_1components_1_1metrics_1_1Metrics.html#a238c9e6184d130cf464b6f6182227c19',1,'src::components::metrics::Metrics']]],
-  ['cyan_41',['CYAN',['../classsrc_1_1util_1_1Log.html#a89ba134048042c3a249ec3b8815f4aa7',1,'src::util::Log']]]
+  ['corpus_2epy_33',['corpus.py',['../corpus_8py.html',1,'']]],
+  ['create_5fapp_34',['create_app',['../namespacesrc_1_1core_1_1boss.html#a5d5fae9aeaf2bcd4c9d8f677910a7f47',1,'src.core.boss.create_app()'],['../namespacesrc_1_1core_1_1worker.html#a2e60db094150c2c7b199afae47855b96',1,'src.core.worker.create_app()']]],
+  ['create_5fbook_35',['create_book',['../classsrc_1_1components_1_1book__conversion_1_1BookFactory.html#a914f55585d21eeade6029677c84f1257',1,'src::components::book_conversion::BookFactory']]],
+  ['create_5fboss_5fthread_36',['create_boss_thread',['../namespacesrc_1_1core_1_1boss.html#a12f79b617c8e04f4bf5168f317e35e4d',1,'src::core::boss']]],
+  ['create_5fdatabase_37',['create_database',['../classsrc_1_1connectors_1_1base_1_1DatabaseConnector.html#a041a20ab44e098f9eeb4f34fd802b61b',1,'src.connectors.base.DatabaseConnector.create_database()'],['../classsrc_1_1connectors_1_1relational_1_1RelationalConnector.html#a041a20ab44e098f9eeb4f34fd802b61b',1,'src.connectors.relational.RelationalConnector.create_database()'],['../classsrc_1_1connectors_1_1graph_1_1GraphConnector.html#a041a20ab44e098f9eeb4f34fd802b61b',1,'src.connectors.graph.GraphConnector.create_database()'],['../classsrc_1_1connectors_1_1document_1_1DocumentConnector.html#a041a20ab44e098f9eeb4f34fd802b61b',1,'src.connectors.document.DocumentConnector.create_database()']]],
+  ['create_5fdb_38',['create_db',['../classsrc_1_1util_1_1Log.html#a5df0f9f19e634c2a75f955a41778a982',1,'src::util::Log']]],
+  ['create_5fsummary_5fpayload_39',['create_summary_payload',['../classsrc_1_1components_1_1metrics_1_1Metrics.html#a238c9e6184d130cf464b6f6182227c19',1,'src::components::metrics::Metrics']]],
+  ['cyan_40',['CYAN',['../classsrc_1_1util_1_1Log.html#a89ba134048042c3a249ec3b8815f4aa7',1,'src::util::Log']]]
 ];

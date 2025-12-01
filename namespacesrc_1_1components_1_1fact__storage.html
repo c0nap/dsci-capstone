@@ -74,9 +74,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
-<a href="#func-members">Functions</a> &#124;
-<a href="#var-members">Variables</a>  </div>
+<a href="#nested-classes">Classes</a>  </div>
   <div class="headertitle"><div class="title">src.components.fact_storage Namespace Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -88,135 +86,7 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1Triple.html">Triple</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:a6fd7e5f580336c96b53da2cd70994777" id="r_a6fd7e5f580336c96b53da2cd70994777"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1fact__storage.html#a6fd7e5f580336c96b53da2cd70994777">sanitize_node</a> (str label)</td></tr>
-<tr class="memdesc:a6fd7e5f580336c96b53da2cd70994777"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clean node name for Cypher safety.  <br /></td></tr>
-<tr class="separator:a6fd7e5f580336c96b53da2cd70994777"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae0bcff290c59ee7c2a039e55c4747777" id="r_ae0bcff290c59ee7c2a039e55c4747777"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1fact__storage.html#ae0bcff290c59ee7c2a039e55c4747777">sanitize_relation</a> (str label, str mode=&quot;UPPER_CASE&quot;, str default_relation=&quot;RELATED_TO&quot;)</td></tr>
-<tr class="memdesc:ae0bcff290c59ee7c2a039e55c4747777"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clean and normalize relation label for knowledge graphs.  <br /></td></tr>
-<tr class="separator:ae0bcff290c59ee7c2a039e55c4747777"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
-Variables</h2></td></tr>
-<tr class="memitem:ae4da58908fdf601e762be19c30d1e336" id="r_ae4da58908fdf601e762be19c30d1e336"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1fact__storage.html#ae4da58908fdf601e762be19c30d1e336">nlp</a> = None</td></tr>
-<tr class="separator:ae4da58908fdf601e762be19c30d1e336"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Function Documentation</h2>
-<a id="a6fd7e5f580336c96b53da2cd70994777" name="a6fd7e5f580336c96b53da2cd70994777"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6fd7e5f580336c96b53da2cd70994777">&#9670;&#160;</a></span>sanitize_node()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"> str sanitize_node </td>
-          <td>(</td>
-          <td class="paramtype">str&#160;</td>
-          <td class="paramname"><em>label</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Clean node name for Cypher safety. </p>
-<ul>
-<li>Joins lists/tuples into single string</li>
-<li>Replaces invalid characters with underscores</li>
-<li>Trims leading/trailing underscores and spaces Used by KG systems before inserting nodes. <dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">label</td><td>Raw node name (subject / object) </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Sanitized string suitable for node property </dd></dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">ValueError</td><td>If result is empty after sanitization </td></tr>
-  </table>
-  </dd>
-</dl>
-</li>
-</ul>
-
-</div>
-</div>
-<a id="ae0bcff290c59ee7c2a039e55c4747777" name="ae0bcff290c59ee7c2a039e55c4747777"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae0bcff290c59ee7c2a039e55c4747777">&#9670;&#160;</a></span>sanitize_relation()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"> str sanitize_relation </td>
-          <td>(</td>
-          <td class="paramtype">str&#160;</td>
-          <td class="paramname"><em>label</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">str &#160;</td>
-          <td class="paramname"><em>mode</em> = <code>&quot;UPPER_CASE&quot;</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">str &#160;</td>
-          <td class="paramname"><em>default_relation</em> = <code>&quot;RELATED_TO&quot;</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Clean and normalize relation label for knowledge graphs. </p>
-<p>Supports two output modes:</p><ul>
-<li>UPPER_CASE: Neo4j convention (e.g., RELATED_TO)</li>
-<li>camelCase: OWL/RDF convention (e.g., relatedTo)</li>
-</ul>
-<p>Process:</p><ul>
-<li>Replaces invalid characters with underscores</li>
-<li>Applies mode-specific casing rules</li>
-<li>Falls back to normalized default if empty or invalid start</li>
-</ul>
-<p>Relations must start with alphabetic character. Default relation is automatically normalized to match mode. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">label</td><td>Raw relation label (string) </td></tr>
-    <tr><td class="paramname">mode</td><td>Output format: "UPPER_CASE" or "camelCase" </td></tr>
-    <tr><td class="paramname">default_relation</td><td>Fallback relation name (auto-normalized to mode) </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Sanitized relation label in specified mode </dd></dl>
-<dl class="exception"><dt>Exceptions</dt><dd>
-  <table class="exception">
-    <tr><td class="paramname">ValueError</td><td>If mode is invalid </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<h2 class="groupheader">Variable Documentation</h2>
-<a id="ae4da58908fdf601e762be19c30d1e336" name="ae4da58908fdf601e762be19c30d1e336"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae4da58908fdf601e762be19c30d1e336">&#9670;&#160;</a></span>nlp</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">nlp = None</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
