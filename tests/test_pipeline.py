@@ -391,9 +391,9 @@ def test_job_15_sanitize_triples_llm(book_data):
 
 @pytest.mark.task
 @pytest.mark.stage_B
-@pytest.mark.order(15)
+@pytest.mark.order(16)
 @pytest.mark.dependency(name="job_15_comprehensive", scope="session", depends=["job_15_minimal"])
-@pytest.mark.parametrize("llm_data", ["llm_edge_case_1", "llm_edge_case_2"], indirect=True)
+@pytest.mark.parametrize("llm_data", ["llm_edge_case_1", "llm_edge_case_2", "llm_edge_case_3", "llm_edge_case_4", "llm_edge_case_5"], indirect=True)
 def test_job_15_comprehensive():
     """Test parsing malformed LLM output."""
     llm_output = llm_data["llm_triples_json"]
