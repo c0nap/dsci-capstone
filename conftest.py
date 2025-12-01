@@ -6,13 +6,29 @@ from src.connectors.relational import RelationalConnector
 from src.core.context import get_session, Session
 from src.util import Log
 from typing import Any, Generator
+import importlib.util
 
 
-# Command-line flags for pytest
-# Usage: pytest --log-success --no-log-colors .
 def pytest_addoption(parser: Any) -> None:
+	"""Command-line flags for pytest
+	@details  Usage: pytest --log-success --no-log-colors"""
     parser.addoption("--log-success", action="store_true", default=False)
     parser.addoption("--no-log-colors", action="store_false", default=True)
+
+
+def optional_param(name: str, package: str) -> pytest.param:
+	""" """
+    exists = importlib.util.find_spec(package) is not None
+    return pytest.param(
+        name,
+        marks=pytest.mark.skipif(not exists, reason=f"{package} not installed")
+    )
+
+PARAMS_RELATION_EXTRACTORS: List[pytest.param] = [
+    optional_param("rebel", "transformers"),
+    optional_param("openie", "stanza"),
+    pytest.param("textacy"),     # test always runs (no dependency)
+]
 
 
 @pytest.fixture(scope="session")
