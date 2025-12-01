@@ -78,14 +78,21 @@ def clean_index(reindex: bool = False) -> None:
     """
     @param reindex  Whether to recursively rename all dataset files to start at ID 1.
     @details
-    Since the individual DatasetLoaders simply append new rows to the index file, a manual
-    post-processing step is required to perform the following cleaning steps.
+    Since the individual DatasetLoaders simply append new rows to the index
+        file, a manual post-processing step is required.
     1. Ensure each path corresponds to a valid file (ghost rows).
+    2. 
     2. (Optional) Ensure a clean number sequence for book IDs, i.e. book 1 ... book N."""
     print("Verifying index integrity...")
+    initial_count = base.get_book_count()
+
+    
     
     # 1. Remove ghost entries from previous runs.
-    final_count, initial_count = align.prune_index()
+    align.prune_index()
+
+
+    final_count = base.get_book_count()
     if final_count < initial_count:
         print(f"✓ Pruned index: {initial_count} -> {final_count} entries (removed {initial_count - final_count} invalid/duplicate).")
     else:
