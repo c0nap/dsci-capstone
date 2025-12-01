@@ -11,8 +11,12 @@ WORKDIR /pipeline
 ENV PYTHONUNBUFFERED=1
 
 # Copy dependency list first to leverage build cache
+# Java installation is optional - necessary for 'stanza' / OpenIE relation extraction
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential make pandoc \
+    build-essential \
+    make \
+    pandoc \
+    default-jre-headless \
  && pip install --upgrade pip setuptools wheel build \
  && rm -rf /var/lib/apt/lists/*
 
