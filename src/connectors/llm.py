@@ -95,13 +95,15 @@ class LLMConnector(Connector):
 
 
 @staticmethod
-def normalize_to_dict(data: Any, keys: List[str]) -> List[Dict[str, Any]]:
+def normalize_to_dict(data: Union[Dict[str, Any], List[Dict[str, Any]]], keys: List[str]) -> List[Dict[str, Any]]:
     """Normalize nested/compacted LLM output into flat dicts.
-    @details  Handles token-saving patterns:
-    - Nested relation-object pairs: {"s":"X", [{"r":"R1","o":"O1"}, ...]}
-    - List subjects with nested r-o: {"s":["X","Y"], [{"r":"R","o":"O"}, ...]}
-    - Cartesian products: {"s":["X","Y"], "r":["R1","R2"], "o":["O1","O2"]}
-    @param data  Raw LLM output (dict, list of dicts, or JSON string)
+    @details
+        Handles token-saving patterns:
+        - Nested relation-object pairs: {"s":"X", [{"r":"R1","o":"O1"}, ...]}
+        - List subjects with nested r-o: {"s":["X","Y"], [{"r":"R","o":"O"}, ...]}
+        - Cartesian products: {"s":["X","Y"], "r":["R1","R2"], "o":["O1","O2"]}
+        Assumes input is already parsed (json.loads called by caller).
+    @param data  Parsed LLM output (dict or list of dicts)
     @param keys  Expected keys (e.g., ["s", "r", "o"])
     @return  List of flat dicts with all keys present
     @throws ValueError  If input format cannot be parsed
@@ -114,7 +116,7 @@ def normalize_to_dict(data: Any, keys: List[str]) -> List[Dict[str, Any]]:
         """
         return list(x) if isinstance(x, (list, tuple)) else [x]
     
-    def _expand_nested_ro(item: Dict) -> List[Dict]:
+    def _expand_nested_ro(item: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Expand nested relation-object pairs pattern.
         @details
             Detects patterns like:
@@ -133,7 +135,7 @@ def normalize_to_dict(data: Any, keys: List[str]) -> List[Dict[str, Any]]:
             return [item]  # No nesting, return as-is
         
         # Cartesian product: each subject × each r-o pair
-        results = []
+        results: List[Dict[str, Any]] = []
         for s in subjects:
             for pair in nested_pairs[0]:  # First nested list
                 r = pair.get("r") or pair.get("relation")
@@ -142,7 +144,7 @@ def normalize_to_dict(data: Any, keys: List[str]) -> List[Dict[str, Any]]:
                     results.append({"s": s, "r": r, "o": o})
         return results
     
-    def _expand_cartesian(item: Dict) -> List[Dict]:
+    def _expand_cartesian(item: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Expand list values into flat combinations.
         @details
             Handles three cases:
@@ -174,26 +176,18 @@ def normalize_to_dict(data: Any, keys: List[str]) -> List[Dict[str, Any]]:
             return [{"s": s, "r": r, "o": o} for s, r, o in zip(s_vals, r_vals, o_vals)]
         
         # Full cartesian product for mismatched lengths
-        results = []
+        results: List[Dict[str, Any]] = []
         for s in s_vals:
             for r in r_vals:
                 for o in o_vals:
                     results.append({"s": s, "r": r, "o": o})
         return results
     
-    # Parse input into list of dicts
-    if isinstance(data, str):
-        data = json.loads(data)
-    
-    if isinstance(data, list):
-        items = data
-    elif isinstance(data, dict):
-        items = [data]
-    else:
-        raise ValueError(f"Cannot normalize {type(data)}")
+    # Normalize input to list of dicts
+    items: List[Dict[str, Any]] = data if isinstance(data, list) else [data]
     
     # Expand each item
-    expanded = []
+    expanded: List[Dict[str, Any]] = []
     for item in items:
         # Try nested r-o expansion first
         nested = _expand_nested_ro(item)
@@ -215,6 +209,7 @@ def normalize_triples(data: Any) -> List[Tuple[str, str, str]]:
         - List subjects/objects for efficiency
         - Cartesian products of s/r/o lists
         Uses normalize_to_dict for structure parsing, then sanitizes values.
+        Accepts JSON strings or pre-parsed structures.
     @param data  Raw LLM output (JSON string, dict, or list)
     @return  List of sanitized (s, r, o) tuples ready for Neo4j
     @throws ValueError  If format cannot be parsed
@@ -253,11 +248,15 @@ def normalize_triples(data: Any) -> List[Tuple[str, str, str]]:
             rel = "RELATED_TO"
         return rel
     
+    # Parse JSON if needed
+    if isinstance(data, str):
+        data = json.loads(data)
+    
     # Normalize to list of dicts
     dicts = normalize_to_dict(data, ["s", "r", "o"])
     
     # Sanitize and filter
-    triples = []
+    triples: List[Tuple[str, str, str]] = []
     for d in dicts:
         s = _sanitize_node(d["s"])
         r = _sanitize_rel(d["r"])
