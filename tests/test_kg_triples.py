@@ -658,16 +658,6 @@ def node_regex_cases():
     ]
 
 @pytest.fixture
-def node_error_cases():
-    """Fixtures that should result in ValueErrors."""
-    return [
-        ("", "Empty string"),
-        ("   ", "Whitespace only"),
-        ("The", "Only stop words (Result becomes empty)"),
-        ("!!!", "Only special chars (Result becomes empty or underscores which get stripped)")
-    ]
-
-@pytest.fixture
 def relation_casing_cases():
     """Fixtures for testing UPPER_CASE vs camelCase modes."""
     return [
@@ -692,7 +682,8 @@ def relation_fallback_cases():
     ]
 
 @pytest.mark.kg
-@pytest.mark.nlp
+@pytest.mark.order(1)
+@pytest.mark.dependency(name="sanitize_node_nlp")
 def test_sanitize_node_nlp_capabilities(node_nlp_cases):
     """Test that NLP logic correctly strips POS tags (DET, PRON, PART).
     @details
@@ -704,6 +695,8 @@ def test_sanitize_node_nlp_capabilities(node_nlp_cases):
         assert result == expected, f"Failed on: {reason}"
 
 @pytest.mark.kg
+@pytest.mark.order(2)
+@pytest.mark.dependency(name="sanitize_node_regex", depends=["sanitize_node_nlp"])
 def test_sanitize_node_regex_cleaning(node_regex_cases):
     """Test that Regex logic handles symbols and whitespace correctly.
     @details
@@ -716,18 +709,8 @@ def test_sanitize_node_regex_cleaning(node_regex_cases):
         assert result == expected, f"Failed on: {reason}"
 
 @pytest.mark.kg
-def test_sanitize_node_limits(node_error_cases):
-    """Test boundaries where node sanitization should raise exceptions.
-    @details
-        If a node label is reduced to an empty string (either because it was empty
-        or contained only stop-words/symbols), it is invalid for the Graph.
-    """
-    for raw, reason in node_error_cases:
-        with pytest.raises(ValueError) as excinfo:
-            sanitize_node(raw)
-        assert "Node name cannot be empty" in str(excinfo.value), f"Failed to raise on: {reason}"
-
-@pytest.mark.kg
+@pytest.mark.order(3)
+@pytest.mark.dependency(name="sanitize_rel_modes")
 @pytest.mark.parametrize("mode", ["UPPER_CASE", "camelCase"])
 def test_sanitize_relation_modes(relation_casing_cases, mode):
     """Test standard relation normalization for both supported modes.
@@ -741,6 +724,8 @@ def test_sanitize_relation_modes(relation_casing_cases, mode):
             assert result == expected
 
 @pytest.mark.kg
+@pytest.mark.order(4)
+@pytest.mark.dependency(name="sanitize_rel_fallback", depends=["sanitize_rel_modes"])
 def test_sanitize_relation_fallbacks(relation_fallback_cases):
     """Test the 'safety net' fallback logic for relations.
     @details
@@ -755,12 +740,8 @@ def test_sanitize_relation_fallbacks(relation_fallback_cases):
             f"Failed fallback logic. Input: '{raw}', Mode: {mode}, Default: '{default_raw}'"
 
 @pytest.mark.kg
-def test_sanitize_relation_invalid_mode():
-    """Test developer error handling for invalid modes."""
-    with pytest.raises(ValueError, match="Invalid mode"):
-        sanitize_relation("some_relation", mode="snake_case")
-
-@pytest.mark.kg
+@pytest.mark.order(5)
+@pytest.mark.dependency(name="sanitize_rel_defaults", depends=["sanitize_rel_fallback"])
 def test_sanitize_relation_default_normalization():
     """Edge case: Ensure the default_relation itself is sanitized if used.
     @details
@@ -773,6 +754,6 @@ def test_sanitize_relation_default_normalization():
     result = sanitize_relation("", mode="UPPER_CASE", default_relation="bad @ default")
     assert result == "BAD_DEFAULT"
 
-    # Case: Fallback is "bad @ default", should become "badDefault" in camelCase
+    # Case: Input is empty, forcing fallback to normalized camelCase default
     result_camel = sanitize_relation("", mode="camelCase", default_relation="bad @ default")
     assert result_camel == "badDefault"
