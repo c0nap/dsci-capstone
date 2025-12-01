@@ -12,7 +12,6 @@ from src.connectors.base import Connector
 from typing import Any, List, Tuple, Dict
 from abc import ABC, abstractmethod
 
-
 class LLMConnector(Connector, ABC):
     """Connector for prompting and returning LLM output (raw text/JSON) via LLMs.
     @note  The method @ref src.connectors.llm.LLMConnector.execute_query simplifies the prompt process.
@@ -27,8 +26,7 @@ class LLMConnector(Connector, ABC):
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the prompt executed successfully.
         @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
-        self.check_connection(Log.test_ops, raise_error=True)
-        # TODO
+        return self.check_connection(Log.test_ops, raise_error=raise_error)
 
     def check_connection(self, log_source: str, raise_error: bool) -> bool:
         """Send a trivial prompt to verify LLM connectivity.
@@ -37,7 +35,10 @@ class LLMConnector(Connector, ABC):
         @return  Whether the prompt executed successfully.
         @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
         result = self.execute_full_query("You are a helpful assistant.", "ping")
-        return result.strip() == "pong"
+        success = result.strip().lower() == "pong"
+        if not success and raise_error:
+            raise Log.Failure(f"{log_source}: Connection check failed")
+        return success
 
     @abstractmethod
     def configure(self) -> None:
@@ -60,25 +61,25 @@ class LLMConnector(Connector, ABC):
         @param filename  Path to the prompt file (.txt)
         @return  Raw LLM response as a string."""
         with open(filename, "r", encoding="utf-8") as f:
-            content = f.read()
-        return self.execute_query(content)
+            return self.execute_query(f.read())
 
 
 class OpenAIConnector(LLMConnector):
     """Lightweight LLM interface for faster response times."""
 
-    def __init__(self, temperature: float = 0):
+    def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant."):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
-        load_dotenv(".env")
         self.temperature = temperature
-        self.system_prompt = "You are a helpful assistant."
-        self.model_name = os.environ.get("LLM_MODEL", "gpt-5-nano")
+        self.system_prompt = system_prompt
+        self.model_name = None
         self.client = None
         self.configure()
 
     def configure(self) -> None:
         """Initialize the OpenAI client."""
+        load_dotenv(".env")
+        self.model_name = os.environ["LLM_MODEL"]
         self.client = OpenAI()
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
@@ -86,7 +87,6 @@ class OpenAIConnector(LLMConnector):
         @param system_prompt  Instructions for the LLM.
         @param human_prompt  The user input or query.
         @return Raw LLM response as a string."""
-        self.system_prompt = system_prompt
         resp = self.client.chat.completions.create(
             model=self.model_name,
             messages=[
@@ -94,7 +94,7 @@ class OpenAIConnector(LLMConnector):
                 {"role": "user", "content": human_prompt},
             ],
             temperature=self.temperature,
-            timeout=30,  # short timeout for fast failure
+            timeout=30,
         )
         return resp.choices[0].message.content
 
@@ -105,11 +105,10 @@ class LangChainConnector(LLMConnector):
     def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant."):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
-        load_dotenv(".env")
-        self.model_name: str = None
-        self.temperature: float = temperature
-        self.system_prompt: str = system_prompt
-        self.llm: ChatOpenAI = None
+        self.temperature = temperature
+        self.system_prompt = system_prompt
+        self.model_name = None
+        self.llm = None
         self.configure()
 
     def configure(self) -> None:
@@ -118,12 +117,11 @@ class LangChainConnector(LLMConnector):
             Reads:
                 - OPENAI_API_KEY from .env for authentication
                 - LLM_MODEL and LLM_TEMPERATURE to override defaults"""
+        load_dotenv(".env")
         self.model_name = os.environ["LLM_MODEL"]
         self.llm = ChatOpenAI(
             model=self.model_name,
-            temperature=self.temperature,
-            max_retries=0,       # disable retries for speed
-            request_timeout=30,  # short timeout to prevent long hangs
+            temperature=self.temperature
         )
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
@@ -131,16 +129,13 @@ class LangChainConnector(LLMConnector):
         @param system_prompt  Instructions for the LLM.
         @param human_prompt  The user input or query.
         @return Raw LLM response as a string."""
-        self.system_prompt = system_prompt
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                SystemMessagePromptTemplate.from_template(system_prompt),
-                HumanMessagePromptTemplate.from_template(human_prompt),
-            ]
-        )
-        formatted_prompt = prompt.format_prompt()
-        response = self.llm.invoke(formatted_prompt.to_messages())
-        return str(response.content)
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            ("human", human_prompt),
+        ])
+        response = self.llm.invoke(prompt.format_messages())
+        return response.content
+
 
 
 
