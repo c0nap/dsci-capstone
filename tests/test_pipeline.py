@@ -169,7 +169,7 @@ def llm_edge_case_1():
         "llm_triples_json": (
             '[\n'
             '  {"s":"Cyril","r":"participant in","o":"rapture"},\n'
-            '  {"s":"Mother", [{"r":"mother","o":"Jane"}, {"r":"speaks","o":"Of course, dear."}],\n'
+            '  {"s":"Mother", "rels": [{"r":"mother","o":"Jane"}, {"r":"speaks","o":"Of course, dear."}]}\n'
             ']'
         ),
         "num_triples": 3,
@@ -182,7 +182,7 @@ def llm_edge_case_2():
         "llm_triples_json": (
             '[\n'
             '  {"s":"they","r":"said","o":"Oh!"},\n'
-            '  {"s":["Robert","Anthea"],"r":"held","o":"their breath"},\n'
+            '  {"s":["Robert","Anthea"],"r":"held","o":"their breath"}\n'
             ']'
         ),
         "num_triples": 3,
@@ -194,7 +194,7 @@ def llm_edge_case_3():
     return {
         "llm_triples_json": (
             '[\n'
-            '  {"s":["Robert","Anthea"],"r":["held","felt chilled by"],"o":["breath","the handle"]},\n'
+            '  {"s":["Robert","Anthea"],"r":["held","felt chilled by"],"o":["breath","the handle"]}\n'
             ']'
         ),
         "num_triples": 8,
@@ -206,7 +206,7 @@ def llm_edge_case_4():
     return {
         "llm_triples_json": (
             '[\n'
-            '  {"s":["Cyril","Jane"], [{"r":"feels","o":"cold"}, {"r":"is","o":"uncomfortable"}],\n'
+            '  {"s":["Cyril","Jane"], "rels": [{"r":"feels","o":"cold"}, {"r":"is","o":"uncomfortable"}]}\n'
             ']'
         ),
         "num_triples": 4,
