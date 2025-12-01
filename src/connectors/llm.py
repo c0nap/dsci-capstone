@@ -94,25 +94,36 @@ class LLMConnector(Connector):
         return self.execute_query(content)
 
 
+@staticmethod
 def normalize_to_dict(data: Any, keys: List[str]) -> List[Dict[str, Any]]:
     """Normalize nested/compacted LLM output into flat dicts.
-    
-    Handles token-saving patterns:
+    @details  Handles token-saving patterns:
     - Nested relation-object pairs: {"s":"X", [{"r":"R1","o":"O1"}, ...]}
     - List subjects with nested r-o: {"s":["X","Y"], [{"r":"R","o":"O"}, ...]}
     - Cartesian products: {"s":["X","Y"], "r":["R1","R2"], "o":["O1","O2"]}
-    
-    @param data  Raw LLM output (dict, list of dicts, etc.)
+    @param data  Raw LLM output (dict, list of dicts, or JSON string)
     @param keys  Expected keys (e.g., ["s", "r", "o"])
     @return  List of flat dicts with all keys present
+    @throws ValueError  If input format cannot be parsed
     """
     
     def _as_list(x: Any) -> List[Any]:
-        """Coerce to list for uniform handling."""
+        """Coerce value to list for uniform handling.
+        @param x  Any input value
+        @return  List containing x, or x itself if already a list/tuple
+        """
         return list(x) if isinstance(x, (list, tuple)) else [x]
     
     def _expand_nested_ro(item: Dict) -> List[Dict]:
-        """Expand {"s":"X", [{"r":"R","o":"O"}, ...]} pattern."""
+        """Expand nested relation-object pairs pattern.
+        @details
+            Detects patterns like:
+            - {"s":"X", [{"r":"R1","o":"O1"}, {"r":"R2","o":"O2"}]}
+            - {"s":["X","Y"], [{"r":"R","o":"O"}]}
+            Creates cartesian product of subjects × nested r-o pairs.
+        @param item  Single dict potentially containing nested r-o list
+        @return  List of expanded flat dicts, or [item] if no nesting found
+        """
         subjects = _as_list(item.get("s") or item.get("subject"))
         
         # Find nested r-o pairs (not under a key, just in the dict values)
@@ -132,7 +143,15 @@ def normalize_to_dict(data: Any, keys: List[str]) -> List[Dict[str, Any]]:
         return results
     
     def _expand_cartesian(item: Dict) -> List[Dict]:
-        """Expand {"s":[...], "r":[...], "o":[...]} into all combinations."""
+        """Expand list values into flat combinations.
+        @details
+            Handles three cases:
+            1. Same-length lists: zip them (parallel structure)
+            2. Single + multi-value: broadcast the single value
+            3. Multiple multi-values: full cartesian product
+        @param item  Dict with potentially list-valued s/r/o
+        @return  List of expanded flat dicts
+        """
         s_vals = _as_list(item.get("s") or item.get("subject"))
         r_vals = _as_list(item.get("r") or item.get("relation"))
         o_vals = _as_list(item.get("o") or item.get("object") or item.get("object_"))
@@ -190,19 +209,26 @@ def normalize_to_dict(data: Any, keys: List[str]) -> List[Dict[str, Any]]:
 @staticmethod
 def normalize_triples(data: Any) -> List[Tuple[str, str, str]]:
     """Normalize flexible LLM output into clean (subject, relation, object) triples.
-    
-    Handles token-saving patterns from LLMs:
-    - Nested relation-object pairs
-    - List subjects/objects for efficiency
-    - Cartesian products of s/r/o lists
-    
+    @details
+        Handles token-saving patterns from LLMs:
+        - Nested relation-object pairs
+        - List subjects/objects for efficiency
+        - Cartesian products of s/r/o lists
+        Uses normalize_to_dict for structure parsing, then sanitizes values.
     @param data  Raw LLM output (JSON string, dict, or list)
-    @return  List of sanitized (s, r, o) tuples
+    @return  List of sanitized (s, r, o) tuples ready for Neo4j
     @throws ValueError  If format cannot be parsed
     """
     
     def _sanitize_node(value: Any) -> str:
-        """Clean node name for Cypher safety."""
+        """Clean node name for Cypher safety.
+        @details
+            - Joins lists/tuples into single string
+            - Replaces invalid characters with underscores
+            - Trims leading/trailing underscores
+        @param value  Raw subject/object value
+        @return  Sanitized string suitable for node property
+        """
         if isinstance(value, (list, tuple)):
             value = " ".join(map(str, value))
         elif not isinstance(value, str):
@@ -210,7 +236,14 @@ def normalize_triples(data: Any) -> List[Tuple[str, str, str]]:
         return re.sub(r"[^A-Za-z0-9_ ]", "_", value).strip("_ ")
     
     def _sanitize_rel(value: Any) -> str:
-        """Clean and normalize relation label (UPPERCASE)."""
+        """Clean and normalize relation label.
+        @details
+            - Converts to UPPERCASE for Neo4j convention
+            - Replaces invalid characters with underscores
+            - Falls back to RELATED_TO if empty or invalid
+        @param value  Raw relation value
+        @return  Uppercase, underscore-safe relation label
+        """
         if isinstance(value, (list, tuple)):
             value = " ".join(map(str, value))
         elif not isinstance(value, str):
