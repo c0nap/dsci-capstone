@@ -190,18 +190,6 @@ def llm_edge_case_2():
 
 @pytest.fixture
 def llm_edge_case_3():
-    """Extreme nesting of subject, relation, object combinations."""
-    return {
-        "llm_triples_json": (
-            '[\n'
-            '  {"s":["Robert","Anthea"],"r":["held","felt chilled by"],"o":["breath","the handle"]}\n'
-            ']'
-        ),
-        "num_triples": 8,
-    }
-
-@pytest.fixture
-def llm_edge_case_4():
     """Combine subject: List[str] and relation-object: List[Dict[str, str]]"""
     return {
         "llm_triples_json": (
@@ -213,7 +201,7 @@ def llm_edge_case_4():
     }
 
 @pytest.fixture
-def llm_edge_case_5():
+def llm_edge_case_4():
     """Same-length lists are also parsable."""
     return {
         "llm_triples_json": (
@@ -224,6 +212,30 @@ def llm_edge_case_5():
             '}'
         ),
         "num_triples": 3,
+    }
+
+@pytest.fixture
+def llm_edge_case_5():
+    """Mismatched-length lists: inferred as Cartesian Product."""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":["Robert","Anthea","Cyril"],"r":["held","felt chilled by"],"o":["breath","the handle"]}\n'
+            ']'
+        ),
+        "num_triples": 12,
+    }
+
+@pytest.fixture
+def llm_edge_case_6():
+    """Matched-length lists: inferred as Columnar (Zip)."""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":["Robert","Anthea"],"r":["held","felt chilled by"],"o":["breath","the handle"]}\n'
+            ']'
+        ),
+        "num_triples": 2,
     }
 
 
