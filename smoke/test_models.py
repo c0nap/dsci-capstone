@@ -2,6 +2,8 @@ import pytest
 from src.components.book_conversion import Chunk
 from src.core.stages import *
 from src.main import pipeline_B, pipeline_D
+from conftest import optional_param
+from typing import List
 
 
 @pytest.fixture
@@ -69,6 +71,11 @@ def relation_extractor(request):
     """Meta-fixture that returns the backend function specified by the parameter."""
     return request.getfixturevalue(request.param)
 
+PARAMS_RELATION_EXTRACTORS: List[pytest.param] = [
+    optional_param("rebel", "transformers"),
+    optional_param("openie", "stanza"),
+    pytest.param("textacy"),     # test always runs (no dependency)
+]
 
 
 @pytest.mark.task
@@ -76,7 +83,7 @@ def relation_extractor(request):
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_minimal", scope="session")
-@pytest.mark.parametrize("relation_extractor", ["rebel", "openie", "textacy"], indirect=True)
+@pytest.mark.parametrize("relation_extractor", PARAMS_RELATION_EXTRACTORS, indirect=True)
 def test_job_12_extraction_minimal(relation_extractor):
     """Parametrized test to verify all extractors return a standard list of tuples.
     @note Relying on default args ensures REBEL returns tuples (parse_tuples=True).
@@ -98,7 +105,7 @@ def test_job_12_extraction_minimal(relation_extractor):
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_chunk", scope="session", depends=["job_12_extraction_minimal"])
-@pytest.mark.parametrize("relation_extractor", ["rebel", "openie", "textacy"], indirect=True)
+@pytest.mark.parametrize("relation_extractor", PARAMS_RELATION_EXTRACTORS, indirect=True)
 def test_job_12_extraction_chunk(book_data, relation_extractor):
     """Runs all extractors on realistic pipeline data in RAW mode.
     @details  Now validates that OpenIE/Textacy can produce stringified output consistent with REBEL.
@@ -120,7 +127,7 @@ def test_job_12_extraction_chunk(book_data, relation_extractor):
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_tuples", scope="session", depends=["job_12_extraction_chunk"])
-@pytest.mark.parametrize("relation_extractor", ["rebel", "openie", "textacy"], indirect=True)
+@pytest.mark.parametrize("relation_extractor", PARAMS_RELATION_EXTRACTORS, indirect=True)
 def test_job_12_extraction_tuples(book_data, relation_extractor):
     """Runs all extractors with tuple parsing on realistic data."""
     extracted = relation_extractor(book_data["chunk_text"], parse_tuples=True)
