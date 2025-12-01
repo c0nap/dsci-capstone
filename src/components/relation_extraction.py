@@ -227,9 +227,12 @@ class RelationExtractorTextacy(RelationExtractor):
         out = []
 
         # Extract SVO (Subject-Verb-Object)
-        # Textacy returns Spacy Spans/Tokens. Convert to .text strings immediately.
+        # SVO components are lists of tokens (e.g., [The, big, dog]), so we must join them.
         for svo in self.textacy.extract.subject_verb_object_triples(doc):
-            out.append((svo.subject.text, svo.verb.text, svo.object.text))
+            subj = " ".join([t.text for t in svo.subject])
+            verb = " ".join([t.text for t in svo.verb])
+            obj =  " ".join([t.text for t in svo.object])
+            out.append((subj, verb, obj))
             
         # Delegate to base helper if raw strings are requested
         return out if parse_tuples else self._format_triples_to_strings(out)
