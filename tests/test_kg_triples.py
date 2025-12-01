@@ -643,7 +643,12 @@ def node_nlp_cases():
         ("Door to Enter", "Door_Enter", "Remove Particle (PART) 'to' in node name"),
         ("walk to school", "walk_to_school", "Remove Particle (PART) 'to'"),
         ("A very big dog", "very_big_dog", "Remove 'A' (DET), keep Adverbs/Adj"),
-        ("The user and the system", "user_and_system", "Remove multiple DETs, keep CCONJ 'and'")
+        ("The user and the system", "user_and_system", "Remove multiple DETs, keep CCONJ 'and'"),
+        ("My own car", "own_car", "Remove Possessive Pronoun (PRON) 'My'"),
+        ("It is time", "is_time", "Remove Pronoun 'It', keep Verb 'is'"),
+        ("The 50% increase", "50_increase", "Handle symbols mixed with NLP (keep numbers)"),
+        ("tHE inconsistent Case", "inconsistent_Case", "Handle mixed-case stopwords"),
+        ("Give it to me", "Give", "Remove 'it' (PRON), 'to' (PART), 'me' (PRON) - leaving only Verb")
     ]
 
 @pytest.fixture
@@ -656,7 +661,13 @@ def node_regex_cases():
         ("Hello---World", "Hello_World", "Trim repeated inner special chars"),
         ("___Underscores___", "Underscores", "Trim leading/trailing underscores"),
         ("Node 123", "Node_123", "Allow numbers"),
-        ("C++ Developer", "C_Developer", "Handle special symbols like +")
+        ("C++ Developer", "C_Developer", "Handle special symbols like +"),
+        ("Line\nBreak", "Line_Break", "Handle newlines as separators"),
+        ("Tab\tSeparated", "Tab_Separated", "Handle tabs as separators"),
+        ("Café Name", "Caf_Name", "Strip non-ASCII (Accents) if regex is strict A-Z"),
+        ("Data (2024)", "Data_2024", "Handle parentheses/brackets"),
+        ("Rocket 🚀", "Rocket", "Strip Emojis"),
+        ("..Start..", "Start", "Trim leading/trailing dots if regex converts them to underscores")
     ]
 
 @pytest.fixture
@@ -670,6 +681,12 @@ def relation_casing_cases():
         ("has part", "camelCase", "relatedTo", "hasPart"),
         ("works_with", "camelCase", "relatedTo", "worksWith"),
         ("  messy  input  ", "UPPER_CASE", "RELATED_TO", "MESSY_INPUT"),
+        ("HTML Parser", "camelCase", "relatedTo", "htmlParser"), # Acronym handling
+        ("HTML Parser", "UPPER_CASE", "RELATED_TO", "HTML_PARSER"), # Acronym handling
+        ("already_snake_case", "UPPER_CASE", "RELATED_TO", "ALREADY_SNAKE_CASE"), # Idempotency check
+        ("alreadyCamelCase", "camelCase", "relatedTo", "alreadyCamelCase"), # Idempotency check
+        ("Is CEO Of", "UPPER_CASE", "RELATED_TO", "IS_CEO_OF"), # Stopwords in relations usually kept
+        ("Is CEO Of", "camelCase", "relatedTo", "isCeoOf")
     ]
 
 @pytest.fixture
@@ -681,6 +698,9 @@ def relation_fallback_cases():
         ("->", "UPPER_CASE", "generic_link", "GENERIC_LINK"),   # Special chars only -> fallback
         ("", "camelCase", "has_connection", "hasConnection"),   # Empty input -> fallback
         ("2nd_step", "camelCase", "backup", "backup"),          # Starts with number -> fallback
+        ("   ", "UPPER_CASE", "empty_space", "EMPTY_SPACE"), # Whitespace only -> Fallback
+        ("_internal", "UPPER_CASE", "private", "PRIVATE"), # Starts with underscore -> Fallback (if regex strips it to empty or invalid)
+        ("!!!", "camelCase", "bad_chars", "badChars") # Symbols only -> Fallback
     ]
 
 @pytest.mark.kg
