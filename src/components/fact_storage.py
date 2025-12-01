@@ -4,7 +4,9 @@ import re
 from src.connectors.graph import GraphConnector
 from src.util import Log
 from typing import Any, Dict, List, Optional, Tuple, TypedDict
+import spacy
 
+_nlp = None  # module-level cache for lazy-loaded NLP model (used by sanitize_node)
 
 class Triple(TypedDict):
     s: str
@@ -636,29 +638,35 @@ class KnowledgeGraph:
 
 
 
-def sanitize_node(value: Any) -> str:
+def sanitize_node(label: str) -> str:
     """Clean node name for Cypher safety.
     @details
         - Joins lists/tuples into single string
         - Replaces invalid characters with underscores
         - Trims leading/trailing underscores and spaces
         Used by KG systems before inserting nodes.
-    @param value  Raw node name (subject/object)
+    @param label  Raw node name (subject / object)
     @return  Sanitized string suitable for node property
     @throws ValueError  If result is empty after sanitization
     """
-    if isinstance(value, (list, tuple)):
-        value = " ".join(map(str, value))
-    elif not isinstance(value, str):
-        value = str(value)
+    # NLP-based cleaning: remove determiners, pronouns, particles
+    global _nlp
+    if _nlp is None:
+        _nlp = spacy.load("en_core_web_sm")
+    doc = _nlp(label)
+    tokens = [
+        token.text for token in doc 
+        if token.pos_ not in {"DET", "PRON", "PART"}  # determiners, pronouns, particles
+    ]
+    cleaned = " ".join(tokens)
     
-    sanitized = re.sub(r"[^A-Za-z0-9_ ]", "_", value).strip("_ ")
+    sanitized = re.sub(r"[^A-Za-z0-9_ ]", "_", cleaned).strip("_ ")
     if not sanitized:
-        raise ValueError(f"Node name cannot be empty after sanitization: {value}")
+        raise ValueError(f"Node name cannot be empty after sanitization: '{label}' -> '{label_clean}'")
     return sanitized
 
 
-def sanitize_relation(value: str, mode: str = "UPPER_CASE", default_relation: str = "RELATED_TO") -> str:
+def sanitize_relation(label: str, mode: str = "UPPER_CASE", default_relation: str = "RELATED_TO") -> str:
     """Clean and normalize relation label for knowledge graphs.
     @details
         Supports two output modes:
@@ -672,14 +680,14 @@ def sanitize_relation(value: str, mode: str = "UPPER_CASE", default_relation: st
         
         Relations must start with alphabetic character.
         Default relation is automatically normalized to match mode.
-    @param value  Raw relation value (string)
+    @param label  Raw relation label (string)
     @param mode  Output format: "UPPER_CASE" or "camelCase"
     @param default_relation  Fallback relation name (auto-normalized to mode)
     @return  Sanitized relation label in specified mode
     @throws ValueError  If mode is invalid
     """
     # Replace invalid chars, split on underscores/spaces for word extraction
-    cleaned = re.sub(r"[^A-Za-z0-9_ ]", "_", value)
+    cleaned = re.sub(r"[^A-Za-z0-9_ ]", "_", label)
     words = [w for w in re.split(r"[_ ]+", cleaned) if w]
     
     # Normalize default_relation according to mode
