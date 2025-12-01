@@ -640,9 +640,10 @@ def node_nlp_cases():
         # (input_label, expected_output, description)
         ("The Apple", "Apple", "Remove Determiner (DET) 'The'"),
         ("He runs", "runs", "Remove Pronoun (PRON) 'He'"),
-        ("walk to school", "walk school", "Remove Particle (PART) 'to'"),
-        ("A very big dog", "very big dog", "Remove 'A' (DET), keep Adverbs/Adj"),
-        ("The user and the system", "user and system", "Remove multiple DETs, keep CCONJ 'and'")
+        ("Door to Enter", "Door_Enter", "Remove Particle (PART) 'to' in node name"),
+        ("walk to school", "walk_to_school", "Remove Particle (PART) 'to'"),
+        ("A very big dog", "very_big_dog", "Remove 'A' (DET), keep Adverbs/Adj"),
+        ("The user and the system", "user_and_system", "Remove multiple DETs, keep CCONJ 'and'")
     ]
 
 @pytest.fixture
@@ -650,10 +651,11 @@ def node_regex_cases():
     """Fixtures focusing on Regex replacement and stripping."""
     return [
         ("User-Name", "User_Name", "Replace hyphen with underscore"),
-        ("User@Name!", "User_Name_", "Replace special chars, allow trailing underscore pre-strip"),
+        ("User@Name!", "User_Name", "Replace special chars, disallow trailing underscore"),
         ("  Spaces  ", "Spaces", "Trim whitespace"),
+        ("Hello---World", "Hello_World", "Trim repeated inner special chars"),
         ("___Underscores___", "Underscores", "Trim leading/trailing underscores"),
-        ("Node 123", "Node 123", "Allow numbers"),
+        ("Node 123", "Node_123", "Allow numbers"),
         ("C++ Developer", "C_Developer", "Handle special symbols like +")
     ]
 

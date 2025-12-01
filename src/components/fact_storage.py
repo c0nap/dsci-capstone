@@ -665,7 +665,8 @@ def sanitize_node(label: str) -> str:
     ]
     cleaned = " ".join(tokens)
     
-    sanitized = re.sub(r"[^A-Za-z0-9_ ]", "_", cleaned).strip("_ ")
+    # Regex: collapse consecutive non-alphanumeric to single underscore, strip edges
+    sanitized = re.sub(r"[^A-Za-z0-9]+", "_", cleaned).strip("_")
     if not sanitized:
         raise ValueError(f"Node name cannot be empty after sanitization: '{label}' -> '{label_clean}'")
     return sanitized
