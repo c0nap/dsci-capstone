@@ -8,7 +8,7 @@ from langchain_openai import ChatOpenAI
 import os
 import re
 from src.connectors.base import Connector
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Dict
 
 
 class LLMConnector(Connector):
@@ -95,7 +95,7 @@ class LLMConnector(Connector):
 
 
 @staticmethod
-def normalize_to_dict(data: Union[Dict[str, Any], List[Dict[str, Any]]], keys: List[str]) -> List[Dict[str, Any]]:
+def normalize_to_dict(data: Dict[str, Any] | List[Dict[str, Any]], keys: List[str]) -> List[Dict[str, Any]]:
     """Normalize nested/compacted LLM output into flat dicts.
     @details
         Handles token-saving patterns:

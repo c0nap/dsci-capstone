@@ -243,10 +243,10 @@ def task_14_relation_extraction_llm(triples_string, text):
 
 def task_15_sanitize_triples_llm(llm_output: str) -> str:
     with Log.timer():
-        # TODO: rely on robust LLM connector logic
+        # TODO: rely on robust LLM connector logic to assume json
         llm_output = json.loads(llm_output)
-        normalize_to_dict(llm_output)
-        json_triples = json.loads(llm_output)
+        # TODO: should LLM connector run sanitization internally?
+        json_triples = normalize_to_dict(llm_output, keys=["s", "r", "o"])
         return json_triples
 
 

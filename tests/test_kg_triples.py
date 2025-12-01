@@ -682,7 +682,7 @@ def relation_fallback_cases():
     ]
 
 @pytest.mark.kg
-@pytest.mark.order(1)
+@pytest.mark.order(51)
 @pytest.mark.dependency(name="sanitize_node_nlp")
 def test_sanitize_node_nlp_capabilities(node_nlp_cases):
     """Test that NLP logic correctly strips POS tags (DET, PRON, PART).
@@ -695,7 +695,7 @@ def test_sanitize_node_nlp_capabilities(node_nlp_cases):
         assert result == expected, f"Failed on: {reason}"
 
 @pytest.mark.kg
-@pytest.mark.order(2)
+@pytest.mark.order(52)
 @pytest.mark.dependency(name="sanitize_node_regex", depends=["sanitize_node_nlp"])
 def test_sanitize_node_regex_cleaning(node_regex_cases):
     """Test that Regex logic handles symbols and whitespace correctly.
@@ -709,7 +709,7 @@ def test_sanitize_node_regex_cleaning(node_regex_cases):
         assert result == expected, f"Failed on: {reason}"
 
 @pytest.mark.kg
-@pytest.mark.order(3)
+@pytest.mark.order(53)
 @pytest.mark.dependency(name="sanitize_rel_modes")
 @pytest.mark.parametrize("mode", ["UPPER_CASE", "camelCase"])
 def test_sanitize_relation_modes(relation_casing_cases, mode):
@@ -724,7 +724,7 @@ def test_sanitize_relation_modes(relation_casing_cases, mode):
             assert result == expected
 
 @pytest.mark.kg
-@pytest.mark.order(4)
+@pytest.mark.order(54)
 @pytest.mark.dependency(name="sanitize_rel_fallback", depends=["sanitize_rel_modes"])
 def test_sanitize_relation_fallbacks(relation_fallback_cases):
     """Test the 'safety net' fallback logic for relations.
@@ -740,7 +740,7 @@ def test_sanitize_relation_fallbacks(relation_fallback_cases):
             f"Failed fallback logic. Input: '{raw}', Mode: {mode}, Default: '{default_raw}'"
 
 @pytest.mark.kg
-@pytest.mark.order(5)
+@pytest.mark.order(55)
 @pytest.mark.dependency(name="sanitize_rel_defaults", depends=["sanitize_rel_fallback"])
 def test_sanitize_relation_default_normalization():
     """Edge case: Ensure the default_relation itself is sanitized if used.
