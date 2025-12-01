@@ -186,7 +186,7 @@ def task_12_relation_extraction_rebel(text, max_tokens=1024, parse_tuples=True):
         return extracted
 
 
-def task_12_relation_extraction_openie(text, memory='4G'):
+def task_12_relation_extraction_openie(text, memory='4G', parse_tuples=True):
     with Log.timer():
         from src.components.relation_extraction import RelationExtractorOpenIE
 
@@ -196,7 +196,7 @@ def task_12_relation_extraction_openie(text, memory='4G'):
         return extracted
 
 
-def task_12_relation_extraction_textacy(text):
+def task_12_relation_extraction_textacy(text, parse_tuples=True):
     with Log.timer():
         from src.components.relation_extraction import RelationExtractorTextacy
 

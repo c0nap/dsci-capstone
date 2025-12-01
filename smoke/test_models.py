@@ -80,6 +80,7 @@ PARAMS_RELATION_EXTRACTORS: List[pytest.param] = [
 
 @pytest.mark.task
 @pytest.mark.stage_B
+@pytest.mark.re
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_minimal", scope="session")
@@ -102,6 +103,7 @@ def test_job_12_extraction_minimal(relation_extractor):
 
 @pytest.mark.task
 @pytest.mark.stage_B
+@pytest.mark.re
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_chunk", scope="session", depends=["job_12_extraction_minimal"])
@@ -124,6 +126,7 @@ def test_job_12_extraction_chunk(book_data, relation_extractor):
 
 @pytest.mark.task
 @pytest.mark.stage_B
+@pytest.mark.re
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_tuples", scope="session", depends=["job_12_extraction_chunk"])
@@ -144,6 +147,7 @@ def test_job_12_extraction_tuples(book_data, relation_extractor):
 
 @pytest.mark.task
 @pytest.mark.stage_B
+@pytest.mark.llm
 @pytest.mark.smoke
 @pytest.mark.order(14)
 @pytest.mark.dependency(name="job_14_llm_minimal", scope="session")
