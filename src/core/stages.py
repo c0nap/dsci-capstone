@@ -3,7 +3,7 @@ import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from src.core.context import session
 from src.util import Log
-from src.components.LLMConnector import normalize_to_dict
+from src.connectors.llm import normalize_to_dict
 
 # unused?
 import traceback
