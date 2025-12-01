@@ -130,7 +130,10 @@ class RelationExtractorOpenIE(RelationExtractor):
         # 3. Download CoreNLP backend if not present (Automatic Setup)
         # This saves the jar files to ~/stanza_corenlp by default
         print("Ensuring CoreNLP backend is installed...")
-        self.stanza.install_corenlp()
+        install_dir = os.path.expanduser("~/stanza_corenlp")
+        if not os.path.exists(install_dir):
+            print("Installing CoreNLP backend...")
+            self.stanza.install_corenlp()
         
         self.memory = memory
 
