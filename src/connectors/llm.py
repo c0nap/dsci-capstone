@@ -5,7 +5,7 @@ from langchain_core.prompts import (
     SystemMessagePromptTemplate,
 )
 from langchain_openai import ChatOpenAI
-from openai import OpenAI
+from openai import OpenAI, BadRequestError
 import os
 import re
 from src.connectors.base import Connector
@@ -89,22 +89,33 @@ class OpenAIConnector(LLMConnector):
     def configure(self) -> None:
         """Initialize the OpenAI client."""
         self._load_env()
-        self.client = OpenAI(timeout=30.0)
+        self.client = OpenAI()
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
         """Send a single prompt using the OpenAI client directly for speed.
         @param system_prompt  Instructions for the LLM.
         @param human_prompt  The user input or query.
         @return Raw LLM response as a string."""
-        resp = self.client.chat.completions.create(
-            model=self.model_name,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": human_prompt},
-            ],
-            temperature=self.temperature,
-        )
-        return resp.choices[0].message.content
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": human_prompt},
+                ],
+                temperature=self.temperature,
+                reasoning_effort="minimal",
+            )
+        except BadRequestError:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": human_prompt},
+                ],
+                temperature=self.temperature,
+            )
+        return str(response.choices[0].message.content)
 
 
 class LangChainConnector(LLMConnector):
@@ -127,6 +138,7 @@ class LangChainConnector(LLMConnector):
         self.llm = ChatOpenAI(
             model=self.model_name,
             temperature=self.temperature,
+            reasoning = {"effort": "minimal"}
         )
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
@@ -138,8 +150,15 @@ class LangChainConnector(LLMConnector):
             ("system", system_prompt),
             ("human", human_prompt),
         ])
-        response = self.llm.invoke(prompt.format_messages())
-        return response.content
+        try:
+            response = self.llm.invoke(prompt.format_messages())
+        except BadRequestError:
+            self.llm = ChatOpenAI(
+                model=self.model_name,
+                temperature=self.temperature
+            )
+            response = self.llm.invoke(prompt.format_messages())
+        return str(response.content)
 
 
 
