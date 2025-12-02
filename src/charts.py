@@ -105,14 +105,15 @@ class Plot:
         
         # Plot bars going inward from center
         y_pos = range(len(merged))
-        ax.barh(y_pos, -merged['elapsed_left'], align='center', label='Dataset 1')
-        ax.barh(y_pos, merged['elapsed_right'], align='center', label='Dataset 2')
+        ax.barh(y_pos, -merged['elapsed_left'], align='center', label='Improved')
+        ax.barh(y_pos, merged['elapsed_right'], align='center', label='Original')
         
-        # Configure axes
+        # Configure axes with log scale to handle outliers
+        ax.set_xscale('symlog', linthresh=0.1)
         ax.set_yticks(y_pos)
         ax.set_yticklabels(merged['function'])
         ax.axvline(0, color='black', linewidth=0.8)
-        ax.set_xlabel("Average elapsed time")
+        ax.set_xlabel("Average elapsed seconds (log scale)")
         ax.set_title("Average Function Runtime Comparison")
         ax.legend()
         
