@@ -77,7 +77,7 @@ docker-start:
 	# remove the container if it exists; silence errors if it doesn’t
 	docker rm -f $(NAME) 2>/dev/null || true
 	# create container with optional args and entrypoint
-	docker create --name $(NAME) -p $(PORT) $(IMG) $(CMD)
+	docker create --name $(NAME) -p $(PORT) $(MEM) $(IMG) $(CMD)
 	# add a secondary network to container (docker compose compatible) and apply service_name as alias
 	make docker-network   # if does not exist
 	docker network connect --alias $(HOST) $(NETWORK) $(NAME)
@@ -96,7 +96,7 @@ docker-blazor:
 docker-questeval:
 	make docker-start NAME="container-qeval" IMG="dsci-cap-img-qeval-dev:latest" \
 		HOST="qeval_worker" NETWORK="capstone_default" PORT="5001:5001" \
-		DETACHED=$(DETACHED) CMD="$(CMD)"
+		MEM="--memory=8g" DETACHED=$(DETACHED) CMD="$(CMD)"
 docker-bookscore:
 	make docker-start NAME="container-bscore" IMG="dsci-cap-img-bscore-dev:latest" \
 		HOST="bscore_worker" NETWORK="capstone_default" PORT="5002:5002" \
