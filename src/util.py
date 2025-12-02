@@ -19,6 +19,9 @@ class Log:
     ## Print the entire DataFrame to console
     FULL_DF = False
 
+    _timing_results: List[Tuple[str, float, str, int]] = []  # (func_name, elapsed, call_chain, run_id)
+    run_id: int = 1
+
     ## ANSI code for green text
     GREEN = "\033[32m"
     ## ANSI code for red text
@@ -284,8 +287,7 @@ class Log:
             elapsed = time.time() - start  # Data recorded even on failure
             Log.elapsed_time(name, elapsed, call_chain)
 
-    _timing_results: List[Tuple[str, float, str, int]] = []  # (func_name, elapsed, call_chain, run_id)
-    run_id: int = 1
+    
 
     @staticmethod
     def get_timing_summary() -> DataFrame:
