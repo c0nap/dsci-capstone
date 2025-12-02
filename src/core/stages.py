@@ -276,6 +276,15 @@ def task_15_sanitize_triples_llm(llm_output: str) -> str:
         return norm_triples
 
 
+def task_16_moderate_triples_llm(triples: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """Filter offensive content from literary triples.
+    @param triples  Normalized triples in JSON format.
+    @return Safe triples for knowledge graph insertion."""
+    with Log.timer():
+        from src.connectors.llm import moderate_triples
+        return moderate_triples(triples)
+
+
 # PIPELINE STAGE C - ENRICHMENT / TRIPLES -> GRAPH
 def task_20_send_triples(triples):
     with Log.timer():

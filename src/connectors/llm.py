@@ -276,3 +276,54 @@ def normalize_to_dict(data: Dict[str, Any] | List[Dict[str, Any]], keys: List[st
     
     return expanded
 
+
+def moderate_texts(texts: List[str]) -> List[bool]:
+    """Check if texts contain offensive content using OpenAI moderation API.
+    @param texts  List of text strings to moderate.
+    @return List of booleans - True if safe, False if flagged.
+    """
+    from openai import OpenAI
+    
+    if not texts:
+        return []
+    
+    load_dotenv()
+    client = OpenAI()
+    batch_size = 32  # OpenAI's max per request
+    safe_flags = []
+    
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i + batch_size]
+        
+        try:
+            response = client.moderations.create(input=batch)
+            
+            # Focus on hate/harassment for old fiction content
+            for result in response.results:
+                is_safe = not (result.categories.hate or 
+                               result.categories.harassment)
+                safe_flags.append(is_safe)
+                
+        except Exception as e:
+            Log.warning(f"Moderation API failed: {e}, marking batch as safe")
+            safe_flags.extend([True] * len(batch))
+    
+    return safe_flags
+
+
+def moderate_triples(triples: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """Filter triples containing offensive content.
+    @param triples  List of dicts with 's', 'r', 'o' keys.
+    @return Filtered list of safe triples.
+    """
+    texts = [f"{t['s']} {t['r']} {t['o']}" for t in triples]
+    safe_flags = moderate_texts(texts)
+    
+    safe_triples = [t for t, is_safe in zip(triples, safe_flags) if is_safe]
+    
+    filtered_count = len(triples) - len(safe_triples)
+    Log.info(f"Moderation: filtered {filtered_count}/{len(triples)} triples")
+    
+    return safe_triples
+
+

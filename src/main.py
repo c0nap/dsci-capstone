@@ -57,6 +57,7 @@ def pipeline_B(collection_name, chunks, book_title):
     print("\n" + "=" * 50 + "\n")
 
     triples = stages.task_15_sanitize_triples_llm(llm_output)
+    triples = stages.task_16_moderate_triples_llm(triples)
     print("\nValid JSON")
     return triples, c
 
