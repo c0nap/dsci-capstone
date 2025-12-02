@@ -4,7 +4,6 @@ import inspect
 from inspect import FrameInfo
 import os
 from pandas import concat, DataFrame, read_csv, Series
-from pandas.errors import EmptyDataError
 import sys
 import time
 from typing import Any, Callable, Generator, List, Optional, Tuple
@@ -315,7 +314,7 @@ class Log:
             existing_df = read_csv(file_path)
             # Remove rows with the current run_id
             existing_df = existing_df[existing_df['run_id'] != Log.run_id]
-        except EmptyDataError:
+        except:
             return current_df
         # Merge existing with current
         merged_df = concat([existing_df, current_df], ignore_index=True)

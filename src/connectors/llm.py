@@ -11,6 +11,7 @@ import re
 from src.connectors.base import Connector
 from typing import Any, List, Tuple, Dict
 from abc import ABC, abstractmethod
+from src.util import Log
 
 class LLMConnector(Connector, ABC):
     """Connector for prompting and returning LLM output (raw text/JSON) via LLMs.
@@ -305,7 +306,7 @@ def moderate_texts(texts: List[str]) -> List[bool]:
                 safe_flags.append(is_safe)
                 
         except Exception as e:
-            Log.warning(f"Moderation API failed: {e}, marking batch as safe")
+            Log.warn(f"Moderation API failed: {e}, marking batch as safe")
             safe_flags.extend([True] * len(batch))
     
     return safe_flags
@@ -322,7 +323,7 @@ def moderate_triples(triples: List[Dict[str, str]]) -> List[Dict[str, str]]:
     safe_triples = [t for t, is_safe in zip(triples, safe_flags) if is_safe]
     
     filtered_count = len(triples) - len(safe_triples)
-    Log.info(f"Moderation: filtered {filtered_count}/{len(triples)} triples")
+    Log.success(f"Moderation: filtered {filtered_count}/{len(triples)} triples")
     
     return safe_triples
 

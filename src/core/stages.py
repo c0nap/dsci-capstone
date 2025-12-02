@@ -7,7 +7,7 @@ from src.connectors.llm import normalize_to_dict, clean_json_block
 
 # unused?
 import traceback
-from typing import Optional
+from typing import Optional, List, Dict
 
 
 ### Will revisit later - Book classes need refactoring ###
