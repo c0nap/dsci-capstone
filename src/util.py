@@ -19,6 +19,9 @@ class Log:
     ## Print the entire DataFrame to console
     FULL_DF = False
 
+    _timing_results: List[Tuple[str, float, str, int]] = []  # (func_name, elapsed, call_chain, run_id)
+    run_id: int = 1
+
     ## ANSI code for green text
     GREEN = "\033[32m"
     ## ANSI code for red text
@@ -284,8 +287,7 @@ class Log:
             elapsed = time.time() - start  # Data recorded even on failure
             Log.elapsed_time(name, elapsed, call_chain)
 
-    _timing_results: List[Tuple[str, float, str, int]] = []  # (func_name, elapsed, call_chain, run_id)
-    run_id: int = 1
+    
 
     @staticmethod
     def get_timing_summary() -> DataFrame:
@@ -306,14 +308,14 @@ class Log:
         current_df = Log.get_timing_summary()
 
         # Read existing file if it exists
-        if os.path.exists(file_path):
+        if not os.path.exists(file_path):
+            return current_df
+        try:
             existing_df = read_csv(file_path)
             # Remove rows with the current run_id
             existing_df = existing_df[existing_df['run_id'] != Log.run_id]
-        else:
-            # No file yet
-            existing_df = DataFrame(columns=['function', 'elapsed', 'call_chain', "run_id"])
-
+        except:
+            return current_df
         # Merge existing with current
         merged_df = concat([existing_df, current_df], ignore_index=True)
         return merged_df
@@ -326,11 +328,16 @@ class Log:
         """
         # Ensure directory exists
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        # Check if file exists to decide whether to write header
-        file_exists = os.path.exists(file_path)
+        # Check if header exists by reading first line
+        header_exists = False
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                first_line = f.readline().strip()
+                # Check if first line contains expected column names
+                header_exists = bool(first_line and not first_line[0].isdigit())
 
         df = Log.get_merged_timing()
-        df.to_csv(file_path, mode="a", index=False, header=not file_exists)
+        df.to_csv(file_path, mode="a", index=False, header=not header_exists)
         Log.time_message(prefix=Log.t_dump, msg=Log.msg_time_dump(file_path))
 
     t_dump = "[DUMP] "
