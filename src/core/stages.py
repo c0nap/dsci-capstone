@@ -222,7 +222,7 @@ def task_14_relation_extraction_llm_langchain(triples_string, text):
 
         # TODO: move to session.llm
         llm = LangChainConnector(
-            temperature=0,
+            temperature=1,  # gpt-5-nano only supports temperature 1
             system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
         )
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
@@ -314,14 +314,30 @@ def task_22_verbalize_triples(mode="triple"):
 
 
 # PIPELINE STAGE D - CONSOLIDATE / GRAPH -> SUMMARY
-def task_30_summarize_llm(triples_string):
+def task_30_summarize_llm_langchain(triples_string):
     """Prompt LLM to generate summary"""
     with Log.timer():
-        from src.connectors.llm import LLMConnector
+        from src.connectors.llm import LangChainConnector
 
         # TODO: move to session.llm
-        llm = LLMConnector(
-            temperature=0,
+        llm = LangChainConnector(
+            temperature=1,  # gpt-5-nano only supports temperature 1
+            system_prompt="You are a helpful assistant that processes semantic triples.",
+        )
+        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+        prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
+        prompt += "Output your generated summary and nothing else."
+        summary = llm.execute_query(prompt)
+        return (prompt, summary)
+
+def task_30_summarize_llm_openai(triples_string):
+    """Prompt LLM to generate summary"""
+    with Log.timer():
+        from src.connectors.llm import OpenAIConnector
+
+        # TODO: move to session.llm
+        llm = OpenAIConnector(
+            temperature=1,  # gpt-5-nano only supports temperature 1
             system_prompt="You are a helpful assistant that processes semantic triples.",
         )
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"

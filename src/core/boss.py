@@ -14,6 +14,7 @@ import threading
 import time
 from datetime import datetime
 from typing import Any, Dict, Generator, List, Optional, Tuple
+from src.util import Log
 
 
 MongoHandle = Generator["Database[Any]", None, None]
@@ -183,11 +184,14 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             return any(story_chunks[task_type] == 'failed')
 
     def record_elapsed_time(chunk_id: str, task: str) -> Optional[float]:
-        if Log.RECORD_TIME:
-            elapsed = time.time() - get_task_start_time(chunk_id, task)
-            Log.elapsed_time(f"worker_{task}", elapsed, chunk_id)
-            return elapsed
-        return None
+        if not Log.RECORD_TIME:
+            return None
+        start = get_task_start_time(chunk_id, task)
+        if start is None:
+            return None
+        elapsed = time.time() - start
+        Log.elapsed_time(f"worker_{task}", elapsed, chunk_id)
+        return elapsed
 
     def get_task_start_time(chunk_id: str, task: str) -> Optional[float]:
         """Get the start timestamp for a given chunk and started task.
@@ -196,7 +200,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         @param task Task name (extraction, load_to_mongo, etc.).
         @return: Timestamp converted to epoch seconds (float), or None if not started or not found."""
         with tracker_lock:
-            chunk_status = chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, 'task']
+            chunk_status = chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, f'{task}']
             if chunk_status.empty:
                 return None
 
@@ -218,12 +222,12 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         @return: Elapsed seconds as float, or None if not completed or not found.
         """
         with tracker_lock:
-            chunk_status = chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, 'task']
+            chunk_status = chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, f'{task}']
             if chunk_status.empty:
                 return None
     
             status = chunk_status.iloc[0]  # e.g., "completed, 0.23495"
-            if 'completed,' not in status and 'failed,' not in status::
+            if 'completed,' not in status and 'failed,' not in status:
                 return None
     
             # Extract float seconds
@@ -334,7 +338,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
         # Map task to chunk-level task name
         task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
-        chunk_task = task_mapping.get(task, task)
+        chunk_task = task_mapping[task]
 
         # Handle different status types
         if status == "started":
