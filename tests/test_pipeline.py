@@ -458,7 +458,7 @@ def test_job_21_describe_graph(main_graph, book_data):
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
     task_20_send_triples(triples_json)
 
-    edge_count_df = group_21_1_describe_graph()
+    edge_count_df = task_21_1_describe_graph()
 
     assert isinstance(edge_count_df, DataFrame)
     assert "node_name" in edge_count_df.columns

@@ -285,7 +285,7 @@ def task_20_send_triples(triples):
 # TODO: 20 -> B
 
 
-def group_21_1_describe_graph(top_n=3):
+def task_21_1_describe_graph(top_n=3):
     with Log.timer():
         edge_count_df = session.main_graph.get_edge_counts(top_n)
         edge_count_df = session.main_graph.find_element_names(edge_count_df, ["node_name"], ["node_id"], "node", "name", drop_ids=True)
@@ -293,13 +293,13 @@ def group_21_1_describe_graph(top_n=3):
         return edge_count_df
 
 
-def group_21_2_send_statistics():
+def task_21_2_send_statistics():
     with Log.timer():
         # TODO: upload to mongo
         pass
 
 
-def group_21_3_post_statistics():
+def task_21_3_post_statistics():
     with Log.timer():
         # TODO: notify blazor
         pass
