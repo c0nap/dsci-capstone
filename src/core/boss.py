@@ -386,6 +386,10 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
                     print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")
 
+                    Log.print_timing_summary()
+                    Log.dump_timing_csv()
+                    Plot.time_elapsed_by_names()
+
         elif "failed" in status:
             # Update chunk status to failed
             print(f"[WARNING] Task {task} failed for chunk {chunk_id}")
