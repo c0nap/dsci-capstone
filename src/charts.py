@@ -70,6 +70,7 @@ class Plot:
         csv1: str = None,
         csv2: str = None,
         only_pipeline: Optional[bool] = None,
+        log_scale: bool = False,
     ) -> None:
         """Plot average elapsed time per function name from two CSV files as mirrored horizontal bars.
         @param filename  Where to save the generated chart
@@ -109,11 +110,15 @@ class Plot:
         ax.barh(y_pos, merged['elapsed_right'], align='center', label='Original')
         
         # Configure axes with log scale to handle outliers
-        ax.set_xscale('symlog', linthresh=0.1)
+        if log_scale:
+            ax.set_xscale('symlog', linthresh=1.0)
         ax.set_yticks(y_pos)
         ax.set_yticklabels(merged['function'])
         ax.axvline(0, color='black', linewidth=0.8)
-        ax.set_xlabel("Average elapsed seconds (log scale)")
+        if log_scale:
+            ax.set_xlabel("Average elapsed seconds (log scale)")
+        else:
+            ax.set_xlabel("Average elapsed time (seconds)")
         ax.set_title("Average Function Runtime Comparison")
         ax.legend()
         
@@ -140,6 +145,7 @@ if __name__ == "__main__":
         filename=args.output,
         csv1=args.csv1,
         csv2=args.csv2,
-        only_pipeline=False
+        only_pipeline=False,
+        log_scale=True
     )
 
