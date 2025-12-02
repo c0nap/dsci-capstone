@@ -71,6 +71,7 @@ class Plot:
         csv2: str = None,
         only_pipeline: Optional[bool] = None,
         log_scale: bool = False,
+        cap_outliers: float = 0,
     ) -> None:
         """Plot average elapsed time per function name from two CSV files as mirrored horizontal bars.
         @param filename  Where to save the generated chart
@@ -97,7 +98,7 @@ class Plot:
         if only_pipeline is not None:
             avg1 = process_df(df1, only_pipeline)
             avg2 = process_df(df2, only_pipeline)
-        
+
         # Merge on function names to align bars
         merged = pd.merge(avg1, avg2, on='function', suffixes=('_left', '_right'))
         
@@ -112,6 +113,9 @@ class Plot:
         # Configure axes with log scale to handle outliers
         if log_scale:
             ax.set_xscale('symlog', linthresh=1.0)
+        if cap_outliers > 0:
+            max_val = merged[['elapsed_left', 'elapsed_right']].quantile(1 - cap_outliers).max()
+            ax.set_xlim(-max_val, max_val)  # cuts off top 5%
         ax.set_yticks(y_pos)
         ax.set_yticklabels(merged['function'])
         ax.axvline(0, color='black', linewidth=0.8)
@@ -146,6 +150,7 @@ if __name__ == "__main__":
         csv1=args.csv1,
         csv2=args.csv2,
         only_pipeline=False,
-        log_scale=True
+        log_scale=False,
+        cap_outliers=0.06
     )
 
