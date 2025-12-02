@@ -65,7 +65,7 @@ class Plot:
 
 
     @staticmethod
-    def time_elapsed_comparison_tasks(
+    def time_elapsed_comparison(
         filename: str = "./logs/charts/runtime_comparison.png",
         csv1: str = None,
         csv2: str = None,
@@ -93,9 +93,9 @@ class Plot:
             per_run_avg = df.groupby(['run_id', 'function'])['elapsed'].mean().reset_index()
             return per_run_avg.groupby('function')['elapsed'].mean().reset_index()
         
-        if allow_pipeline is not None:
-            avg1 = process_df(df1, allow_pipeline)
-            avg2 = process_df(df2, allow_pipeline)
+        if only_pipeline is not None:
+            avg1 = process_df(df1, only_pipeline)
+            avg2 = process_df(df2, only_pipeline)
         
         # Merge on function names to align bars
         merged = pd.merge(avg1, avg2, on='function', suffixes=('_left', '_right'))

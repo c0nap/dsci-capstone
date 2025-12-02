@@ -328,11 +328,16 @@ class Log:
         """
         # Ensure directory exists
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        # Check if file exists to decide whether to write header
-        file_exists = os.path.exists(file_path)
+        # Check if header exists by reading first line
+        header_exists = False
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as f:
+                first_line = f.readline().strip()
+                # Check if first line contains expected column names
+                header_exists = bool(first_line and not first_line[0].isdigit())
 
         df = Log.get_merged_timing()
-        df.to_csv(file_path, mode="a", index=False, header=not file_exists)
+        df.to_csv(file_path, mode="a", index=False, header=not header_exists)
         Log.time_message(prefix=Log.t_dump, msg=Log.msg_time_dump(file_path))
 
     t_dump = "[DUMP] "
