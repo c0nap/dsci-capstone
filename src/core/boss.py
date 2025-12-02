@@ -15,6 +15,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, Generator, List, Optional, Tuple
 from src.util import Log
+from src.charts import Plot
 
 
 MongoHandle = Generator["Database[Any]", None, None]
@@ -109,7 +110,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         """Update story-level task status. Auto-initializes with pending if not exists.
         @param story_id Unique identifier for the story.
         @param task Task name (preprocessing, chunking, summarization, metrics).
-        @param status Status (pending, assigned, in-progress, completed)."""
+        @param status Status (pending, assigned, started, completed)."""
         nonlocal story_tracker
         with tracker_lock:
             if story_id not in story_tracker['story_id'].values:
@@ -128,7 +129,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         @param chunk_id Unique identifier for the chunk.
         @param story_id Unique identifier for the story.
         @param task Task name (extraction, load_to_mongo, etc.).
-        @param status Status (pending, assigned, in-progress, completed, failed)."""
+        @param status Status (pending, assigned, started, completed, failed)."""
         nonlocal chunk_tracker
         with tracker_lock:
             if chunk_id not in chunk_tracker['chunk_id'].values:
@@ -155,7 +156,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
             # If starting a new task, append timestamp
             if Log.RECORD_TIME and status == 'started':
-                status = f"started, {time.time()}"
+                status = f"started, {datetime.now().isoformat()}"
 
             # Update specific task status
             chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, task] = status
@@ -342,22 +343,26 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
         # Handle different status types
         if "started" in status:
-            # Update chunk status to in-progress
-            update_chunk_status(chunk_id, story_id, chunk_task, 'in-progress')
+            # Update chunk status to started
+            update_chunk_status(chunk_id, story_id, chunk_task, 'started')
 
-            # Update story status to in-progress if not already
-            update_story_status(story_id, 'metrics', 'in-progress')
+            # Update story status to started if not already
+            update_story_status(story_id, 'metrics', 'started')
 
         elif "completed" in status:
             # Update chunk status to completed
             seconds = record_elapsed_time(chunk_id, chunk_task)
             update_chunk_status(chunk_id, story_id, chunk_task, 'completed')
             if seconds:
-                set_elapsed_time(chunk_id, chunk_task, seconds)
+                set_elapsed_time(chunk_id, chunk_task, seconds, 'completed')
 
             # Check if all chunks for this story completed this task
             if check_story_completion(story_id, chunk_task):
                 print(f"[STORY COMPLETE] All chunks completed {chunk_task} for story {story_id}")
+
+                Log.print_timing_summary()
+                Log.dump_timing_csv()
+                Plot.time_elapsed_by_names()
 
                 # Check if all metric tasks are complete for the story
                 all_metrics_complete = all(
@@ -387,7 +392,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             seconds = record_elapsed_time(chunk_id, chunk_task)
             update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
             if seconds:
-                set_elapsed_time(chunk_id, chunk_task, seconds)
+                set_elapsed_time(chunk_id, chunk_task, seconds, 'failed')
 
             # Check if we should mark the story-level task as failed
             if check_story_failure(story_id, chunk_task):
@@ -559,7 +564,7 @@ def post_story_status(boss_port: int, story_id: int, task: str, status: str) -> 
     @param boss_port Port the boss microservice is running on.
     @param story_id Unique identifier for the story.
     @param task Task name (extraction, load_to_mongo, etc.).
-    @param status Status (pending, assigned, in-progress, completed, failed).
+    @param status Status (pending, assigned, started, completed, failed).
     @return JSON response indicating success or failure."""
     return requests.post(f'http://localhost:{boss_port}/status/story', json={'story_id': story_id, 'task': task, 'status': status})
 
@@ -570,7 +575,7 @@ def post_chunk_status(boss_port: int, chunk_id: str, story_id: int, task: str, s
     @param chunk_id Unique identifier for the chunk.
     @param story_id Unique identifier for the story.
     @param task Task name (extraction, load_to_mongo, etc.).
-    @param status Status (pending, assigned, in-progress, completed, failed).
+    @param status Status (pending, assigned, started, completed, failed).
     @return JSON response indicating success or failure."""
     return requests.post(
         f'http://localhost:{boss_port}/status/chunk', json={'story_id': story_id, "chunk_id": chunk_id, 'task': task, 'status': status}

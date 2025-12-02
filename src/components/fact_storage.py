@@ -46,7 +46,7 @@ class KnowledgeGraph:
 
         # Normalize already-cleaned inputs for extra Cypher safety
         if not subject or not relation or not object_:
-            Log.warn(Log.kg, f"Invalid triple: ({subject})-[:{relation}]->({object_})", verbose)
+            Log.warn(Log.kg, f"Invalid triple: ({subject})-[:{relation}]->({object_})", self.verbose)
             return
         relation = sanitize_relation(relation)
         subject = sanitize_node(subject)
