@@ -157,6 +157,88 @@ def book_2_data():
     }
 
 
+@pytest.fixture
+def llm_data(request):
+    """Realistic or malformed LLM response edge cases."""
+    return request.getfixturevalue(request.param)
+
+@pytest.fixture
+def llm_edge_case_1():
+    """Save tokens by reusing the original subject."""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":"Cyril","r":"participant in","o":"rapture"},\n'
+            '  {"s":"Mother", "rels": [{"r":"mother","o":"Jane"}, {"r":"speaks","o":"Of course, dear."}]}\n'
+            ']'
+        ),
+        "num_triples": 3,
+    }
+
+@pytest.fixture
+def llm_edge_case_2():
+    """Save tokens by providing multiple subjects."""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":"they","r":"said","o":"Oh!"},\n'
+            '  {"s":["Robert","Anthea"],"r":"held","o":"their breath"}\n'
+            ']'
+        ),
+        "num_triples": 3,
+    }
+
+@pytest.fixture
+def llm_edge_case_3():
+    """Combine subject: List[str] and relation-object: List[Dict[str, str]]"""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":["Cyril","Jane"], "rels": [{"r":"feels","o":"cold"}, {"r":"is","o":"uncomfortable"}]}\n'
+            ']'
+        ),
+        "num_triples": 4,
+    }
+
+@pytest.fixture
+def llm_edge_case_4():
+    """Same-length lists are also parsable."""
+    return {
+        "llm_triples_json": (
+            '{\n'
+            '  "s": ["egg","Cyril","Phoenix"],\n'
+            '  "r": ["location","speaks","speaks"],\n'
+            '  "o": ["altar","Oh","Ah, hum!"]\n'
+            '}'
+        ),
+        "num_triples": 3,
+    }
+
+@pytest.fixture
+def llm_edge_case_5():
+    """Mismatched-length lists: inferred as Cartesian Product."""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":["Robert","Anthea","Cyril"],"r":["held","felt chilled by"],"o":["breath","the handle"]}\n'
+            ']'
+        ),
+        "num_triples": 12,
+    }
+
+@pytest.fixture
+def llm_edge_case_6():
+    """Matched-length lists: inferred as Columnar (Zip)."""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":["Robert","Anthea"],"r":["held","felt chilled by"],"o":["breath","the handle"]}\n'
+            ']'
+        ),
+        "num_triples": 2,
+    }
+
+
 ##########################################################################
 # Tests
 ##########################################################################
@@ -297,6 +379,7 @@ def test_job_13_concatenate_triples(book_data):
 
 @pytest.mark.task
 @pytest.mark.stage_B
+@pytest.mark.llm
 @pytest.mark.order(15)
 @pytest.mark.dependency(name="job_15_minimal", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
@@ -319,16 +402,28 @@ def test_job_15_sanitize_triples_llm(book_data):
         assert isinstance(triple["o"], str) and len(triple["o"]) > 0
 
 
-# @pytest.mark.task
-# @pytest.mark.stage_B
-# @pytest.mark.order(15)
-# @pytest.mark.dependency(name="task_15_comprehensive", scope="session", depends=["job_15_minimal"])
-# def test_job_15_comprehensive(book_data):
-#     """Test parsing realistic LLM JSON output."""
-#     triples = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
+@pytest.mark.task
+@pytest.mark.stage_B
+@pytest.mark.llm
+@pytest.mark.order(16)
+@pytest.mark.dependency(name="job_15_comprehensive", scope="session", depends=["job_15_minimal"])
+@pytest.mark.parametrize("llm_data", ["llm_edge_case_1", "llm_edge_case_2", "llm_edge_case_3", "llm_edge_case_4", "llm_edge_case_5"], indirect=True)
+def test_job_15_comprehensive(llm_data):
+    """Test parsing malformed LLM output."""
+    llm_output = llm_data["llm_triples_json"]
+    num_triples = llm_data["num_triples"]
+    triples = task_15_sanitize_triples_llm(llm_output)
 
-#     # TODO - normalize_triples with malformed llm output
-#     pass
+    assert isinstance(triples, list)
+    assert len(triples) == num_triples  # Matches fixture data
+    # Verify structure: each triple has s, r, o keys
+    for triple in triples:
+        assert "s" in triple
+        assert "r" in triple
+        assert "o" in triple
+        assert isinstance(triple["s"], str) and len(triple["s"]) > 0
+        assert isinstance(triple["r"], str) and len(triple["r"]) > 0
+        assert isinstance(triple["o"], str) and len(triple["o"]) > 0
 
 
 @pytest.mark.task

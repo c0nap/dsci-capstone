@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from dotenv import load_dotenv
 from neo4j.graph import Node, Relationship
-from neomodel import config, db
+from neomodel import db, get_config
 import os
 from pandas import DataFrame, Series
 import re
@@ -26,7 +26,8 @@ class GraphConnector(DatabaseConnector):
         database = os.environ["DB_NAME"]
         super().configure("NEO4J", database)
         # Connect neomodel - URL never needs to change for Neo4j
-        config.DATABASE_URL = self.connection_string
+        config = get_config()
+        config.database_url = self.connection_string
 
         ## The name of a graph in the database; keeps queries short and readable, and matches the `kg` node property.
         self._graph_name: Optional[str] = "default"

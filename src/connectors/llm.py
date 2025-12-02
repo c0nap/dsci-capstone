@@ -8,15 +8,16 @@ from langchain_openai import ChatOpenAI
 import os
 import re
 from src.connectors.base import Connector
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Dict
 
 
 class LLMConnector(Connector):
     """Connector for prompting and returning LLM output (raw text/JSON) via LangChain.
     @note  The method @ref src.connectors.llm.LLMConnector.execute_query simplifies the prompt process.
+    @details  To implement various configurations, either set properties directly or create another LLMConnector instance.
+        Useful config options: temperature, system_prompt, llm, model_name.
+        We prefer creating a separate wrapper instance for reusable hard-coded configurations.
     """
-
-    # TODO: we may want various models with different configurations
 
     def __init__(
         self,
@@ -92,90 +93,109 @@ class LLMConnector(Connector):
             content = f.read()
         return self.execute_query(content)
 
-    # TODO: Generalize this - normalize_to_dict(keys=["s","r","o"])
-    @staticmethod
-    def normalize_triples(data: Any) -> List[Tuple[str, str, str]]:
-        """Normalize flexible LLM output into a list of clean (subject, relation, object) triples.
-        @details
-            - Accepts dicts, lists of dicts, tuples, or dicts-of-lists.
-            - Joins list values, trims, and sanitizes for Cypher safety.
-            - Enforces uppercase underscore-safe relation labels.
-        @param data  Raw LLM output to normalize.
-        @return  List of sanitized (s, r, o) triples ready for insertion.
-        @throws ValueError  If input format cannot be parsed.
+
+@staticmethod
+def normalize_to_dict(data: Dict[str, Any] | List[Dict[str, Any]], keys: List[str]) -> List[Dict[str, Any]]:
+    """Normalize nested/compacted LLM output into flat dicts.
+    @details
+        Handles token-saving patterns:
+        - Nested relation-object pairs: {"s":"X", [{"r":"R1","o":"O1"}, ...]}
+        - List subjects with nested r-o: {"s":["X","Y"], [{"r":"R","o":"O"}, ...]}
+        - Cartesian products: {"s":["X","Y"], "r":["R1","R2"], "o":["O1","O2"]}
+        Assumes input is already parsed (json.loads called by caller).
+    @param data  Parsed LLM output (dict or list of dicts)
+    @param keys  Expected keys (e.g., ["s", "r", "o"])
+    @return  List of flat dicts with all keys present
+    @throws ValueError  If input format cannot be parsed
+    """
+    
+    def _as_list(x: Any) -> List[Any]:
+        """Coerce value to list for uniform handling.
+        @param x  Any input value
+        @return  List containing x, or x itself if already a list/tuple
         """
+        return list(x) if isinstance(x, (list, tuple)) else [x]
+    
+    def _expand_nested_ro(item: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Expand nested relation-object pairs pattern.
+        @details
+            Detects patterns like:
+            - {"s":"X", [{"r":"R1","o":"O1"}, {"r":"R2","o":"O2"}]}
+            - {"s":["X","Y"], [{"r":"R","o":"O"}]}
+            Creates cartesian product of subjects × nested r-o pairs.
+        @param item  Single dict potentially containing nested r-o list
+        @return  List of expanded flat dicts, or [item] if no nesting found
+        """
+        subjects = _as_list(item.get("s") or item.get("subject"))
+        
+        # Find nested r-o pairs (not under a key, just in the dict values)
+        nested_pairs = [v for v in item.values() if isinstance(v, list) and v and isinstance(v[0], dict)]
+        
+        if not nested_pairs:
+            return [item]  # No nesting, return as-is
+        
+        # Cartesian product: each subject × each r-o pair
+        results: List[Dict[str, Any]] = []
+        for s in subjects:
+            for pair in nested_pairs[0]:  # First nested list
+                r = pair.get("r") or pair.get("relation")
+                o = pair.get("o") or pair.get("object") or pair.get("object_")
+                if r and o:
+                    results.append({"s": s, "r": r, "o": o})
+        return results
+    
+    def _expand_cartesian(item: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Expand list values into flat combinations.
+        @details
+            Handles three cases:
+            1. Same-length lists: zip them (parallel structure)
+            2. Single + multi-value: broadcast the single value
+            3. Multiple multi-values: full cartesian product
+        @param item  Dict with potentially list-valued s/r/o
+        @return  List of expanded flat dicts
+        """
+        s_vals = _as_list(item.get("s") or item.get("subject"))
+        r_vals = _as_list(item.get("r") or item.get("relation"))
+        o_vals = _as_list(item.get("o") or item.get("object") or item.get("object_"))
+        
+        # If lists have same length, zip them (not cartesian)
+        if len(s_vals) == len(r_vals) == len(o_vals) and len(s_vals) > 1:
+            return [{"s": s, "r": r, "o": o} for s, r, o in zip(s_vals, r_vals, o_vals)]
+        
+        # Otherwise, broadcast single values or create cartesian product
+        max_len = max(len(s_vals), len(r_vals), len(o_vals))
+        if len(s_vals) == 1:
+            s_vals *= max_len
+        if len(r_vals) == 1:
+            r_vals *= max_len
+        if len(o_vals) == 1:
+            o_vals *= max_len
+        
+        # If all same length now, zip
+        if len(s_vals) == len(r_vals) == len(o_vals):
+            return [{"s": s, "r": r, "o": o} for s, r, o in zip(s_vals, r_vals, o_vals)]
+        
+        # Full cartesian product for mismatched lengths
+        results: List[Dict[str, Any]] = []
+        for s in s_vals:
+            for r in r_vals:
+                for o in o_vals:
+                    results.append({"s": s, "r": r, "o": o})
+        return results
+    
+    # Normalize input to list of dicts
+    items: List[Dict[str, Any]] = data if isinstance(data, list) else [data]
+    
+    # Expand each item
+    expanded: List[Dict[str, Any]] = []
+    for item in items:
+        # Try nested r-o expansion first
+        nested = _expand_nested_ro(item)
+        if len(nested) > 1 or nested[0] != item:
+            expanded.extend(nested)
+        else:
+            # Try cartesian expansion
+            expanded.extend(_expand_cartesian(item))
+    
+    return expanded
 
-        def _sanitize_node(value: Any) -> str:
-            """Clean a node name for Cypher safety.
-            @param value  Raw subject/object value.
-            @return  Sanitized string suitable for node property.
-            """
-            if isinstance(value, (list, tuple)):  # Join list/tuple into single string
-                value = " ".join(map(str, value))
-            elif not isinstance(value, str):  # Convert non-str types
-                value = str(value)
-            # Replace invalid chars, trim edges
-            return re.sub(r"[^A-Za-z0-9_ ]", "_", value).strip("_ ")
-
-        def _sanitize_rel(value: Any) -> str:
-            """Clean and normalize a relation label.
-            @param value  Raw relation value.
-            @return  Uppercase, underscore-safe relation label.
-            """
-            if isinstance(value, (list, tuple)):  # Join list/tuple into one label
-                value = " ".join(map(str, value))
-            elif not isinstance(value, str):
-                value = str(value)
-            rel = re.sub(r"[^A-Za-z0-9_]", "_", value.upper()).strip("_")
-            # Fallback if empty or invalid start char
-            if not rel or not rel[0].isalpha():
-                rel = "RELATED_TO"
-            return rel
-
-        def _as_list(x: Any) -> List[Any]:
-            """Ensure value is returned as a list.
-            @param x  Any input type.
-            @return  List wrapping the input if needed.
-            """
-            return list(x) if isinstance(x, (list, tuple)) else [x]
-
-        def _extract(data: Any) -> List[Tuple[str, str, str]]:
-            """Extract raw triples from any supported LLM format.
-            @param data  Raw triple input (dict, list, etc.).
-            @return  List of unprocessed (s, r, o) tuples.
-            """
-            # List of dicts [{s,r,o}, ...]
-            if isinstance(data, list) and data and isinstance(data[0], dict):
-                return [
-                    (d.get("s") or d.get("subject"), d.get("r") or d.get("relation"), d.get("o") or d.get("object") or d.get("object_")) for d in data
-                ]
-            # Single dict (scalars or lists)
-            if isinstance(data, dict):
-                s = data.get("s") or data.get("subject")
-                r = data.get("r") or data.get("relation")
-                o = data.get("o") or data.get("object") or data.get("object_")
-                S, R, O = _as_list(s), _as_list(r), _as_list(o)
-                # Expand 1-element lists to match longest list length
-                n = max(len(S), len(R), len(O))
-                if len(S) == 1 and n > 1:
-                    S *= n
-                if len(R) == 1 and n > 1:
-                    R *= n
-                if len(O) == 1 and n > 1:
-                    O *= n
-                m = min(len(S), len(R), len(O))
-                return list(zip(S[:m], R[:m], O[:m]))
-            # Single list/tuple triple
-            if isinstance(data, (list, tuple)) and len(data) == 3 and not isinstance(data[0], dict):
-                return [tuple(data)]
-            raise ValueError("Unrecognized triple format")
-
-        # Extract and sanitize all triples
-        raw_triples = _extract(data)
-        clean_triples = []
-        for s, r, o in raw_triples:
-            s_clean, r_clean, o_clean = _sanitize_node(s), _sanitize_rel(r), _sanitize_node(o)
-            # Only include fully valid triples
-            if all([s_clean, r_clean, o_clean]):
-                clean_triples.append((s_clean, r_clean, o_clean))
-        return clean_triples

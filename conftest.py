@@ -6,14 +6,26 @@ from src.connectors.relational import RelationalConnector
 from src.core.context import get_session, Session
 from src.util import Log
 from typing import Any, Generator
+import importlib.util
 
 
-# Command-line flags for pytest
-# Usage: pytest --log-success --no-log-colors .
 def pytest_addoption(parser: Any) -> None:
+    """Command-line flags for pytest
+    @details  Usage: pytest --log-success --no-log-colors"""
     parser.addoption("--log-success", action="store_true", default=False)
     parser.addoption("--no-log-colors", action="store_false", default=True)
 
+
+def optional_param(name: str, package: str) -> pytest.param:
+    """Return a pytest.param that is skipped if the given package is missing.
+    @param name  The fixture name to include in the parameter list.
+    @param package  The name of a Python package to check for.
+    @return  PyTest parameter with the skip flag set if package is not installed."""
+    exists = importlib.util.find_spec(package) is not None
+    return pytest.param(
+        name,
+        marks=pytest.mark.skipif(not exists, reason=f"{package} not installed")
+    )
 
 @pytest.fixture(scope="session")
 def session(request: pytest.FixtureRequest) -> Generator[Session, None, None]:

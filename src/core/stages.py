@@ -3,6 +3,7 @@ import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from src.core.context import session
 from src.util import Log
+from src.connectors.llm import normalize_to_dict
 
 # unused?
 import traceback
@@ -174,14 +175,34 @@ def task_11_send_chunk(c, collection_name, book_title):
 
 def task_12_relation_extraction_rebel(text, max_tokens=1024, parse_tuples=True):
     with Log.timer():
-        from src.components.relation_extraction import RelationExtractor
+        from src.components.relation_extraction import RelationExtractorREBEL
 
         # TODO: move to session.rel_extract
         re_rebel = "Babelscape/rebel-large"
         # TODO: different models
         # re_rst = "GAIR/rst-information-extraction-11b"
         # ner_renard = "compnet-renard/bert-base-cased-literary-NER"
-        nlp = RelationExtractor(model_name=re_rebel, max_tokens=max_tokens)
+        nlp = RelationExtractorREBEL(model_name=re_rebel, max_tokens=max_tokens)
+        extracted = nlp.extract(text, parse_tuples=parse_tuples)
+        return extracted
+
+
+def task_12_relation_extraction_openie(text, memory='4G', parse_tuples=True):
+    with Log.timer():
+        from src.components.relation_extraction import RelationExtractorOpenIE
+
+        # Initialize OpenIE wrapper (handles CoreNLP server internally)
+        nlp = RelationExtractorOpenIE(memory=memory)
+        extracted = nlp.extract(text, parse_tuples=parse_tuples)
+        return extracted
+
+
+def task_12_relation_extraction_textacy(text, parse_tuples=True):
+    with Log.timer():
+        from src.components.relation_extraction import RelationExtractorTextacy
+
+        # Initialize Textacy wrapper (pure Python backup)
+        nlp = RelationExtractorTextacy()
         extracted = nlp.extract(text, parse_tuples=parse_tuples)
         return extracted
 
@@ -209,13 +230,23 @@ def task_14_relation_extraction_llm(triples_string, text):
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
         prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
         llm_output = llm.execute_query(prompt)
+        # TODO - move retry logic to LLMConnector
+        # Enforce valid JSON
+        attempts = 10
+        while not json.loads(llm_output) and attempts > 0:
+            llm_output = llm.execute_query(prompt)
+            attempts -= 1
+        if attempts == 0:
+            raise Log.Failure()
         return (prompt, llm_output)
 
 
 def task_15_sanitize_triples_llm(llm_output: str) -> str:
     with Log.timer():
-        # TODO: call LLM.normalize_triples
-        json_triples = json.loads(llm_output)
+        # TODO: rely on robust LLM connector logic to assume json
+        llm_output = json.loads(llm_output)
+        # TODO: should LLM connector run sanitization internally?
+        json_triples = normalize_to_dict(llm_output, keys=["s", "r", "o"])
         return json_triples
 
 
