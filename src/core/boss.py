@@ -170,7 +170,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             story_chunks = chunk_tracker[chunk_tracker['story_id'] == story_id]
             if story_chunks.empty:
                 return False
-            return all(story_chunks[task_type] == 'completed')
+            return all(story_chunks[task_type].str.contains('completed'))
 
     def check_story_failure(story_id: int, task_type: str) -> bool:
         """Check if any chunks for a story have failed a specific task.
@@ -181,7 +181,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             story_chunks = chunk_tracker[chunk_tracker['story_id'] == story_id]
             if story_chunks.empty:
                 return False
-            return any(story_chunks[task_type] == 'failed')
+            return any(story_chunks[task_type].str.contains('failed'))
 
     def record_elapsed_time(chunk_id: str, task: str) -> Optional[float]:
         if not Log.RECORD_TIME:
@@ -341,14 +341,14 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         chunk_task = task_mapping[task]
 
         # Handle different status types
-        if status == "started":
+        if "started" in status:
             # Update chunk status to in-progress
             update_chunk_status(chunk_id, story_id, chunk_task, 'in-progress')
 
             # Update story status to in-progress if not already
             update_story_status(story_id, 'metrics', 'in-progress')
 
-        elif status == "completed":
+        elif "completed" in status:
             # Update chunk status to completed
             seconds = record_elapsed_time(chunk_id, chunk_task)
             update_chunk_status(chunk_id, story_id, chunk_task, 'completed')
@@ -381,7 +381,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
                     print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")
 
-        elif status == "failed":
+        elif "failed" in status:
             # Update chunk status to failed
             print(f"[WARNING] Task {task} failed for chunk {chunk_id}")
             seconds = record_elapsed_time(chunk_id, chunk_task)
@@ -420,7 +420,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                 story_data = story_status.to_dict('records')[0]
 
                 task_columns = [col for col in story_data.keys() if col not in ['story_id']]
-                completed_tasks = sum(story_data[col] == 'completed' for col in task_columns)
+                completed_tasks = sum('completed' in story_data[col] for col in task_columns)
 
                 return (
                     jsonify(
@@ -447,7 +447,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                 story_id = chunk_data['story_id']
 
                 task_columns = [col for col in chunk_data.keys() if col not in ['chunk_id', 'story_id']]
-                completed_tasks = sum(chunk_data[col] == 'completed' for col in task_columns)
+                completed_tasks = sum('completed' in chunk_data[col] for col in task_columns)
 
                 return (
                     jsonify(
