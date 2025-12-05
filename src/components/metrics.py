@@ -15,12 +15,12 @@ class Metrics:
 
         # Read environment variables
         load_dotenv(".env")
-        self.HOST = os.getenv("BLAZOR_HOST")
-        self.PORT = os.getenv("BLAZOR_PORT")
-        self.url = f"http://{self.HOST}:{self.PORT}/api/metrics"
+        blazor_host = os.environ["BLAZOR_HOST"]
+        blazor_port = os.environ["BLAZOR_PORT"]
+        self.blazor_url = f"http://{blazor_host}:{self.blazor_port}/api/metrics"
 
     @staticmethod
-    def compute_basic_metrics(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]:
+    def compute_basic(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]:
         """Compute ROUGE and BERTScore.
         @param summary  A text string containing a book summary
         @param gold_summary  A summary to compare against
@@ -37,28 +37,7 @@ class Metrics:
         return {"rouge": rouge_result, "bertscore": bertscore_result}
 
     @staticmethod
-    def create_summary_payload(book_id: str, book_title: str, summary: str, gold_summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Create the full Blazor payload for a single book.
-        @param book_id  Unique identifier for one book.
-        @param book_title  String containing the title of a book.
-        @param summary  String containing a book summary.
-        @param gold_summary  Optional summary to compare against.
-        @param metrics  Dictionary containing various nested evaluation metrics.
-        @return  A dictionary with C#-style key names."""
-        if metrics is None:
-            metrics = Metrics.generate_default_metrics()
-
-        return {
-            "BookID": str(book_id),
-            "BookTitle": book_title,
-            "SummaryText": summary,
-            "GoldSummaryText": gold_summary,
-            "Metrics": metrics,
-            "QAResults": [],
-        }
-
-    @staticmethod
-    def generate_default_metrics(
+    def generate_payload(
         rouge1_f1: float = 0.0,
         rouge2_f1: float = 0.0,
         rougeL_f1: float = 0.0,
@@ -138,7 +117,28 @@ class Metrics:
         }
 
     @staticmethod
-    def generate_example_metrics() -> Dict[str, Any]:
+    def generate_basic(book_id: str, book_title: str, summary: str, gold_summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Create the full Blazor payload for a single book.
+        @param book_id  Unique identifier for one book.
+        @param book_title  String containing the title of a book.
+        @param summary  String containing a book summary.
+        @param gold_summary  Optional summary to compare against.
+        @param metrics  Dictionary containing various nested evaluation metrics.
+        @return  A dictionary with C#-style key names."""
+        if metrics is None:
+            metrics = Metrics.generate_payload()
+
+        return {
+            "BookID": str(book_id),
+            "BookTitle": book_title,
+            "SummaryText": summary,
+            "GoldSummaryText": gold_summary,
+            "Metrics": metrics,
+            "QAResults": [],
+        }
+
+    @staticmethod
+    def generate_example() -> Dict[str, Any]:
         """Create a placeholder payload with dummy values.
         @return Full payload with nested metrics."""
         return Metrics.create_summary_payload(
@@ -147,7 +147,7 @@ class Metrics:
             "This is an AI-generated summary of the entire book. It captures the key plot points and themes.",
             "No gold-standard summary available.",
             # Override some defaults with example values
-            Metrics.generate_default_metrics(
+            Metrics.generate_payload_metrics(
                 rouge1_f1=0.83,
                 rouge2_f1=0.86,
                 rougeL_f1=0.89,
@@ -180,8 +180,8 @@ class Metrics:
         import requests
 
         try:
-            print(f"Sending payload to Blazor at {self.url}")
-            response = requests.post(self.url, json=payload)
+            print(f"Sending payload to Blazor at {self.blazor_url}")
+            response = requests.post(self.blazor_url, json=payload)
 
             if response.ok:  # handles 200–299
                 print("POST succeeded")
@@ -197,7 +197,7 @@ class Metrics:
             print(f"Request failed: {e}")
             return False
 
-    def post_basic_metrics(self, book_id: str, book_title: str, summary: str, gold_summary: str = "", text: str = "", **kwargs: Any) -> None:
+    def post_basic(self, book_id: str, book_title: str, summary: str, gold_summary: str = "", text: str = "", **kwargs: Any) -> None:
         """POST basic evaluation scores to Blazor (ROUGE, BERTScore).
         @param book_id  Unique identifier for one book.
         @param book_title  String containing the title of a book.
@@ -206,7 +206,7 @@ class Metrics:
         @param text  A string containing text from the book.
         @param kwargs  Any additional named arguments will be added to the payload."""
         results = Metrics.compute_basic_metrics(summary, gold_summary, text)
-        metrics = Metrics.generate_default_metrics(
+        metrics = Metrics.generate_payload_metrics(
             rouge1_f1=results["rouge"]["rouge1"],
             rouge2_f1=results["rouge"]["rouge2"],
             rougeL_f1=results["rouge"]["rougeL"],
@@ -219,12 +219,12 @@ class Metrics:
         payload = Metrics.create_summary_payload(book_id, book_title, summary, gold_summary, metrics)
         self.post_payload(payload)
 
-    def post_basic_output(self, book_id: str, book_title: str, summary: str) -> None:
+    def post_example(self, book_id: str, book_title: str, summary: str) -> None:
         """POST dummy date to Blazor.
         @param book_id  Unique identifier for one book.
         @param book_title  String containing the title of a book.
         @param summary  String containing a book summary."""
-        metrics = Metrics.generate_default_metrics()
+        metrics = Metrics.generate_payload_metrics()
         payload = Metrics.create_summary_payload(book_id, book_title, summary, "No gold-standard summary available.", metrics)
         self.post_payload(payload)
 

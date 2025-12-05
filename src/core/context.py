@@ -69,7 +69,7 @@ def get_session(*args: Any, **kwargs: Any) -> Session:
 session: Session
 
 
-def __getattr__(name: str) -> Any:
+def __getattr__(name: str) -> Session:
     """Lazy attribute resolution for module-level imports.
     @details
         - Only called when normal attribute lookup fails (i.e., name not in module globals).

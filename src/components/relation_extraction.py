@@ -127,7 +127,7 @@ class RelationExtractorOpenIE(RelationExtractor):
 
         # 2. Attach to self so other methods can use them
         self.stanza = stanza
-        self.CoreNLPClient = CoreNLPClient
+        self.client = CoreNLPClient
 
         # 3. Download CoreNLP backend if not present (Automatic Setup)
         # This saves the jar files to ~/stanza_corenlp by default
@@ -137,7 +137,7 @@ class RelationExtractorOpenIE(RelationExtractor):
             print("Installing CoreNLP backend...")
             self.stanza.install_corenlp()
         
-        self.memory = memory
+        self.java_memory = memory
 
     def _get_client(self) -> "CoreNLPClient":
         """Configure and instantiate the CoreNLP Client.
@@ -154,12 +154,12 @@ class RelationExtractorOpenIE(RelationExtractor):
             'openie.max_entailments_per_clause': 500
         }
         
-        # Use self.CoreNLPClient (lazy loaded)
-        return self.CoreNLPClient(
+        # Use self.client (lazy loaded)
+        return self.client(
             annotators=['tokenize', 'ssplit', 'pos', 'lemma', 'ner', 'parse', 'coref', 'openie'],
             properties=properties,
             timeout=30000,
-            memory=self.memory,
+            memory=self.java_memory,
             be_quiet=True # Set to False for debugging Java output
         )
 

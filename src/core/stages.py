@@ -369,7 +369,7 @@ def task_40_post_summary(book_id, book_title, summary):
     - Post to Blazor metrics page"""
     # TODO: pytest
     with Log.timer():
-        session.metrics.post_basic_output(book_id, book_title, summary)
+        session.metrics.post_example(book_id, book_title, summary)
 
 
 def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval):
@@ -379,7 +379,7 @@ def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, book
     - Post to Blazor metrics page"""
     # TODO: pytest
     with Log.timer():
-        session.metrics.post_basic_metrics(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
+        session.metrics.post_basic(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
 
 
 # TODO: move rouge / bertscore out of post function

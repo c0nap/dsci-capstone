@@ -323,7 +323,7 @@ class KnowledgeGraph:
         triples_df = self.get_subgraph_by_nodes(node_ids, id_columns=id_columns)
         return triples_df
 
-    def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
+    def get_random_walk(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
         """Sample subgraph using directed random walk traversal starting from specified nodes.
         @details
         - More diverse than degree-based filtering (nodes with many edges) and better preserves graph structure.
@@ -513,7 +513,7 @@ class KnowledgeGraph:
             triples_string += f"{subj} {rel} {obj}\n"
         return triples_string
 
-    def to_contextualized_string(self, focus_nodes: Optional[List[str]] = None, top_n: int = 5) -> str:
+    def to_context(self, focus_nodes: Optional[List[str]] = None, top_n: int = 5) -> str:
         """Convert triples to contextualized string grouped by focus nodes.
         @details  Groups triples by subject nodes and formats them with context headers.
         This provides better structure for LLM comprehension compared to flat triple lists.

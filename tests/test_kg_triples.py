@@ -239,9 +239,9 @@ def test_get_neighborhood(nature_scene_graph: KnowledgeGraph) -> None:
 @pytest.mark.kg
 @pytest.mark.order(19)
 @pytest.mark.dependency(name="random_walk_minimal", depends=["knowledge_graph_triples"], scope="session")
-def test_get_random_walk_sample(nature_scene_graph: KnowledgeGraph) -> None:
+def test_get_random_walk(nature_scene_graph: KnowledgeGraph) -> None:
     """Test random walk sampling starting from specified nodes.
-    @details  Validates that get_random_walk_sample generates a representative
+    @details  Validates that get_random_walk generates a representative
     subgraph by following random paths through the graph.
     """
     kg = nature_scene_graph
@@ -254,7 +254,7 @@ def test_get_random_walk_sample(nature_scene_graph: KnowledgeGraph) -> None:
     kid1_id = nodes_df[nodes_df["name"] == "Kid1"]["element_id"].iloc[0]
 
     # Perform random walk with length 3
-    sample = kg.get_random_walk_sample([kid1_id], walk_length=3, num_walks=1)
+    sample = kg.get_random_walk([kid1_id], walk_length=3, num_walks=1)
     assert sample is not None
     assert len(sample) > 0
     assert len(sample) <= 3  # Should visit at most walk_length edges
@@ -266,7 +266,7 @@ def test_get_random_walk_sample(nature_scene_graph: KnowledgeGraph) -> None:
     assert first_triple["subject"] == "Kid1", "Random walk must start from specified start node"
 
     # Test multiple walks produces equal or more coverage
-    sample_multi = kg.get_random_walk_sample([kid1_id], walk_length=5, num_walks=3)
+    sample_multi = kg.get_random_walk([kid1_id], walk_length=5, num_walks=3)
     assert sample_multi is not None
     # Multiple walks should visit at least as many edges (with possible duplicates removed)
     assert len(sample_multi) >= len(sample), "More walks should not reduce coverage"
@@ -350,7 +350,7 @@ def test_get_neighborhood_comprehensive(nature_scene_graph: KnowledgeGraph) -> N
 @pytest.mark.kg
 @pytest.mark.order(21)
 @pytest.mark.dependency(name="random_walk_comprehensive", depends=["random_walk_minimal"], scope="session")
-def test_get_random_walk_sample_comprehensive(nature_scene_graph: KnowledgeGraph) -> None:
+def test_get_random_walk_comprehensive(nature_scene_graph: KnowledgeGraph) -> None:
     """Comprehensive test for random walk sampling.
     @details  Tests edge cases and advanced features:
     - Empty start_nodes list (should sample from any node)
@@ -370,27 +370,27 @@ def test_get_random_walk_sample_comprehensive(nature_scene_graph: KnowledgeGraph
     kid2_id = nodes_df[nodes_df["name"] == "Kid2"]["element_id"].iloc[0]
 
     # Edge case 1: Empty start_nodes (should randomly pick from graph)
-    sample_random_start = kg.get_random_walk_sample([], walk_length=3, num_walks=1)
+    sample_random_start = kg.get_random_walk([], walk_length=3, num_walks=1)
     assert sample_random_start is not None
     assert len(sample_random_start) > 0, "Empty start_nodes should default to random node"
 
     # Edge case 2: Start from leaf/dead-end node
     # Whiteboard is inside Classroom - may have limited outgoing paths
-    sample_from_leaf = kg.get_random_walk_sample([whiteboard_id], walk_length=5, num_walks=1)
+    sample_from_leaf = kg.get_random_walk([whiteboard_id], walk_length=5, num_walks=1)
     assert sample_from_leaf is not None
     # May not reach full walk_length due to dead ends, but should get something
     assert len(sample_from_leaf) > 0, "Should handle leaf nodes gracefully"
 
     # Feature: Walk length is respected (sample size <= walk_length due to deduplication)
-    sample_short = kg.get_random_walk_sample([kid1_id], walk_length=2, num_walks=1)
+    sample_short = kg.get_random_walk([kid1_id], walk_length=2, num_walks=1)
     assert len(sample_short) <= 2, "Walk should respect length limit"
 
-    sample_long = kg.get_random_walk_sample([kid1_id], walk_length=5, num_walks=1)
+    sample_long = kg.get_random_walk([kid1_id], walk_length=5, num_walks=1)
     assert len(sample_long) <= 5, "Walk should respect length limit"
 
     # Feature: Random walks can produce different samples (test stochasticity)
     # NOTE: This is probabilistic - some graphs have forced paths that make walks deterministic
-    samples = [kg.get_random_walk_sample([kid1_id], walk_length=5, num_walks=1) for _ in range(10)]  # Increased trials for better probability
+    samples = [kg.get_random_walk([kid1_id], walk_length=5, num_walks=1) for _ in range(10)]  # Increased trials for better probability
 
     # Convert samples to hashable tuples for comparison
     sample_hashes = []
@@ -412,12 +412,12 @@ def test_get_random_walk_sample_comprehensive(nature_scene_graph: KnowledgeGraph
         assert unique_samples >= 2, "With 10 trials, should see at least 2 different paths"
 
     # Edge case 3: Multiple start nodes
-    sample_multi_start = kg.get_random_walk_sample([kid1_id, kid2_id], walk_length=3, num_walks=2)
+    sample_multi_start = kg.get_random_walk([kid1_id, kid2_id], walk_length=3, num_walks=2)
     assert sample_multi_start is not None
     assert len(sample_multi_start) > 0, "Multiple start nodes should work"
 
     # Feature: Very long walks eventually explore large portions of graph
-    sample_exhaustive = kg.get_random_walk_sample([kid1_id], walk_length=20, num_walks=10)
+    sample_exhaustive = kg.get_random_walk([kid1_id], walk_length=20, num_walks=10)
     # Should capture significant graph coverage with enough walks
     coverage_ratio = len(sample_exhaustive) / len(all_triples)
     assert coverage_ratio > 0.1, "Extensive walking should cover at least 10% of graph"
