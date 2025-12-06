@@ -1,7 +1,13 @@
 from dotenv import load_dotenv
 import os
-from typing import List, Tuple, Union, Optional
+from typing import List, Tuple, Union, Optional, TypedDict
 from abc import ABC, abstractmethod
+
+class Triple(TypedDict):
+    s: str
+    r: str
+    o: str
+
 
 class RelationExtractor(ABC):
     """Abstract base class for Relation Extraction (RE) models.
@@ -14,7 +20,7 @@ class RelationExtractor(ABC):
     TUPLE_DELIM = "  "
 
     @abstractmethod
-    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Tuple[str, str, str], str]]:
+    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Triple, str]]:
         """Extract relations from the provided text.
         @param text  The raw input text to process.
         @param parse_tuples  If False, returns a formatted string 'Subj  Rel  Obj'.
@@ -22,7 +28,7 @@ class RelationExtractor(ABC):
         """
         pass
 
-    def _format_triples_to_strings(self, triples: List[Tuple[str, str, str]]) -> List[str]:
+    def _triples_to_strings(self, triples: List[Triple]) -> List[str]:
         """Helper to convert native tuples to standardized raw strings."""
         return [f"{s}{self.TUPLE_DELIM}{r}{self.TUPLE_DELIM}{o}" for s, r, o in triples]
 
@@ -60,7 +66,7 @@ class RelationExtractorREBEL(RelationExtractor):
         self.max_tokens = max_tokens
         self.tuple_delim = " "
 
-    def extract(self, text: str, parse_tuples: bool = False) -> List[Union[Tuple[str, str, str], str]]:
+    def extract(self, text: str, parse_tuples: bool = False) -> List[Union[Triple, str]]:
         """Perform extraction on the text using the generative model.
         @details 
             The text is first segmented into sentences because RE models degrade 
@@ -75,7 +81,7 @@ class RelationExtractorREBEL(RelationExtractor):
         doc = self.nlp(text)
         sentences = [sent.text for sent in doc.sents]
 
-        out: List[Union[Tuple[str, str, str], str]] = []
+        out: List[Union[Triple, str]] = []
 
         # Perform RE on each sentence individually
         for sentence in sentences:
@@ -163,7 +169,7 @@ class RelationExtractorOpenIE(RelationExtractor):
             be_quiet=True # Set to False for debugging Java output
         )
 
-    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Tuple[str, str, str], str]]:
+    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Triple, str]]:
         """Extract triples using the Stanford OpenIE pipeline.
         @details
             Uses a context manager to spin up the Java server, process the text, 
@@ -189,7 +195,7 @@ class RelationExtractorOpenIE(RelationExtractor):
                     t = (triple.subject, triple.relation, triple.object)
                     out.append(t)
         # Delegate to base helper if raw strings are requested
-        return out if parse_tuples else self._format_triples_to_strings(out)
+        return out if parse_tuples else self._triples_to_strings(out)
 
 
 class RelationExtractorTextacy(RelationExtractor):
@@ -218,7 +224,7 @@ class RelationExtractorTextacy(RelationExtractor):
         # Attach textacy to self to avoid import errors later
         self.textacy = textacy
         
-    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Tuple[str, str, str], str]]:
+    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Triple, str]]:
         """Extract SVO triples.
         @param text  The raw input text.
         @param parse_tuples  If False, concatenates the triples into a multi-line string.
@@ -228,7 +234,7 @@ class RelationExtractorTextacy(RelationExtractor):
         out = []
 
         # Extract SVO (Subject-Verb-Object)
-        # SVO components are lists of tokens (e.g., [The, big, dog]), so we must join them.
+        # Textacy triples use token lists instead of strings ["Alberts", "brother"] vs "Alberts brother", so we must join them.
         for svo in self.textacy.extract.subject_verb_object_triples(doc):
             subj = " ".join([t.text for t in svo.subject])
             verb = " ".join([t.text for t in svo.verb])
@@ -236,5 +242,5 @@ class RelationExtractorTextacy(RelationExtractor):
             out.append((subj, verb, obj))
             
         # Delegate to base helper if raw strings are requested
-        return out if parse_tuples else self._format_triples_to_strings(out)
+        return out if parse_tuples else self._triples_to_strings(out)
 

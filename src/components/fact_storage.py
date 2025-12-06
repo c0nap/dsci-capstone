@@ -3,15 +3,11 @@ import random
 import re
 from src.connectors.graph import GraphConnector
 from src.util import Log
-from typing import Any, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Dict, List, Optional, Tuple
 import spacy
+from src.components.relation_extraction import Triple
 
 nlp = None  # module-level cache for lazy-loaded NLP model (used by sanitize_node)
-
-class Triple(TypedDict):
-    s: str
-    r: str
-    o: str
 
 
 class KnowledgeGraph:

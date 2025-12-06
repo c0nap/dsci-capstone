@@ -17,7 +17,7 @@ class Metrics:
         load_dotenv(".env")
         blazor_host = os.environ["BLAZOR_HOST"]
         blazor_port = os.environ["BLAZOR_PORT"]
-        self.blazor_url = f"http://{blazor_host}:{self.blazor_port}/api/metrics"
+        self.blazor_url = f"http://{blazor_host}:{blazor_port}/api/metrics"
 
     @staticmethod
     def compute_basic(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]:
