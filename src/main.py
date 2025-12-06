@@ -151,6 +151,7 @@ CHAPTER 12. THE END OF THE END\n
 
 
 if __name__ == "__main__":
+    session.setup()
     # TODO: handle this better - half env parsing is here, half is in boss.py
     load_dotenv(".env")
     DB_NAME = os.environ["DB_NAME"]
