@@ -7,61 +7,32 @@ from typing import Tuple
 
 
 # --------------------------------------------------
-# Helper Functions - Orchestration
+# Helper Functions - Gutenberg ID / Gutendex
 # --------------------------------------------------
 
-def prune_index() -> Tuple[int, int]:
-    """Remove invalid entries: missing files AND duplicates.
+def prune_duplicates() -> None:
+    """Remove duplicate books based on gutenberg_id and title.
+    @return  Number of duplicate entries removed.
     @details
-    1. Removes rows where 'text_path' file is missing.
-    2. Removes rows with no usable identifier (both gutenberg_id and title are missing/empty).
-    3. Deduplicates based on ['gutenberg_id', 'title']:
-       - If GID matches, it's a duplicate.
-       - If GID is missing (NaN), relies on title matching.
-       - Keeps first occurrence, drops later duplicates.
+    Deduplicates based on ['gutenberg_id', 'title']:
+    1. If GID matches, it's a duplicate.
+    2. If GID is missing (NaN), relies on title matching.
+    3. Keeps first occurrence, drops later duplicates.
+    Examples:
+    - (123, "moby dick") vs (123, "moby dick") → duplicate (same GID)
+    - (123, "moby dick") vs (456, "moby dick") → NOT duplicate (different GIDs)
+    - (NaN, "moby dick") vs (NaN, "moby dick") → duplicate (same title, no GID)
+    - (NaN, "moby dick") vs (123, "moby dick") → NOT duplicate (one has GID)
     """
     index_file = DatasetLoader.INDEX_FILE
     if not os.path.exists(index_file):
         return
-
     df = read_csv(index_file)
-    initial_count = len(df)
 
-    # --- Step 1: Remove rows with missing text files ---
-    def file_exists(path):
-        return isinstance(path, str) and os.path.exists(path)
-
-    df = df[df['text_path'].apply(file_exists)]
-
-    # --- Step 2: Remove rows with no usable identifier ---
-    def has_identifier(row):
-        has_gid = isinstance(row.get('gutenberg_id'), (int, float, str)) and str(row['gutenberg_id']).strip() not in ['', 'nan', 'None']
-        has_title = isinstance(row.get('title'), str) and row['title'].strip() != ''
-        return has_gid or has_title
-    
-    df = df[df.apply(has_identifier, axis=1)]
-
-    # --- Step 3: Deduplicate (Gutenberg ID > Title) ---
-    # Strategy: Drop duplicates considering BOTH columns together
-    # - (123, "moby dick") vs (123, "moby dick") → duplicate (same GID)
-    # - (123, "moby dick") vs (456, "moby dick") → NOT duplicate (different GIDs)
-    # - (NaN, "moby dick") vs (NaN, "moby dick") → duplicate (same title, no GID)
-    # - (NaN, "moby dick") vs (123, "moby dick") → NOT duplicate (one has GID)
-    
-    dedup_keys = ['title']
-    if 'gutenberg_id' in df.columns:
-        dedup_keys.append('gutenberg_id')
-    
-    # keep='first' ensures we keep the existing entry and drop the new duplicate
-    df = df.drop_duplicates(subset=dedup_keys, keep='first')
-
-    # Sort by book_id to keep things tidy
+    keys = ['title', 'gutenberg_id']
+    df = df.drop_duplicates(subset=keys, keep='first')
     df = df.sort_values('book_id')
-    
-    # Write back if changes needed
-    final_count = len(df)
-    if final_count < initial_count:
-        df.to_csv(index_file, index=False)
+    df.to_csv(index_file, index=False)
 
 # --------------------------------------------------
 # Helper Functions - Text Similarity & Title Matching
