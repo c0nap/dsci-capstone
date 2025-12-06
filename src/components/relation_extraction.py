@@ -12,9 +12,8 @@ class Triple(TypedDict):
 class RelationExtractor(ABC):
     """Abstract base class for Relation Extraction (RE) models.
     @details
-        Derived classes must implement the extract method to process text
-        and return a list of triples or raw strings.
-        Backends (Spacy, Stanza, Transformers) should be lazy-loaded.
+    Derived classes must implement extract() to return a list of triples.
+    Backends (Spacy, Stanza, Transformers) are lazy-loaded to avoid memory for unused models.
     """
     # Unified delimiter for "raw" string representation
     TUPLE_DELIM = "  "
@@ -43,7 +42,8 @@ class RelationExtractorREBEL(RelationExtractor):
 
     def __init__(self, model_name="Babelscape/rebel-large", max_tokens=1024) -> None:
         """Initialize the REBEL model and tokenizer.
-        @note  Lazy imports are used to prevent heavy libraries from loading unless this class is instantiated.
+        @note  Imports are strictly local. This prevents the heavy PyTorch/Transformer 
+               stack from initializing if this specific extractor is not selected.
         @param model_name  The HuggingFace hub path for the model.
         @param max_tokens  The maximum sequence length for the tokenizer.
         """
@@ -70,7 +70,7 @@ class RelationExtractorREBEL(RelationExtractor):
         """Perform extraction on the text using the generative model.
         @details 
             The text is first segmented into sentences because RE models degrade 
-            in performance on long, multi-sentence paragraphs.
+            significantly in performance on long, multi-sentence paragraphs.
         @param text  The input narrative text.
         @param parse_tuples  If True, parses the generated string into structured tuples.
         @return  A list of extracted relations.
