@@ -12,24 +12,18 @@ class Triple(TypedDict):
 class RelationExtractor(ABC):
     """Abstract base class for Relation Extraction (RE) models.
     @details
-    Derived classes must implement extract() to return a list of triples.
+    Derived classes must implement extract() to return a list of Triple dictionaries.
     Backends (Spacy, Stanza, Transformers) are lazy-loaded to avoid memory for unused models.
     """
-    # Unified delimiter for "raw" string representation
-    TUPLE_DELIM = "  "
 
     @abstractmethod
-    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Triple, str]]:
+    def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
         """Extract relations from the provided text.
         @param text  The raw input text to process.
-        @param parse_tuples  If False, returns a formatted string 'Subj  Rel  Obj'.
-        @return  A list of triples (subj, rel, obj) or raw string outputs.
+        @param parse_tuples  Retained for API compatibility; extraction always returns structured Triples.
+        @return  A list of Triple dictionaries {'s': ..., 'r': ..., 'o': ...}.
         """
         pass
-
-    def _triples_to_strings(self, triples: List[Triple]) -> List[str]:
-        """Helper to convert native tuples to standardized raw strings."""
-        return [f"{s}{self.TUPLE_DELIM}{r}{self.TUPLE_DELIM}{o}" for s, r, o in triples]
 
 
 class RelationExtractorREBEL(RelationExtractor):
@@ -48,20 +42,22 @@ class RelationExtractorREBEL(RelationExtractor):
         """
         self.model_name = model_name
         self.max_tokens = max_tokens
-        self.tuple_delim = " "
+        
+        # Internal delimiter used by the model for splitting generated text
+        self._model_delim = " " 
         
         # Placeholders for lazy loading
         self.nlp: Optional["spacy.language.Language"] = None
         self.tokenizer: Optional["transformers.PreTrainedTokenizer"] = None
         self.model: Optional["transformers.PreTrainedModel"] = None
 
-    def extract(self, text: str, parse_tuples: bool = False) -> List[Union[Triple, str]]:
+    def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
         """Perform extraction on the text using the generative model.
         @details 
             The text is first segmented into sentences because RE models degrade 
             significantly in performance on long, multi-sentence paragraphs.
         @param text  The input narrative text.
-        @param parse_tuples  If True, parses the generated string into structured tuples.
+        @param parse_tuples  Unused (Always parses to Triples).
         @return  A list of extracted relations.
         """
         # 1. Lazy Imports & Setup (Run once)
@@ -74,6 +70,7 @@ class RelationExtractorREBEL(RelationExtractor):
             self.nlp.add_pipe("sentencizer")
 
             # Load Model
+            load_dotenv(".env")
             print(f"Loading REBEL model: {self.model_name}...")
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
@@ -84,7 +81,7 @@ class RelationExtractorREBEL(RelationExtractor):
         doc = self.nlp(text)
         sentences = [sent.text for sent in doc.sents]
 
-        out: List[Union[Triple, str]] = []
+        out: List[Triple] = []
 
         # Perform RE on each sentence individually
         for sentence in sentences:
@@ -99,18 +96,15 @@ class RelationExtractorREBEL(RelationExtractor):
             outputs = self.model.generate(**inputs)
             decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             
-            if parse_tuples:
-                # REBEL output format is specific; we split by the delimiter
-                parts = [str(element).strip() for element in decoded.split(self.tuple_delim)]
-                # group 3 at a time using zip to form (subj, obj, rel)
-                # Note: REBEL outputs Subj, Obj, Rel order in its raw decoding
-                for subj, obj, rel in zip(parts[0::3], parts[1::3], parts[2::3]):
-                    # Filter out empty strings or malformed triples
-                    if subj and obj and rel:
-                        out.append((subj, rel, obj))
-            else:
-                # Return raw REBEL text: 'subj  obj  rel'
-                out.append(str(decoded))
+            # REBEL output format is specific; we split by the internal model delimiter
+            parts = [str(element).strip() for element in decoded.split(self._model_delim)]
+            
+            # group 3 at a time using zip to form (subj, obj, rel)
+            # Note: REBEL outputs Subj, Obj, Rel order in its raw decoding
+            for subj, obj, rel in zip(parts[0::3], parts[1::3], parts[2::3]):
+                # Filter out empty strings or malformed triples
+                if subj and obj and rel:
+                    out.append({'s': subj, 'r': rel, 'o': obj})
                 
         return out
 
@@ -123,13 +117,16 @@ class RelationExtractorOpenIE(RelationExtractor):
         this extracts spans directly from the text and handles coreference resolution internally.
     """
 
-    def __init__(self, memory='4G', timeout=600) -> None:
+    def __init__(self, memory: str = '4G', timeout: float = 120) -> None:
         """Initialize the Stanza CoreNLP configuration.
         @details 
             Configuration targets "Exhaustive" and "Coref-Resolved" extraction.
         @param memory  Java heap size string (e.g., '4G', '8G').
-        @param timeout  Timeout for the Java server response in ms.
+        @param timeout  Timeout for the Java server response in seconds.
         """
+        self.timeout = timeout
+        self.memory = memory
+        
         # Pre-configure properties so they are ready for the context manager
         self.client_config = {
             'annotators': ['tokenize', 'ssplit', 'pos', 'lemma', 'ner', 'parse', 'coref', 'openie'],
@@ -137,19 +134,19 @@ class RelationExtractorOpenIE(RelationExtractor):
                 'openie.resolve_coref': True,
                 'openie.triple.strict': False,
             },
-            'timeout': timeout,
+            'timeout': 1000 * timeout,
             'memory': memory,
             'be_quiet': True
         }
 
-    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Triple, str]]:
+    def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
         """Extract triples using the Stanford OpenIE pipeline.
         @details
             Uses a context manager to spin up the Java server via CoreNLPClient.
             This ensures the heavy Java process (which requires ~4GB RAM) is 
             terminated immediately after processing, freeing resources.
         @param text  The raw narrative text.
-        @param parse_tuples  If False, concatenates the triples into a multi-line string.
+        @param parse_tuples  Unused (Always parses to Triples).
         @return  A list of extracted relations.
         """
         # Lazy Import
@@ -164,7 +161,7 @@ class RelationExtractorOpenIE(RelationExtractor):
             stanza.install_corenlp()
 
         text = text.replace("\n", " ").strip()
-        out = []
+        out: List[Triple] = []
 
         # We use a context manager to ensure the Java server is cleanly started / stopped.
         with CoreNLPClient(**self.client_config) as client:
@@ -173,13 +170,14 @@ class RelationExtractorOpenIE(RelationExtractor):
             # Iterate through sentences and their extracted triples
             for sentence in doc.sentence:
                 for triple in sentence.openieTriple:
-                    # formatting: (Subject, Relation, Object)
-                    # We create a tuple for easy consumption
-                    t = (triple.subject, triple.relation, triple.object)
-                    out.append(t)
+                    # We create a TypedDict for easy consumption
+                    out.append({
+                        's': triple.subject, 
+                        'r': triple.relation, 
+                        'o': triple.object
+                    })
                     
-        # Delegate to base helper if raw strings are requested
-        return out if parse_tuples else self._triples_to_strings(out)
+        return out
 
 
 class RelationExtractorTextacy(RelationExtractor):
@@ -197,10 +195,10 @@ class RelationExtractorTextacy(RelationExtractor):
         self.nlp: Optional["spacy.language.Language"] = None
         self.model_name: str = "en_core_web_sm"
 
-    def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Triple, str]]:
+    def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
         """Extract SVO triples.
         @param text  The raw input text.
-        @param parse_tuples  If False, concatenates the triples into a multi-line string.
+        @param parse_tuples  Unused (Always parses to Triples).
         @return  A list of extracted relations.
         """
         # Lazy Imports
@@ -218,7 +216,7 @@ class RelationExtractorTextacy(RelationExtractor):
                 self.nlp = spacy.load(self.model_name)
 
         doc = self.nlp(text)
-        out = []
+        out: List[Triple] = []
 
         # Extract SVO (Subject-Verb-Object)
         # Textacy triples use token lists instead of strings ["Alberts", "brother"] vs "Alberts brother", so we must join them.
@@ -226,8 +224,7 @@ class RelationExtractorTextacy(RelationExtractor):
             subj = " ".join([t.text for t in svo.subject])
             verb = " ".join([t.text for t in svo.verb])
             obj =  " ".join([t.text for t in svo.object])
-            out.append((subj, verb, obj))
+            out.append({'s': subj, 'r': verb, 'o': obj})
             
-        # Delegate to base helper if raw strings are requested
-        return out if parse_tuples else self._triples_to_strings(out)
+        return out
 

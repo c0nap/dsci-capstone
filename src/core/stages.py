@@ -173,7 +173,7 @@ def task_11_send_chunk(c, collection_name, book_title):
 # tied to pipeline_B -> pipeline_A
 
 
-def task_12_relation_extraction_rebel(text, max_tokens=1024, parse_tuples=True):
+def task_12_relation_extraction_rebel(text, max_tokens=1024):
     with Log.timer():
         from src.components.relation_extraction import RelationExtractorREBEL
 
@@ -183,27 +183,27 @@ def task_12_relation_extraction_rebel(text, max_tokens=1024, parse_tuples=True):
         # re_rst = "GAIR/rst-information-extraction-11b"
         # ner_renard = "compnet-renard/bert-base-cased-literary-NER"
         nlp = RelationExtractorREBEL(model_name=re_rebel, max_tokens=max_tokens)
-        extracted = nlp.extract(text, parse_tuples=parse_tuples)
+        extracted = nlp.extract(text)
         return extracted
 
 
-def task_12_relation_extraction_openie(text, memory='4G', parse_tuples=True):
+def task_12_relation_extraction_openie(text, memory='4G'):
     with Log.timer():
         from src.components.relation_extraction import RelationExtractorOpenIE
 
         # Initialize OpenIE wrapper (handles CoreNLP server internally)
         nlp = RelationExtractorOpenIE(memory=memory)
-        extracted = nlp.extract(text, parse_tuples=parse_tuples)
+        extracted = nlp.extract(text)
         return extracted
 
 
-def task_12_relation_extraction_textacy(text, parse_tuples=True):
+def task_12_relation_extraction_textacy(text):
     with Log.timer():
         from src.components.relation_extraction import RelationExtractorTextacy
 
         # Initialize Textacy wrapper (pure Python backup)
         nlp = RelationExtractorTextacy()
-        extracted = nlp.extract(text, parse_tuples=parse_tuples)
+        extracted = nlp.extract(text)
         return extracted
 
 

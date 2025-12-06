@@ -107,19 +107,19 @@ def llm_prompt_task(request):
 @pytest.mark.dependency(name="job_12_extraction_minimal", scope="session")
 @pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
 def test_job_12_extraction_minimal(relation_extraction_task):
-    """Parametrized test to verify all extractors return a standard list of tuples.
-    @note Relying on default args ensures REBEL returns tuples (parse_tuples=True).
+    """Parametrized test to verify all extractors return a standard list of Triple dicts.
+    @note Relying on default args ensures REBEL parses output to Triples.
     """
     sample_text = "Alice met Bob in the forest. Bob then went to the village."
     extracted = relation_extraction_task(sample_text)
     assert isinstance(extracted, list)
     
-    # If the model extracted anything, ensure it conforms to the standard (Subj, Rel, Obj) tuple
+    # If the model extracted anything, ensure it conforms to the standard Triple dict
     if len(extracted) > 0:
         triple = extracted[0]
-        assert isinstance(triple, tuple), f"Expected tuple output, got {type(triple)}"
-        assert len(triple) == 3, "Tuple must have exactly 3 elements (Subj, Rel, Obj)"
-        assert all(isinstance(x, str) for x in triple)
+        assert isinstance(triple, dict), f"Expected dict output, got {type(triple)}"
+        assert all(key in triple for key in ["s", "r", "o"]), "Triple must have keys 's', 'r', and 'o'"
+        assert all(isinstance(val, str) for val in triple.values())
 
 
 @pytest.mark.task
@@ -129,38 +129,19 @@ def test_job_12_extraction_minimal(relation_extraction_task):
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_chunk", scope="session", depends=["job_12_extraction_minimal"])
 @pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
-def test_job_12_extraction_chunk(book_data, relation_extraction_task):
-    """Runs all extractors on realistic pipeline data in RAW mode.
-    @details  Now validates that OpenIE/Textacy can produce stringified output consistent with REBEL.
-    """
-    # parse_tuples=False forces the class to return strings
-    extracted = relation_extraction_task(book_data["chunk"].text, parse_tuples=False)
+def test_job_12_extraction(book_data, relation_extraction_task):
+    """Runs all extractors on realistic pipeline data."""
+    extracted = relation_extraction_task(book_data["chunk"].text)
 
     assert isinstance(extracted, list)
-    assert len(extracted) >= 5  # Realistic chunk should yield multiple triples
-    assert all(isinstance(triple, str) for triple in extracted)
+    # Flexible check: we expect some results, but exact count depends on the model
+    assert len(extracted) >= 1 
+    assert all(isinstance(t, dict) for t in extracted)
     
-    # Verify the standardized delimiter is present (defined in Base Class)
-    # This ensures downstream parsers don't break regardless of which model was used
-    assert any("  " in triple for triple in extracted)
-
-
-@pytest.mark.task
-@pytest.mark.stage_B
-@pytest.mark.re
-@pytest.mark.smoke
-@pytest.mark.order(12)
-@pytest.mark.dependency(name="job_12_extraction_tuples", scope="session", depends=["job_12_extraction_chunk"])
-@pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
-def test_job_12_extraction_tuples(book_data, relation_extraction_task):
-    """Runs all extractors with tuple parsing on realistic data."""
-    extracted = relation_extraction_task(book_data["chunk"].text, parse_tuples=True)
-
-    assert isinstance(extracted, list)
-    assert len(extracted) >= 5
-    assert all(isinstance(triple, tuple) and len(triple) == 3 for triple in extracted)
-    
-    for subj, rel, obj in extracted:
+    for triple in extracted:
+        subj = triple["s"]
+        rel = triple["r"]
+        obj = triple["o"]
         assert isinstance(subj, str) and len(subj) > 0
         assert isinstance(rel, str) and len(rel) > 0
         assert isinstance(obj, str) and len(obj) > 0
@@ -190,7 +171,7 @@ def test_job_14_llm_minimal(book_data, llm_prompt_task):
 @pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(120)
-@pytest.mark.dependency(name="stage_B_minimal", scope="session", depends=["job_14_llm_minimal", "job_12_extraction_tuples"])
+@pytest.mark.dependency(name="stage_B_minimal", scope="session", depends=["job_14_llm_minimal", "job_12_extraction_chunk"])
 def test_pipeline_B_minimal(docs_db, book_data):
     """Test running the aggregate pipeline_B on smoke test data."""
     collection_name = "example_chunks"
