@@ -1,43 +1,33 @@
 from typing import Any, Dict, List
+from dotenv import load_dotenv
+import os
 
 
-# Keep most imports inside a class method, dont pull them along during Worker imports
+"""Contains functions to score a summary or knowledge graph.
+    @details
+    - Most imports are kept isolated inside functions.
+    - Reduces heavy baggage during Worker imports."""
 
 
 class Metrics:
-    """Utility class for computing and posting evaluation metrics."""
-
-    timeout_seconds = 900
+    """Utility class for posting evaluation metrics to Blazor web application."""
 
     def __init__(self) -> None:
-        from dotenv import load_dotenv
-        import os
-
-        # Read environment variables
         load_dotenv(".env")
+        ## Where to POST the book chunk payload.
+        self.blazor_url: str = self.get_blazor_url()
+        ## Number of seconds to wait on Blazor to accept the POST before timing out.
+        self.timeout_seconds: float = 60
+
+    def get_blazor_url(self) -> str:
+        """Read environment variables to construct the Blazor URL.
+        @return  A string URL specifying the network location of Blazor metrics endpoint."""
         blazor_host = os.environ["BLAZOR_HOST"]
         blazor_port = os.environ["BLAZOR_PORT"]
-        self.blazor_url = f"http://{blazor_host}:{blazor_port}/api/metrics"
+        return f"http://{blazor_host}:{blazor_port}/api/metrics"
 
     @staticmethod
-    def compute_basic(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]:
-        """Compute ROUGE and BERTScore.
-        @param summary  A text string containing a book summary
-        @param gold_summary  A summary to compare against
-        @param chunk  The original text of the chunk.
-        @return  Dict containing 'rouge' and 'bertscore' keys.
-            Scores are nested with inconsistent schema."""
-        import evaluate
-
-        rouge = evaluate.load("rouge")
-        bertscore = evaluate.load("bertscore")
-
-        rouge_result = rouge.compute(predictions=[summary], references=[gold_summary])
-        bertscore_result = bertscore.compute(predictions=[summary], references=[gold_summary], model_type="roberta-large")
-        return {"rouge": rouge_result, "bertscore": bertscore_result}
-
-    @staticmethod
-    def generate_payload(
+    def get_metrics_template(
         rouge1_f1: float = 0.0,
         rouge2_f1: float = 0.0,
         rougeL_f1: float = 0.0,
@@ -117,7 +107,7 @@ class Metrics:
         }
 
     @staticmethod
-    def generate_basic(book_id: str, book_title: str, summary: str, gold_summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
+    def get_book_template(book_id: str, book_title: str, summary: str, gold_summary: str, metrics: Dict[str, Any] = None) -> Dict[str, Any]:
         """Create the full Blazor payload for a single book.
         @param book_id  Unique identifier for one book.
         @param book_title  String containing the title of a book.
@@ -125,15 +115,12 @@ class Metrics:
         @param gold_summary  Optional summary to compare against.
         @param metrics  Dictionary containing various nested evaluation metrics.
         @return  A dictionary with C#-style key names."""
-        if metrics is None:
-            metrics = Metrics.generate_payload()
-
         return {
             "BookID": str(book_id),
             "BookTitle": book_title,
             "SummaryText": summary,
             "GoldSummaryText": gold_summary,
-            "Metrics": metrics,
+            "Metrics": metrics or Metrics.get_metrics_template(),
             "QAResults": [],
         }
 
@@ -141,13 +128,13 @@ class Metrics:
     def generate_example() -> Dict[str, Any]:
         """Create a placeholder payload with dummy values.
         @return Full payload with nested metrics."""
-        return Metrics.create_summary_payload(
+        return Metrics.get_book_template(
             "book-42",
             "Example Book",
             "This is an AI-generated summary of the entire book. It captures the key plot points and themes.",
             "No gold-standard summary available.",
             # Override some defaults with example values
-            Metrics.generate_payload_metrics(
+            Metrics.get_metrics_template(
                 rouge1_f1=0.83,
                 rouge2_f1=0.86,
                 rougeL_f1=0.89,
@@ -205,8 +192,8 @@ class Metrics:
         @param gold_summary  Optional summary to compare against.
         @param text  A string containing text from the book.
         @param kwargs  Any additional named arguments will be added to the payload."""
-        results = Metrics.compute_basic_metrics(summary, gold_summary, text)
-        metrics = Metrics.generate_payload_metrics(
+        results = Metrics.compute_basic(summary, gold_summary, text)
+        metrics = Metrics.get_metrics_template(
             rouge1_f1=results["rouge"]["rouge1"],
             rouge2_f1=results["rouge"]["rouge2"],
             rougeL_f1=results["rouge"]["rougeL"],
@@ -216,7 +203,7 @@ class Metrics:
             bert_f1=results["bertscore"]["f1"][0],
             **kwargs,
         )
-        payload = Metrics.create_summary_payload(book_id, book_title, summary, gold_summary, metrics)
+        payload = Metrics.get_book_template(book_id, book_title, summary, gold_summary, metrics)
         self.post_payload(payload)
 
     def post_example(self, book_id: str, book_title: str, summary: str) -> None:
@@ -224,18 +211,56 @@ class Metrics:
         @param book_id  Unique identifier for one book.
         @param book_title  String containing the title of a book.
         @param summary  String containing a book summary."""
-        metrics = Metrics.generate_payload_metrics()
-        payload = Metrics.create_summary_payload(book_id, book_title, summary, "No gold-standard summary available.", metrics)
+        payload = Metrics.generate_example()
         self.post_payload(payload)
 
     
 
-    
-    
-    
 
 
 
+
+
+
+
+@staticmethod
+def compute_basic(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]:
+    """Compute ROUGE and BERTScore.
+    @param summary  A text string containing a book summary
+    @param gold_summary  A summary to compare against
+    @param chunk  The original text of the chunk.
+    @return  Dict containing 'rouge' and 'bertscore' keys.
+        Scores are nested with inconsistent schema."""
+    rouge_result = run_rouge(summary, gold_summary)
+    bertscore_result = run_bertscore(summary, gold_summary)
+    return {"rouge": rouge_result, "bertscore": bertscore_result}
+
+@staticmethod
+def run_rouge(prediction: str, reference: str) -> Dict[str, float]:
+    """Run the ROUGE evaluation metric given one reference and one prediction to judge.
+    @param prediction  Text string containing the generated summary.
+    @param reference  Text string to compare against.
+    @return  ROUGE results directly from 'evaluate' library.
+    Values correspond to F1 score since this is the standard ROUGE metric.
+    Example schema: { "rouge1": 0.87, ... }
+    Valid keys: rouge1, rouge2, rougeL, rougeLsum."""
+    import evaluate
+    model = evaluate.load("rouge")
+    rouge_result = rouge.compute(predictions=[prediction], references=[reference])
+    return result
+
+@staticmethod
+def run_bertscore(prediction: str, reference: str) -> Dict[str, List[float]]:
+    """Run the BERTScore evaluation metric given one reference and one prediction to judge.
+    @param prediction  Text string containing the generated summary.
+    @param reference  Text string to compare against.
+    @return  BERTScore results directly from 'evaluate' library.
+    Example schema: { "precision": [0.87], ... }
+    Valid keys: precision, recall, f1."""
+    import evaluate
+    model = evaluate.load("bertscore")
+    result = model.compute(predictions=[prediction], references=[reference], model_type="roberta-large")
+    return result
 
 
 
@@ -301,9 +326,6 @@ def run_questeval(
         "value": result.get("ex_level_scores", [0])[0],
         "has_reference": ref is not None,
     }
-
-
-
 
 
 
