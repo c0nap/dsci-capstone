@@ -4,6 +4,7 @@ from typing import Optional, Iterator
 import requests
 import time
 import os
+import shutil
 
 
 class DatasetLoader(ABC):
@@ -11,6 +12,7 @@ class DatasetLoader(ABC):
     @details
     Handles streaming for large datasets, normalizes output to a 
     common schema, and provides shared utilities for Gutenberg lookups.
+    Manages a global index that tracks books across all datasets.
     """
     
     TEXTS_DIR = "./datasets/texts"
@@ -92,6 +94,10 @@ class DatasetLoader(ABC):
         except Exception as e:
             print(f"Warning: Gutendex lookup failed for {gutenberg_id or query}: {e}")
             return None
+    
+    # --------------------------------------------------
+    # Download Helpers
+    # --------------------------------------------------
 
     def _calculate_subset_size(self, total: int, n: int = None, fraction: float = None) -> int:
         """Calculate number of items to download.
@@ -105,6 +111,10 @@ class DatasetLoader(ABC):
         elif n is None:
             return total
         return min(n, total)
+    
+    # --------------------------------------------------
+    # Global Index Management
+    # --------------------------------------------------
     
     def _get_next_id(self) -> int:
         """Get next available book ID and increment counter.
@@ -171,7 +181,14 @@ class DatasetLoader(ABC):
         # Save updated index
         index_df.to_csv(self.INDEX_FILE, index=False)
 
-    def make_index_row(**kwargs):
+    @staticmethod
+    def make_index_row(**kwargs) -> dict:
+        """Create standardized index row with all fields.
+        @param kwargs  Fields to populate (book_id, title, gutenberg_id, etc.)
+        @return  Dict with all index fields, unpopulated fields set to None.
+        @details
+        Use this factory to ensure consistent schema across datasets.
+        """
         row = {
             "book_id": None,
             "title": None,
@@ -192,6 +209,16 @@ class DatasetLoader(ABC):
 # Helper Functions - Index Management
 # --------------------------------------------------
 
+def get_book_count() -> int:
+    """Get total number of books in index.
+    @return  Number of books, or 0 if index doesn't exist.
+    """
+    if not os.path.exists(DatasetLoader.INDEX_FILE):
+        return 0
+    df = read_csv(DatasetLoader.INDEX_FILE)
+    return len(df)
+
+
 def load_text_from_path(text_path: str) -> str:
     """Load full text from saved file path.
     @param text_path  Path to text file.
@@ -202,6 +229,31 @@ def load_text_from_path(text_path: str) -> str:
     """
     with open(text_path, "r", encoding="utf-8") as f:
         return f.read()
+
+
+def prune_missing_files() -> int:
+    """Remove index entries where text files no longer exist.
+    @return  Number of entries removed.
+    @details
+    This is a file-system integrity check only. Does not deduplicate.
+    """
+    index_file = DatasetLoader.INDEX_FILE
+    if not os.path.exists(index_file):
+        return 0
+
+    df = read_csv(index_file)
+    initial_count = len(df)
+
+    def file_exists(path):
+        return isinstance(path, str) and os.path.exists(path)
+
+    df = df[df['text_path'].apply(file_exists)]
+    
+    removed = initial_count - len(df)
+    if removed > 0:
+        df.to_csv(index_file, index=False)
+    
+    return removed
 
 
 def hard_reset() -> int:

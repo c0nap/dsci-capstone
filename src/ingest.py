@@ -74,7 +74,7 @@ def print_index() -> None:
         print("No index file created (no data downloaded)")
 
 
-def clean_index(reindex: bool = False) -> None:
+def repair_index(reindex: bool = False) -> None:
     """
     @param reindex  Whether to recursively rename all dataset files to start at ID 1.
     @details
@@ -178,5 +178,5 @@ Examples:
         n_litbank=args.n_litbank,
         litbank_repo=args.litbank_repo
     )
-    clean_index(args.reset)
+    repair_index(args.reset)
     print_index()
