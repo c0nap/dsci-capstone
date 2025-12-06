@@ -40,31 +40,20 @@ class RelationExtractorREBEL(RelationExtractor):
         It is powerful but can hallucinate or normalize entities (non-literal).
     """
 
-    def __init__(self, model_name="Babelscape/rebel-large", max_tokens=1024) -> None:
-        """Initialize the REBEL model and tokenizer.
-        @note  Imports are strictly local. This prevents the heavy PyTorch/Transformer 
-               stack from initializing if this specific extractor is not selected.
+    def __init__(self, model_name: str = "Babelscape/rebel-large", max_tokens: int = 1024) -> None:
+        """Initialize the REBEL config.
+        @note  Imports and model loading are deferred to the first extract() call.
         @param model_name  The HuggingFace hub path for the model.
         @param max_tokens  The maximum sequence length for the tokenizer.
         """
-        # 1. Lazy Imports
-        import spacy
-        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-
-        # 2. Setup Spacy for basic sentence segmentation (faster than Transformers for splitting)
-        self.nlp = spacy.blank("en") 
-        self.sentencizer = self.nlp.add_pipe("sentencizer")
-
-        # 3. Load Environment and Model
-        # Ensure HF_HUB_TOKEN is available for gated models if necessary
-        load_dotenv(".env")
-        
-        print(f"Loading REBEL model: {model_name}...")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-        
+        self.model_name = model_name
         self.max_tokens = max_tokens
         self.tuple_delim = " "
+        
+        # Placeholders for lazy loading
+        self.nlp: Optional["spacy.language.Language"] = None
+        self.tokenizer: Optional["transformers.PreTrainedTokenizer"] = None
+        self.model: Optional["transformers.PreTrainedModel"] = None
 
     def extract(self, text: str, parse_tuples: bool = False) -> List[Union[Triple, str]]:
         """Perform extraction on the text using the generative model.
@@ -75,6 +64,20 @@ class RelationExtractorREBEL(RelationExtractor):
         @param parse_tuples  If True, parses the generated string into structured tuples.
         @return  A list of extracted relations.
         """
+        # 1. Lazy Imports & Setup (Run once)
+        if self.model is None or self.nlp is None:
+            import spacy
+            from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+            
+            # Setup Spacy for basic sentence segmentation
+            self.nlp = spacy.blank("en")
+            self.nlp.add_pipe("sentencizer")
+
+            # Load Model
+            print(f"Loading REBEL model: {self.model_name}...")
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+            self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
+
         # Split into sentences: RE models generally output 1 relation set per input sequence.
         # Cleaning newlines prevents tokenization artifacts.
         text = text.replace("\n", " ").strip()
@@ -120,80 +123,61 @@ class RelationExtractorOpenIE(RelationExtractor):
         this extracts spans directly from the text and handles coreference resolution internally.
     """
 
-    def __init__(self, memory='4G') -> None:
-        """Initialize the Stanza CoreNLP client interface.
+    def __init__(self, memory='4G', timeout=600) -> None:
+        """Initialize the Stanza CoreNLP configuration.
         @details 
-            Checks for the existence of the CoreNLP backend and installs it if missing.
-            This is a blocking operation on the first run.
+            Configuration targets "Exhaustive" and "Coref-Resolved" extraction.
         @param memory  Java heap size string (e.g., '4G', '8G').
+        @param timeout  Timeout for the Java server response in ms.
         """
-        # 1. Lazy Imports: Only happen when you instantiate THIS class
-        import stanza
-        from stanza.server import CoreNLPClient
-
-        # 2. Attach to self so other methods can use them
-        self.stanza = stanza
-        self.client = CoreNLPClient
-
-        # 3. Download CoreNLP backend if not present (Automatic Setup)
-        # This saves the jar files to ~/stanza_corenlp by default
-        print("Ensuring CoreNLP backend is installed...")
-        install_dir = os.path.expanduser("~/stanza_corenlp")
-        if not os.path.exists(install_dir):
-            print("Installing CoreNLP backend...")
-            self.stanza.install_corenlp()
-        
-        self.java_memory = memory
-
-    def _get_client(self) -> "CoreNLPClient":
-        """Configure and instantiate the CoreNLP Client.
-        @details
-            Configuration targets "Exhaustive" and "Coref-Resolved" extraction:
-            - openie.resolve_coref: Uses the coref graph to replace pronouns (He -> Harry).
-            - openie.triple.strict: False allows for more loose/exhaustive extractions.
-            - openie.max_entailments_per_clause: Maximizes variations of triples returned.
-        @return  An instance of stanza.server.CoreNLPClient.
-        """
-        properties = {
-            'openie.resolve_coref': True,
-            'openie.triple.strict': False,
-            'openie.max_entailments_per_clause': 500
+        # Pre-configure properties so they are ready for the context manager
+        self.client_config = {
+            'annotators': ['tokenize', 'ssplit', 'pos', 'lemma', 'ner', 'parse', 'coref', 'openie'],
+            'properties': {
+                'openie.resolve_coref': True,
+                'openie.triple.strict': False,
+            },
+            'timeout': timeout,
+            'memory': memory,
+            'be_quiet': True
         }
-        
-        # Use self.client (lazy loaded)
-        return self.client(
-            annotators=['tokenize', 'ssplit', 'pos', 'lemma', 'ner', 'parse', 'coref', 'openie'],
-            properties=properties,
-            timeout=30000,
-            memory=self.java_memory,
-            be_quiet=True # Set to False for debugging Java output
-        )
 
     def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Triple, str]]:
         """Extract triples using the Stanford OpenIE pipeline.
         @details
-            Uses a context manager to spin up the Java server, process the text, 
-            and tear it down immediately to free resources.
-            For production / batch processing, you might want to keep the client alive longer
+            Uses a context manager to spin up the Java server via CoreNLPClient.
+            This ensures the heavy Java process (which requires ~4GB RAM) is 
+            terminated immediately after processing, freeing resources.
         @param text  The raw narrative text.
         @param parse_tuples  If False, concatenates the triples into a multi-line string.
         @return  A list of extracted relations.
         """
+        # Lazy Import
+        import stanza
+        from stanza.server import CoreNLPClient
+
+        # Ensure CoreNLP backend is installed (Run once check)
+        # This saves the jar files to ~/stanza_corenlp by default
+        install_dir = os.path.expanduser("~/stanza_corenlp")
+        if not os.path.exists(install_dir):
+            print("Ensuring CoreNLP backend is installed...")
+            stanza.install_corenlp()
+
         text = text.replace("\n", " ").strip()
         out = []
 
-        # We use a context manager to ensure the server spins up/down cleanly
-        with self._get_client() as client:
-            # Submit annotation request
-            ann = client.annotate(text)
+        # We use a context manager to ensure the Java server is cleanly started / stopped.
+        with CoreNLPClient(**self.client_config) as client:
+            doc = client.annotate(text)
             
             # Iterate through sentences and their extracted triples
-            for sentence in ann.sentence:
+            for sentence in doc.sentence:
                 for triple in sentence.openieTriple:
                     # formatting: (Subject, Relation, Object)
                     # We create a tuple for easy consumption
                     t = (triple.subject, triple.relation, triple.object)
                     out.append(t)
+                    
         # Delegate to base helper if raw strings are requested
         return out if parse_tuples else self._triples_to_strings(out)
 
@@ -207,35 +191,38 @@ class RelationExtractorTextacy(RelationExtractor):
     """
 
     def __init__(self) -> None:
-        """Initialize Spacy model for dependency parsing.
-        @note  Defaults to 'en_core_web_sm'. Ensure this model is downloaded via `python -m spacy download en_core_web_sm`.
+        """Initialize config only.
+        @note  Spacy model loading is deferred to extract().
         """
-        import spacy
-        import textacy
+        self.nlp: Optional["spacy.language.Language"] = None
+        self.model_name: str = "en_core_web_sm"
 
-        # Auto-download if missing (Self-healing)
-        try:
-            self.nlp = spacy.load("en_core_web_sm")
-        except OSError:
-            print("Spacy model 'en_core_web_sm' not found. Downloading...")
-            spacy.cli.download("en_core_web_sm")
-            self.nlp = spacy.load("en_core_web_sm")
-        
-        # Attach textacy to self to avoid import errors later
-        self.textacy = textacy
-        
     def extract(self, text: str, parse_tuples: bool = True) -> List[Union[Triple, str]]:
         """Extract SVO triples.
         @param text  The raw input text.
         @param parse_tuples  If False, concatenates the triples into a multi-line string.
         @return  A list of extracted relations.
         """
+        # Lazy Imports
+        import spacy
+        import textacy
+        
+        # Load Model on first run
+        if self.nlp is None:
+            # Auto-download if missing (Self-healing)
+            try:
+                self.nlp = spacy.load(self.model_name)
+            except OSError:
+                print(f"Spacy model '{self.model_name}' not found. Downloading...")
+                spacy.cli.download(self.model_name)
+                self.nlp = spacy.load(self.model_name)
+
         doc = self.nlp(text)
         out = []
 
         # Extract SVO (Subject-Verb-Object)
         # Textacy triples use token lists instead of strings ["Alberts", "brother"] vs "Alberts brother", so we must join them.
-        for svo in self.textacy.extract.subject_verb_object_triples(doc):
+        for svo in textacy.extract.subject_verb_object_triples(doc):
             subj = " ".join([t.text for t in svo.subject])
             verb = " ".join([t.text for t in svo.verb])
             obj =  " ".join([t.text for t in svo.object])
