@@ -192,7 +192,7 @@ class Metrics:
         @param gold_summary  Optional summary to compare against.
         @param text  A string containing text from the book.
         @param kwargs  Any additional named arguments will be added to the payload."""
-        results = Metrics.compute_basic(summary, gold_summary, text)
+        results = compute_basic(summary, gold_summary, text)
         metrics = Metrics.get_metrics_template(
             rouge1_f1=results["rouge"]["rouge1"],
             rouge2_f1=results["rouge"]["rouge2"],
@@ -246,7 +246,7 @@ def run_rouge(prediction: str, reference: str) -> Dict[str, float]:
     Valid keys: rouge1, rouge2, rougeL, rougeLsum."""
     import evaluate
     model = evaluate.load("rouge")
-    rouge_result = rouge.compute(predictions=[prediction], references=[reference])
+    result = model.compute(predictions=[prediction], references=[reference])
     return result
 
 @staticmethod
@@ -408,7 +408,7 @@ def run_bookscore(chunk: Dict[str, Any], *, model: str = "gpt-3.5-turbo", batch_
                 cwd=pkg_path,
                 capture_output=True,
                 text=True,
-                timeout=Metrics.timeout_seconds,
+                timeout=self.timeout_seconds,
                 check=True,
                 # start_new_session=True
             )
