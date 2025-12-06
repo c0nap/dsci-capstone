@@ -654,7 +654,7 @@ def sanitize_node(label: str) -> str:
             nlp = spacy.load("en_core_web_sm")
         except OSError:
             print("Spacy model 'en_core_web_sm' not found. Downloading...")
-            spacy.cli.download("en_core_web_sm")
+            spacy.cli.download("en_core_web_sm")  # type: ignore[attr-defined]
             nlp = spacy.load("en_core_web_sm")
 
     doc = nlp(label)

@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 import os
-from typing import List, Optional, TypedDict, TYPE_CHECKING
+from typing import Any, List, Optional, TypedDict, TYPE_CHECKING
 from abc import ABC, abstractmethod
 
 # Forward references for lazy-loaded modules

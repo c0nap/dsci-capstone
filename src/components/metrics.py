@@ -223,7 +223,6 @@ class Metrics:
 
 
 
-@staticmethod
 def compute_basic(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]:
     """Compute ROUGE and BERTScore.
     @param summary  A text string containing a book summary
@@ -235,7 +234,6 @@ def compute_basic(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]
     bertscore_result = run_bertscore(summary, gold_summary)
     return {"rouge": rouge_result, "bertscore": bertscore_result}
 
-@staticmethod
 def run_rouge(prediction: str, reference: str) -> Dict[str, float]:
     """Run the ROUGE evaluation metric given one reference and one prediction to judge.
     @param prediction  Text string containing the generated summary.
@@ -249,7 +247,6 @@ def run_rouge(prediction: str, reference: str) -> Dict[str, float]:
     result = model.compute(predictions=[prediction], references=[reference])
     return result
 
-@staticmethod
 def run_bertscore(prediction: str, reference: str) -> Dict[str, List[float]]:
     """Run the BERTScore evaluation metric given one reference and one prediction to judge.
     @param prediction  Text string containing the generated summary.
@@ -366,6 +363,7 @@ def run_bookscore(chunk: Dict[str, Any], *, model: str = "gpt-3.5-turbo", batch_
     summary = chunk['summary']
     book_title = chunk.get('book_title', 'Unkown Book')  # TODO: convert to arg
     api_key = os.environ["BOOKSCORE_API_KEY"]
+    timeout_seconds: float = 300
 
     with tempfile.TemporaryDirectory() as tmpdir:
         # 1: Write book text as pickle
@@ -408,7 +406,7 @@ def run_bookscore(chunk: Dict[str, Any], *, model: str = "gpt-3.5-turbo", batch_
                 cwd=pkg_path,
                 capture_output=True,
                 text=True,
-                timeout=self.timeout_seconds,
+                timeout=timeout_seconds,
                 check=True,
                 # start_new_session=True
             )
