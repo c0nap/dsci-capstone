@@ -2,7 +2,7 @@ from pandas import read_csv
 import os
 from src.corpus.base import DatasetLoader
 from src.corpus.hf import BookSumLoader, NarrativeQALoader
-from src.corpus.read import LitBankLoader
+from src.corpus.repo import LitBankLoader
 import src.corpus
 import shutil
 
@@ -55,7 +55,7 @@ def download_by_counts(n_booksum: int = None,
         if n_litbank == -1:
             n_litbank = None
         # Auto-resolve repo path
-        resolved_repo = read.ensure_github_repo(litbank_url, "litbank")
+        resolved_repo = repo.ensure_github_repo(litbank_url, "litbank")
         print(f"Processing LitBank (n={n_litbank or 'all'})...")
         loader = LitBankLoader(repo_path=resolved_repo)
         loader.download(n=n_litbank)
