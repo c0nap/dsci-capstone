@@ -27,9 +27,12 @@ def optional_param(name: str, package: str) -> pytest.param:
         marks=pytest.mark.skipif(not exists, reason=f"{package} not installed")
     )
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def session(request: pytest.FixtureRequest) -> Generator[Session, None, None]:
-    """Fixture to create session."""
+    """Fixture to create session.
+    @details
+    - autouse=True ensures Session.setup() runs once for the whole suite.
+    - See smoke test for pipeline_E: helper function imports session, but the test doesn't ask for it."""
     # Parse control args
     verbose = request.config.getoption("--log-success")
     Log.USE_COLORS = request.config.getoption("--no-log-colors")

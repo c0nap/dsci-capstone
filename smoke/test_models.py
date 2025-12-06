@@ -38,7 +38,6 @@ def book_data():
         "summary": "The children discover a magical carpet with a Phoenix.",
         "gold_summary": "Children find magical carpet.",
         "chunk": chunk,
-        "chunk_text": chunk_text,
         "rebel_triples": [
             "children  had  carpet",
             "carpet  arrived  nursery",
@@ -106,13 +105,13 @@ def llm_prompt_task(request):
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_minimal", scope="session")
-@pytest.mark.parametrize("relation_extractor", PARAMS_RELATION_EXTRACTORS, indirect=True)
-def test_job_12_extraction_minimal(relation_extractor):
+@pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
+def test_job_12_extraction_minimal(relation_extraction_task):
     """Parametrized test to verify all extractors return a standard list of tuples.
     @note Relying on default args ensures REBEL returns tuples (parse_tuples=True).
     """
     sample_text = "Alice met Bob in the forest. Bob then went to the village."
-    extracted = relation_extractor(sample_text)
+    extracted = relation_extraction_task(sample_text)
     assert isinstance(extracted, list)
     
     # If the model extracted anything, ensure it conforms to the standard (Subj, Rel, Obj) tuple
@@ -129,13 +128,13 @@ def test_job_12_extraction_minimal(relation_extractor):
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_chunk", scope="session", depends=["job_12_extraction_minimal"])
-@pytest.mark.parametrize("relation_extractor", PARAMS_RELATION_EXTRACTORS, indirect=True)
-def test_job_12_extraction_chunk(book_data, relation_extractor):
+@pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
+def test_job_12_extraction_chunk(book_data, relation_extraction_task):
     """Runs all extractors on realistic pipeline data in RAW mode.
     @details  Now validates that OpenIE/Textacy can produce stringified output consistent with REBEL.
     """
     # parse_tuples=False forces the class to return strings
-    extracted = relation_extractor(book_data["chunk_text"], parse_tuples=False)
+    extracted = relation_extraction_task(book_data["chunk"].text, parse_tuples=False)
 
     assert isinstance(extracted, list)
     assert len(extracted) >= 5  # Realistic chunk should yield multiple triples
@@ -155,7 +154,7 @@ def test_job_12_extraction_chunk(book_data, relation_extractor):
 @pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
 def test_job_12_extraction_tuples(book_data, relation_extraction_task):
     """Runs all extractors with tuple parsing on realistic data."""
-    extracted = relation_extraction_task(book_data["chunk_text"], parse_tuples=True)
+    extracted = relation_extraction_task(book_data["chunk"].text, parse_tuples=True)
 
     assert isinstance(extracted, list)
     assert len(extracted) >= 5
@@ -178,11 +177,11 @@ def test_job_14_llm_minimal(book_data, llm_prompt_task):
     """Test LLM-based triple sanitization with realistic data."""
     triples_string = "\n".join(book_data["rebel_triples"])
 
-    prompt, llm_output = llm_prompt_task(triples_string, book_data["chunk_text"])
+    prompt, llm_output = llm_prompt_task(triples_string, book_data["chunk"].text)
 
     assert isinstance(prompt, str)
     assert triples_string in prompt
-    assert book_data["chunk_text"] in prompt
+    assert book_data["chunk"].text in prompt
     assert isinstance(llm_output, str)
     assert len(llm_output) > 0
 
@@ -191,7 +190,7 @@ def test_job_14_llm_minimal(book_data, llm_prompt_task):
 @pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(120)
-@pytest.mark.dependency(name="stage_B_minimal", scope="session", depends=["job_14_llm_minimal", "job_12_rebel_tuples"])
+@pytest.mark.dependency(name="stage_B_minimal", scope="session", depends=["job_14_llm_minimal", "job_12_extraction_tuples"])
 def test_pipeline_B_minimal(docs_db, book_data):
     """Test running the aggregate pipeline_B on smoke test data."""
     collection_name = "example_chunks"
@@ -223,11 +222,11 @@ def test_pipeline_B_minimal(docs_db, book_data):
 @pytest.mark.stage_D
 @pytest.mark.smoke
 @pytest.mark.order(140)
-@pytest.mark.dependency(name="stage_D_minimal", scope="session", depends=["pipeline_B_minimal"])
+@pytest.mark.dependency(name="stage_D_minimal", scope="session", depends=["stage_B_minimal"])
 def test_pipeline_D_minimal(docs_db, book_data):
     """Test running pipeline_D with smoke test data."""
     collection_name = "test_pipeline_d_smoke"
-    chunk = book_data["sample_chunk"]
+    chunk = book_data["chunk"]
     triples_string = "\n".join(book_data["rebel_triples"])
 
     # Insert chunk first - verified by pipeline_B_minimal
@@ -278,7 +277,7 @@ def test_pipeline_E_minimal_full_payload(book_data):
     summary = book_data["summary"]
     book_title = book_data["book_title"]
     book_id = str(book_data["book_id"])
-    chunk_text = book_data["sample_chunk"].text
+    chunk_text = book_data["chunk"].text
     gold_summary = book_data["gold_summary"]
     bookscore = book_data["bookscore"]
     questeval = book_data["questeval"]
