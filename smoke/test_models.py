@@ -1,7 +1,7 @@
 import pytest
 from src.components.book_conversion import Chunk
 from src.core.stages import *
-from src.main import pipeline_B, pipeline_D
+from src.main import pipeline_B, pipeline_D, pipeline_E
 from conftest import optional_param
 from typing import List
 
@@ -33,6 +33,10 @@ def book_data():
     )
 
     return {
+        "book_id": 1,
+        "book_title": "Five Children and It",
+        "summary": "The children discover a magical carpet with a Phoenix.",
+        "gold_summary": "Children find magical carpet.",
         "chunk": chunk,
         "chunk_text": chunk_text,
         "rebel_triples": [
@@ -48,6 +52,8 @@ def book_data():
             "children  want  adventures",
         ],  # used to test LLM triple sanitization
         "llm_triples_json": llm_triples_json,
+        "bookscore": 0.85,
+        "questeval": 0.92,
     }
 
 
@@ -238,3 +244,48 @@ def test_pipeline_D_minimal(docs_db, book_data):
     doc = collection.find_one({"_id": chunk.get_chunk_id()})
     assert doc is not None
     assert doc["summary"] == summary
+
+
+
+@pytest.mark.pipeline
+@pytest.mark.stage_E
+@pytest.mark.smoke
+@pytest.mark.order(150)
+@pytest.mark.dependency(name="stage_E_minimal", scope="session")
+def test_pipeline_E_minimal_summary_only(book_data):
+    """Test running pipeline_E with summary-only mode.
+    @note  Requires Blazor to accept POST."""
+    summary = book_data["summary"]
+    book_title = book_data["book_title"]
+    book_id = str(book_data["book_id"])
+
+    # TODO: Cannot verify output - need task_40_post_payload implementation
+
+    # Test summary-only path (no chunk parameter)
+    pipeline_E(summary, book_title, book_id)
+
+    assert True  # Placeholder - verifies no exceptions raised
+
+
+@pytest.mark.pipeline
+@pytest.mark.stage_E
+@pytest.mark.smoke
+@pytest.mark.order(151)
+@pytest.mark.dependency(name="stage_E_payload", scope="session", depends=["stage_E_minimal"])
+def test_pipeline_E_minimal_full_payload(book_data):
+    """Test running pipeline_E with full payload including metrics.
+    @note  Requires Blazor to accept POST."""
+    summary = book_data["summary"]
+    book_title = book_data["book_title"]
+    book_id = str(book_data["book_id"])
+    chunk_text = book_data["sample_chunk"].text
+    gold_summary = book_data["gold_summary"]
+    bookscore = book_data["bookscore"]
+    questeval = book_data["questeval"]
+
+    # TODO: Cannot verify output - need task_40_post_payload implementation
+
+    # Test full payload path
+    pipeline_E(summary, book_title, book_id, chunk_text, gold_summary, bookscore, questeval)
+
+    assert True  # Placeholder - verifies no exceptions raised
