@@ -126,7 +126,7 @@ class DocumentConnector(DatabaseConnector):
                 return False
             raise Log.Failure(Log.doc_db + log_source + Log.bad_addr, Log.msg_bad_addr(self.connection_string)) from None
 
-    def get_unmanaged_handle(self):
+    def get_unmanaged_handle(self) -> MongoHandle:
         """Expose the low-level PyMongo handle for external use.
         @warning Connection remains open - use for long-lived services only.
         @return PyMongo database instance."""

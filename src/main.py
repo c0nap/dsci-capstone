@@ -49,7 +49,7 @@ def pipeline_B(collection_name, chunks, book_title):
     print()
     triples_string = stages.task_13_concatenate_triples(extracted)
 
-    prompt, llm_output = stages.task_14_relation_extraction_llm(triples_string, c.text)
+    prompt, llm_output = stages.task_14_relation_extraction_llm_openai(triples_string, c.text)
     print("\n    LLM prompt:")
     print(prompt)
     print("\n    LLM output:")
@@ -57,6 +57,7 @@ def pipeline_B(collection_name, chunks, book_title):
     print("\n" + "=" * 50 + "\n")
 
     triples = stages.task_15_sanitize_triples_llm(llm_output)
+    triples = stages.task_16_moderate_triples_llm(triples)
     print("\nValid JSON")
     return triples, c
 
@@ -72,7 +73,7 @@ def pipeline_C(json_triples):
     stages.task_20_send_triples(json_triples)
 
     # basic linear verbalization of triples (concatenate)
-    edge_count_df = stages.group_21_1_describe_graph()
+    edge_count_df = stages.task_21_1_describe_graph()
     print("\nMost relevant nodes:")
     print(edge_count_df)
 
@@ -85,7 +86,7 @@ def pipeline_C(json_triples):
 @Log.time
 def pipeline_D(collection_name, triples_string, chunk_id):
     """Generate chunk summary"""
-    _, summary = stages.task_30_summarize_llm(triples_string)
+    _, summary = stages.task_30_summarize_llm_openai(triples_string)
     print("\nGenerated summary:")
     print(summary)
 
@@ -150,6 +151,7 @@ CHAPTER 12. THE END OF THE END\n
 
 
 if __name__ == "__main__":
+    session.setup()
     # TODO: handle this better - half env parsing is here, half is in boss.py
     load_dotenv(".env")
     DB_NAME = os.environ["DB_NAME"]
@@ -220,14 +222,13 @@ CHAPTER 12. THE END OF THE END\n
     summary = pipeline_D(COLLECTION, triples_string, chunk.get_chunk_id())
     post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
-    # pipeline_E is moved to callback() to finalize asynchronously
-
+    
     # Post chunk - this will enqueue worker processing
     if compute_worker_metrics:
         for task_type in ["questeval", "bookscore"]:
             response = post_process_full_story(BOSS_PORT, story_id, task_type)
             print(f"Triggered {task_type}: {response.json()}")
-        pipeline_E(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
+            # pipeline_E is moved to callback() to finalize asynchronously
     else:
         pipeline_E(summary, book_title, book_id)
 

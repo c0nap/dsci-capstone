@@ -5,43 +5,28 @@ from langchain_core.prompts import (
     SystemMessagePromptTemplate,
 )
 from langchain_openai import ChatOpenAI
+from openai import OpenAI, BadRequestError
 import os
 import re
 from src.connectors.base import Connector
 from typing import Any, List, Tuple, Dict
+from abc import ABC, abstractmethod
+from src.util import Log
 
-
-class LLMConnector(Connector):
-    """Connector for prompting and returning LLM output (raw text/JSON) via LangChain.
+class LLMConnector(Connector, ABC):
+    """Connector for prompting and returning LLM output (raw text/JSON) via LLMs.
     @note  The method @ref src.connectors.llm.LLMConnector.execute_query simplifies the prompt process.
     @details  To implement various configurations, either set properties directly or create another LLMConnector instance.
         Useful config options: temperature, system_prompt, llm, model_name.
         We prefer creating a separate wrapper instance for reusable hard-coded configurations.
     """
 
-    def __init__(
-        self,
-        temperature: float = 0,
-        system_prompt: str = "You are a helpful assistant.",
-    ) -> None:
-        """Initialize the connector.
-        @note  Model name is specified in the .env file."""
-        # Read environment variables at runtime
-        load_dotenv(".env")
-        self.model_name: str = None
-        self.temperature: float = temperature
-        self.system_prompt: str = system_prompt
-        self.llm: ChatOpenAI = None
-        self.configure()
-
-    def configure(self) -> None:
-        """Initialize the LangChain LLM using environment credentials.
-        @details
-            Reads:
-                - OPENAI_API_KEY from .env for authentication
-                - LLM_MODEL and LLM_TEMPERATURE to override defaults"""
-        self.model_name = os.environ["LLM_MODEL"]
-        self.llm = ChatOpenAI(model=self.model_name, temperature=self.temperature)
+    def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
+        """Initialize common LLM connector properties."""
+        self.temperature = temperature
+        self.system_prompt = system_prompt
+        self.model_name = None
+        self.verbose = verbose
 
     def test_operations(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the database, and test full functionality.
@@ -49,9 +34,7 @@ class LLMConnector(Connector):
         @param raise_error  Whether to raise an error on connection failure.
         @return  Whether the prompt executed successfully.
         @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
-        result = self.execute_full_query("You are a helpful assistant.", "ping")
-        return result.strip() == "pong"
-        # TODO
+        return self.check_connection(Log.test_ops, raise_error=raise_error)
 
     def check_connection(self, log_source: str, raise_error: bool) -> bool:
         """Send a trivial prompt to verify LLM connectivity.
@@ -60,23 +43,25 @@ class LLMConnector(Connector):
         @return  Whether the prompt executed successfully.
         @throws Log.Failure  If raise_error is True and the connection test fails to complete."""
         result = self.execute_full_query("You are a helpful assistant.", "ping")
-        return result.strip() == "pong"
+        success = result.strip().lower() == "pong"
+        if not success and raise_error:
+            raise Log.Failure(f"{log_source}: Connection check failed")
+        return success
 
+    def _load_env(self) -> None:
+        """Load environment variables and set model name.
+        @details Called by subclasses during configure() to ensure consistent env loading."""
+        load_dotenv(".env")
+        self.model_name = os.environ["LLM_MODEL"]
+
+    @abstractmethod
+    def configure(self) -> None:
+        pass
+
+    @abstractmethod
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
         """Send a single prompt to the LLM with separate system and human instructions."""
-        self.system_prompt = system_prompt
-
-        # Build prompt template
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                SystemMessagePromptTemplate.from_template(system_prompt),
-                HumanMessagePromptTemplate.from_template(human_prompt),
-            ]
-        )
-
-        formatted_prompt = prompt.format_prompt()  # <-- returns ChatPromptValue
-        response = self.llm.invoke(formatted_prompt.to_messages())  # <-- to_messages() returns list of BaseMessage
-        return str(response.content)
+        pass
 
     def execute_query(self, query: str) -> str:
         """Send a single prompt through the connection and return raw LLM output.
@@ -84,14 +69,108 @@ class LLMConnector(Connector):
         @return Raw LLM response as a string."""
         return self.execute_full_query(self.system_prompt, query)
 
-    def execute_file(self, filename: str) -> str:  # type: ignore[override]
+    def execute_file(self, filename: str) -> str:
         """Run a single prompt from a file.
         @details  Reads the entire file as a single string and sends it to execute_query.
         @param filename  Path to the prompt file (.txt)
         @return  Raw LLM response as a string."""
         with open(filename, "r", encoding="utf-8") as f:
-            content = f.read()
-        return self.execute_query(content)
+            return self.execute_query(f.read())
+
+
+class OpenAIConnector(LLMConnector):
+    """Lightweight LLM interface for faster response times."""
+
+    def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
+        """Initialize the connector.
+        @note  Model name is specified in the .env file."""
+        super().__init__(temperature, system_prompt)
+        self.client = None
+        self.configure()
+
+    def configure(self) -> None:
+        """Initialize the OpenAI client."""
+        self._load_env()
+        self.client = OpenAI()
+
+    def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
+        """Send a single prompt using the OpenAI client directly for speed.
+        @param system_prompt  Instructions for the LLM.
+        @param human_prompt  The user input or query.
+        @return Raw LLM response as a string."""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": human_prompt},
+                ],
+                temperature=self.temperature,
+                reasoning_effort="minimal",
+            )
+        except BadRequestError:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": human_prompt},
+                ],
+                temperature=self.temperature,
+            )
+        return str(response.choices[0].message.content)
+
+
+class LangChainConnector(LLMConnector):
+    """Fully-featured API to prompt across various LLM providers."""
+
+    def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
+        """Initialize the connector.
+        @note  Model name is specified in the .env file."""
+        super().__init__(temperature, system_prompt)
+        self.client = None
+        self.configure()
+
+    def configure(self) -> None:
+        """Initialize the LangChain LLM using environment credentials.
+        @details
+            Reads:
+                - OPENAI_API_KEY from .env for authentication
+                - LLM_MODEL and LLM_TEMPERATURE to override defaults"""
+        self._load_env()
+        self.client = ChatOpenAI(
+            model=self.model_name,
+            temperature=self.temperature,
+            reasoning = {"effort": "minimal"}
+        )
+
+    def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
+        """Send a single prompt to the LLM with separate system and human instructions.
+        @param system_prompt  Instructions for the LLM.
+        @param human_prompt  The user input or query.
+        @return Raw LLM response as a string."""
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            ("human", human_prompt),
+        ])
+        try:
+            response = self.client.invoke(prompt.format_messages())
+        except BadRequestError:
+            self.client = ChatOpenAI(
+                model=self.model_name,
+                temperature=self.temperature
+            )
+            response = self.client.invoke(prompt.format_messages())
+        return str(response.content)
+
+
+
+@staticmethod
+def clean_json_block(s: str) -> str:
+    # Remove leading/trailing triple backticks and optional "json" label
+    s = s.strip()
+    s = re.sub(r"^```json\s*", "", s, flags=re.IGNORECASE)
+    s = re.sub(r"\s*```$", "", s)
+    return s
 
 
 @staticmethod
@@ -198,4 +277,55 @@ def normalize_to_dict(data: Dict[str, Any] | List[Dict[str, Any]], keys: List[st
             expanded.extend(_expand_cartesian(item))
     
     return expanded
+
+
+def moderate_texts(texts: List[str]) -> List[bool]:
+    """Check if texts contain offensive content using OpenAI moderation API.
+    @param texts  List of text strings to moderate.
+    @return List of booleans - True if safe, False if flagged.
+    """
+    from openai import OpenAI
+    
+    if not texts:
+        return []
+    
+    load_dotenv()
+    client = OpenAI()
+    batch_size = 32  # OpenAI's max per request
+    safe_flags = []
+    
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i + batch_size]
+        
+        try:
+            response = client.moderations.create(input=batch)
+            
+            # Focus on hate/harassment for old fiction content
+            for result in response.results:
+                is_safe = not (result.categories.hate or 
+                               result.categories.harassment)
+                safe_flags.append(is_safe)
+                
+        except Exception as e:
+            Log.warn(f"Moderation API failed: {e}, marking batch as safe")
+            safe_flags.extend([True] * len(batch))
+    
+    return safe_flags
+
+
+def moderate_triples(triples: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    """Filter triples containing offensive content.
+    @param triples  List of dicts with 's', 'r', 'o' keys.
+    @return Filtered list of safe triples.
+    """
+    texts = [f"{t['s']} {t['r']} {t['o']}" for t in triples]
+    safe_flags = moderate_texts(texts)
+    
+    safe_triples = [t for t, is_safe in zip(triples, safe_flags) if is_safe]
+    
+    filtered_count = len(triples) - len(safe_triples)
+    Log.success(f"Moderation: filtered {filtered_count}/{len(triples)} triples")
+    
+    return safe_triples
+
 

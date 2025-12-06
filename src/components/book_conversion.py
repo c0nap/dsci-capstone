@@ -454,7 +454,7 @@ class EPUBToTEI:
 
     # Paragraph handling has been moved to ParagraphStreamTEI.
     # def _normalize_paragraphs(self, content: str) -> str:
-    #   """Remove raw newlines inside <p> tags, collapsing them to spaces."""
+    #   #"#"#"Remove raw newlines inside <p> tags, collapsing them to spaces.#"#"#"
     #   if self.save_tei:
     #       root = etree.parse(self.tei_path).getroot()
     #   else:
@@ -468,7 +468,7 @@ class EPUBToTEI:
     #   return etree.tostring(root, encoding=self.encoding).decode(self.encoding)
 
     # def print_chapters(self, limit: int = 100):
-    #     """Old debug method: print chapter names with snippet."""
+    #     #"#"#"Old debug method: print chapter names with snippet.#"#"#"
     #     if self.save_tei:
     #         root = etree.parse(self.tei_path).getroot()
     #     else:
@@ -550,9 +550,9 @@ class EPUBToTEI:
 #             self.pre_scan(extract_chapters=True)
 
 #     def pre_scan(self, extract_chapters: bool = True):
-#         """
+#         #"#"#"
 #         Performs a single, unified pass to capture all metadata and chapter info.
-#         """
+#         #"#"#"
 #         in_book_content = False
 #         self.total_chars = 0
 #         line_number = 0
@@ -654,9 +654,9 @@ class EPUBToTEI:
 #             self.chapter_info_df.to_csv(chapter_csv_filename, index=False)
 
 #     def debug_pre_scan(self):
-#         """
+#         #"#"#"
 #         Prints the metadata and chapter information to help debug the pre-scan process.
-#         """
+#         #"#"#"
 #         print("--- Starting Pre-scan Debugging ---")
 #         print(f"Book Filename: {self.filename}")
 #         print("\n### Metadata ###")
@@ -677,10 +677,10 @@ class EPUBToTEI:
 #         print("\n--- Pre-scan Debugging Complete ---")
 
 #     def read_chunks(self) -> Iterator[Chunk]:
-#         """
+#         #"#"#"
 #         A simplified generator that yields memory-efficient Chunks from the book file.
 #         It processes the book line by line, maintaining state for chunking.
-#         """
+#         #"#"#"
 #         line_num = 0
 #         cumulative_chars = 0
 #         current_chapter_index = 0
@@ -806,7 +806,7 @@ class EPUBToTEI:
 #         total_chapter_chars: int,
 #         section: int,
 #     ) -> Iterator[Chunk]:
-#         """Helper method to handle the logic of chunking and yielding."""
+#         #"#"#"Helper method to handle the logic of chunking and yielding.#"#"#"
 #         # Split a large paragraph into multiple chunks if needed
 #         if len(text) > self.max_chunk_length:
 #             sentences = re.split(r"(?<=[.!?])\s+", text)
@@ -864,7 +864,7 @@ class EPUBToTEI:
 #         total_chapter_chars: int,
 #         section: int,
 #     ) -> Chunk:
-#         """Helper to create a single Chunk object with calculated percentages."""
+#         #"#"#"Helper to create a single Chunk object with calculated percentages.#"#"#"
 #         return Chunk(
 #             text=text,
 #             chapter=chapter_name,

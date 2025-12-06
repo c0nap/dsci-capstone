@@ -4,7 +4,7 @@ from pandas import DataFrame, read_csv
 import pytest
 from src.components.book_conversion import Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from src.core.stages import *
-from src.main import pipeline_A, pipeline_C, pipeline_E
+from src.main import pipeline_A, pipeline_C
 from src.util import Log
 
 
@@ -458,7 +458,7 @@ def test_job_21_describe_graph(main_graph, book_data):
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
     task_20_send_triples(triples_json)
 
-    edge_count_df = group_21_1_describe_graph()
+    edge_count_df = task_21_1_describe_graph()
 
     assert isinstance(edge_count_df, DataFrame)
     assert "node_name" in edge_count_df.columns
@@ -568,7 +568,7 @@ def test_pipeline_A_from_csv():
 @pytest.mark.dependency(name="stage_C_minimal", scope="session", depends=["job_20", "job_22"])
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_pipeline_C_minimal(main_graph, book_data):
-    """Test running pipeline_C with smoke test data."""
+    """Test running pipeline_C on checkpoint data."""
     json_triples = json.loads(book_data["llm_triples_json"])
 
     triples_string = pipeline_C(json_triples)
@@ -582,45 +582,3 @@ def test_pipeline_C_minimal(main_graph, book_data):
 
     assert isinstance(triples_string, str)
     assert len(triples_string) > 0
-
-
-@pytest.mark.pipeline
-@pytest.mark.stage_E
-@pytest.mark.order(150)
-@pytest.mark.dependency(name="stage_E_minimal", scope="session")
-@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_pipeline_E_minimal_summary_only(book_data):
-    """Test running pipeline_E with summary-only mode."""
-    summary = "The children discover a magical carpet with a Phoenix."
-    book_title = book_data["book_title"]
-    book_id = str(book_data["book_id"])
-
-    # TODO: Cannot verify output - need task_40_post_payload implementation
-
-    # Test summary-only path (no chunk parameter)
-    pipeline_E(summary, book_title, book_id)
-
-    assert True  # Placeholder - verifies no exceptions raised
-
-
-@pytest.mark.pipeline
-@pytest.mark.stage_E
-@pytest.mark.order(151)
-@pytest.mark.dependency(name="stage_E_payload", scope="session", depends=["stage_E_minimal"])
-@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_pipeline_E_minimal_full_payload(book_data):
-    """Test running pipeline_E with full payload including metrics."""
-    summary = "The children discover a magical carpet with a Phoenix."
-    book_title = book_data["book_title"]
-    book_id = str(book_data["book_id"])
-    chunk_text = book_data["sample_chunk"].text
-    gold_summary = "Children find magical carpet."
-    bookscore = 0.85
-    questeval = 0.92
-
-    # TODO: Cannot verify output - need task_40_post_payload implementation
-
-    # Test full payload path
-    pipeline_E(summary, book_title, book_id, chunk_text, gold_summary, bookscore, questeval)
-
-    assert True  # Placeholder - verifies no exceptions raised

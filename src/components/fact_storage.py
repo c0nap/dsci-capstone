@@ -3,15 +3,11 @@ import random
 import re
 from src.connectors.graph import GraphConnector
 from src.util import Log
-from typing import Any, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Dict, List, Optional, Tuple
 import spacy
+from src.components.relation_extraction import Triple
 
 nlp = None  # module-level cache for lazy-loaded NLP model (used by sanitize_node)
-
-class Triple(TypedDict):
-    s: str
-    r: str
-    o: str
 
 
 class KnowledgeGraph:
@@ -36,7 +32,7 @@ class KnowledgeGraph:
         @param subject  A string representing the entity performing an action.
         @param relation  A string describing the action.
         @param object_  A string representing the entity being acted upon.
-        @note  LLM output should be pre-normalized using @ref src.connectors.llm.LLMConnector.normalize_triples.
+        @note  LLM output should be pre-normalized using @ref src.connectors.llm.normalize_to_dict.
         @throws Log.Failure  If the triple cannot be added to our graph database.
         """
         if self._first_insert:
@@ -45,6 +41,9 @@ class KnowledgeGraph:
                 self.database.drop_graph(self.graph_name)
 
         # Normalize already-cleaned inputs for extra Cypher safety
+        if not subject or not relation or not object_:
+            Log.warn(Log.kg, f"Invalid triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+            return
         relation = sanitize_relation(relation)
         subject = sanitize_node(subject)
         object_ = sanitize_node(object_)
@@ -65,7 +64,7 @@ class KnowledgeGraph:
 
     def add_triples_json(self, triples_json: List[Triple]) -> None:
         """Add several semantic triples to the graph from pre-verified JSON.
-        @note  JSON should be pre-normalized using @ref src.connectors.llm.normalize_triples.
+        @note  JSON should be pre-normalized using @ref src.connectors.llm.normalize_to_dict.
         @param triples_json  A list of Triple dictionaries containing keys: 's', 'r', and 'o'.
         @throws Log.Failure  If any triple cannot be added to the graph database.
         """
@@ -320,7 +319,7 @@ class KnowledgeGraph:
         triples_df = self.get_subgraph_by_nodes(node_ids, id_columns=id_columns)
         return triples_df
 
-    def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
+    def get_random_walk(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
         """Sample subgraph using directed random walk traversal starting from specified nodes.
         @details
         - More diverse than degree-based filtering (nodes with many edges) and better preserves graph structure.
@@ -510,7 +509,7 @@ class KnowledgeGraph:
             triples_string += f"{subj} {rel} {obj}\n"
         return triples_string
 
-    def to_contextualized_string(self, focus_nodes: Optional[List[str]] = None, top_n: int = 5) -> str:
+    def to_context(self, focus_nodes: Optional[List[str]] = None, top_n: int = 5) -> str:
         """Convert triples to contextualized string grouped by focus nodes.
         @details  Groups triples by subject nodes and formats them with context headers.
         This provides better structure for LLM comprehension compared to flat triple lists.
@@ -655,7 +654,7 @@ def sanitize_node(label: str) -> str:
             nlp = spacy.load("en_core_web_sm")
         except OSError:
             print("Spacy model 'en_core_web_sm' not found. Downloading...")
-            spacy.cli.download("en_core_web_sm")
+            spacy.cli.download("en_core_web_sm")  # type: ignore[attr-defined]
             nlp = spacy.load("en_core_web_sm")
 
     doc = nlp(label)
@@ -665,7 +664,7 @@ def sanitize_node(label: str) -> str:
     ]
     cleaned = " ".join(tokens)
     if not cleaned:  # Revert back to input: a messy label is better than nothing.
-    	cleaned = label
+        cleaned = label
     
     # Regex: collapse consecutive non-alphanumeric to single underscore, strip edges
     sanitized = re.sub(r"[^A-Za-z0-9]+", "_", cleaned).strip("_")

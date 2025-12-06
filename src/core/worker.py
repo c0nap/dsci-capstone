@@ -159,7 +159,7 @@ def mark_task_in_progress(mongo_db: MongoHandle, collection_name: str, chunk_id:
         raise RuntimeError(f"Task {task_name} already has data for chunk_id={chunk_id}. " "Boss should have cleared this before assignment.")
 
     # Mark as in-progress
-    collection.update_one({"_id": chunk_id}, {"$set": {f"{task_name}.status": "in_progress"}}, upsert=True)
+    collection.update_one({"_id": chunk_id}, {"$set": {f"{task_name}.status": "started"}}, upsert=True)
 
 
 def save_task_result(mongo_db: MongoHandle, collection_name: str, chunk_id: str, task_name: str, result: Dict[str, Any]) -> None:
