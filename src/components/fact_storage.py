@@ -32,7 +32,7 @@ class KnowledgeGraph:
         @param subject  A string representing the entity performing an action.
         @param relation  A string describing the action.
         @param object_  A string representing the entity being acted upon.
-        @note  LLM output should be pre-normalized using @ref src.connectors.llm.LLMConnector.normalize_triples.
+        @note  LLM output should be pre-normalized using @ref src.connectors.llm.normalize_to_dict.
         @throws Log.Failure  If the triple cannot be added to our graph database.
         """
         if self._first_insert:
@@ -64,7 +64,7 @@ class KnowledgeGraph:
 
     def add_triples_json(self, triples_json: List[Triple]) -> None:
         """Add several semantic triples to the graph from pre-verified JSON.
-        @note  JSON should be pre-normalized using @ref src.connectors.llm.normalize_triples.
+        @note  JSON should be pre-normalized using @ref src.connectors.llm.normalize_to_dict.
         @param triples_json  A list of Triple dictionaries containing keys: 's', 'r', and 'o'.
         @throws Log.Failure  If any triple cannot be added to the graph database.
         """

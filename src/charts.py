@@ -75,8 +75,11 @@ class Plot:
     ) -> None:
         """Plot average elapsed time per function name from two CSV files as mirrored horizontal bars.
         @param filename  Where to save the generated chart
-        @param csv1      Path to first CSV file (left bars)
-        @param csv2      Path to second CSV file (right bars)
+        @param csv1  Path to first CSV file (left bars)
+        @param csv2  Path to second CSV file (right bars)
+        @param only_pipeline  Include pipeline_A (True), task_40 (False), or both (None)
+        @param log_scale  Whether to use a logarithmic scale for the plot
+        @param cap_outliers  Percentile to truncate large outliers. Disabled at 0 by default.
         """
         # Read data from CSV files or fall back to Log.get_merged_timing()
         if csv1 and csv2:
