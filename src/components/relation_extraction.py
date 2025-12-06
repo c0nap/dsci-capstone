@@ -55,7 +55,7 @@ class RelationExtractorREBEL(RelationExtractor):
         # Placeholders for lazy loading
         self.nlp: Optional[spacy.language.Language] = None
         self.tokenizer: Optional[transformers.PreTrainedTokenizer] = None
-        self.model: Optional[transformers.PreTrainedModel] = None
+        self.model: Any = None  # AutoModelForSeq2SeqLM.from_pretrained() return type - internal factory messes up typing
 
     def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
         """Perform extraction on the text using the generative model.
