@@ -286,42 +286,39 @@ def prune_keys() -> int:
     return removed
 
 
-def hard_reset() -> int:
-    """Renumber all existing datasets starting from ID 00001.
+
+
+def hard_reset() -> None:
+    """Renumber all books sequentially starting from ID 1.
+    @return  Total number of books after renumbering.
     @details
-    1. Scans valid text files.
-    2. Renames files sequentially (00001, 00002...).
-    3. Updates global index and next_id counter.
-    @return  The number of books in the index, now equivalent to the maximum book ID.
+    Renames text files and updates index to use sequential IDs.
+    Maintains relative order from existing book_id field.
+    This is useful after pruning to eliminate gaps in ID sequence.
     """
     if not os.path.exists(DatasetLoader.INDEX_FILE):
-        return 0
+        return
     df = read_csv(DatasetLoader.INDEX_FILE)
     if df.empty:
-        return 0
+        return
 
     # Sort by current book_id to maintain relative order
     df = df.sort_values('book_id')
-    
-    id_map = {}  # Track mapping from old_id -> new_id for logging and debugging
-    for new_id_int, (idx, row) in enumerate(df.iterrows(), start=1):
+    for new_id, (idx, row) in enumerate(df.iterrows(), start=1):
         old_path = str(row['text_path'])
-        old_id = int(row['book_id'])
         title = str(row['title'])
         
-        # Generate new path
-        # Format: datasets/texts/00001_title.txt
-        new_filename = f"{new_id_int:05d}_{title.replace(' ', '_')}.txt"
+        # Generate new path: datasets/texts/00001_title.txt
+        new_filename = f"{new_id:05d}_{title.replace(' ', '_')}.txt"
         new_path = os.path.join(DatasetLoader.TEXTS_DIR, new_filename)
         
         # Rename file on disk
-        if old_path != new_path:
+        if old_path != new_path and os.path.exists(old_path):
             shutil.move(old_path, new_path)
-            
+        
         # Update DataFrame
-        df.at[idx, 'book_id'] = new_id_int
+        df.at[idx, 'book_id'] = new_id
         df.at[idx, 'text_path'] = new_path
-        id_map[old_id] = new_id_int
 
     # Save updated index
     df.to_csv(DatasetLoader.INDEX_FILE, index=False)
@@ -329,4 +326,5 @@ def hard_reset() -> int:
     # Update next_id file
     with open(DatasetLoader.NEXT_ID_FILE, "w") as f:
         f.write(str(len(df) + 1))
+    
     return len(df)
