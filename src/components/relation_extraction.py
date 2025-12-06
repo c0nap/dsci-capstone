@@ -1,7 +1,13 @@
 from dotenv import load_dotenv
 import os
-from typing import List, Tuple, Union, Optional, TypedDict
+from typing import List, Optional, TypedDict, TYPE_CHECKING
 from abc import ABC, abstractmethod
+
+# Forward references for lazy-loaded modules
+if TYPE_CHECKING:
+    import spacy
+    import spacy.language
+    import transformers
 
 class Triple(TypedDict):
     s: str
@@ -47,9 +53,9 @@ class RelationExtractorREBEL(RelationExtractor):
         self._model_delim = " " 
         
         # Placeholders for lazy loading
-        self.nlp: Optional["spacy.language.Language"] = None
-        self.tokenizer: Optional["transformers.PreTrainedTokenizer"] = None
-        self.model: Optional["transformers.PreTrainedModel"] = None
+        self.nlp: Optional[spacy.language.Language] = None
+        self.tokenizer: Optional[transformers.PreTrainedTokenizer] = None
+        self.model: Optional[transformers.PreTrainedModel] = None
 
     def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
         """Perform extraction on the text using the generative model.
@@ -192,7 +198,7 @@ class RelationExtractorTextacy(RelationExtractor):
         """Initialize config only.
         @note  Spacy model loading is deferred to extract().
         """
-        self.nlp: Optional["spacy.language.Language"] = None
+        self.nlp: Optional[spacy.language.Language] = None
         self.model_name: str = "en_core_web_sm"
 
     def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
@@ -212,7 +218,7 @@ class RelationExtractorTextacy(RelationExtractor):
                 self.nlp = spacy.load(self.model_name)
             except OSError:
                 print(f"Spacy model '{self.model_name}' not found. Downloading...")
-                spacy.cli.download(self.model_name)
+                spacy.cli.download(self.model_name)  # type: ignore[attr-defined]
                 self.nlp = spacy.load(self.model_name)
 
         doc = self.nlp(text)
