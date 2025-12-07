@@ -482,34 +482,35 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
 # ------------------------------------------------------------------------------
 # GROUP 1: BASIC COMPARISON OF SUMMARY / SOURCE TEXT
 # ------------------------------------------------------------------------------
-# run_rouge_l                  [BASELINE] Standard industry benchmark. Checks longest common subsequence.
-# run_bertscore                [MEANING] Contextual embedding similarity. The modern gold standard for meaning preservation.
-# run_novel_ngrams             [ABSTRACTIVENESS] Measures what percentage of n-grams are "new" vs copied.
-# run_jsd                      [DISTRIBUTION] Jensen-Shannon Divergence. Checks if vocab distribution matches source (statistically).
-# run_entity_metrics           [FACTS] Named Entity precision/recall. Did we preserve the specific names/dates correctly?
+# run_rougeL_recall            [BASELINE] Standard industry benchmark. Checks longest common subsequence (LCS). Recall-focused when using source as reference.
+# run_bertscore                [MEANING] Contextual embedding similarity. Use lightweight model (distilroberta-base) for CPU. Measures semantic meaning preservation.
+# run_novel_ngrams             [ABSTRACTIVENESS] Measures % of n-grams (default n=3) in summary not in source. Signals lexical novelty vs copying.
+# run_jsd_stats                [DISTRIBUTION] Jensen-Shannon Divergence of word frequency distributions. Normalized over union vocabulary to check topical drift.
+# run_entity_coverage          [FACTS] Named Entity precision/recall. Tracks missing vs hallucinated entities. Optionally separate by type (PERSON, LOC, DATE).
 # ------------------------------------------------------------------------------
 # GROUP 2: HIGH-LEVEL COMPARISON
 # ------------------------------------------------------------------------------
-# run_ncd                      [INFO-THEORY] Normalized Compression Distance. Captures structural overlap without needing word matches.
-# run_salience_recall          [KEYWORDS] TF-IDF weighted recall. Ensures we kept the *rare* and *important* words.
-# run_nli_faithfulness         [LOGIC] Natural Language Inference. Checks for logical contradictions (hallucinations).
-# run_readability_delta        [COMPLEXITY] Flesch-Kincaid/ARI delta. Did we simplify the text relative to the source?
+# run_ncd_overlap              [INFO-THEORY] Normalized Compression Distance. Use fast zlib/lzma compression to capture structural overlap.
+# run_salience_recall          [KEYWORDS] TF-IDF weighted recall of top-k rare terms from source. Ensures rare, important words are preserved.
+# run_nli_faithfulness         [LOGIC] NLI-style entailment checking (SummaC-ZS or cross-encoder). Detects logical contradictions or hallucinations.
+# run_readability_delta        [COMPLEXITY] Flesch-Kincaid / ARI delta between source and summary. Optionally include SMOG index. Measures simplification or complexity change.
 # ------------------------------------------------------------------------------
 # GROUP 3: REFERENCE-FREE QUALITY SCORES
 # ------------------------------------------------------------------------------
-# run_sentence_coherence       [FLOW] Embedding similarity between adjacent sentences. Checks for smooth transitions.
-# run_entity_grid_coherence    [DISCOURSE] Entity transition model (via spaCy). Measures narrative focus stability.
-
+# run_sentence_coherence       [FLOW] Embedding similarity between adjacent sentences. Average over sentence pairs to check smooth transitions.
+# run_entity_grid_coherence    [DISCOURSE] Entity transition model via spaCy. Measures narrative focus stability.
+# run_lexical_diversity        [STYLE] Type-Token Ratio (TTR). Measures vocabulary richness vs source.
+# run_stopword_ratio           [STYLE] Stopword / content-word density. High ratio may indicate low information content.
 
 # ==============================================================================
 # CORE CRITERIA
 # ==============================================================================
-# - Fast - must conclude under 10s on CPU (no heavy models)
-# - Usable - attempting to evaluate a summary around 300 tokens long from a 500 token text, no external datasets required
-# - Reference free - only the summary and base text are available, no reference summary
-# - Easy to implement - no heavy imports, use existing libraries like evaluate, spacy, or textstats. LLM prompts (agent-as-judge) must cite a paper for grounding.
-# - Unique / Insightful - metrics should illustrate something not immediately obvious from looking at the summary, and should not duplicate each other
-# - Domain adjacent - text is from narrative fiction books, but factuality metrics are acceptable if their results are meaningfully applicable to generic text
+# - Fast: must conclude under 10s on CPU (no heavy models)
+# - Usable: evaluates ~300-token summary from ~500-token source, no external datasets required
+# - Reference free: only the summary and base text are used
+# - Easy to implement: prefer existing libraries (evaluate, spacy, textacy, textstats). LLM prompts must cite a paper if used.
+# - Unique / Insightful: metrics illustrate non-obvious aspects and do not duplicate each other
+# - Domain adjacent: designed for narrative fiction books, but factuality metrics remain meaningful for generic text
 
 
 from typing import Dict, Any, List
