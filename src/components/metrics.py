@@ -491,7 +491,7 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
 # GROUP 2: HIGH-LEVEL COMPARISON
 # ------------------------------------------------------------------------------
 # run_ncd_overlap              [INFO-THEORY] Normalized Compression Distance. Library: zlib
-# run_salience_recall          [KEYWORDS] Recall of top-k TF-IDF source terms present in summary. Library: textacy
+# run_salience_recall          [KEYWORDS] Recall of top-k TF-IDF source terms present in summary. Library: sklearn
 # run_nli_faithfulness         [LOGIC] % of summary sentences entailed by source. Library: transformers
 # run_readability_delta        [COMPLEXITY] Flesch-Kincaid delta (source minus summary). Library: textstats
 # ------------------------------------------------------------------------------
@@ -499,7 +499,7 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
 # ------------------------------------------------------------------------------
 # run_sentence_coherence       [FLOW] Average cosine similarity between adjacent sentence embeddings. Library: sentence-transformers
 # run_entity_grid_coherence    [DISCOURSE] Average entity transition coherence. Library: spacy
-# run_lexical_diversity        [STYLE] Type-Token Ratio (TTR). Library: textacy
+# run_lexical_diversity        [STYLE] Type-Token Ratio (TTR). Library: nltk
 # run_stopword_ratio           [STYLE] Ratio of stopwords to total words. Library: nltk
 
 # ==============================================================================
