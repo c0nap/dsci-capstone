@@ -5,44 +5,34 @@ FROM python:3.12-slim
 LABEL org.opencontainers.image.source="https://github.com/c0nap/dsci-capstone"
 
 # Enable relative paths - helpful name for container's root folder
-WORKDIR /pipeline
+WORKDIR /flask
 
 # Make Python stdout/stderr unbuffered so logs show immediately
 ENV PYTHONUNBUFFERED=1
 
 # Install system dependencies in one layer
-# Java installation is optional - necessary for 'stanza' / OpenIE relation extraction
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     make \
-    pandoc \
-    default-jre-headless \
  && pip install --upgrade pip setuptools wheel build \
  && rm -rf /var/lib/apt/lists/*
 
-COPY deps/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY deps/metricscore.txt .
+RUN pip install --no-cache-dir -r metricscore.txt
 
 
 # Copy source code into the container (optional .dockerignore)
 COPY src/ src/
-COPY tests/ tests/
-COPY smoke/ smoke/
-COPY datasets/ datasets/
+COPY Makefile ./
 
 # Declare build args - whether to include .env or .env.dummy
 ARG ENV_FILE
 
 # Create .env file
 COPY ${ENV_FILE} .env
-COPY Makefile .
 # Generate .env.docker with mapped hostnames
 RUN make env-docker
 RUN mv .env.docker .env
 
-COPY pyproject.toml pytest.ini conftest.py .
-# Used to merge with time-elapsed data with existing
-COPY logs/elapsed_time.csv logs/
-
-# default command
-CMD ["python", "-m", "src.main"]
+# Supply task as command line flag to set worker behavior
+CMD ["python", "-m", "src.core.worker", "--task", "metricscore"]
