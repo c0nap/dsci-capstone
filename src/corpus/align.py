@@ -59,23 +59,33 @@ def gutendex_lookup_id(gutenberg_id: int) -> Optional[Dict[str, Any]]:
         url = f"{GUTENDEX_API}/{gutenberg_id}"
         results = _request_gutendex(url)
         return _unpack_gutendex(results[0]) if results else None
-    except (requests.RequestException, IndexError):
+    except (requests.RequestException, IndexError, KeyError):
         return None
 
 
-def gutendex_search_title(query: str, author: Optional[str] = None, min_fuzz: int = 85) -> Optional[Dict[str, Any]]:
-    """Search for a book by title (and optionally author) with fuzzy verification.
-    @param query  Title string to search for (natural language preferred).
-    @param author  Optional author name to filter/rank results.
-    @param min_fuzz  Minimum fuzzy match score (0-100) required to accept a result.
+def gutendex_search_title(title: str, author: Optional[str] = None, min_fuzz: int = 80) -> Optional[Dict[str, Any]]:
+    """Search for a book by title with progressive fallback strategy.
+    @param title  Title string to search for.
+    @param author  Optional author name for verification and fallback.
+    @param min_fuzz  Minimum fuzzy match score (0-100) for title verification.
     @return  Metadata dict with keys: gutenberg_id, title, author, language, text_url.
         Returns None if no confident match is found."""
-    if not query:
+    if not title:
         return None
     
     try:
-        results = _request_gutendex(GUTENDEX_API, params={"search": query, "languages": "en"})
-        return _filter_candidates(results, query, author, min_fuzz)
+        # Strategy: Try title-only first, fall back to title+author if needed
+        results = _request_gutendex(GUTENDEX_API, params={"search": title, "languages": "en"})
+        
+        match = _find_best_match(results, title, author, min_fuzz)
+        
+        # Fallback: If no match and author provided, try combined search
+        if not match and author:
+            combined = f"{title} {author}"
+            results = _request_gutendex(GUTENDEX_API, params={"search": combined, "languages": "en"})
+            match = _find_best_match(results, title, author, min_fuzz)
+        
+        return match
     except requests.RequestException:
         return None
 
@@ -102,54 +112,60 @@ def _request_gutendex(url: str, params: Dict[str, Any] = None, timeout: int = 10
 
 def _unpack_gutendex(data: dict) -> dict:
     """Normalize Gutendex JSON to internal schema.
-    @param data  Raw JSON object from Gutendex API.
+    @param data  Raw JSON object from Gutenberg API.
     @return  Dict with keys: gutenberg_id, title, author, language, text_url."""
-    authors = [a["name"] for a in data.get("authors", []) if "name" in a]
+    authors = [a["name"] for a in data.get("authors", [])]
     formats = data.get("formats", {})
     
+    # API returns different MIME type keys per book
     text_url = (formats.get("text/plain; charset=utf-8") or 
                 formats.get("text/plain; charset=us-ascii") or 
                 formats.get("text/plain"))
 
     return {
-        "gutenberg_id": data.get("id"),
+        "gutenberg_id": data["id"],
         "title": data.get("title", ""),
         "author": ", ".join(authors),
-        "language": data.get("languages", [""])[0],
+        "language": data.get("languages", [])[0] if data.get("languages") else "",
         "text_url": text_url
     }
 
 
-def _filter_candidates(candidates: List[dict], query: str, author: Optional[str], min_score: int) -> Optional[dict]:
-    """Select best match from candidates using fuzzy logic.
+def _find_best_match(candidates: List[dict], title: str, author: Optional[str], min_score: int) -> Optional[dict]:
+    """Find best title match from search results, optionally verifying author.
     @param candidates  List of raw Gutendex book dicts.
-    @param query  Title to match against.
-    @param author  Optional author name to filter results.
-    @param min_score  Minimum fuzzy match score (0-100) to accept.
+    @param title  Title to match against.
+    @param author  Optional author name to verify match quality.
+    @param min_score  Minimum fuzzy match score (0-100) for title.
     @return  Normalized metadata dict or None if no match meets threshold."""
     if not candidates:
         return None
 
     # Pre-process for fuzzy matching (spaces preferred over underscores)
-    clean_query = query.replace("_", " ")
+    clean_title = title.replace("_", " ").lower()
     clean_author = author.lower() if author else None
     
     best_match = None
     best_score = 0
 
     for cand in candidates:
-        # 1. Author Check (if provided)
-        if clean_author:
-            cand_authors = [a["name"].lower() for a in cand.get("authors", []) if "name" in a]
-            # Skip candidate if no author matches loosely (score < 70)
-            if not process.extractOne(clean_author, cand_authors, scorer=fuzz.token_set_ratio, score_cutoff=70):
-                continue
-
-        # 2. Title Score
-        score = fuzz.token_sort_ratio(clean_query, cand.get("title", ""))
+        cand_title = cand.get("title", "").lower()
+        title_score = fuzz.token_sort_ratio(clean_title, cand_title)
         
-        if score > best_score:
-            best_score = score
+        # Author boost: increase score if author matches
+        if clean_author and title_score >= min_score - 10:  # Only check if close
+            cand_authors = [a["name"].lower() for a in cand.get("authors", [])]
+            author_match = process.extractOne(
+                clean_author, 
+                cand_authors, 
+                scorer=fuzz.token_set_ratio, 
+                score_cutoff=70
+            )
+            if author_match:
+                title_score = min(100, title_score + 5)  # Small boost for author match
+        
+        if title_score > best_score:
+            best_score = title_score
             best_match = cand
 
     if best_match and best_score >= min_score:
