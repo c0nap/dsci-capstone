@@ -791,9 +791,9 @@ def run_readability_delta(summary: str, source: str) -> Dict[str, float]:
     index for additional complexity measures.
     @return: Dictionary containing difference in Flesch-Kincaid grade
     """
-    import textstats
-    fk_source = textstats.flesch_kincaid_grade(source)
-    fk_summary = textstats.flesch_kincaid_grade(summary)
+    import textstat
+    fk_source = textstat.flesch_kincaid_grade(source)
+    fk_summary = textstat.flesch_kincaid_grade(summary)
     return {"readability_delta": fk_source - fk_summary}
 
 

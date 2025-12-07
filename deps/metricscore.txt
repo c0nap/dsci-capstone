@@ -19,7 +19,7 @@ bert-score
 scipy
 scikit-learn
 sentence_transformers
-textstats
+textstat
 spacy
 transformers
 --extra-index-url https://download.pytorch.org/whl/cpu

@@ -20,7 +20,7 @@ bert-score
 scipy
 scikit-learn
 sentence_transformers
-textstats
+textstat
 
 # Database drivers
 sqlalchemy
