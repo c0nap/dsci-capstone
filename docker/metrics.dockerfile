@@ -17,8 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && pip install --upgrade pip setuptools wheel build \
  && rm -rf /var/lib/apt/lists/*
 
-COPY deps/metricscore.txt .
-RUN pip install --no-cache-dir -r metricscore.txt
+COPY deps/metrics.txt .
+RUN pip install --no-cache-dir -r metrics.txt
 RUN python -m spacy download en_core_web_sm
 
 
