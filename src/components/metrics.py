@@ -1,6 +1,6 @@
-from typing import Any, Dict, List
 from dotenv import load_dotenv
 import os
+from typing import Any, Dict, List
 
 
 """Contains functions to score a summary or knowledge graph.
@@ -234,6 +234,7 @@ def compute_basic(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]
     bertscore_result = run_bertscore(summary, gold_summary)
     return {"rouge": rouge_result, "bertscore": bertscore_result}
 
+
 def run_rouge(prediction: str, reference: str) -> Dict[str, float]:
     """Run the ROUGE evaluation metric given one reference and one prediction to judge.
     @param prediction  Text string containing the generated summary.
@@ -243,9 +244,11 @@ def run_rouge(prediction: str, reference: str) -> Dict[str, float]:
     Example schema: { "rouge1": 0.87, ... }
     Valid keys: rouge1, rouge2, rougeL, rougeLsum."""
     import evaluate
+
     model = evaluate.load("rouge")
     result = model.compute(predictions=[prediction], references=[reference])
     return result
+
 
 def run_bertscore(prediction: str, reference: str) -> Dict[str, List[float]]:
     """Run the BERTScore evaluation metric given one reference and one prediction to judge.
@@ -255,16 +258,10 @@ def run_bertscore(prediction: str, reference: str) -> Dict[str, List[float]]:
     Example schema: { "precision": [0.87], ... }
     Valid keys: precision, recall, f1."""
     import evaluate
+
     model = evaluate.load("bertscore")
     result = model.compute(predictions=[prediction], references=[reference], model_type="roberta-large")
     return result
-
-
-
-
-
-
-
 
 
 def run_questeval(
@@ -323,11 +320,6 @@ def run_questeval(
         "value": result.get("ex_level_scores", [0])[0],
         "has_reference": ref is not None,
     }
-
-
-
-
-
 
 
 def run_bookscore(chunk: Dict[str, Any], *, model: str = "gpt-3.5-turbo", batch_size: int = 10, use_v2: bool = True) -> Dict[str, Any]:

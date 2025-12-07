@@ -287,8 +287,6 @@ class Log:
             elapsed = time.time() - start  # Data recorded even on failure
             Log.elapsed_time(name, elapsed, call_chain)
 
-    
-
     @staticmethod
     def get_timing_summary() -> DataFrame:
         """Returns timing results as a pandas DataFrame.

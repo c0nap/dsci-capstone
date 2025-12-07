@@ -1,9 +1,9 @@
+from conftest import optional_param
 import pytest
 from src.components.book_conversion import Chunk
 from src.core.stages import *
 from src.main import pipeline_B, pipeline_D, pipeline_E
-from conftest import optional_param
-from typing import List, Any
+from typing import Any, List
 
 
 @pytest.fixture
@@ -61,25 +61,29 @@ def rebel():
     """Fixture returning the REBEL extraction function."""
     return task_12_relation_extraction_rebel
 
+
 @pytest.fixture
 def openie():
     """Fixture returning the OpenIE extraction function."""
     return task_12_relation_extraction_openie
+
 
 @pytest.fixture
 def textacy():
     """Fixture returning the Textacy extraction function."""
     return task_12_relation_extraction_textacy
 
+
 @pytest.fixture
 def relation_extraction_task(request):
     """Meta-fixture that returns the backend function specified by the parameter."""
     return request.getfixturevalue(request.param)
 
-PARAMS_RELATION_EXTRACTORS: List[Any] = [   # ParameterSet is internal to PyTest
+
+PARAMS_RELATION_EXTRACTORS: List[Any] = [  # ParameterSet is internal to PyTest
     optional_param("rebel", "transformers"),
     optional_param("openie", "stanza"),
-    pytest.param("textacy"),     # test always runs (no dependency)
+    pytest.param("textacy"),  # test always runs (no dependency)
 ]
 
 
@@ -88,10 +92,12 @@ def langchain():
     """Fixture returning the LangChain LLM API."""
     return task_14_relation_extraction_llm_langchain
 
+
 @pytest.fixture
 def openai():
     """Fixture returning the OpenAI LLM API."""
     return task_14_relation_extraction_llm_openai
+
 
 @pytest.fixture
 def llm_prompt_task(request):
@@ -113,7 +119,7 @@ def test_job_12_extraction_minimal(relation_extraction_task):
     sample_text = "Alice met Bob in the forest. Bob then went to the village."
     extracted = relation_extraction_task(sample_text)
     assert isinstance(extracted, list)
-    
+
     # If the model extracted anything, ensure it conforms to the standard Triple dict
     if len(extracted) > 0:
         triple = extracted[0]
@@ -135,9 +141,9 @@ def test_job_12_extraction(book_data, relation_extraction_task):
 
     assert isinstance(extracted, list)
     # Flexible check: we expect some results, but exact count depends on the model
-    assert len(extracted) >= 1 
+    assert len(extracted) >= 1
     assert all(isinstance(t, dict) for t in extracted)
-    
+
     for triple in extracted:
         subj = triple["s"]
         rel = triple["r"]
@@ -224,7 +230,6 @@ def test_pipeline_D_minimal(docs_db, book_data):
     doc = collection.find_one({"_id": chunk.get_chunk_id()})
     assert doc is not None
     assert doc["summary"] == summary
-
 
 
 @pytest.mark.pipeline

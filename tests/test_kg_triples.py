@@ -1,12 +1,10 @@
 from pandas import DataFrame
 import pytest
-from src.components.fact_storage import KnowledgeGraph
+import re
+from src.components.fact_storage import KnowledgeGraph, sanitize_node, sanitize_relation
 from src.connectors.graph import GraphConnector
 from src.util import Log
 from typing import Generator
-import re
-from src.components.fact_storage import sanitize_node, sanitize_relation
-
 
 
 @pytest.mark.kg
@@ -633,6 +631,7 @@ def test_ranked_degree_ties(main_graph: KnowledgeGraph) -> None:
 # NODE AND EDGE LABEL SANITIZATION
 # ==========================================
 
+
 @pytest.fixture
 def node_nlp_cases():
     """Fixtures focusing on spaCy NLP cleaning (Stopword/Part-of-speech removal)."""
@@ -648,8 +647,9 @@ def node_nlp_cases():
         ("It is time", "is_time", "Remove Pronoun 'It', keep Verb 'is'"),
         ("The 50% increase", "50_increase", "Handle symbols mixed with NLP (keep numbers)"),
         ("tHE inconsistent Case", "inconsistent_Case", "Handle mixed-case stopwords"),
-        ("Give it to me", "Give_to", "Remove 'it' (PRON) and 'me' (PRON) - leaving only 'Give' Verb and 'to' ADP")
+        ("Give it to me", "Give_to", "Remove 'it' (PRON) and 'me' (PRON) - leaving only 'Give' Verb and 'to' ADP"),
     ]
+
 
 @pytest.fixture
 def node_regex_cases():
@@ -667,8 +667,9 @@ def node_regex_cases():
         ("Café Name", "Caf_Name", "Strip non-ASCII (Accents) if regex is strict A-Z"),
         ("Data (2024)", "Data_2024", "Handle parentheses/brackets"),
         ("Rocket 🚀", "Rocket", "Strip Emojis"),
-        ("..Start..", "Start", "Trim leading/trailing dots if regex converts them to underscores")
+        ("..Start..", "Start", "Trim leading/trailing dots if regex converts them to underscores"),
     ]
+
 
 @pytest.fixture
 def relation_casing_cases():
@@ -681,13 +682,14 @@ def relation_casing_cases():
         ("has part", "camelCase", "relatedTo", "hasPart"),
         ("works_with", "camelCase", "relatedTo", "worksWith"),
         ("  messy  input  ", "UPPER_CASE", "RELATED_TO", "MESSY_INPUT"),
-        ("HTML Parser", "camelCase", "relatedTo", "htmlParser"), # Acronym handling
-        ("HTML Parser", "UPPER_CASE", "RELATED_TO", "HTML_PARSER"), # Acronym handling
-        ("already_snake_case", "UPPER_CASE", "RELATED_TO", "ALREADY_SNAKE_CASE"), # Idempotency check
-        ("alreadyCamelCase", "camelCase", "relatedTo", "alreadyCamelCase"), # Idempotency check
-        ("Is CEO Of", "UPPER_CASE", "RELATED_TO", "IS_CEO_OF"), # Stopwords in relations usually kept
-        ("Is CEO Of", "camelCase", "relatedTo", "isCeoOf")
+        ("HTML Parser", "camelCase", "relatedTo", "htmlParser"),  # Acronym handling
+        ("HTML Parser", "UPPER_CASE", "RELATED_TO", "HTML_PARSER"),  # Acronym handling
+        ("already_snake_case", "UPPER_CASE", "RELATED_TO", "ALREADY_SNAKE_CASE"),  # Idempotency check
+        ("alreadyCamelCase", "camelCase", "relatedTo", "alreadyCamelCase"),  # Idempotency check
+        ("Is CEO Of", "UPPER_CASE", "RELATED_TO", "IS_CEO_OF"),  # Stopwords in relations usually kept
+        ("Is CEO Of", "camelCase", "relatedTo", "isCeoOf"),
     ]
+
 
 @pytest.fixture
 def relation_fallback_cases():
@@ -695,12 +697,13 @@ def relation_fallback_cases():
     return [
         # (input, mode, default_raw, expected_final)
         ("123", "UPPER_CASE", "default_rel", "DEFAULT_REL"),  # Starts with number -> fallback
-        ("->", "UPPER_CASE", "generic_link", "GENERIC_LINK"),   # Special chars only -> fallback
-        ("", "camelCase", "has_connection", "hasConnection"),   # Empty input -> fallback
-        ("2nd_step", "camelCase", "backup", "backup"),          # Starts with number -> fallback
-        ("   ", "UPPER_CASE", "empty_space", "EMPTY_SPACE"), # Whitespace only -> Fallback
-        ("!!!", "camelCase", "bad_chars", "badChars") # Symbols only -> Fallback
+        ("->", "UPPER_CASE", "generic_link", "GENERIC_LINK"),  # Special chars only -> fallback
+        ("", "camelCase", "has_connection", "hasConnection"),  # Empty input -> fallback
+        ("2nd_step", "camelCase", "backup", "backup"),  # Starts with number -> fallback
+        ("   ", "UPPER_CASE", "empty_space", "EMPTY_SPACE"),  # Whitespace only -> Fallback
+        ("!!!", "camelCase", "bad_chars", "badChars"),  # Symbols only -> Fallback
     ]
+
 
 @pytest.mark.kg
 @pytest.mark.order(51)
@@ -715,6 +718,7 @@ def test_sanitize_node_nlp_capabilities(node_nlp_cases):
         result = sanitize_node(raw)
         assert result == expected, f"Failed on: {reason}"
 
+
 @pytest.mark.kg
 @pytest.mark.order(52)
 @pytest.mark.dependency(name="sanitize_node_regex", depends=["sanitize_node_nlp"])
@@ -728,6 +732,7 @@ def test_sanitize_node_regex_cleaning(node_regex_cases):
     for raw, expected, reason in node_regex_cases:
         result = sanitize_node(raw)
         assert result == expected, f"Failed on: {reason}"
+
 
 @pytest.mark.kg
 @pytest.mark.order(53)
@@ -744,6 +749,7 @@ def test_sanitize_relation_modes(relation_casing_cases, mode):
             result = sanitize_relation(raw, mode=mode, default_relation=default)
             assert result == expected
 
+
 @pytest.mark.kg
 @pytest.mark.order(54)
 @pytest.mark.dependency(name="sanitize_rel_fallback", depends=["sanitize_rel_modes"])
@@ -751,14 +757,14 @@ def test_sanitize_relation_fallbacks(relation_fallback_cases):
     """Test the 'safety net' fallback logic for relations.
     @details
         The function requires relations to start with an alphabetic character.
-        If the input is garbage (e.g., '123' or '>>'), it must revert to the 
-        default_relation, and that default relation *must* also be normalized 
+        If the input is garbage (e.g., '123' or '>>'), it must revert to the
+        default_relation, and that default relation *must* also be normalized
         to the requested mode.
     """
     for raw, mode, default_raw, expected in relation_fallback_cases:
         result = sanitize_relation(raw, mode=mode, default_relation=default_raw)
-        assert result == expected, \
-            f"Failed fallback logic. Input: '{raw}', Mode: {mode}, Default: '{default_raw}'"
+        assert result == expected, f"Failed fallback logic. Input: '{raw}', Mode: {mode}, Default: '{default_raw}'"
+
 
 @pytest.mark.kg
 @pytest.mark.order(55)
@@ -766,8 +772,8 @@ def test_sanitize_relation_fallbacks(relation_fallback_cases):
 def test_sanitize_relation_default_normalization():
     """Edge case: Ensure the default_relation itself is sanitized if used.
     @details
-        If the input is empty, we return the default. 
-        But if the default provided is 'bad input', the function must clean 
+        If the input is empty, we return the default.
+        But if the default provided is 'bad input', the function must clean
         the default before returning it.
     """
     # Case: Input is empty, forcing fallback.

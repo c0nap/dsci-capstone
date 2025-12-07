@@ -36,7 +36,6 @@ class Plot:
         plt.close()
         Log.chart(title, filename)
 
-
     @staticmethod
     def time_elapsed_by_names(filename: str = "./logs/charts/avg_runtime.png") -> None:
         """Plot average elapsed time per function name, averaging across runs.
@@ -63,7 +62,6 @@ class Plot:
         plt.close()
         Log.chart(title, filename)
 
-
     @staticmethod
     def time_elapsed_comparison(
         filename: str = "./logs/charts/runtime_comparison.png",
@@ -87,7 +85,7 @@ class Plot:
             df2 = pd.read_csv(csv2)
         else:
             raise
-        
+
         # Process both datasets
         def process_df(df: pd.DataFrame, only_pipeline: bool) -> pd.DataFrame:
             # Choose or exclude functions containing "pipeline"
@@ -97,22 +95,22 @@ class Plot:
                 df = df[~df['function'].str.contains('pipeline', case=False, na=False)]
             per_run_avg = df.groupby(['run_id', 'function'])['elapsed'].mean().reset_index()
             return per_run_avg.groupby('function')['elapsed'].mean().reset_index()
-        
+
         if only_pipeline is not None:
             avg1 = process_df(df1, only_pipeline)
             avg2 = process_df(df2, only_pipeline)
 
         # Merge on function names to align bars
         merged = pd.merge(avg1, avg2, on='function', suffixes=('_left', '_right'))
-        
+
         # Create figure
         fig, ax = plt.subplots(figsize=(10, len(merged) * 0.5))
-        
+
         # Plot bars going inward from center
         y_pos = range(len(merged))
         ax.barh(y_pos, -merged['elapsed_left'], align='center', label='Improved')
         ax.barh(y_pos, merged['elapsed_right'], align='center', label='Original')
-        
+
         # Configure axes with log scale to handle outliers
         if log_scale:
             ax.set_xscale('symlog', linthresh=1.0)
@@ -128,32 +126,24 @@ class Plot:
             ax.set_xlabel("Average elapsed time (seconds)")
         ax.set_title("Average Function Runtime Comparison")
         ax.legend()
-        
+
         plt.tight_layout()
-        
+
         # Save the figure
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         plt.savefig(filename)
         plt.close()
         Log.chart("Average Function Runtime Comparison", filename)
 
+
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Compare function runtimes from two CSV files')
     parser.add_argument('csv1', help='Path to first CSV file')
     parser.add_argument('csv2', help='Path to second CSV file')
-    parser.add_argument('--output', default='./logs/charts/runtime_comparison.png',
-                        help='Output filename for chart')
-    
-    args = parser.parse_args()
-    
-    Plot.time_elapsed_comparison(
-        filename=args.output,
-        csv1=args.csv1,
-        csv2=args.csv2,
-        only_pipeline=False,
-        log_scale=False,
-        cap_outliers=0.06
-    )
+    parser.add_argument('--output', default='./logs/charts/runtime_comparison.png', help='Output filename for chart')
 
+    args = parser.parse_args()
+
+    Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=False, log_scale=False, cap_outliers=0.06)

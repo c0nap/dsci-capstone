@@ -162,6 +162,7 @@ def llm_data(request):
     """Realistic or malformed LLM response edge cases."""
     return request.getfixturevalue(request.param)
 
+
 @pytest.fixture
 def llm_edge_case_1():
     """Save tokens by reusing the original subject."""
@@ -174,6 +175,7 @@ def llm_edge_case_1():
         ),
         "num_triples": 3,
     }
+
 
 @pytest.fixture
 def llm_edge_case_2():
@@ -188,6 +190,7 @@ def llm_edge_case_2():
         "num_triples": 3,
     }
 
+
 @pytest.fixture
 def llm_edge_case_3():
     """Combine subject: List[str] and relation-object: List[Dict[str, str]]"""
@@ -199,6 +202,7 @@ def llm_edge_case_3():
         ),
         "num_triples": 4,
     }
+
 
 @pytest.fixture
 def llm_edge_case_4():
@@ -214,6 +218,7 @@ def llm_edge_case_4():
         "num_triples": 3,
     }
 
+
 @pytest.fixture
 def llm_edge_case_5():
     """Mismatched-length lists: inferred as Cartesian Product."""
@@ -225,6 +230,7 @@ def llm_edge_case_5():
         ),
         "num_triples": 12,
     }
+
 
 @pytest.fixture
 def llm_edge_case_6():

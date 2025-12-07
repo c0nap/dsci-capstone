@@ -1,11 +1,12 @@
 from pandas import concat, DataFrame, option_context
 import random
 import re
+import spacy
+from src.components.relation_extraction import Triple
 from src.connectors.graph import GraphConnector
 from src.util import Log
 from typing import Any, Dict, List, Optional, Tuple
-import spacy
-from src.components.relation_extraction import Triple
+
 
 nlp = None  # module-level cache for lazy-loaded NLP model (used by sanitize_node)
 
@@ -633,8 +634,6 @@ class KnowledgeGraph:
             print(triples_df)
 
 
-
-
 def sanitize_node(label: str) -> str:
     """Clean node name for Cypher safety.
     @details
@@ -658,14 +657,11 @@ def sanitize_node(label: str) -> str:
             nlp = spacy.load("en_core_web_sm")
 
     doc = nlp(label)
-    tokens = [
-        token.text for token in doc 
-        if token.pos_ not in {"DET", "PRON", "PART"}  # determiners, pronouns, particles
-    ]
+    tokens = [token.text for token in doc if token.pos_ not in {"DET", "PRON", "PART"}]  # determiners, pronouns, particles
     cleaned = " ".join(tokens)
     if not cleaned:  # Revert back to input: a messy label is better than nothing.
         cleaned = label
-    
+
     # Regex: collapse consecutive non-alphanumeric to single underscore, strip edges
     sanitized = re.sub(r"[^A-Za-z0-9]+", "_", cleaned).strip("_")
     if not sanitized:
@@ -679,12 +675,12 @@ def sanitize_relation(label: str, mode: str = "UPPER_CASE", default_relation: st
         Supports two output modes:
         - UPPER_CASE: Neo4j convention (e.g., RELATED_TO)
         - camelCase: OWL/RDF convention (e.g., relatedTo)
-        
+
         Process:
         - Replaces invalid characters with underscores
         - Applies mode-specific casing rules
         - Falls back to normalized default if empty or invalid start
-        
+
         Relations must start with alphabetic character.
         Default relation is automatically normalized to match mode.
     @param label  Raw relation label (string)
@@ -700,27 +696,24 @@ def sanitize_relation(label: str, mode: str = "UPPER_CASE", default_relation: st
     # 2. CLEAN: Replace invalid chars, split on underscores/spaces
     cleaned = re.sub(r"[^A-Za-z0-9_ ]", "_", pre_split)
     words = [w for w in re.split(r"[_ ]+", cleaned) if w]
-    
+
     # Normalize default_relation according to mode
     default_cleaned = re.sub(r"[^A-Za-z0-9_ ]", "_", default_relation)
     default_words = [w for w in re.split(r"[_ ]+", default_cleaned) if w]
-    
+
     if mode == "UPPER_CASE":
         # Neo4j convention: SCREAMING_SNAKE_CASE
         normalized_default = "_".join(w.upper() for w in default_words) if default_words else "RELATED_TO"
         if not words:
             return normalized_default
-        
+
         sanitized = "_".join(w.upper() for w in words)
         if not sanitized or not sanitized[0].isalpha():
             sanitized = normalized_default
-            
+
     elif mode == "camelCase":
         # OWL convention: lowerCamelCase
-        normalized_default = (
-            default_words[0].lower() + "".join(w.capitalize() for w in default_words[1:])
-            if default_words else "relatedTo"
-        )
+        normalized_default = default_words[0].lower() + "".join(w.capitalize() for w in default_words[1:]) if default_words else "relatedTo"
         if not words:
             return normalized_default
 

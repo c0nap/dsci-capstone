@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from dotenv import load_dotenv
 from langchain_core.prompts import (
     ChatPromptTemplate,
@@ -5,13 +6,13 @@ from langchain_core.prompts import (
     SystemMessagePromptTemplate,
 )
 from langchain_openai import ChatOpenAI
-from openai import OpenAI, BadRequestError
+from openai import BadRequestError, OpenAI
 import os
 import re
 from src.connectors.base import Connector
-from typing import Any, List, Tuple, Dict
-from abc import ABC, abstractmethod
 from src.util import Log
+from typing import Any, Dict, List, Tuple
+
 
 class LLMConnector(Connector, ABC):
     """Connector for prompting and returning LLM output (raw text/JSON) via LLMs.
@@ -137,31 +138,25 @@ class LangChainConnector(LLMConnector):
                 - OPENAI_API_KEY from .env for authentication
                 - LLM_MODEL and LLM_TEMPERATURE to override defaults"""
         self._load_env()
-        self.client = ChatOpenAI(
-            model=self.model_name,
-            temperature=self.temperature,
-            reasoning = {"effort": "minimal"}
-        )
+        self.client = ChatOpenAI(model=self.model_name, temperature=self.temperature, reasoning={"effort": "minimal"})
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
         """Send a single prompt to the LLM with separate system and human instructions.
         @param system_prompt  Instructions for the LLM.
         @param human_prompt  The user input or query.
         @return Raw LLM response as a string."""
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("human", human_prompt),
-        ])
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system_prompt),
+                ("human", human_prompt),
+            ]
+        )
         try:
             response = self.client.invoke(prompt.format_messages())
         except BadRequestError:
-            self.client = ChatOpenAI(
-                model=self.model_name,
-                temperature=self.temperature
-            )
+            self.client = ChatOpenAI(model=self.model_name, temperature=self.temperature)
             response = self.client.invoke(prompt.format_messages())
         return str(response.content)
-
 
 
 def clean_json_block(s: str) -> str:
@@ -185,14 +180,14 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
     @return  List of flat dicts with all keys present
     @throws ValueError  If input format cannot be parsed
     """
-    
+
     def _as_list(x: Any) -> List[Any]:
         """Coerce value to list for uniform handling.
         @param x  Any input value
         @return  List containing x, or x itself if already a list/tuple
         """
         return list(x) if isinstance(x, (list, tuple)) else [x]
-    
+
     def _expand_nested_ro(item: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Expand nested relation-object pairs pattern.
         @details
@@ -204,13 +199,13 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
         @return  List of expanded flat dicts, or [item] if no nesting found
         """
         subjects = _as_list(item.get("s") or item.get("subject"))
-        
+
         # Find nested r-o pairs (not under a key, just in the dict values)
         nested_pairs = [v for v in item.values() if isinstance(v, list) and v and isinstance(v[0], dict)]
-        
+
         if not nested_pairs:
             return [item]  # No nesting, return as-is
-        
+
         # Cartesian product: each subject × each r-o pair
         results: List[Dict[str, Any]] = []
         for s in subjects:
@@ -220,7 +215,7 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
                 if r and o:
                     results.append({"s": s, "r": r, "o": o})
         return results
-    
+
     def _expand_cartesian(item: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Expand list values into flat combinations.
         @details
@@ -234,11 +229,11 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
         s_vals = _as_list(item.get("s") or item.get("subject"))
         r_vals = _as_list(item.get("r") or item.get("relation"))
         o_vals = _as_list(item.get("o") or item.get("object") or item.get("object_"))
-        
+
         # If lists have same length, zip them (not cartesian)
         if len(s_vals) == len(r_vals) == len(o_vals) and len(s_vals) > 1:
             return [{"s": s, "r": r, "o": o} for s, r, o in zip(s_vals, r_vals, o_vals)]
-        
+
         # Otherwise, broadcast single values or create cartesian product
         max_len = max(len(s_vals), len(r_vals), len(o_vals))
         if len(s_vals) == 1:
@@ -247,11 +242,11 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
             r_vals *= max_len
         if len(o_vals) == 1:
             o_vals *= max_len
-        
+
         # If all same length now, zip
         if len(s_vals) == len(r_vals) == len(o_vals):
             return [{"s": s, "r": r, "o": o} for s, r, o in zip(s_vals, r_vals, o_vals)]
-        
+
         # Full cartesian product for mismatched lengths
         results: List[Dict[str, Any]] = []
         for s in s_vals:
@@ -259,10 +254,10 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
                 for o in o_vals:
                     results.append({"s": s, "r": r, "o": o})
         return results
-    
+
     # Normalize input to list of dicts
     items: List[Dict[str, Any]] = data if isinstance(data, list) else [data]
-    
+
     # Expand each item
     expanded: List[Dict[str, Any]] = []
     for item in items:
@@ -273,7 +268,7 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
         else:
             # Try cartesian expansion
             expanded.extend(_expand_cartesian(item))
-    
+
     return expanded
 
 
@@ -283,31 +278,30 @@ def moderate_texts(texts: List[str]) -> List[bool]:
     @return List of booleans - True if safe, False if flagged.
     """
     from openai import OpenAI
-    
+
     if not texts:
         return []
-    
+
     load_dotenv()
     client = OpenAI()
     batch_size = 32  # OpenAI's max per request
     safe_flags = []
-    
+
     for i in range(0, len(texts), batch_size):
-        batch = texts[i:i + batch_size]
-        
+        batch = texts[i : i + batch_size]
+
         try:
             response = client.moderations.create(input=batch)
-            
+
             # Focus on hate/harassment for old fiction content
             for result in response.results:
-                is_safe = not (result.categories.hate or 
-                               result.categories.harassment)
+                is_safe = not (result.categories.hate or result.categories.harassment)
                 safe_flags.append(is_safe)
-                
+
         except Exception as e:
             Log.warn(f"Moderation API failed: {e}, marking batch as safe")
             safe_flags.extend([True] * len(batch))
-    
+
     return safe_flags
 
 
@@ -318,12 +312,10 @@ def moderate_triples(triples: List[Dict[str, str]]) -> List[Dict[str, str]]:
     """
     texts = [f"{t['s']} {t['r']} {t['o']}" for t in triples]
     safe_flags = moderate_texts(texts)
-    
+
     safe_triples = [t for t, is_safe in zip(triples, safe_flags) if is_safe]
-    
+
     filtered_count = len(triples) - len(safe_triples)
     Log.success(f"Moderation: filtered {filtered_count}/{len(triples)} triples")
-    
+
     return safe_triples
-
-

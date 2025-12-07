@@ -1,3 +1,4 @@
+import importlib.util
 import pytest
 from src.components.fact_storage import KnowledgeGraph
 from src.connectors.document import DocumentConnector
@@ -6,7 +7,6 @@ from src.connectors.relational import RelationalConnector
 from src.core.context import get_session, Session
 from src.util import Log
 from typing import Any, Generator
-import importlib.util
 
 
 def pytest_addoption(parser: Any) -> None:
@@ -22,10 +22,8 @@ def optional_param(name: str, package: str) -> Any:  # ParameterSet is internal 
     @param package  The name of a Python package to check for.
     @return  PyTest parameter with the skip flag set if package is not installed."""
     exists = importlib.util.find_spec(package) is not None
-    return pytest.param(
-        name,
-        marks=pytest.mark.skipif(not exists, reason=f"{package} not installed")
-    )
+    return pytest.param(name, marks=pytest.mark.skipif(not exists, reason=f"{package} not installed"))
+
 
 @pytest.fixture(scope="session", autouse=True)
 def session(request: pytest.FixtureRequest) -> Generator[Session, None, None]:

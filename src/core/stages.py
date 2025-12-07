@@ -1,13 +1,13 @@
 import json
 import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
+from src.connectors.llm import clean_json_block, normalize_to_dict
 from src.core.context import session
 from src.util import Log
-from src.connectors.llm import normalize_to_dict, clean_json_block
 
 # unused?
 import traceback
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
 
 
 ### Will revisit later - Book classes need refactoring ###
@@ -282,6 +282,7 @@ def task_16_moderate_triples_llm(triples: List[Dict[str, str]]) -> List[Dict[str
     @return Safe triples for knowledge graph insertion."""
     with Log.timer():
         from src.connectors.llm import moderate_triples
+
         return moderate_triples(triples)
 
 
@@ -338,6 +339,7 @@ def task_30_summarize_llm_langchain(triples_string):
         prompt += "Output your generated summary and nothing else."
         summary = llm.execute_query(prompt)
         return (prompt, summary)
+
 
 def task_30_summarize_llm_openai(triples_string):
     """Prompt LLM to generate summary"""

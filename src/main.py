@@ -3,7 +3,12 @@ import os
 import pickle
 from src.charts import Plot
 from src.core import stages
-from src.core.boss import create_boss_thread, post_chunk_status, post_process_full_story, post_story_status
+from src.core.boss import (
+    create_boss_thread,
+    post_chunk_status,
+    post_process_full_story,
+    post_story_status
+)
 from src.util import Log
 import time
 
@@ -150,6 +155,7 @@ CHAPTER 12. THE END OF THE END\n
 
 if __name__ == "__main__":
     from src.core.context import session
+
     session.setup()
     # TODO: handle this better - half env parsing is here, half is in boss.py
     load_dotenv(".env")
@@ -221,7 +227,7 @@ CHAPTER 12. THE END OF THE END\n
     summary = pipeline_D(COLLECTION, triples_string, chunk.get_chunk_id())
     post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
-    
+
     # Post chunk - this will enqueue worker processing
     if compute_worker_metrics:
         for task_type in ["questeval", "bookscore"]:

@@ -1,4 +1,5 @@
-from typing import Any, Self, Optional, TYPE_CHECKING
+from typing import Any, Optional, Self, TYPE_CHECKING
+
 
 # 1. Avoid circular imports: compile-time imports only when type checking
 if TYPE_CHECKING:

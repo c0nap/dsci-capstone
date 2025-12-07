@@ -1,13 +1,15 @@
+from abc import ABC, abstractmethod
 from dotenv import load_dotenv
 import os
-from typing import Any, List, Optional, TypedDict, TYPE_CHECKING
-from abc import ABC, abstractmethod
+from typing import Any, List, Optional, TYPE_CHECKING, TypedDict
+
 
 # Forward references for lazy-loaded modules
 if TYPE_CHECKING:
     import spacy
     import spacy.language
     import transformers
+
 
 class Triple(TypedDict):
     s: str
@@ -48,10 +50,10 @@ class RelationExtractorREBEL(RelationExtractor):
         """
         self.model_name = model_name
         self.max_tokens = max_tokens
-        
+
         # Internal delimiter used by the model for splitting generated text
-        self._model_delim = " " 
-        
+        self._model_delim = " "
+
         # Placeholders for lazy loading
         self.nlp: Optional[spacy.language.Language] = None
         self.tokenizer: Optional[transformers.PreTrainedTokenizer] = None
@@ -59,8 +61,8 @@ class RelationExtractorREBEL(RelationExtractor):
 
     def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
         """Perform extraction on the text using the generative model.
-        @details 
-            The text is first segmented into sentences because RE models degrade 
+        @details
+            The text is first segmented into sentences because RE models degrade
             significantly in performance on long, multi-sentence paragraphs.
         @param text  The input narrative text.
         @param parse_tuples  Unused (Always parses to Triples).
@@ -70,7 +72,7 @@ class RelationExtractorREBEL(RelationExtractor):
         if self.model is None or self.nlp is None:
             import spacy
             from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-            
+
             # Setup Spacy for basic sentence segmentation
             self.nlp = spacy.blank("en")
             self.nlp.add_pipe("sentencizer")
@@ -97,21 +99,21 @@ class RelationExtractorREBEL(RelationExtractor):
                 truncation=True,
                 max_length=self.max_tokens,
             )
-            
+
             # Generate the linearized triples
             outputs = self.model.generate(**inputs)
             decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            
+
             # REBEL output format is specific; we split by the internal model delimiter
             parts = [str(element).strip() for element in decoded.split(self._model_delim)]
-            
+
             # group 3 at a time using zip to form (subj, obj, rel)
             # Note: REBEL outputs Subj, Obj, Rel order in its raw decoding
             for subj, obj, rel in zip(parts[0::3], parts[1::3], parts[2::3]):
                 # Filter out empty strings or malformed triples
                 if subj and obj and rel:
                     out.append({'s': subj, 'r': rel, 'o': obj})
-                
+
         return out
 
 
@@ -125,14 +127,14 @@ class RelationExtractorOpenIE(RelationExtractor):
 
     def __init__(self, memory: str = '4G', timeout: float = 120) -> None:
         """Initialize the Stanza CoreNLP configuration.
-        @details 
+        @details
             Configuration targets "Exhaustive" and "Coref-Resolved" extraction.
         @param memory  Java heap size string (e.g., '4G', '8G').
         @param timeout  Timeout for the Java server response in seconds.
         """
         self.timeout = timeout
         self.memory = memory
-        
+
         # Pre-configure properties so they are ready for the context manager
         self.client_config = {
             'annotators': ['tokenize', 'ssplit', 'pos', 'lemma', 'ner', 'parse', 'coref', 'openie'],
@@ -142,14 +144,14 @@ class RelationExtractorOpenIE(RelationExtractor):
             },
             'timeout': 1000 * timeout,
             'memory': memory,
-            'be_quiet': True
+            'be_quiet': True,
         }
 
     def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
         """Extract triples using the Stanford OpenIE pipeline.
         @details
             Uses a context manager to spin up the Java server via CoreNLPClient.
-            This ensures the heavy Java process (which requires ~4GB RAM) is 
+            This ensures the heavy Java process (which requires ~4GB RAM) is
             terminated immediately after processing, freeing resources.
         @param text  The raw narrative text.
         @param parse_tuples  Unused (Always parses to Triples).
@@ -172,17 +174,13 @@ class RelationExtractorOpenIE(RelationExtractor):
         # We use a context manager to ensure the Java server is cleanly started / stopped.
         with CoreNLPClient(**self.client_config) as client:
             doc = client.annotate(text)
-            
+
             # Iterate through sentences and their extracted triples
             for sentence in doc.sentence:
                 for triple in sentence.openieTriple:
                     # We create a TypedDict for easy consumption
-                    out.append({
-                        's': triple.subject, 
-                        'r': triple.relation, 
-                        'o': triple.object
-                    })
-                    
+                    out.append({'s': triple.subject, 'r': triple.relation, 'o': triple.object})
+
         return out
 
 
@@ -210,7 +208,7 @@ class RelationExtractorTextacy(RelationExtractor):
         # Lazy Imports
         import spacy
         import textacy
-        
+
         # Load Model on first run
         if self.nlp is None:
             # Auto-download if missing (Self-healing)
@@ -229,8 +227,7 @@ class RelationExtractorTextacy(RelationExtractor):
         for svo in textacy.extract.subject_verb_object_triples(doc):
             subj = " ".join([t.text for t in svo.subject])
             verb = " ".join([t.text for t in svo.verb])
-            obj =  " ".join([t.text for t in svo.object])
+            obj = " ".join([t.text for t in svo.object])
             out.append({'s': subj, 'r': verb, 'o': obj})
-            
-        return out
 
+        return out

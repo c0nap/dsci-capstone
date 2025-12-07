@@ -2,20 +2,20 @@
 Manages task distribution to workers and tracks completion order."""
 
 from collections import defaultdict
+from datetime import datetime
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, Response
 import os
 import pandas as pd
 from pymongo.database import Database
 import requests
+from src.charts import Plot
 from src.connectors.document import DocumentConnector
 from src.core.context import session
+from src.util import Log
 import threading
 import time
-from datetime import datetime
 from typing import Any, Dict, Generator, List, Optional, Tuple
-from src.util import Log
-from src.charts import Plot
 
 
 MongoHandle = Generator["Database[Any]", None, None]
@@ -226,11 +226,11 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             chunk_status = chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, f'{task}']
             if chunk_status.empty:
                 return None
-    
+
             status = chunk_status.iloc[0]  # e.g., "completed, 0.23495"
             if 'completed,' not in status and 'failed,' not in status:
                 return None
-    
+
             # Extract float seconds
             _, seconds = status.split(', ', 1)
             return float(seconds)
@@ -249,9 +249,6 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                 return
             # Write status
             chunk_tracker.loc[mask, task] = f"{status}, {seconds}"
-
-
-
 
     @app.route("/process_story", methods=["POST"])
     def process_story() -> Tuple[Response, int]:
