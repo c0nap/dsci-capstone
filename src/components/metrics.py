@@ -482,25 +482,25 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
 # ------------------------------------------------------------------------------
 # GROUP 1: BASIC COMPARISON OF SUMMARY / SOURCE TEXT
 # ------------------------------------------------------------------------------
-# run_rougeL_recall            [BASELINE] Standard industry benchmark. Checks longest common subsequence (LCS). Recall-focused when using source as reference.
-# run_bertscore                [MEANING] Contextual embedding similarity. Use lightweight model (distilroberta-base) for CPU. Measures semantic meaning preservation.
-# run_novel_ngrams             [ABSTRACTIVENESS] Measures % of n-grams (default n=3) in summary not in source. Signals lexical novelty vs copying.
-# run_jsd_stats                [DISTRIBUTION] Jensen-Shannon Divergence of word frequency distributions. Normalized over union vocabulary to check topical drift.
-# run_entity_coverage          [FACTS] Named Entity precision/recall. Tracks missing vs hallucinated entities. Optionally separate by type (PERSON, LOC, DATE).
+# run_rougeL_recall            [BASELINE] Longest common subsequence recall (source as reference). Library: rouge_score
+# run_bertscore                [MEANING] Average F1 over all tokens. Library: evaluate
+# run_novel_ngrams             [ABSTRACTIVENESS] % of new 3-grams in summary. Library: nltk
+# run_jsd_stats                [DISTRIBUTION] Jensen-Shannon divergence of word frequency distributions. Library: scipy
+# run_entity_coverage          [FACTS] Recall of source entities present in summary. Library: spacy
 # ------------------------------------------------------------------------------
 # GROUP 2: HIGH-LEVEL COMPARISON
 # ------------------------------------------------------------------------------
-# run_ncd_overlap              [INFO-THEORY] Normalized Compression Distance. Use fast zlib/lzma compression to capture structural overlap.
-# run_salience_recall          [KEYWORDS] TF-IDF weighted recall of top-k rare terms from source. Ensures rare, important words are preserved.
-# run_nli_faithfulness         [LOGIC] NLI-style entailment checking (SummaC-ZS or cross-encoder). Detects logical contradictions or hallucinations.
-# run_readability_delta        [COMPLEXITY] Flesch-Kincaid / ARI delta between source and summary. Optionally include SMOG index. Measures simplification or complexity change.
+# run_ncd_overlap              [INFO-THEORY] Normalized Compression Distance. Library: zlib
+# run_salience_recall          [KEYWORDS] Recall of top-k TF-IDF source terms present in summary. Library: textacy
+# run_nli_faithfulness         [LOGIC] % of summary sentences entailed by source. Library: transformers
+# run_readability_delta        [COMPLEXITY] Flesch-Kincaid delta (source minus summary). Library: textstats
 # ------------------------------------------------------------------------------
 # GROUP 3: REFERENCE-FREE QUALITY SCORES
 # ------------------------------------------------------------------------------
-# run_sentence_coherence       [FLOW] Embedding similarity between adjacent sentences. Average over sentence pairs to check smooth transitions.
-# run_entity_grid_coherence    [DISCOURSE] Entity transition model via spaCy. Measures narrative focus stability.
-# run_lexical_diversity        [STYLE] Type-Token Ratio (TTR). Measures vocabulary richness vs source.
-# run_stopword_ratio           [STYLE] Stopword / content-word density. High ratio may indicate low information content.
+# run_sentence_coherence       [FLOW] Average cosine similarity between adjacent sentence embeddings. Library: sentence-transformers
+# run_entity_grid_coherence    [DISCOURSE] Average entity transition coherence. Library: spacy
+# run_lexical_diversity        [STYLE] Type-Token Ratio (TTR). Library: textacy
+# run_stopword_ratio           [STYLE] Ratio of stopwords to total words. Library: nltk
 
 # ==============================================================================
 # CORE CRITERIA
@@ -511,6 +511,46 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
 # - Easy to implement: prefer existing libraries (evaluate, spacy, textacy, textstats). LLM prompts must cite a paper if used.
 # - Unique / Insightful: metrics illustrate non-obvious aspects and do not duplicate each other
 # - Domain adjacent: designed for narrative fiction books, but factuality metrics remain meaningful for generic text
+
+
+
+
+# FOOTNOTES FOR CONTEXT IN DOCSTRINGS
+# run_rougeL_recall            Standard industry benchmark. Checks longest common subsequence (LCS). Recall-focused when using source as reference.
+# run_bertscore                Contextual embedding similarity. Use lightweight model (distilroberta-base) for CPU. Measures semantic meaning preservation.
+# run_novel_ngrams             Measures % of n-grams (default n=3) in summary not in source. Signals lexical novelty vs copying.
+# run_jsd_stats                Jensen-Shannon Divergence of word frequency distributions. Normalized over union vocabulary to check topical drift.
+# run_entity_coverage          Named Entity precision/recall. Tracks missing vs hallucinated entities. Optionally separate by type (PERSON, LOC, DATE).
+# run_ncd_overlap              HEORY] Normalized Compression Distance. Use fast zlib/lzma compression to capture structural overlap.
+# run_salience_recall          TF-IDF weighted recall of top-k rare terms from source. Ensures rare, important words are preserved.
+# run_nli_faithfulness         NLI-style entailment checking (SummaC-ZS or cross-encoder). Detects logical contradictions or hallucinations.
+# run_readability_delta        Flesch-Kincaid / ARI delta between source and summary. Optionally include SMOG index. Measures simplification or complexity change.
+# run_sentence_coherence       Embedding similarity between adjacent sentences. Average over sentence pairs to check smooth transitions.
+# run_entity_grid_coherence    Entity transition model via spaCy. Measures narrative focus stability.
+# run_lexical_diversity        Type-Token Ratio (TTR). Measures vocabulary richness vs source.
+# run_stopword_ratio           Stopword / content-word density. High ratio may indicate low information content.
+
+# FOOTNOTE ON IMPLEMENTATION
+# run_rougeL_recall: Only recall is reported, not precision or F1.
+#   Justification: Since we are reference-free (source = implicit reference), recall directly measures how much of the source content is preserved in the summary.
+#   Precision is less meaningful here because the summary may include new words or abstractions; focusing on recall avoids penalizing creative paraphrasing.
+# run_bertscore: Average F1 across tokens is the single number returned.
+#   Justification: Averaging F1 provides a single scalar capturing overall semantic alignment without needing separate precision/recall breakdowns.
+#   It balances false negatives and false positives, giving a fast, interpretable metric of meaning preservation.
+# run_entity_coverage: Recall of entities present in summary; optional entity types (PERSON, LOC, DATE) can be broken out if desired.
+#   Justification: In narrative fiction, the goal is typically to capture the important characters/locations from the source.
+#   Recall ensures missing entities are penalized, while allowing for creative additions in the summary without negatively impacting the score.
+# run_nli_faithfulness: Percent of summary sentences entailed by source is returned as a single scalar.
+#   Justification: A single entailment percentage simplifies interpretation and stays fast on CPU.
+#   Reporting per-sentence percentages would be more granular but adds complexity; a global scalar gives a high-level view of logical consistency.
+# run_sentence_coherence: Cosine similarity averaged across all adjacent sentence pairs.
+#   Justification: Averaging produces one smooth scalar reflecting overall flow without needing to inspect each pair individually.
+#   This keeps computation light while capturing whether sentences transition naturally, which is critical in narrative text.
+# run_readability_delta: Source minus summary Flesch-Kincaid score gives a single delta; positive → simpler summary.
+#   Justification: A single delta is intuitive (positive means simplified, negative means more complex) and fast to compute.
+#   Tracking delta rather than separate source/summary scores reduces cognitive load when comparing multiple summaries.
+
+
 
 
 from typing import Dict, Any, List
