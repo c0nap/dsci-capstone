@@ -4,6 +4,7 @@ from typing import Optional, Iterator
 import os
 import shutil
 import threading
+from src.corpus import align
 
 
 class DatasetLoader(ABC):
@@ -151,16 +152,6 @@ class DatasetLoader(ABC):
         
         return filepath
 
-def get_text_name(book_id: int, title: str, extension: str) -> str:
-    """Generate the standardized filename for a book.
-    @param book_id  Internal ID (e.g., 1).
-    @param title  Title string.
-    @param extension  File extension including dot (e.g., '.txt').
-    @return  Formatted string: '00001_title_of_book.txt'.
-    """
-    clean_title = align.normalize_title(title)
-    return f"{book_id:05d}_{clean_title}{extension}"
-
 # --------------------------------------------------
 # Helper Functions - Index Management
 # --------------------------------------------------
@@ -228,7 +219,7 @@ def reindex_rows() -> None:
         old_path = str(row['text_path'])
         _, ext = os.path.splitext(old_path)
 
-        new_filename = get_text_name(new_id, title, ext)
+        new_filename = align.get_text_name(new_id, title, ext)
         new_path = os.path.join(DatasetLoader.TEXTS_DIR, new_filename)
         
         # Only move if the path has actually changed and source exists

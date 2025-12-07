@@ -91,6 +91,16 @@ def fetch_gutenberg_metadata(query: str = None, gutenberg_id: str | int = None) 
 # Helper Functions - Text Similarity & Title Matching
 # --------------------------------------------------
 
+def get_text_name(book_id: int, title: str, extension: str) -> str:
+    """Generate the standardized filename for a book.
+    @param book_id  Internal ID (e.g., 1).
+    @param title  Title string.
+    @param extension  File extension including dot (e.g., '.txt').
+    @return  Formatted string: '00001_title_of_book.txt'.
+    """
+    clean_title = normalize_title(title)
+    return f"{book_id:05d}_{clean_title}{extension}"
+
 def normalize_title(title: str) -> str:
     """Remove punctuation, special chars, and standardize title format.
     @param title  A raw title string.
