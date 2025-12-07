@@ -227,7 +227,7 @@ PARAMS_ENTITY_METRICS: List[Any] = [
 # Metrics that don't necessarily return [0, 1] ranges
 PARAMS_UNBOUNDED_METRICS: List[Any] = [
     optional_param("jsd_distribution", "scipy"),
-    optional_param("readability_delta", "textstats"),
+    optional_param("readability_delta", "textstat"),
 ]
 
 # All metrics for comprehensive testing

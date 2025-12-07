@@ -756,13 +756,21 @@ def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
     granularity.
     @return: Dictionary containing entailment percentage
     """
-    from transformers import pipeline
+    from transformers import pipeline, AutoTokenizer
     from nltk import sent_tokenize
     
-    nli = pipeline("text-classification", 
-                   model="microsoft/deberta-v3-xsmall", 
-                   device=-1)
-    
+    model_name = "cross-encoder/nli-deberta-base"
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_name,
+        use_fast=False  # Force slow tokenizer (fast crashes on 3.12)
+    )
+    nli = pipeline(
+        "text-classification",
+        model=model_name,
+        tokenizer=tokenizer,
+        device=-1,  # CPU
+        return_all_scores=False
+    )
     summary_sents = sent_tokenize(summary)
     entailed = 0
     
