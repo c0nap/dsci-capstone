@@ -87,6 +87,19 @@ def fetch_gutenberg_metadata(query: str = None, gutenberg_id: str | int = None) 
         print(f"Warning: Gutendex lookup failed for {gutenberg_id or query}: {e}")
         return None
 
+def extract_gutenberg_id(url: str) -> Optional[int]:
+    """Extract the numeric ID from a Gutenberg URL.
+    @param url  e.g. 'https://www.gutenberg.org/ebooks/12345'
+    @return  12345 or None.
+    """
+    if not url:
+        return None
+    # Flexible regex for http/https and trailing slashes
+    match = re.search(r'gutenberg\.org/ebooks/(\d+)', url)
+    if match:
+        return int(match.group(1))
+    return None
+
 # --------------------------------------------------
 # Helper Functions - Text Similarity & Title Matching
 # --------------------------------------------------
