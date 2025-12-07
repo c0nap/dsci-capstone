@@ -31,6 +31,42 @@ class DatasetLoader(ABC):
         @return  List of column names that will be present in the output DataFrame.
         """
         pass
+
+    @staticmethod
+    def _make_index_row(**kwargs) -> dict:
+        """Create standardized index row with CORE fields + any extras.
+        @param kwargs  Any dataset-specific fields (e.g., booksum_id="123").
+        @return  Dict with core fields initialized + kwargs merged in.
+        """
+        row = {
+            "book_id": None,
+            "title": None,
+            "text_path": None,
+            "gutenberg_id": None,
+        }
+        row.update(kwargs)
+        return row
+
+    def append_to_index(self, book_id: int, title: str, text_path: str, gutenberg_id: int | None, **kwargs) -> None:
+        """Append book entry to global index.
+        @details
+        If 'kwargs' contains keys not currently in the CSV, pandas adds them automatically.
+        """
+        row = self._make_index_row(
+            book_id=book_id, 
+            title=title, 
+            text_path=text_path, 
+            gutenberg_id=gutenberg_id, 
+            **kwargs
+        )
+        new_row = DataFrame([row])
+
+        if not os.path.exists(self.INDEX_FILE):
+            df = new_row  # Create new index file
+        else:  # If exists, load and merge
+            df = read_csv(self.INDEX_FILE)
+            df = concat([index_df, new_row], ignore_index=True)
+        save_as_index(df)
     
     # --------------------------------------------------
     # Download Helpers
@@ -96,55 +132,6 @@ class DatasetLoader(ABC):
             f.write(text)
         
         return filepath
-    
-    def _append_to_index(self, row: dict) -> None:
-        """Append book entry to global index.
-        @param row  Dict with keys: book_id, title, gutenberg_id, text_path, and dataset-specific fields.
-        @details
-        Creates index.csv if it doesn't exist. Appends row to existing index.
-        """
-        # Create index with headers if doesn't exist
-        if not os.path.exists(self.INDEX_FILE):
-            headers = ["book_id", "title", "gutenberg_id", "text_path", 
-                       "booksum_id", "booksum_path", 
-                       "nqa_id", "nqa_path", 
-                       "litbank_id", "litbank_path"]
-            df = DataFrame(columns=headers)
-            df.to_csv(self.INDEX_FILE, index=False)
-        
-        # Read existing index
-        index_df = read_csv(self.INDEX_FILE)
-        
-        # Append new row
-        new_row = DataFrame([row])
-        index_df = DataFrame(list(index_df.to_dict('records')) + list(new_row.to_dict('records')))
-        
-        # Save updated index
-        index_df.to_csv(self.INDEX_FILE, index=False)
-
-    @staticmethod
-    def make_index_row(**kwargs) -> dict:
-        """Create standardized index row with all fields.
-        @param kwargs  Fields to populate (book_id, title, gutenberg_id, etc.)
-        @return  Dict with all index fields, unpopulated fields set to None.
-        @details
-        Use this factory to ensure consistent schema across datasets.
-        """
-        row = {
-            "book_id": None,
-            "title": None,
-            "text_path": None,
-            "gutenberg_id": None,
-            "booksum_id": None,
-            "booksum_path": None,
-            "nqa_id": None,
-            "nqa_path": None,
-            "litbank_id": None,
-            "litbank_path": None,
-        }
-        row.update(kwargs)
-        return row
-
 
 # --------------------------------------------------
 # Helper Functions - Index Management
