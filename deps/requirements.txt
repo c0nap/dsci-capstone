@@ -8,12 +8,16 @@ sqlparse
 pypandoc
 lxml
 rapidfuzz
+flask
+
+# Metrics
 evaluate
 rouge_score
 nltk
 absl-py
 bert-score
-flask
+scipy
+textstats
 
 # Database drivers
 sqlalchemy

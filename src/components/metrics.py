@@ -473,25 +473,46 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
 
         return chunked_pkl
 
+
 # -----------------------------------------------------------------------------------
 # Fast core metrics
-# 1. Basic overlap between original chunk and its summary.
+# 1. Surface-level overlap between original chunk and its summary.
 # -----------------------------------------------------------------------------------
 
-def run_rouge_l(summary: str, source: str):
-    """ROUGE-L Recall (Coverage Score)
+from typing import Dict, Any, List
+
+
+def run_rouge_l(summary: str, source: str) -> Dict[str, float]:
+    """
+    ROUGE-L Recall (Coverage Score)
+
+    @param summary: The model-generated summary text.
+    @param source: The original source text being summarized.
+    @return: A dictionary containing ROUGE-L recall.
     @details
-    Measures how much of the important content structure in the source appears in the summary.
-    Captures longest common subsequence"""
+    ROUGE-L measures longest-common-subsequence overlap.  
+    This metric exists to capture **structural and lexical coverage**, acting as the
+    baseline sanity-check that the summary is not missing the core backbone of the text.
+    """
     from rouge_score import rouge_scorer
     scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
     scores = scorer.score(source, summary)
     return {"rougeL_recall": scores["rougeL"].recall}
 
-def run_bertscore(summary: str, source: str):
-    """BERTScore embedding similarity
+
+def run_bertscore(summary: str, source: str) -> Dict[str, Any]:
+    """
+    BERTScore embedding similarity
+
+    @param summary: Summary text.
+    @param source: Original text.
+    @return: The BERTScore dict from `evaluate`.
     @details
-    Semantic preservation at the token/embedding level."""
+    BERTScore measures **semantic similarity**, not lexical overlap.  
+    It exists because summaries can be phrased differently while still
+    preserving meaning—ROUGE cannot capture that. This protects you against
+    false negatives on paraphrased but faithful summaries.
+    """
     import evaluate
     model = evaluate.load("bertscore")
     return model.compute(
@@ -499,58 +520,179 @@ def run_bertscore(summary: str, source: str):
         references=[source]
     )
 
-def run_novel_ngrams(summary: str, source: str, n: int = 3):
-    """Novel n-gram Percentage (reference-free abstraction vs invention)
+
+def run_novel_ngrams(summary: str, source: str, n: int = 3) -> Dict[str, float]:
+    """
+    Novel n-gram Percentage
+
+    @param summary: Summary text.
+    @param source: Source text.
+    @param n: N-gram length (default 3).
+    @return: Ratio of novel n-grams.
     @details
-    Measures how much of the text is lexically new vs directly lifted.
-    High novelty → abstraction or hallucination → cross-check with entity metrics."""
+    Novel n-grams quantify how much of the summary is **newly written** rather than
+    lifted lexically from the source.  
+    This exists because high abstraction is good, but high novelty can indicate:
+      - unwanted hallucination  
+      - off-topic writing  
+    It complements ROUGE (overlap) by measuring *invention*.
+    """
     from nltk import ngrams, word_tokenize
+
     src_tokens = word_tokenize(source.lower())
     sum_tokens = word_tokenize(summary.lower())
+
     src_set = set(ngrams(src_tokens, n))
     sum_list = list(ngrams(sum_tokens, n))
+
     novel = sum(1 for g in sum_list if g not in src_set)
     pct = novel / (len(sum_list) or 1)
     return {"novel_ngram_pct": pct}
 
+
+def run_ncd(summary: str, source: str) -> Dict[str, float]:
+    """
+    Normalized Compression Distance (NCD)
+
+    @param summary: Summary text.
+    @param source: Source text.
+    @return: NCD score (placeholder until logic added).
+    @details
+    NCD uses compression to estimate **universal similarity**, independent of tokens
+    or embeddings.  
+    It exists because it can detect similarity even when:
+      - wording is heavily paraphrased  
+      - structure changes  
+      - there is low lexical overlap  
+    This complements both ROUGE and BERTScore.
+    """
+    # Placeholder — you said no new logic yet
+    return {"ncd": 0.0}
+
+
 # -----------------------------------------------------------------------------------
 # Fast core metrics
-# 2. High level comparison between original chunk and its summary.
+# 2. High-level comparison between original chunk and its summary.
 # -----------------------------------------------------------------------------------
 
-def run_entity_metrics(summary: str, source: str):
-    """Entity Coverage & Hallucination (spaCy)
+def run_entity_coverage(summary: str, source: str) -> Dict[str, float]:
+    """
+    Entity Coverage & Hallucination (spaCy)
+
+    @param summary: Summary text.
+    @param source: Source text.
+    @return: Coverage and hallucination ratios.
     @details
-    Checks whether the summary drops key characters/locations (coverage) or invents new ones (hallucination)."""
+    This metric checks **who/what appears in the text**:
+      - Coverage = Are key characters/places preserved?
+      - Hallucination = Did the summary invent new entities?
+    This exists because summaries can be semantically similar (BERTScore)
+    while still **dropping crucial actors** or **inventing new ones**.
+    """
     import spacy
     nlp = spacy.load("en_core_web_sm")
+
     src = nlp(source)
     summ = nlp(summary)
+
     src_ents = {e.text.lower() for e in src.ents}
     sum_ents = {e.text.lower() for e in summ.ents}
+
     coverage = len(src_ents & sum_ents) / (len(src_ents) or 1)
     halluc = len(sum_ents - src_ents) / (len(sum_ents) or 1)
+
     return {"entity_coverage": coverage, "entity_hallucination": halluc}
 
-def run_readability_delta(summary: str, source: str):
-    """Readability Delta (textstats)
+
+def run_readability_delta(summary: str, source: str) -> Dict[str, float]:
+    """
+    Readability Delta (textstats)
+
+    @param summary: Summary text.
+    @param source: Source text.
+    @return: Difference in Flesch-Kincaid grade.
     @details
-    Detects simplification or stylistic drift between source & summary."""
+    This metric exists because summaries should generally be **simpler** than
+    their sources. A huge negative shift = oversimplification; no shift =
+    overly extractive.
+    """
     import textstats
     fk_source = textstats.flesch_kincaid_grade(source)
     fk_summary = textstats.flesch_kincaid_grade(summary)
     return {"readability_delta": fk_source - fk_summary}
 
-def run_jsd(summary: str, source: str):
-    """Jensen–Shannon Divergence (JSD) on word distributions.
+
+def run_jsd_distribution(summary: str, source: str) -> Dict[str, float]:
+    """
+    Jensen-Shannon Divergence (JSD)
+
+    @param summary: Summary text.
+    @param source: Source text.
+    @return: JSD value between the two token distributions.
     @details
-    Measures topical drift. Captures lexical distribution change (statistical)"""
+    JSD measures **distributional drift** — whether the summary is using
+    different kinds of words (topics, style, frequency profile).  
+    This exists because even if meaning is similar (BERTScore), the *lexical
+    signal* can shift, revealing stylistic mismatch or omissions.
+    """
     from collections import Counter
     import numpy as np
     from scipy.stats import entropy
-    def jsd(p, q):
-        p=np.array(p); q=np.array(q)
-        p/=p.sum(); q/=q.sum()
-        m = 0.5*(p+q)
-        return 0.5*(entropy(p, m) + entropy(q, m))
 
+    def jsd(p: np.ndarray, q: np.ndarray) -> float:
+        p = p / p.sum()
+        q = q / q.sum()
+        m = 0.5 * (p + q)
+        return 0.5 * (entropy(p, m) + entropy(q, m))
+
+    src_counts = Counter(source.lower().split())
+    sum_counts = Counter(summary.lower().split())
+
+    vocab = list(set(src_counts) | set(sum_counts))
+    p = np.array([src_counts[w] for w in vocab], dtype=float)
+    q = np.array([sum_counts[w] for w in vocab], dtype=float)
+
+    return {"jsd": jsd(p, q)}
+
+
+def run_salience_recall(summary: str, source: str) -> Dict[str, float]:
+    """
+    TF-IDF Salience Recall
+
+    @param summary: Summary text.
+    @param source: Source text.
+    @return: Fraction of top-salience words preserved.
+    @details
+    Unlike BERTScore (semantic) or ROUGE (lexical), salience recall targets
+    **rare-but-important words** by ranking terms using TF-IDF.
+
+    This exists because summaries can preserve general meaning while still
+    *dropping precise, important anchors* (e.g., names, unique objects,
+    specific locations, magical items, plot-significant vocabulary in fiction).
+    """
+    # Placeholder — no extra business logic added
+    return {"salience_recall": 0.0}
+
+
+def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
+    """
+    NLI-based Faithfulness Score
+
+    @param summary: Summary text.
+    @param source: Source text.
+    @return: Placeholder contradiction/entailment metrics.
+    @details
+    NLI detects:
+      - Entailment: The summary is supported by the text.
+      - Neutral: The summary adds unverifiable info.
+      - Contradiction: The summary states something *false*.
+
+    This metric exists because:
+      - Entity metrics detect invented nouns,  
+      - Novel n-grams detect invented phrasing,  
+      - BUT NLI detects invented **claims**.
+
+    It is your “lie detector.”
+    """
+    # Placeholder — no extra business logic added
+    return {"nli_faithfulness": 0.0}
