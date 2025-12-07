@@ -74,23 +74,6 @@ class DatasetLoader(ABC):
         save_as_index(df)
     
     # --------------------------------------------------
-    # Download Helpers
-    # --------------------------------------------------
-
-    def _calculate_subset_size(self, total: int, n: int = None, fraction: float = None) -> int:
-        """Calculate number of items to download.
-        @param total  Total number of items available.
-        @param n  Number of items to download. If None, downloads all.
-        @param fraction  Fraction of dataset to download (0.0-1.0). Overrides n if set.
-        @return  Number of items to download.
-        """
-        if fraction is not None:
-            return int(total * fraction)
-        elif n is None:
-            return total
-        return min(n, total)
-    
-    # --------------------------------------------------
     # Global Index Management
     # --------------------------------------------------
     

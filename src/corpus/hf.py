@@ -20,10 +20,9 @@ class BookSumLoader(DatasetLoader):
         self.cache_dir = cache_dir
         self.metadata_file = f"{cache_dir}/metadata.csv"
     
-    def download(self, n: int = None, fraction: float = None) -> None:
+    def download(self, n: int = None) -> None:
         """Download dataset to local cache.
         @param n  Number of books to download. If None, downloads all.
-        @param fraction  Fraction of dataset to download (0.0-1.0). Overrides n if set.
         @details
         Downloads HuggingFace dataset in streaming mode for efficiency,
         saves text to global texts dir, saves metadata as CSV, and appends to global index.
@@ -133,10 +132,9 @@ class NarrativeQALoader(DatasetLoader):
         self.cache_dir = cache_dir
         self.metadata_file = f"{cache_dir}/metadata.csv"
     
-    def download(self, n: int = None, fraction: float = None) -> None:
+    def download(self, n: int = None) -> None:
         """Download dataset to local cache.
         @param n  Number of books to download. If None, downloads all.
-        @param fraction  Fraction of dataset to download (0.0-1.0). Overrides n if set.
         @details
         Downloads HuggingFace dataset in streaming mode for efficiency,
         saves text to global texts dir, saves metadata as CSV, and appends to global index.

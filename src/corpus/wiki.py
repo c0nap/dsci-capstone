@@ -67,7 +67,7 @@ class WikipediaLoader(DatasetLoader):
             print(f"Warning: Wikipedia section fetch failed for {wiki_title}: {e}")
             return None
 
-    def download(self, titles: Iterable[str] = None, n: int = None, fraction: float = None) -> None:
+    def download(self, titles: Iterable[str] = None, n: int = None) -> None:
         """Download Wikipedia pages for a list of titles.
         @param titles  Iterable of wiki page titles (e.g., ['Pride_and_Prejudice']). If None and n provided,
                        tries to read first n titles from global index.csv.

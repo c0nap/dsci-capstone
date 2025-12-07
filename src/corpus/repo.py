@@ -82,10 +82,9 @@ class LitBankLoader(DatasetLoader):
         self.cache_dir = cache_dir
         self.metadata_file = f"{cache_dir}/metadata.csv"
     
-    def download(self, n: int = None, fraction: float = None) -> None:
+    def download(self, n: int = None) -> None:
         """Process LitBank files and copy annotations.
         @param n  Number of books to process. If None, processes all.
-        @param fraction  Fraction of books to process (0.0-1.0). Overrides n if set.
         @details
         Reads original LitBank files, fetches Gutenberg metadata,
         copies and renames all annotation files with book IDs,
@@ -101,10 +100,7 @@ class LitBankLoader(DatasetLoader):
         
         # Get all books from entities/brat (has all books)
         all_files = [f for f in os.listdir(entities_path) if f.endswith("_brat.txt")]
-        total = len(all_files)
-        num_to_process = self._calculate_subset_size(total, n, fraction)
-        
-        files_to_process = all_files[:num_to_process]
+        files_to_process = all_files[:n]
         
         # Process each book
         rows = []
