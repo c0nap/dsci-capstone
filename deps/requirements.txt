@@ -11,12 +11,15 @@ rapidfuzz
 flask
 
 # Metrics
+numpy
 evaluate
 rouge_score
 nltk
 absl-py
 bert-score
 scipy
+scikit-learn
+sentence_transformers
 textstats
 
 # Database drivers
