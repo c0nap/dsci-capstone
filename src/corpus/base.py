@@ -290,41 +290,46 @@ def prune_keys() -> int:
 
 def hard_reset() -> None:
     """Renumber all books sequentially starting from ID 1.
-    @return  Total number of books after renumbering.
     @details
-    Renames text files and updates index to use sequential IDs.
-    Maintains relative order from existing book_id field.
-    This is useful after pruning to eliminate gaps in ID sequence.
+    Recursively renames all dataset files to match new book IDs:
+    1. Text files: datasets/texts/00001_title.txt
+    2. Dataset metadata CSVs: datasets/booksum/00001.csv, datasets/nqa/00001.csv, etc.
+    3. Updates all path references in global index.csv and each dataset's metadata.csv
+    Context:
+    - Each dataset maintains its own metadata.csv with dataset-specific annotations
+    - These metadata files are named by book_id (e.g., 00042.csv)
+    - When book IDs change, these files must be renamed and index updated
+    - Maintains data integrity across the entire corpus structure
     """
-    if not os.path.exists(DatasetLoader.INDEX_FILE):
-        return
-    df = read_csv(DatasetLoader.INDEX_FILE)
-    if df.empty:
-        return
+    df = read_csv(DatasetLoader.INDEX_FILE).sort_values('book_id')
+    
+    # Dynamically find all metadata path columns (excluding the main text_path)
+    meta_cols = [c for c in df.columns if c.endswith('_path') and c != 'text_path']
 
-    # Sort by current book_id to maintain relative order
-    df = df.sort_values('book_id')
     for new_id, (idx, row) in enumerate(df.iterrows(), start=1):
-        old_path = str(row['text_path'])
-        title = str(row['title'])
+        # 1. Rename Main Text File
+        new_txt = f"{new_id:05d}_{str(row['title']).replace(' ', '_')}.txt"
+        new_path = os.path.join(DatasetLoader.TEXTS_DIR, new_txt)
         
-        # Generate new path: datasets/texts/00001_title.txt
-        new_filename = f"{new_id:05d}_{title.replace(' ', '_')}.txt"
-        new_path = os.path.join(DatasetLoader.TEXTS_DIR, new_filename)
+        if os.path.exists(str(row['text_path'])) and row['text_path'] != new_path:
+            shutil.move(row['text_path'], new_path)
         
-        # Rename file on disk
-        if old_path != new_path and os.path.exists(old_path):
-            shutil.move(old_path, new_path)
-        
-        # Update DataFrame
         df.at[idx, 'book_id'] = new_id
         df.at[idx, 'text_path'] = new_path
 
-    # Save updated index
+        # 2. Rename Associated Metadata CSVs
+        for col in meta_cols:
+            old_p = str(row[col]) if pd.notna(row[col]) else None
+            
+            if old_p and os.path.exists(old_p):
+                # Derive directory from existing path and rename to ID.csv
+                new_meta = os.path.join(os.path.dirname(old_p), f"{new_id:05d}.csv")
+                
+                if old_p != new_meta:
+                    shutil.move(old_p, new_meta)
+                df.at[idx, col] = new_meta
+
     df.to_csv(DatasetLoader.INDEX_FILE, index=False)
-    
-    # Update next_id file
     with open(DatasetLoader.NEXT_ID_FILE, "w") as f:
         f.write(str(len(df) + 1))
-    
-    return len(df)
+
