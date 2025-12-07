@@ -89,7 +89,7 @@ class Plot:
             raise
         
         # Process both datasets
-        def process_df(df, only_pipeline: bool):
+        def process_df(df: pd.DataFrame, only_pipeline: bool) -> pd.DataFrame:
             # Choose or exclude functions containing "pipeline"
             if only_pipeline:
                 df = df[df['function'].str.contains('pipeline', case=False, na=False)]

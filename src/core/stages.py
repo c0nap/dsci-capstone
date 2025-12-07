@@ -266,7 +266,7 @@ def task_14_relation_extraction_llm_openai(triples_string, text):
         return (prompt, llm_output)
 
 
-def task_15_sanitize_triples_llm(llm_output: str) -> str:
+def task_15_sanitize_triples_llm(llm_output: str) -> List[Dict[str, str]]:
     with Log.timer():
         # TODO: rely on robust LLM connector logic to assume json
         llm_output = clean_json_block(llm_output)

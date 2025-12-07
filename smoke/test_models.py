@@ -3,7 +3,7 @@ from src.components.book_conversion import Chunk
 from src.core.stages import *
 from src.main import pipeline_B, pipeline_D, pipeline_E
 from conftest import optional_param
-from typing import List
+from typing import List, Any
 
 
 @pytest.fixture
@@ -76,7 +76,7 @@ def relation_extraction_task(request):
     """Meta-fixture that returns the backend function specified by the parameter."""
     return request.getfixturevalue(request.param)
 
-PARAMS_RELATION_EXTRACTORS: List[pytest.param] = [
+PARAMS_RELATION_EXTRACTORS: List[Any] = [   # ParameterSet is internal to PyTest
     optional_param("rebel", "transformers"),
     optional_param("openie", "stanza"),
     pytest.param("textacy"),     # test always runs (no dependency)

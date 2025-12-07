@@ -16,7 +16,7 @@ def pytest_addoption(parser: Any) -> None:
     parser.addoption("--no-log-colors", action="store_false", default=True)
 
 
-def optional_param(name: str, package: str) -> pytest.param:
+def optional_param(name: str, package: str) -> Any:  # ParameterSet is internal to PyTest
     """Return a pytest.param that is skipped if the given package is missing.
     @param name  The fixture name to include in the parameter list.
     @param package  The name of a Python package to check for.

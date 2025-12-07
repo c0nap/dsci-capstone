@@ -23,10 +23,10 @@ class LLMConnector(Connector, ABC):
 
     def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
         """Initialize common LLM connector properties."""
-        self.temperature = temperature
-        self.system_prompt = system_prompt
-        self.model_name = None
-        self.verbose = verbose
+        self.temperature: float = temperature
+        self.system_prompt: str = system_prompt
+        self.model_name: str = None
+        self.verbose: bool = verbose
 
     def test_operations(self, raise_error: bool = True) -> bool:
         """Establish a basic connection to the database, and test full functionality.
@@ -69,13 +69,13 @@ class LLMConnector(Connector, ABC):
         @return Raw LLM response as a string."""
         return self.execute_full_query(self.system_prompt, query)
 
-    def execute_file(self, filename: str) -> str:
+    def execute_file(self, filename: str) -> List[str]:
         """Run a single prompt from a file.
         @details  Reads the entire file as a single string and sends it to execute_query.
         @param filename  Path to the prompt file (.txt)
         @return  Raw LLM response as a string."""
         with open(filename, "r", encoding="utf-8") as f:
-            return self.execute_query(f.read())
+            return [self.execute_query(f.read())]
 
 
 class OpenAIConnector(LLMConnector):
@@ -85,7 +85,7 @@ class OpenAIConnector(LLMConnector):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
         super().__init__(temperature, system_prompt)
-        self.client = None
+        self.client: OpenAI = None
         self.configure()
 
     def configure(self) -> None:
@@ -127,7 +127,7 @@ class LangChainConnector(LLMConnector):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
         super().__init__(temperature, system_prompt)
-        self.client = None
+        self.client: ChatOpenAI = None
         self.configure()
 
     def configure(self) -> None:
@@ -164,7 +164,6 @@ class LangChainConnector(LLMConnector):
 
 
 
-@staticmethod
 def clean_json_block(s: str) -> str:
     # Remove leading/trailing triple backticks and optional "json" label
     s = s.strip()
@@ -173,8 +172,7 @@ def clean_json_block(s: str) -> str:
     return s
 
 
-@staticmethod
-def normalize_to_dict(data: Dict[str, Any] | List[Dict[str, Any]], keys: List[str]) -> List[Dict[str, Any]]:
+def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[str]) -> List[Dict[str, str]]:
     """Normalize nested/compacted LLM output into flat dicts.
     @details
         Handles token-saving patterns:
