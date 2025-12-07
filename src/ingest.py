@@ -10,6 +10,8 @@ import shutil
 # Helper Functions - Corpus Index Orchestration
 # --------------------------------------------------
 
+litbank_url = "https://github.com/dbamman/litbank.git"
+
 def download_by_counts(n_booksum: int = None, 
                         n_nqa: int = None, 
                         n_litbank: int = None,
@@ -66,7 +68,7 @@ def print_index() -> None:
     """Inspects the cross-dataset book registry, and prints a helpful summary."""
     print("\n=== Global Index Summary ===")
     if os.path.exists(DatasetLoader.INDEX_FILE):
-        index = read_csv(DatasetLoader.INDEX_FILE)
+        index = base.get_index()
         print(f"Total books indexed: {len(index)}")
         print(f"Index location: {DatasetLoader.INDEX_FILE}")
         print(f"Texts directory: {DatasetLoader.TEXTS_DIR}")
@@ -75,45 +77,39 @@ def print_index() -> None:
 
 
 def repair_index(reindex: bool = False) -> None:
-    """
-    @param reindex  Whether to recursively rename all dataset files to start at ID 1.
-    @details
-    Since the individual DatasetLoaders simply append new rows to the index
-        file, a manual post-processing step is required.
-    1. Ensure each path corresponds to a valid file (ghost rows).
-    2. 
-    2. (Optional) Ensure a clean number sequence for book IDs, i.e. book 1 ... book N."""
+    """Fix the index file after downloading new books.
+    @param reindex  Whether to rename all full-text book files to start at ID 1.
+    @details  Required because the individual DatasetLoaders simply append new rows to the shared index.
+    1. Each path corresponds to a valid file (ghost rows).
+    2. Duplicates are safely removed.
+    3. (Optional) Clean number sequence for book IDs, i.e. book 1 ... book N."""
     print("Verifying index integrity...")
-    initial_count = base.get_book_count()
 
-    
-    
-    # 1. Remove ghost entries from previous runs.
-    align.prune_index()
+    # Prune duplicates and invalid rows
+    n1 = base.get_book_count()
+    df = base.get_index()
+    df = base.prune_bad_refs(df)
+    n2 = base.get_book_count()
+    df = align.prune_duplicates(df)
+    n3 = base.get_book_count()
 
-
-    final_count = base.get_book_count()
-    if final_count < initial_count:
-        print(f"✓ Pruned index: {initial_count} -> {final_count} entries (removed {initial_count - final_count} invalid/duplicate).")
+    if n3 < n1:
+        print(f"✓ Pruned index: {n1} -> {n2} -> {n3} entries (removed {n1 - n3} invalid or duplicate).")
+        base.save_as_index(df)
     else:
         print("✓ Index integrity check passed.")
     
-    # 2. Renumber if requested
-    if args.reset:
+    # Renumber if requested
+    if reindex:
         print("\n=== Hard Reset (Renumbering) ===")
         print("Indexing text files...")
-        n_bks = base.hard_reset()
-        if n_bks > 0:
-            print(f"✓ Renumbered {len(df)} books (IDs 1 to {len(df)})")
-            print(f"✓ Next ID set to {len(df) + 1}\n")
-        else:
-            print("No index to reset.")
+        base.reindex_rows(df)
+        print(f"✓ Renumbered {n3} books (IDs 1 to {n3})")
+        print(f"✓ Next ID set to {n3 + 1}\n")
 
-
-litbank_url = "https://github.com/dbamman/litbank.git"
 
 # --------------------------------------
-# Main
+# Entry Point
 # --------------------------------------
 
 if __name__ == "__main__":

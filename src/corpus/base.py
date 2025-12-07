@@ -132,11 +132,15 @@ class DatasetLoader(ABC):
         
         with open(self.NEXT_ID_FILE, "r") as f:
             current_id = int(f.read().strip())
-        
+        self._increment_id(current_id)
+        return current_id
+
+    @staticmethod
+    def _increment_id(self, current_id: int) -> None:
+        """Increment counter by writing to the shared file.
+        @param current_id  Will write current_id + 1."""
         with open(self.NEXT_ID_FILE, "w") as f:
             f.write(str(current_id + 1))
-        
-        return current_id
     
     def _save_text(self, book_id: int, title: str, text: str) -> str:
         """Save text to global texts directory.
@@ -223,12 +227,25 @@ def load_text_from_path(text_path: str) -> str:
     """Load full text from saved file path.
     @param text_path  Path to text file.
     @return  Full text content as string.
-    @details
-    Use this helper to retrieve full text when needed for processing,
-    without keeping it in memory in the DataFrame.
+    @details  Can retrieve full text as needed without keeping it in DataFrame memory.
     """
     with open(text_path, "r", encoding="utf-8") as f:
         return f.read()
+
+
+def get_index() -> DataFrame:
+    """Read the index file into memory.
+    @return  DataFrame containing book IDs and file paths to various datasets.
+    """
+    df = read_csv(DatasetLoader.INDEX_FILE)
+    return df
+
+
+def save_as_index(df: DataFrame) -> None:
+    """Write the DataFrame to the global index file.
+    @param  DataFrame containing book IDs and file paths to various datasets.
+    """
+    df.to_csv(DatasetLoader.INDEX_FILE, index=False)
 
 
 def prune_bad_refs(df: DataFrame) -> DataFrame:
@@ -241,32 +258,32 @@ def prune_bad_refs(df: DataFrame) -> DataFrame:
     return df
 
 
-
 def reindex_rows() -> None:
     """Renumber books sequentially starting from ID 1.
+    @note  Not a pure function because file names are altered.
     @details
     - Renames 'text_path' column only: datasets/texts/00001_title.txt
     - Each dataset maintains its own metadata.csv with internal IDs and file paths.
+    - Use the dataset-specific ID returned by @ref src.corpus.base.DatasetLoader.get_schema to lookup specific books.
     """
-    df = read_csv(DatasetLoader.INDEX_FILE)
+    df = get_index()
     if df.empty:
         return
 
     for new_id, (idx, row) in enumerate(df.iterrows(), start=1):
         # Fix the ID prefix of full-text files: datasets/texts/00001_title.txt
-        new_txt = f"{new_id:05d}_{str(row['title']).replace(' ', '_')}.txt"
-        new_path = os.path.join(DatasetLoader.TEXTS_DIR, new_txt)
+        old_path = str(row['text_path'])
+        _, ext = os.path.splitext(old_path)
+        new_filename = f"{new_id:05d}_{str(row['title']).replace(' ', '_')}{ext}"
+        new_path = os.path.join(DatasetLoader.TEXTS_DIR, new_filename)
         
         # Only move if the path has actually changed and source exists
-        old_path = str(row['text_path'])
         if os.path.exists(old_path) and old_path != new_path:
             shutil.move(old_path, new_path)
         
-        # Update Index
+        # Update index and save to file
         df.at[idx, 'book_id'] = new_id
         df.at[idx, 'text_path'] = new_path
     df = df.sort_values('book_id').reset_index(drop=True)
-    df.to_csv(DatasetLoader.INDEX_FILE, index=False)
-    with open(DatasetLoader.NEXT_ID_FILE, "w") as f:
-        f.write(str(len(df) + 1))
-
+    save_as_index(df)
+    DatasetLoader._increment_id(len(df))
