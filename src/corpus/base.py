@@ -75,11 +75,31 @@ class DatasetLoader(ABC):
             df = concat([df, new_row], ignore_index=True)
         save_as_index(df)
     
+    def save_text(self, book_id: int, title: str, text: str) -> str:
+        """Save text to global texts directory.
+        @param book_id  Unique internal ID for the book.
+        @param title  Normalized title of the book.
+        @param text_path  Path to the local text file.
+        @return  Path to saved text file.
+        """
+        os.makedirs(self.TEXTS_DIR, exist_ok=True)
+        
+        # Clean file name using convention.
+        clean_title = title.replace(' ', '_')
+        filename = get_text_name(book_id, clean_title, ".txt")
+        filepath = os.path.join(self.TEXTS_DIR, filename)
+        
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(text)
+        
+        return filepath
+
     # --------------------------------------------------
     # Global Index Management (Thread-Safe)
     # --------------------------------------------------
     _id_lock = threading.Lock()
     _current_global_id = None
+    
     def _get_next_id(self) -> int:
         """Get next available book ID safely across multiple threads.
         @return  Next unique integer ID.
@@ -133,24 +153,7 @@ class DatasetLoader(ABC):
         except (ValueError, KeyError):
             return 0
     
-    def save_text(self, book_id: int, title: str, text: str) -> str:
-        """Save text to global texts directory.
-        @param book_id  Unique internal ID for the book.
-        @param title  Normalized title of the book.
-        @param text_path  Path to the local text file.
-        @return  Path to saved text file.
-        """
-        os.makedirs(self.TEXTS_DIR, exist_ok=True)
-        
-        # Clean file name using convention.
-        clean_title = title.replace(' ', '_')
-        filename = get_text_name(book_id, clean_title, ".txt")
-        filepath = os.path.join(self.TEXTS_DIR, filename)
-        
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(text)
-        
-        return filepath
+    
 
 # --------------------------------------------------
 # Helper Functions - Index Management
