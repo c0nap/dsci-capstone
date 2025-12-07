@@ -230,12 +230,12 @@ def compute_basic(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]
     @param chunk  The original text of the chunk.
     @return  Dict containing 'rouge' and 'bertscore' keys.
         Scores are nested with inconsistent schema."""
-    rouge_result = run_rouge(summary, gold_summary)
-    bertscore_result = run_bertscore(summary, gold_summary)
+    rouge_result = run_rouge_old(summary, gold_summary)
+    bertscore_result = run_bertscore_old(summary, gold_summary)
     return {"rouge": rouge_result, "bertscore": bertscore_result}
 
 
-def run_rouge(prediction: str, reference: str) -> Dict[str, float]:
+def run_rouge_old(prediction: str, reference: str) -> Dict[str, float]:
     """Run the ROUGE evaluation metric given one reference and one prediction to judge.
     @param prediction  Text string containing the generated summary.
     @param reference  Text string to compare against.
@@ -250,7 +250,7 @@ def run_rouge(prediction: str, reference: str) -> Dict[str, float]:
     return result
 
 
-def run_bertscore(prediction: str, reference: str) -> Dict[str, List[float]]:
+def run_bertscore_old(prediction: str, reference: str) -> Dict[str, List[float]]:
     """Run the BERTScore evaluation metric given one reference and one prediction to judge.
     @param prediction  Text string containing the generated summary.
     @param reference  Text string to compare against.
