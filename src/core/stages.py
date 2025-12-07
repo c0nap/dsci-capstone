@@ -7,7 +7,7 @@ from src.util import Log
 
 # unused?
 import traceback
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 
 ### Will revisit later - Book classes need refactoring ###
@@ -216,7 +216,7 @@ def task_13_concatenate_triples(extracted):
         return triples_string
 
 
-def _task_14_relation_extraction_llm(triples_string: str, text: str, llm: LLMConnector) -> None:
+def _task_14_relation_extraction_llm(triples_string: str, text: str, llm: LLMConnector) -> Tuple[str, str]:
     prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
     prompt += f"And here is the original text:\n{text}\n\n"
     prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
@@ -232,7 +232,7 @@ def _task_14_relation_extraction_llm(triples_string: str, text: str, llm: LLMCon
     #     raise Log.Failure()
     return (prompt, llm_output)
 
-def task_14_relation_extraction_llm_langchain(triples_string, text):
+def task_14_relation_extraction_llm_langchain(triples_string: str, text: str) -> Tuple[str, str]:
     with Log.timer():
         from src.connectors.llm import LangChainConnector
 
@@ -244,7 +244,7 @@ def task_14_relation_extraction_llm_langchain(triples_string, text):
         return _task_14_relation_extraction_llm(triples_string, text, llm)
         
 
-def task_14_relation_extraction_llm_openai(triples_string, text):
+def task_14_relation_extraction_llm_openai(triples_string: str, text: str) -> Tuple[str, str]:
     with Log.timer():
         from src.connectors.llm import OpenAIConnector
 
@@ -314,7 +314,7 @@ def task_22_verbalize_triples(mode="triple"):
 
 
 # PIPELINE STAGE D - CONSOLIDATE / GRAPH -> SUMMARY
-def _task_30_summarize_llm(triples_string, llm: LLMConnector):
+def _task_30_summarize_llm(triples_string: str, llm: LLMConnector) -> Tuple[str, str]:
     prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
     prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
     prompt += "Output your generated summary and nothing else."
@@ -322,7 +322,7 @@ def _task_30_summarize_llm(triples_string, llm: LLMConnector):
     return (prompt, summary)
 
 
-def task_30_summarize_llm_langchain(triples_string):
+def task_30_summarize_llm_langchain(triples_string: str) -> Tuple[str, str]:
     """Prompt LLM to generate summary"""
     with Log.timer():
         from src.connectors.llm import LangChainConnector
@@ -334,7 +334,7 @@ def task_30_summarize_llm_langchain(triples_string):
         )
         return _task_30_summarize_llm(triples_string, llm)
 
-def task_30_summarize_llm_openai(triples_string):
+def task_30_summarize_llm_openai(triples_string: str) -> Tuple[str, str]:
     """Prompt LLM to generate summary"""
     with Log.timer():
         from src.connectors.llm import OpenAIConnector
