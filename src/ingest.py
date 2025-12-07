@@ -1,9 +1,8 @@
-from pandas import read_csv
 import os
 from src.corpus.base import DatasetLoader
 from src.corpus.hf import BookSumLoader, NarrativeQALoader
 from src.corpus.repo import LitBankLoader
-import src.corpus
+from src.corpus import base, align, repo, hf
 import shutil
 
 # --------------------------------------------------
@@ -103,7 +102,7 @@ def repair_index(reindex: bool = False) -> None:
     if reindex:
         print("\n=== Hard Reset (Renumbering) ===")
         print("Indexing text files...")
-        base.reindex_rows(df)
+        base.reindex_rows()
         print(f"✓ Renumbered {n3} books (IDs 1 to {n3})")
         print(f"✓ Next ID set to {n3 + 1}\n")
 

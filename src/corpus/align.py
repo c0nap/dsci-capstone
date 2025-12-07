@@ -3,14 +3,17 @@ from rapidfuzz import fuzz, process
 import os
 import re
 from src.corpus.base import load_text_from_path, DatasetLoader
-from typing import Tuple
+from typing import Tuple, Optional
+import requests
+import time
 
+GUTENDEX_API = "https://gutendex.com/books"
 
 # --------------------------------------------------
 # Helper Functions - Gutenberg ID / Gutendex
 # --------------------------------------------------
 
-def prune_duplicates() -> None:
+def prune_duplicates(df: DataFrame) -> DataFrame:
     """Remove duplicate books based on gutenberg_id and title.
     @return  Number of duplicate entries removed.
     @details
@@ -24,14 +27,9 @@ def prune_duplicates() -> None:
     - (NaN, "moby dick") vs (NaN, "moby dick") → duplicate (same title, no GID)
     - (NaN, "moby dick") vs (123, "moby dick") → NOT duplicate (one has GID)
     """
-    index_file = DatasetLoader.INDEX_FILE
-    if not os.path.exists(index_file):
-        return
-    df = read_csv(index_file)
-
     keys = ['title', 'gutenberg_id']
     df = df.drop_duplicates(subset=keys, keep='first')
-    df.to_csv(index_file, index=False)
+    return df
 
     
 def fetch_gutenberg_metadata(query: str = None, gutenberg_id: str | int = None) -> Optional[dict]:
@@ -46,12 +44,12 @@ def fetch_gutenberg_metadata(query: str = None, gutenberg_id: str | int = None) 
     try:
         # 1. Direct ID Lookup
         if gutenberg_id:
-            url = f"{self.GUTENDEX_API}/{gutenberg_id}"
+            url = f"{GUTENDEX_API}/{gutenberg_id}"
             params = {}
 
         # 2. Search Query
         else:
-            url = self.GUTENDEX_API
+            url = GUTENDEX_API
             params = {"search": query}
         response = requests.get(url, params=params, timeout=10)
         
@@ -84,7 +82,7 @@ def fetch_gutenberg_metadata(query: str = None, gutenberg_id: str | int = None) 
             "language": result.get("languages", [""])[0],
             "text_url": text_url
         }
-        
+
     except Exception as e:
         print(f"Warning: Gutendex lookup failed for {gutenberg_id or query}: {e}")
         return None

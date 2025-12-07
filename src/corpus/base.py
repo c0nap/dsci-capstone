@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
-from pandas import DataFrame, read_csv
+from pandas import DataFrame, read_csv, concat
 from typing import Optional, Iterator
-import requests
-import time
 import os
 import shutil
 
@@ -18,7 +16,6 @@ class DatasetLoader(ABC):
     TEXTS_DIR = "./datasets/texts"
     INDEX_FILE = "./datasets/index.csv"
     NEXT_ID_FILE = "./datasets/next_id.txt"
-    GUTENDEX_API = "https://gutendex.com/books"
     
     @abstractmethod
     def load(self, streaming: bool = False) -> DataFrame | Iterator[dict]:
@@ -76,7 +73,7 @@ class DatasetLoader(ABC):
         return current_id
 
     @staticmethod
-    def _increment_id(self, current_id: int) -> None:
+    def _increment_id(current_id: int) -> None:
         """Increment counter by writing to the shared file.
         @param current_id  Will write current_id + 1."""
         with open(self.NEXT_ID_FILE, "w") as f:
