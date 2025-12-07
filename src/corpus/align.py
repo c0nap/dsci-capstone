@@ -91,14 +91,21 @@ def fetch_gutenberg_metadata(query: str = None, gutenberg_id: str | int = None) 
 # Helper Functions - Text Similarity & Title Matching
 # --------------------------------------------------
 
-def normalize_title(t: str) -> str:
-    """Remove punctuation and extra whitespace from title.
-    @param t  The title string to normalize.
-    @return  Normalized title with punctuation removed and whitespace collapsed.
-    """
-    t = t.lower()
+def normalize_title(title: str) -> str:
+    """Remove punctuation, special chars, and standardize title format.
+    @param title  A raw title string.
+    @details  Example: "Moby-Dick; or, The Whale!" -> "moby_dick_or_the_whale"
+    @return  Normalized string: lowercase, alphanumeric, underscore-separated."""
+    t = str(title).lower()
+    
+    # Replace all non-alphanumeric characters (punctuation, quotes, etc) with spaces
+    # [\W_] matches anything that isn't [a-zA-Z0-9]. 
     t = re.sub(r"[\W_]+", " ", t)
-    return t.strip()
+    t = t.strip()
+    
+    # Collapse multiple spaces and replace with single underscore
+    t = re.sub(r"\s+", "_", t)
+    return t
 
 
 def exact_merge(df1: DataFrame, df2: DataFrame, 

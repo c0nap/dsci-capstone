@@ -34,7 +34,7 @@ class DatasetLoader(ABC):
 
     @staticmethod
     def _make_index_row(**kwargs) -> dict:
-        """Create standardized index row with CORE fields + any extras.
+        """Create standardized index row with core fields + any extras.
         @param kwargs  Any dataset-specific fields (e.g., booksum_id="123").
         @return  Dict with core fields initialized + kwargs merged in.
         """
@@ -48,9 +48,14 @@ class DatasetLoader(ABC):
         return row
 
     def append_to_index(self, book_id: int, title: str, text_path: str, gutenberg_id: int | None, **kwargs) -> None:
-        """Append book entry to global index.
-        @details
-        If 'kwargs' contains keys not currently in the CSV, pandas adds them automatically.
+        """Append a single book entry to the global index.
+        @param book_id  Unique internal ID for the book.
+        @param title  Normalized title of the book.
+        @param text_path  Path to the local text file.
+        @param gutenberg_id  Gutenberg ID if available (or None).
+        @param kwargs  Additional dataset-specific columns (e.g., nqa_id).
+        @details  If new keys are provided, pandas adds them and fills existing rows with N/A.
+        This makes sense in ABC because only derived loaders should append to the index.
         """
         row = self._make_index_row(
             book_id=book_id, 
@@ -65,7 +70,7 @@ class DatasetLoader(ABC):
             df = new_row  # Create new index file
         else:  # If exists, load and merge
             df = read_csv(self.INDEX_FILE)
-            df = concat([index_df, new_row], ignore_index=True)
+            df = concat([df, new_row], ignore_index=True)
         save_as_index(df)
     
     # --------------------------------------------------
@@ -115,23 +120,34 @@ class DatasetLoader(ABC):
         with open(self.NEXT_ID_FILE, "w") as f:
             f.write(str(current_id + 1))
     
-    def _save_text(self, book_id: int, title: str, text: str) -> str:
+    def save_text(self, book_id: int, title: str, text: str) -> str:
         """Save text to global texts directory.
-        @param book_id  Global book ID.
-        @param title  Normalized book title.
-        @param text  Full text content.
+        @param book_id  Unique internal ID for the book.
+        @param title  Normalized title of the book.
+        @param text_path  Path to the local text file.
         @return  Path to saved text file.
         """
         os.makedirs(self.TEXTS_DIR, exist_ok=True)
         
-        # Normalize title for filename
-        filename = f"{book_id:05d}_{title.replace(' ', '_')}.txt"
+        # Clean file name using convention.
+        clean_title = title.replace(' ', '_')
+        filename = get_text_name(book_id, clean_title, ".txt")
         filepath = os.path.join(self.TEXTS_DIR, filename)
         
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(text)
         
         return filepath
+
+def get_text_name(book_id: int, title: str, extension: str) -> str:
+    """Generate the standardized filename for a book.
+    @param book_id  Internal ID (e.g., 1).
+    @param title  Title string.
+    @param extension  File extension including dot (e.g., '.txt').
+    @return  Formatted string: '00001_title_of_book.txt'.
+    """
+    clean_title = align.normalize_title(title)
+    return f"{book_id:05d}_{clean_title}{extension}"
 
 # --------------------------------------------------
 # Helper Functions - Index Management
@@ -196,9 +212,11 @@ def reindex_rows() -> None:
 
     for new_id, (idx, row) in enumerate(df.iterrows(), start=1):
         # Fix the ID prefix of full-text files: datasets/texts/00001_title.txt
+        title = str(row['title']).replace(' ', '_')
         old_path = str(row['text_path'])
         _, ext = os.path.splitext(old_path)
-        new_filename = f"{new_id:05d}_{str(row['title']).replace(' ', '_')}{ext}"
+
+        new_filename = get_text_name(new_id, title, ext)
         new_path = os.path.join(DatasetLoader.TEXTS_DIR, new_filename)
         
         # Only move if the path has actually changed and source exists
