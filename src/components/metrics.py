@@ -769,16 +769,15 @@ def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
         model=model_name,
         tokenizer=tokenizer,
         device=-1,  # CPU
-        return_all_scores=False
+        top_k=1
     )
     summary_sents = sent_tokenize(summary)
     entailed = 0
     
     for sent in summary_sents:
-        result = nli(f"{source} [SEP] {sent}")[0]
-        if result['label'] == 'ENTAILMENT':
+        out = nli({"text": source, "text_pair": sent})[0]
+        if out["label"].upper() == "ENTAILMENT":
             entailed += 1
-    
     faithfulness = entailed / (len(summary_sents) or 1)
     return {"nli_faithfulness": faithfulness}
 
