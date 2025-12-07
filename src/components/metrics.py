@@ -224,7 +224,7 @@ class Metrics:
 
 
 def compute_basic(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]:
-    """Compute ROUGE and BERTScore.
+    """Compute ROUGE and BERTScore to compare against a gold-quality reference summary.
     @param summary  A text string containing a book summary
     @param gold_summary  A summary to compare against
     @param chunk  The original text of the chunk.
@@ -472,3 +472,85 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
             raise RuntimeError(f"BookScore chunking timed out after {Metrics.timeout_seconds}s") from e
 
         return chunked_pkl
+
+# -----------------------------------------------------------------------------------
+# Fast core metrics
+# 1. Basic overlap between original chunk and its summary.
+# -----------------------------------------------------------------------------------
+
+def run_rouge_l(summary: str, source: str):
+    """ROUGE-L Recall (Coverage Score)
+    @details
+    Measures how much of the important content structure in the source appears in the summary.
+    Captures longest common subsequence"""
+    from rouge_score import rouge_scorer
+    scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
+    scores = scorer.score(source, summary)
+    return {"rougeL_recall": scores["rougeL"].recall}
+
+def run_bertscore(summary: str, source: str):
+    """BERTScore embedding similarity
+    @details
+    Semantic preservation at the token/embedding level."""
+    import evaluate
+    model = evaluate.load("bertscore")
+    return model.compute(
+        predictions=[summary],
+        references=[source]
+    )
+
+def run_novel_ngrams(summary: str, source: str, n: int = 3):
+    """Novel n-gram Percentage (reference-free abstraction vs invention)
+    @details
+    Measures how much of the text is lexically new vs directly lifted.
+    High novelty → abstraction or hallucination → cross-check with entity metrics."""
+    from nltk import ngrams, word_tokenize
+    src_tokens = word_tokenize(source.lower())
+    sum_tokens = word_tokenize(summary.lower())
+    src_set = set(ngrams(src_tokens, n))
+    sum_list = list(ngrams(sum_tokens, n))
+    novel = sum(1 for g in sum_list if g not in src_set)
+    pct = novel / (len(sum_list) or 1)
+    return {"novel_ngram_pct": pct}
+
+# -----------------------------------------------------------------------------------
+# Fast core metrics
+# 2. High level comparison between original chunk and its summary.
+# -----------------------------------------------------------------------------------
+
+def run_entity_metrics(summary: str, source: str):
+    """Entity Coverage & Hallucination (spaCy)
+    @details
+    Checks whether the summary drops key characters/locations (coverage) or invents new ones (hallucination)."""
+    import spacy
+    nlp = spacy.load("en_core_web_sm")
+    src = nlp(source)
+    summ = nlp(summary)
+    src_ents = {e.text.lower() for e in src.ents}
+    sum_ents = {e.text.lower() for e in summ.ents}
+    coverage = len(src_ents & sum_ents) / (len(src_ents) or 1)
+    halluc = len(sum_ents - src_ents) / (len(sum_ents) or 1)
+    return {"entity_coverage": coverage, "entity_hallucination": halluc}
+
+def run_readability_delta(summary: str, source: str):
+    """Readability Delta (textstats)
+    @details
+    Detects simplification or stylistic drift between source & summary."""
+    import textstats
+    fk_source = textstats.flesch_kincaid_grade(source)
+    fk_summary = textstats.flesch_kincaid_grade(summary)
+    return {"readability_delta": fk_source - fk_summary}
+
+def run_jsd(summary: str, source: str):
+    """Jensen–Shannon Divergence (JSD) on word distributions.
+    @details
+    Measures topical drift. Captures lexical distribution change (statistical)"""
+    from collections import Counter
+    import numpy as np
+    from scipy.stats import entropy
+    def jsd(p, q):
+        p=np.array(p); q=np.array(q)
+        p/=p.sum(); q/=q.sum()
+        m = 0.5*(p+q)
+        return 0.5*(entropy(p, m) + entropy(q, m))
+
