@@ -1,7 +1,7 @@
 import json
 import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
-from src.connectors.llm import clean_json_block, normalize_to_dict
+from src.connectors.llm import LLMConnector, clean_json_block, normalize_to_dict
 from src.core.context import session
 from src.util import Log
 
@@ -216,6 +216,22 @@ def task_13_concatenate_triples(extracted):
         return triples_string
 
 
+def _task_14_relation_extraction_llm(triples_string: str, text: str, llm: LLMConnector) -> None:
+    prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+    prompt += f"And here is the original text:\n{text}\n\n"
+    prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
+    prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
+    llm_output = llm.execute_query(prompt)
+    # # TODO - move retry logic to LLMConnector
+    # # Enforce valid JSON
+    # attempts = 10
+    # while not json.loads(llm_output) and attempts > 0:
+    #     llm_output = llm.execute_query(prompt)
+    #     attempts -= 1
+    # if attempts == 0:
+    #     raise Log.Failure()
+    return (prompt, llm_output)
+
 def task_14_relation_extraction_llm_langchain(triples_string, text):
     with Log.timer():
         from src.connectors.llm import LangChainConnector
@@ -225,21 +241,8 @@ def task_14_relation_extraction_llm_langchain(triples_string, text):
             temperature=1,  # gpt-5-nano only supports temperature 1
             system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
         )
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-        prompt += f"And here is the original text:\n{text}\n\n"
-        prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
-        prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
-        llm_output = llm.execute_query(prompt)
-        # # TODO - move retry logic to LLMConnector
-        # # Enforce valid JSON
-        # attempts = 10
-        # while not json.loads(llm_output) and attempts > 0:
-        #     llm_output = llm.execute_query(prompt)
-        #     attempts -= 1
-        # if attempts == 0:
-        #     raise Log.Failure()
-        return (prompt, llm_output)
-
+        return _task_14_relation_extraction_llm(triples_string, text, llm)
+        
 
 def task_14_relation_extraction_llm_openai(triples_string, text):
     with Log.timer():
@@ -250,20 +253,7 @@ def task_14_relation_extraction_llm_openai(triples_string, text):
             temperature=1,  # gpt-5-nano only supports temperature 1
             system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
         )
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-        prompt += f"And here is the original text:\n{text}\n\n"
-        prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
-        prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
-        llm_output = llm.execute_query(prompt)
-        # # TODO - move retry logic to LLMConnector
-        # # Enforce valid JSON
-        # attempts = 10
-        # while not json.loads(llm_output) and attempts > 0:
-        #     llm_output = llm.execute_query(prompt)
-        #     attempts -= 1
-        # if attempts == 0:
-        #     raise Log.Failure()
-        return (prompt, llm_output)
+        return _task_14_relation_extraction_llm(triples_string, text, llm)
 
 
 def task_15_sanitize_triples_llm(llm_output: str) -> List[Dict[str, str]]:
@@ -324,6 +314,14 @@ def task_22_verbalize_triples(mode="triple"):
 
 
 # PIPELINE STAGE D - CONSOLIDATE / GRAPH -> SUMMARY
+def _task_30_summarize_llm(triples_string, llm: LLMConnector):
+    prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+    prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
+    prompt += "Output your generated summary and nothing else."
+    summary = llm.execute_query(prompt)
+    return (prompt, summary)
+
+
 def task_30_summarize_llm_langchain(triples_string):
     """Prompt LLM to generate summary"""
     with Log.timer():
@@ -334,12 +332,7 @@ def task_30_summarize_llm_langchain(triples_string):
             temperature=1,  # gpt-5-nano only supports temperature 1
             system_prompt="You are a helpful assistant that processes semantic triples.",
         )
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-        prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
-        prompt += "Output your generated summary and nothing else."
-        summary = llm.execute_query(prompt)
-        return (prompt, summary)
-
+        return _task_30_summarize_llm(triples_string, llm)
 
 def task_30_summarize_llm_openai(triples_string):
     """Prompt LLM to generate summary"""
@@ -351,11 +344,7 @@ def task_30_summarize_llm_openai(triples_string):
             temperature=1,  # gpt-5-nano only supports temperature 1
             system_prompt="You are a helpful assistant that processes semantic triples.",
         )
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-        prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
-        prompt += "Output your generated summary and nothing else."
-        summary = llm.execute_query(prompt)
-        return (prompt, summary)
+        return _task_30_summarize_llm(triples_string, llm)
 
 
 def task_31_send_summary(summary, collection_name, chunk_id):
