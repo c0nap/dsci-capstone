@@ -34,66 +34,6 @@ class DatasetLoader(ABC):
         @return  List of column names that will be present in the output DataFrame.
         """
         pass
-
-    
-    def fetch_gutenberg_metadata(self, query: str = None, gutenberg_id: str | int = None) -> Optional[dict]:
-        """Search or lookup metadata from Gutendex.
-        @param query  General search string (title/author). Used if gutenberg_id is None.
-        @param gutenberg_id  Specific Gutenberg ID. If provided, performs direct lookup.
-        @return  Normalized dict with keys: title, author, language, gutenberg_id, text_url.
-                 Returns None if not found or on error.
-        """
-        if not query and not gutenberg_id:
-            return None
-
-        try:
-            # 1. Direct ID Lookup
-            if gutenberg_id:
-                url = f"{self.GUTENDEX_API}/{gutenberg_id}"
-                params = {}
-            # 2. Search Query
-            else:
-                url = self.GUTENDEX_API
-                params = {"search": query}
-
-            response = requests.get(url, params=params, timeout=10)
-            
-            # Rate limit politeness
-            if response.status_code == 429:
-                time.sleep(2)
-                response = requests.get(url, params=params, timeout=10)
-
-            response.raise_for_status()
-            data = response.json()
-
-            # Handle search results vs direct object return
-            result = None
-            if gutenberg_id:
-                result = data  # Direct ID returns the object
-            elif data.get("count", 0) > 0:
-                result = data["results"][0]  # Search returns list, take top match
-
-            if not result:
-                return None
-
-            # Normalize output
-            authors = [a.get("name", "") for a in result.get("authors", [])]
-            
-            # Find text URL (prefer plain text)
-            formats = result.get("formats", {})
-            text_url = formats.get("text/plain; charset=utf-8") or formats.get("text/plain")
-
-            return {
-                "gutenberg_id": result.get("id"),
-                "title": result.get("title", ""),
-                "author": ", ".join(authors) if authors else "",
-                "language": result.get("languages", [""])[0],
-                "text_url": text_url
-            }
-
-        except Exception as e:
-            print(f"Warning: Gutendex lookup failed for {gutenberg_id or query}: {e}")
-            return None
     
     # --------------------------------------------------
     # Download Helpers
