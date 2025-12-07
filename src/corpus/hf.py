@@ -1,6 +1,6 @@
 from pandas import DataFrame, read_csv
 from datasets import load_dataset  # type: ignore
-from typing import Optional, Any
+from typing import Optional, Any, List, Dict, Union
 import os
 import re
 from urllib.parse import unquote
@@ -27,19 +27,23 @@ class HuggingFaceLoader(DatasetLoader):
         self.metadata_file = os.path.join(cache_dir, "metadata.csv")
 
     @abstractmethod
-    def _extract_book_data(self, raw_item: dict) -> Optional[dict]:
+    def _extract_book_data(self, raw_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Hook: Transform a raw HF row into our standardized dict.
-        @return Dict with keys: 'source_id', 'title', 'text', 'summary', 'gutenberg_id', 'extras'.
+        @return Dict with KEYS MATCHING GET_SCHEMA + 'text' and 'gutenberg_id'.
+                Example: {'nqa_id': '...', 'title': '...', 'text': '...', ...}
                 Return None to skip the item.
         """
         pass
 
     @abstractmethod
-    def _get_dataset_specific_index_cols(self, source_id: str | int) -> dict:
-        """Hook: Map source_id to the specific index columns (e.g. {'booksum_id': 123})."""
+    def make_index_cols(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate the dataset-specific columns for the global index, not the dataset schema.
+        @param data  The dictionary returned by @ref src.corpus.hf.HuggingFaceLoader_extract_book_data.
+        @return Dict with keys like {'nqa_id': ..., 'nqa_path': ...}
+        """
         pass
 
-    def download(self, n: int = None) -> None:
+    def download(self, n: Optional[int] = None) -> None:
         """Download dataset to local cache.
         @param n  Number of books to download. If None, downloads all.
         """
@@ -47,7 +51,7 @@ class HuggingFaceLoader(DatasetLoader):
         
         print(f"Initializing stream for {self.dataset_name}...")
         try:
-            ds = load_dataset(
+            dataset = load_dataset(
                 self.dataset_name, 
                 self.subset, 
                 split=self.split, 
@@ -59,11 +63,11 @@ class HuggingFaceLoader(DatasetLoader):
             return
 
         num_to_download = n if n is not None else float('inf')
-        rows = []
+        rows: List[Dict[str, Any]] = []
         count = 0
         skipped = 0
 
-        for raw in ds:
+        for raw in dataset:
             if count >= num_to_download:
                 break
 
@@ -77,29 +81,28 @@ class HuggingFaceLoader(DatasetLoader):
             book_id = self.consume_next_id()
             
             # 3. Save Text (Base Logic)
-            title = data.get('title', 'untitled')
-            text = data.get('text', '')
+            # We pop 'text' so it doesn't get saved to the CSV metadata file
+            text = data.pop("text", "")
+            title = data.get("title", "untitled")
             text_path = self.save_text(book_id, title, text)
             
             # 4. Prepare Metadata Row (For local CSV)
-            meta_row = {
-                "book_id": book_id,
-                "source_id": data.get("source_id"),
-                "title": title,
-                "summary": data.get("summary", ""),
-            }
-            meta_row.update(data.get("extras", {}))
-            rows.append(meta_row)
+            # Inject our internal book_id into the dataset specific record
+            data["book_id"] = book_id
+            
+            # We treat 'gutenberg_id' as index-only data, typically not needed in local meta
+            # but we can keep it if desired. For now, we use it for alignment.
+            gutenberg_id = data.get("gutenberg_id")
+            
+            rows.append(data)
 
             # 5. Update Global Index (Base Logic)
-            specific_cols = self._get_dataset_specific_index_cols(data.get("source_id"))
-            
             self.append_to_index(
                 book_id=book_id,
                 title=title,
                 text_path=text_path,
-                gutenberg_id=data.get("gutenberg_id"),
-                **specific_cols
+                gutenberg_id=gutenberg_id,
+                **self.make_index_cols(data)
             )
 
             count += 1
@@ -109,6 +112,7 @@ class HuggingFaceLoader(DatasetLoader):
         
         if rows:
             df = DataFrame(rows)
+            # Ensure columns match get_schema logic if strictly enforcing
             df.to_csv(self.metadata_file, index=False)
         else:
             print(f"Warning: No valid rows processed for {self.dataset_name}.")
@@ -134,47 +138,29 @@ class BookSumLoader(HuggingFaceLoader):
             split=split, 
             cache_dir=cache_dir
         )
-        self._internal_count = 0
 
-    def _extract_book_data(self, raw_item: dict) -> Optional[dict]:
-        # 1. Normalize Title
-        raw_title = raw_item.get("title", "")
-        if not isinstance(raw_title, str):
-            return None
-        
-        # align.normalize_title handles punctuation/spacing/lowercase
+    def _extract_book_data(self, raw_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        raw_title = raw_item["title"]
         title = align.normalize_title(raw_title)
-        if not title:
-            return None
-
-        # 2. Gutenberg Lookup (BookSum has no ID, strict title search via align)
-        gutenberg_id = None
-        # Note: In production, consider caching this to reduce API hits
-        meta = align.fetch_gutenberg_metadata(query=title)
-        if meta:
-            gutenberg_id = meta.get("gutenberg_id")
-
-        self._internal_count += 1
-        # Use 'bid' if present, else fallback to internal counter
-        source_id = raw_item.get("bid", self._internal_count)
+        gutenberg_id = align.fetch_gutenberg_metadata(query=title)["gutenberg_id"]
+        booksum_id = raw_item["bid"]
 
         return {
-            "source_id": source_id,
+            "booksum_id": booksum_id,
             "title": title,
-            "text": raw_item.get("text", ""),
-            "summary": raw_item.get("summary", ""),
-            "gutenberg_id": gutenberg_id,
-            "extras": {} 
+            "text": raw_item["text"],
+            "summary": raw_item["summary"],
+            "gutenberg_id": gutenberg_id
         }
 
-    def _get_dataset_specific_index_cols(self, source_id: str | int) -> dict:
+    def make_index_cols(self, data: Dict[str, Any]) -> Dict[str, Any]:
         return {
-            "booksum_id": source_id,
+            "booksum_id": data["booksum_id"],
             "booksum_path": self.metadata_file
         }
 
-    def get_schema(self) -> list[str]:
-        return ["book_id", "source_id", "title", "summary"]
+    def get_schema(self) -> List[str]:
+        return ["book_id", "title", "booksum_id", "summary"]
 
 
 class NarrativeQALoader(HuggingFaceLoader):
@@ -187,52 +173,32 @@ class NarrativeQALoader(HuggingFaceLoader):
             split=split,
             cache_dir=cache_dir
         )
-        self._seen_ids = set()
 
-    def _extract_book_data(self, raw_item: dict) -> Optional[dict]:
-        doc = raw_item.get("document", {})
-        nqa_id = doc.get("id", "")
-
-        # Deduplication
-        if not nqa_id or nqa_id in self._seen_ids:
-            return None
-        self._seen_ids.add(nqa_id)
-
-        url = doc.get("url", "")
-        raw_title = ""
-
-        # 1. Gutenberg ID Extraction (Delegated to align.py)
+    def _extract_book_data(self, raw_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        doc = raw_item["document"]
+        nqa_id = doc["nqa_id"]
+        url = doc["url"]
+        raw_title = doc["title"]
         gutenberg_id = align.extract_gutenberg_id(url)
-        
-        # 2. Title Extraction (Fallback to URL slug if metadata missing)
-        # Note: This is extraction logic, not matching logic, so it stays here.
-        if not raw_title and url:
-            slug = url.split('/')[-1].replace('.html', '').replace('.htm', '')
-            try:
-                # Basic URL decoding
-                raw_title = unquote(slug).replace('_', ' ').replace('-', ' ')
-            except:
-                raw_title = slug
-
+        if not gutenberg_id:
+            gutenberg_id = align.fetch_gutenberg_metadata(query=title)["gutenberg_id"]
         title = align.normalize_title(raw_title)
-
+        
         return {
-            "source_id": nqa_id,
+            "nqa_id": nqa_id,
             "title": title,
-            "text": doc.get("text", ""),
-            "summary": doc.get("summary", {}).get("text", ""),
-            "gutenberg_id": gutenberg_id,
-            "extras": {
-                "author": doc.get("author", "").strip(),
-                "url": url
-            }
+            "text": doc["text"],
+            "summary": doc["summary"]["text"],
+            "author": doc["author"],
+            "url": url,
+            "gutenberg_id": gutenberg_id
         }
 
-    def _get_dataset_specific_index_cols(self, source_id: str | int) -> dict:
+    def make_index_cols(self, data: Dict[str, Any]) -> Dict[str, Any]:
         return {
-            "nqa_id": source_id,
+            "nqa_id": data["nqa_id"],
             "nqa_path": self.metadata_file
         }
 
-    def get_schema(self) -> list[str]:
-        return ["book_id", "source_id", "title", "summary", "author", "url"]
+    def get_schema(self) -> List[str]:
+        return ["book_id", "title", "nqa_id", "summary", "author", "url"]
