@@ -9,11 +9,12 @@ var searchData=
   ['db_5fexists_6',['db_exists',['../classsrc_1_1util_1_1Log.html#aaf2ba8668a9050425cf26320a8fbc2c1',1,'src::util::Log']]],
   ['db_5fname_7',['DB_NAME',['../namespacesrc_1_1main.html#a5d2a964cf672c9a1f11c290d6eafc2e1',1,'src::main']]],
   ['db_5ftype_8',['db_type',['../classsrc_1_1connectors_1_1base_1_1DatabaseConnector.html#ade713bacd446db85cbacd6617a61a20d',1,'src.connectors.base.DatabaseConnector.db_type'],['../classsrc_1_1connectors_1_1relational_1_1RelationalConnector.html#ade713bacd446db85cbacd6617a61a20d',1,'src.connectors.relational.RelationalConnector.db_type']]],
-  ['df_9',['df',['../namespacesrc_1_1components_1_1corpus.html#ab52c96bea30646abf8170f333bbd42b9',1,'src::components::corpus']]],
-  ['df_5fbooksum_10',['df_booksum',['../namespacesrc_1_1components_1_1corpus.html#a8301daa1f2df0afa526bbffd9a09894e',1,'src::components::corpus']]],
-  ['df_5fnqa_11',['df_nqa',['../namespacesrc_1_1components_1_1corpus.html#a3f522611c1ca83e27b55837d728a732f',1,'src::components::corpus']]],
-  ['doc_5fdb_12',['doc_db',['../classsrc_1_1util_1_1Log.html#a0cf6184798c5dc67e98e9fe0c518d51e',1,'src::util::Log']]],
-  ['docs_5fdb_13',['docs_db',['../classsrc_1_1core_1_1context_1_1Session.html#ad41254b27e713a531687c19679621d87',1,'src::core::context::Session']]],
-  ['drop_5fdb_14',['drop_db',['../classsrc_1_1util_1_1Log.html#a428096c41d150fa1ba24d1fe92025f48',1,'src::util::Log']]],
-  ['drop_5fgr_15',['drop_gr',['../classsrc_1_1util_1_1Log.html#a68ae4871ffa4f88e79fa7d202e62fe9a',1,'src::util::Log']]]
+  ['default_9',['default',['../namespacesrc_1_1charts.html#affb1327b18bf08a379d19eef89cf1ed1',1,'src::charts']]],
+  ['df_10',['df',['../namespacesrc_1_1components_1_1corpus.html#ab52c96bea30646abf8170f333bbd42b9',1,'src::components::corpus']]],
+  ['df_5fbooksum_11',['df_booksum',['../namespacesrc_1_1components_1_1corpus.html#a8301daa1f2df0afa526bbffd9a09894e',1,'src::components::corpus']]],
+  ['df_5fnqa_12',['df_nqa',['../namespacesrc_1_1components_1_1corpus.html#a3f522611c1ca83e27b55837d728a732f',1,'src::components::corpus']]],
+  ['doc_5fdb_13',['doc_db',['../classsrc_1_1util_1_1Log.html#a0cf6184798c5dc67e98e9fe0c518d51e',1,'src::util::Log']]],
+  ['docs_5fdb_14',['docs_db',['../classsrc_1_1core_1_1context_1_1Session.html#ad41254b27e713a531687c19679621d87',1,'src::core::context::Session']]],
+  ['drop_5fdb_15',['drop_db',['../classsrc_1_1util_1_1Log.html#a428096c41d150fa1ba24d1fe92025f48',1,'src::util::Log']]],
+  ['drop_5fgr_16',['drop_gr',['../classsrc_1_1util_1_1Log.html#a68ae4871ffa4f88e79fa7d202e62fe9a',1,'src::util::Log']]]
 ];

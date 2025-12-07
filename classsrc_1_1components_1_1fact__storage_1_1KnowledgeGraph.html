@@ -92,7 +92,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a93a10363f73125f2d34d71a3b879754e" id="r_a93a10363f73125f2d34d71a3b879754e"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a93a10363f73125f2d34d71a3b879754e">add_triple</a> (self, str subject, str relation, str object_)</td></tr>
 <tr class="memdesc:a93a10363f73125f2d34d71a3b879754e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a semantic triple to the graph using raw Cypher.  <br /></td></tr>
 <tr class="separator:a93a10363f73125f2d34d71a3b879754e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac390d6edcd3b657fedbfbb8636a0a6b4" id="r_ac390d6edcd3b657fedbfbb8636a0a6b4"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#ac390d6edcd3b657fedbfbb8636a0a6b4">add_triples_json</a> (self, List[<a class="el" href="classsrc_1_1components_1_1fact__storage_1_1Triple.html">Triple</a>] triples_json)</td></tr>
+<tr class="memitem:ac390d6edcd3b657fedbfbb8636a0a6b4" id="r_ac390d6edcd3b657fedbfbb8636a0a6b4"><td class="memItemLeft" align="right" valign="top">None&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#ac390d6edcd3b657fedbfbb8636a0a6b4">add_triples_json</a> (self, List[<a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1Triple.html">Triple</a>] triples_json)</td></tr>
 <tr class="memdesc:ac390d6edcd3b657fedbfbb8636a0a6b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add several semantic triples to the graph from pre-verified JSON.  <br /></td></tr>
 <tr class="separator:ac390d6edcd3b657fedbfbb8636a0a6b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7705e1a657e9b8a8b5308bbe2aeea10" id="r_ad7705e1a657e9b8a8b5308bbe2aeea10"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#ad7705e1a657e9b8a8b5308bbe2aeea10">get_all_triples</a> (self)</td></tr>
@@ -119,9 +119,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:adecacf34639ce7b7fe5ad4f5fcb93269" id="r_adecacf34639ce7b7fe5ad4f5fcb93269"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#adecacf34639ce7b7fe5ad4f5fcb93269">get_by_ranked_degree</a> (self, int best_rank=1, int worst_rank=-1, bool enforce_count=False, List[str] id_columns=[&quot;subject_id&quot;, &quot;object_id&quot;])</td></tr>
 <tr class="memdesc:adecacf34639ce7b7fe5ad4f5fcb93269"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return triples associated with nodes whose degree rank lies in the specified range.  <br /></td></tr>
 <tr class="separator:adecacf34639ce7b7fe5ad4f5fcb93269"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22e96793f24c38821b74199b53808c70" id="r_a22e96793f24c38821b74199b53808c70"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a22e96793f24c38821b74199b53808c70">get_random_walk_sample</a> (self, List[str] start_nodes, int walk_length, int num_walks=1)</td></tr>
-<tr class="memdesc:a22e96793f24c38821b74199b53808c70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sample subgraph using directed random walk traversal starting from specified nodes.  <br /></td></tr>
-<tr class="separator:a22e96793f24c38821b74199b53808c70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8124c06cb54cf53624526a93ab14374" id="r_ae8124c06cb54cf53624526a93ab14374"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#ae8124c06cb54cf53624526a93ab14374">get_random_walk</a> (self, List[str] start_nodes, int walk_length, int num_walks=1)</td></tr>
+<tr class="memdesc:ae8124c06cb54cf53624526a93ab14374"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sample subgraph using directed random walk traversal starting from specified nodes.  <br /></td></tr>
+<tr class="separator:ae8124c06cb54cf53624526a93ab14374"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30b242830f1f919101712dbc323883d3" id="r_a30b242830f1f919101712dbc323883d3"><td class="memItemLeft" align="right" valign="top">DataFrame&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a30b242830f1f919101712dbc323883d3">get_community_subgraph</a> (self, int community_id)</td></tr>
 <tr class="memdesc:a30b242830f1f919101712dbc323883d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return all triples belonging to a specific GraphRAG community.  <br /></td></tr>
 <tr class="separator:a30b242830f1f919101712dbc323883d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -131,9 +131,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:abb18547c7d0e8f6e7cff15f0e50572ed" id="r_abb18547c7d0e8f6e7cff15f0e50572ed"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#abb18547c7d0e8f6e7cff15f0e50572ed">to_triples_string</a> (self, Optional[DataFrame] triple_names_df=None, str mode=&quot;triple&quot;)</td></tr>
 <tr class="memdesc:abb18547c7d0e8f6e7cff15f0e50572ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert triples to string representation in various formats.  <br /></td></tr>
 <tr class="separator:abb18547c7d0e8f6e7cff15f0e50572ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a612295bda572cc7983bea05bb52d1c6a" id="r_a612295bda572cc7983bea05bb52d1c6a"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a612295bda572cc7983bea05bb52d1c6a">to_contextualized_string</a> (self, Optional[List[str]] focus_nodes=None, int top_n=5)</td></tr>
-<tr class="memdesc:a612295bda572cc7983bea05bb52d1c6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert triples to contextualized string grouped by focus nodes.  <br /></td></tr>
-<tr class="separator:a612295bda572cc7983bea05bb52d1c6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecf469244bc28f9a365201596f616275" id="r_aecf469244bc28f9a365201596f616275"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#aecf469244bc28f9a365201596f616275">to_context</a> (self, Optional[List[str]] focus_nodes=None, int top_n=5)</td></tr>
+<tr class="memdesc:aecf469244bc28f9a365201596f616275"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert triples to contextualized string grouped by focus nodes.  <br /></td></tr>
+<tr class="separator:aecf469244bc28f9a365201596f616275"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c49fc276013bd2222dc93609c544518" id="r_a3c49fc276013bd2222dc93609c544518"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1fact__storage_1_1KnowledgeGraph.html#a3c49fc276013bd2222dc93609c544518">to_narrative</a> (self, str strategy=&quot;path&quot;, Optional[str] start_node=None, int max_triples=50)</td></tr>
 <tr class="memdesc:a3c49fc276013bd2222dc93609c544518"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert graph to narrative text using specified strategy.  <br /></td></tr>
 <tr class="separator:a3c49fc276013bd2222dc93609c544518"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -269,7 +269,7 @@ Protected Attributes</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>LLM output should be pre-normalized using <a class="el" href="classsrc_1_1connectors_1_1llm_1_1LLMConnector.html#ae1f4d34569124c1120ec5b0fa98f94eb">src.connectors.llm.LLMConnector.normalize_triples</a>. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>LLM output should be pre-normalized using <a class="el" href="namespacesrc_1_1connectors_1_1llm.html#ac4b64895b9e03d2abeeb3b9f522176cd">src.connectors.llm.normalize_to_dict</a>. </dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">Log.Failure</td><td>If the triple cannot be added to our graph database. </td></tr>
@@ -294,7 +294,7 @@ Protected Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">List[<a class="el" href="classsrc_1_1components_1_1fact__storage_1_1Triple.html">Triple</a>]&#160;</td>
+          <td class="paramtype">List[<a class="el" href="classsrc_1_1components_1_1relation__extraction_1_1Triple.html">Triple</a>]&#160;</td>
           <td class="paramname"><em>triples_json</em>&#160;</td>
         </tr>
         <tr>
@@ -306,7 +306,7 @@ Protected Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Add several semantic triples to the graph from pre-verified JSON. </p>
-<dl class="section note"><dt>Note</dt><dd>JSONshould be pre-normalized using <a class="el" href="classsrc_1_1connectors_1_1llm_1_1LLMConnector.html#ae1f4d34569124c1120ec5b0fa98f94eb">src.connectors.llm.LLMConnector.normalize_triples</a>. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>JSON should be pre-normalized using <a class="el" href="namespacesrc_1_1connectors_1_1llm.html#ac4b64895b9e03d2abeeb3b9f522176cd">src.connectors.llm.normalize_to_dict</a>. </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">triples_json</td><td>A list of Triple dictionaries containing keys: 's', 'r', and 'o'. </td></tr>
@@ -825,14 +825,14 @@ lives in City, and follows Dave." </p><dl class="params"><dt>Parameters</dt><dd>
 
 </div>
 </div>
-<a id="a22e96793f24c38821b74199b53808c70" name="a22e96793f24c38821b74199b53808c70"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a22e96793f24c38821b74199b53808c70">&#9670;&#160;</a></span>get_random_walk_sample()</h2>
+<a id="ae8124c06cb54cf53624526a93ab14374" name="ae8124c06cb54cf53624526a93ab14374"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae8124c06cb54cf53624526a93ab14374">&#9670;&#160;</a></span>get_random_walk()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"> DataFrame get_random_walk_sample </td>
+          <td class="memname"> DataFrame get_random_walk </td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname"><em>self</em>, </td>
@@ -1091,14 +1091,14 @@ lives in City, and follows Dave." </p><dl class="params"><dt>Parameters</dt><dd>
 
 </div>
 </div>
-<a id="a612295bda572cc7983bea05bb52d1c6a" name="a612295bda572cc7983bea05bb52d1c6a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a612295bda572cc7983bea05bb52d1c6a">&#9670;&#160;</a></span>to_contextualized_string()</h2>
+<a id="aecf469244bc28f9a365201596f616275" name="aecf469244bc28f9a365201596f616275"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aecf469244bc28f9a365201596f616275">&#9670;&#160;</a></span>to_context()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"> str to_contextualized_string </td>
+          <td class="memname"> str to_context </td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname"><em>self</em>, </td>

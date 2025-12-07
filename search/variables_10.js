@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['r_0',['r',['../classsrc_1_1components_1_1fact__storage_1_1Triple.html#a71c488e31107566012e3e9a048491c2e',1,'src::components::fact_storage::Triple']]],
+  ['r_0',['r',['../classsrc_1_1components_1_1relation__extraction_1_1Triple.html#a71c488e31107566012e3e9a048491c2e',1,'src::components::relation_extraction::Triple']]],
   ['raw_5ftei_5fcontent_1',['raw_tei_content',['../classsrc_1_1components_1_1book__conversion_1_1EPUBToTEI.html#a1cfda4cb31898954af35844135557e8c',1,'src::components::book_conversion::EPUBToTEI']]],
   ['reader_2',['reader',['../classsrc_1_1components_1_1book__conversion_1_1Story.html#a594a23d93fbef31193790edc87763969',1,'src::components::book_conversion::Story']]],
   ['record_5ftime_3',['RECORD_TIME',['../classsrc_1_1util_1_1Log.html#a76bdb1955a1b2fdef4ee691bb6a0bb33',1,'src::util::Log']]],

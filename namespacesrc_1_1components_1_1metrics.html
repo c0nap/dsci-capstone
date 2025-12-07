@@ -83,11 +83,20 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1metrics_1_1Metrics.html">Metrics</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility class for computing and posting evaluation metrics.  <a href="classsrc_1_1components_1_1metrics_1_1Metrics.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility class for posting evaluation metrics to Blazor web application.  <a href="classsrc_1_1components_1_1metrics_1_1Metrics.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:afc1b0b2a72fd8d971b81d90b38c39d31" id="r_afc1b0b2a72fd8d971b81d90b38c39d31"><td class="memItemLeft" align="right" valign="top">Dict[str, Any]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1metrics.html#afc1b0b2a72fd8d971b81d90b38c39d31">compute_basic</a> (str summary, str gold_summary, str chunk)</td></tr>
+<tr class="memdesc:afc1b0b2a72fd8d971b81d90b38c39d31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute ROUGE and BERTScore.  <br /></td></tr>
+<tr class="separator:afc1b0b2a72fd8d971b81d90b38c39d31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95e969f362a02900df59697439f039b8" id="r_a95e969f362a02900df59697439f039b8"><td class="memItemLeft" align="right" valign="top">Dict[str, float]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1metrics.html#a95e969f362a02900df59697439f039b8">run_rouge</a> (str prediction, str reference)</td></tr>
+<tr class="memdesc:a95e969f362a02900df59697439f039b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run the ROUGE evaluation metric given one reference and one prediction to judge.  <br /></td></tr>
+<tr class="separator:a95e969f362a02900df59697439f039b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9e394e06311b11cb697957722ca7627" id="r_af9e394e06311b11cb697957722ca7627"><td class="memItemLeft" align="right" valign="top">Dict[str, List[float]]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1metrics.html#af9e394e06311b11cb697957722ca7627">run_bertscore</a> (str prediction, str reference)</td></tr>
+<tr class="memdesc:af9e394e06311b11cb697957722ca7627"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run the BERTScore evaluation metric given one reference and one prediction to judge.  <br /></td></tr>
+<tr class="separator:af9e394e06311b11cb697957722ca7627"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ce5bfca04e60c127162d875ba4b8068" id="r_a3ce5bfca04e60c127162d875ba4b8068"><td class="memItemLeft" align="right" valign="top">Dict[str, Any]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1metrics.html#a3ce5bfca04e60c127162d875ba4b8068">run_questeval</a> (Dict[str, Any] chunk, *str qeval_task=&quot;summarization&quot;, bool use_cuda=False, bool use_question_weighter=True)</td></tr>
 <tr class="memdesc:a3ce5bfca04e60c127162d875ba4b8068"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run QuestEval metric calculation.  <br /></td></tr>
 <tr class="separator:a3ce5bfca04e60c127162d875ba4b8068"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -147,6 +156,89 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="afc1b0b2a72fd8d971b81d90b38c39d31" name="afc1b0b2a72fd8d971b81d90b38c39d31"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc1b0b2a72fd8d971b81d90b38c39d31">&#9670;&#160;</a></span>compute_basic()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> Dict[str, Any] compute_basic </td>
+          <td>(</td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>summary</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>gold_summary</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>chunk</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Compute ROUGE and BERTScore. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">summary</td><td>A text string containing a book summary </td></tr>
+    <tr><td class="paramname">gold_summary</td><td>A summary to compare against </td></tr>
+    <tr><td class="paramname">chunk</td><td>The original text of the chunk. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Dict containing 'rouge' and 'bertscore' keys. Scores are nested with inconsistent schema. </dd></dl>
+
+</div>
+</div>
+<a id="af9e394e06311b11cb697957722ca7627" name="af9e394e06311b11cb697957722ca7627"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9e394e06311b11cb697957722ca7627">&#9670;&#160;</a></span>run_bertscore()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> Dict[str, List[float]] run_bertscore </td>
+          <td>(</td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>prediction</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>reference</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Run the BERTScore evaluation metric given one reference and one prediction to judge. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">prediction</td><td>Text string containing the generated summary. </td></tr>
+    <tr><td class="paramname">reference</td><td>Text string to compare against. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>BERTScore results directly from 'evaluate' library. Example schema: { "precision": [0.87], ... } Valid keys: precision, recall, f1. </dd></dl>
 
 </div>
 </div>
@@ -275,6 +367,44 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a95e969f362a02900df59697439f039b8" name="a95e969f362a02900df59697439f039b8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a95e969f362a02900df59697439f039b8">&#9670;&#160;</a></span>run_rouge()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"> Dict[str, float] run_rouge </td>
+          <td>(</td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>prediction</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">str&#160;</td>
+          <td class="paramname"><em>reference</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Run the ROUGE evaluation metric given one reference and one prediction to judge. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">prediction</td><td>Text string containing the generated summary. </td></tr>
+    <tr><td class="paramname">reference</td><td>Text string to compare against. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>ROUGE results directly from 'evaluate' library. Values correspond to F1 score since this is the standard ROUGE metric. Example schema: { "rouge1": 0.87, ... } Valid keys: rouge1, rouge2, rougeL, rougeLsum. </dd></dl>
 
 </div>
 </div>

@@ -1,3 +1,7 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" href="$classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html" title=" " alt="" coords="5,5,140,31"/>
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,5,113,31"/>
+<area shape="rect" id="Node000001" href="$classsrc_1_1util_1_1Log_1_1Failure.html" title="User&#45;facing base class for custom error handling." alt="" coords="161,5,253,31"/>
+<area shape="poly" id="edge22_Node000000_Node000001" title=" " alt="" coords="127,15,161,15,161,21,127,21"/>
+<area shape="rect" id="Node000002" href="$classsrc_1_1util_1_1Log_1_1BadAddressFailure.html" title="Raised when a database connection string or address is invalid." alt="" coords="301,5,471,31"/>
+<area shape="poly" id="edge23_Node000001_Node000002" title=" " alt="" coords="267,15,301,15,301,21,267,21"/>
 </map>

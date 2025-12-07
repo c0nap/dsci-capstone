@@ -1,0 +1,7 @@
+<map id="RelationExtractorOpenIE" name="RelationExtractorOpenIE">
+<area shape="rect" id="Node000001" title="Wrapper for Stanford OpenIE using the Stanza library." alt="" coords="5,152,187,177"/>
+<area shape="rect" id="Node000002" href="$classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html" title="Abstract base class for Relation Extraction (RE) models." alt="" coords="29,79,163,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="99,118,99,152,93,152,93,118"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="71,5,121,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="99,44,99,79,93,79,93,44"/>
+</map>

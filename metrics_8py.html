@@ -84,7 +84,7 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1components_1_1metrics_1_1Metrics.html">Metrics</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility class for computing and posting evaluation metrics.  <a href="classsrc_1_1components_1_1metrics_1_1Metrics.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility class for posting evaluation metrics to Blazor web application.  <a href="classsrc_1_1components_1_1metrics_1_1Metrics.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
@@ -98,6 +98,15 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:afc1b0b2a72fd8d971b81d90b38c39d31" id="r_afc1b0b2a72fd8d971b81d90b38c39d31"><td class="memItemLeft" align="right" valign="top">Dict[str, Any]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1metrics.html#afc1b0b2a72fd8d971b81d90b38c39d31">compute_basic</a> (str summary, str gold_summary, str chunk)</td></tr>
+<tr class="memdesc:afc1b0b2a72fd8d971b81d90b38c39d31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute ROUGE and BERTScore.  <br /></td></tr>
+<tr class="separator:afc1b0b2a72fd8d971b81d90b38c39d31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95e969f362a02900df59697439f039b8" id="r_a95e969f362a02900df59697439f039b8"><td class="memItemLeft" align="right" valign="top">Dict[str, float]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1metrics.html#a95e969f362a02900df59697439f039b8">run_rouge</a> (str prediction, str reference)</td></tr>
+<tr class="memdesc:a95e969f362a02900df59697439f039b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run the ROUGE evaluation metric given one reference and one prediction to judge.  <br /></td></tr>
+<tr class="separator:a95e969f362a02900df59697439f039b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9e394e06311b11cb697957722ca7627" id="r_af9e394e06311b11cb697957722ca7627"><td class="memItemLeft" align="right" valign="top">Dict[str, List[float]]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1metrics.html#af9e394e06311b11cb697957722ca7627">run_bertscore</a> (str prediction, str reference)</td></tr>
+<tr class="memdesc:af9e394e06311b11cb697957722ca7627"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run the BERTScore evaluation metric given one reference and one prediction to judge.  <br /></td></tr>
+<tr class="separator:af9e394e06311b11cb697957722ca7627"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ce5bfca04e60c127162d875ba4b8068" id="r_a3ce5bfca04e60c127162d875ba4b8068"><td class="memItemLeft" align="right" valign="top">Dict[str, Any]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1components_1_1metrics.html#a3ce5bfca04e60c127162d875ba4b8068">run_questeval</a> (Dict[str, Any] chunk, *str qeval_task=&quot;summarization&quot;, bool use_cuda=False, bool use_question_weighter=True)</td></tr>
 <tr class="memdesc:a3ce5bfca04e60c127162d875ba4b8068"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run QuestEval metric calculation.  <br /></td></tr>
 <tr class="separator:a3ce5bfca04e60c127162d875ba4b8068"><td class="memSeparator" colspan="2">&#160;</td></tr>

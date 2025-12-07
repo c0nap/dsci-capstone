@@ -5,5 +5,7 @@ var searchData=
   ['merge_5fdataframes_2',['merge_dataframes',['../namespacesrc_1_1components_1_1corpus.html#aaf257c4cd0ce2d73e7ba421aa413631d',1,'src::components::corpus']]],
   ['metricscontroller_3',['MetricsController',['../classBlazorApp_1_1Controllers_1_1MetricsController.html#a62d4c838cdab73f9ae29c4aa755d6072',1,'BlazorApp::Controllers::MetricsController']]],
   ['metricshub_4',['MetricsHub',['../classBlazorApp_1_1Hubs_1_1MetricsHub.html#a5b1da7d0d132b7d0b163df5ca70dbe1c',1,'BlazorApp::Hubs::MetricsHub']]],
-  ['mongo_5fhandle_5',['mongo_handle',['../namespacesrc_1_1connectors_1_1document.html#ab69923b28c6c869ac302049fd62d34e4',1,'src::connectors::document']]]
+  ['moderate_5ftexts_5',['moderate_texts',['../namespacesrc_1_1connectors_1_1llm.html#ae99e6f3b116378c2fabc96ffd4ab46b4',1,'src::connectors::llm']]],
+  ['moderate_5ftriples_6',['moderate_triples',['../namespacesrc_1_1connectors_1_1llm.html#a2e7e874cd3dd155a6eacfee92d8d6d5d',1,'src::connectors::llm']]],
+  ['mongo_5fhandle_7',['mongo_handle',['../namespacesrc_1_1connectors_1_1document.html#ab69923b28c6c869ac302049fd62d34e4',1,'src::connectors::document']]]
 ];

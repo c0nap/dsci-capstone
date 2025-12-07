@@ -75,7 +75,8 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#namespaces">Namespaces</a>  </div>
+<a href="#namespaces">Namespaces</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">llm.py File Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -83,7 +84,13 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1connectors_1_1llm_1_1LLMConnector.html">LLMConnector</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connector for prompting and returning LLM output (raw text/JSON) via LangChain.  <a href="classsrc_1_1connectors_1_1llm_1_1LLMConnector.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connector for prompting and returning LLM output (raw text/JSON) via LLMs.  <a href="classsrc_1_1connectors_1_1llm_1_1LLMConnector.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1connectors_1_1llm_1_1OpenAIConnector.html">OpenAIConnector</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Lightweight LLM interface for faster response times.  <a href="classsrc_1_1connectors_1_1llm_1_1OpenAIConnector.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classsrc_1_1connectors_1_1llm_1_1LangChainConnector.html">LangChainConnector</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fully-featured API to prompt across various LLM providers.  <a href="classsrc_1_1connectors_1_1llm_1_1LangChainConnector.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
@@ -94,6 +101,20 @@ Namespaces</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:namespacesrc_1_1connectors_1_1llm" id="r_namespacesrc_1_1connectors_1_1llm"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1connectors_1_1llm.html">src.connectors.llm</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a9be670d5ba806f7db62364a555314399" id="r_a9be670d5ba806f7db62364a555314399"><td class="memItemLeft" align="right" valign="top">str&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1connectors_1_1llm.html#a9be670d5ba806f7db62364a555314399">clean_json_block</a> (str s)</td></tr>
+<tr class="separator:a9be670d5ba806f7db62364a555314399"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4b64895b9e03d2abeeb3b9f522176cd" id="r_ac4b64895b9e03d2abeeb3b9f522176cd"><td class="memItemLeft" align="right" valign="top">List[Dict[str, str]]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1connectors_1_1llm.html#ac4b64895b9e03d2abeeb3b9f522176cd">normalize_to_dict</a> (Dict[str, str]|List[Dict[str, str]] data, List[str] keys)</td></tr>
+<tr class="memdesc:ac4b64895b9e03d2abeeb3b9f522176cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Normalize nested/compacted LLM output into flat dicts.  <br /></td></tr>
+<tr class="separator:ac4b64895b9e03d2abeeb3b9f522176cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae99e6f3b116378c2fabc96ffd4ab46b4" id="r_ae99e6f3b116378c2fabc96ffd4ab46b4"><td class="memItemLeft" align="right" valign="top">List[bool]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1connectors_1_1llm.html#ae99e6f3b116378c2fabc96ffd4ab46b4">moderate_texts</a> (List[str] texts)</td></tr>
+<tr class="memdesc:ae99e6f3b116378c2fabc96ffd4ab46b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if texts contain offensive content using OpenAI moderation API.  <br /></td></tr>
+<tr class="separator:ae99e6f3b116378c2fabc96ffd4ab46b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e7e874cd3dd155a6eacfee92d8d6d5d" id="r_a2e7e874cd3dd155a6eacfee92d8d6d5d"><td class="memItemLeft" align="right" valign="top">List[Dict[str, str]]&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacesrc_1_1connectors_1_1llm.html#a2e7e874cd3dd155a6eacfee92d8d6d5d">moderate_triples</a> (List[Dict[str, str]] triples)</td></tr>
+<tr class="memdesc:a2e7e874cd3dd155a6eacfee92d8d6d5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Filter triples containing offensive content.  <br /></td></tr>
+<tr class="separator:a2e7e874cd3dd155a6eacfee92d8d6d5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 <!-- start footer part -->

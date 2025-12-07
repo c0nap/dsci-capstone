@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['s_0',['s',['../classsrc_1_1components_1_1fact__storage_1_1Triple.html#a57cb3b15a36af5718db6733fe868b0e8',1,'src::components::fact_storage::Triple']]],
-  ['sentencizer_1',['sentencizer',['../classsrc_1_1components_1_1relation__extraction_1_1RelationExtractor.html#a79395f8d543141932acc2bc200d18de2',1,'src.components.relation_extraction.RelationExtractor.sentencizer'],['../namespacesrc_1_1components_1_1book__conversion.html#a79395f8d543141932acc2bc200d18de2',1,'src.components.book_conversion.sentencizer']]],
+  ['s_0',['s',['../classsrc_1_1components_1_1relation__extraction_1_1Triple.html#a57cb3b15a36af5718db6733fe868b0e8',1,'src::components::relation_extraction::Triple']]],
+  ['sentencizer_1',['sentencizer',['../namespacesrc_1_1components_1_1book__conversion.html#a79395f8d543141932acc2bc200d18de2',1,'src::components::book_conversion']]],
   ['session_2',['session',['../namespacesrc_1_1core_1_1context.html#a7a856e8c650ece02053620b6267a0696',1,'src::core::context']]],
   ['specific_5fqueries_3',['specific_queries',['../classsrc_1_1connectors_1_1relational_1_1mysqlConnector.html#a663b62f9f3a1b33194cfefcdc3f98def',1,'src.connectors.relational.mysqlConnector.specific_queries'],['../classsrc_1_1connectors_1_1relational_1_1postgresConnector.html#a663b62f9f3a1b33194cfefcdc3f98def',1,'src.connectors.relational.postgresConnector.specific_queries']]],
   ['start_5finclusive_4',['start_inclusive',['../classsrc_1_1components_1_1book__conversion_1_1ParagraphStreamTEI.html#a1e9e91268d0d9e6566ecc461d71edcd0',1,'src::components::book_conversion::ParagraphStreamTEI']]],
