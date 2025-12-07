@@ -3,14 +3,14 @@ from rapidfuzz import fuzz, process
 import os
 import re
 from src.corpus.base import load_text_from_path, DatasetLoader
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict, List, Any
 import requests
 import time
 
 GUTENDEX_API = "https://gutendex.com/books"
 
 # --------------------------------------------------
-# Helper Functions - Gutenberg ID / Gutendex
+# Helper Functions - Index Normalization
 # --------------------------------------------------
 
 def prune_duplicates(df: DataFrame) -> DataFrame:
@@ -31,74 +31,116 @@ def prune_duplicates(df: DataFrame) -> DataFrame:
     df = df.drop_duplicates(subset=keys, keep='first')
     return df
 
-    
-def fetch_gutenberg_metadata(query: str = None, gutenberg_id: str | int = None) -> Optional[dict]:
-    """Search or lookup metadata from Gutendex.
-    @param query  General search string (title/author). Used if gutenberg_id is None.
-    @param gutenberg_id  Specific Gutenberg ID. If provided, performs direct lookup.
-    @return  Normalized dict with keys: title, author, language, gutenberg_id, text_url.
-             Returns None if not found or on error.
-    """
-    if not query and not gutenberg_id:
-        return None
-    try:
-        # 1. Direct ID Lookup
-        if gutenberg_id:
-            url = f"{GUTENDEX_API}/{gutenberg_id}"
-            params = {}
+def normalize_title(title: str) -> str:
+    """Remove punctuation, special chars, and standardize format."""
+    if not title: return ""
+    t = str(title).lower()
+    t = re.sub(r"[\W_]+", " ", t).strip()
+    return re.sub(r"\s+", "_", t)
 
-        # 2. Search Query
-        else:
-            url = GUTENDEX_API
-            params = {"search": query}
-        response = requests.get(url, params=params, timeout=10)
-        
-        # Rate limit politeness
-        if response.status_code == 429:
-            time.sleep(2)
-            response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
 
-        # Handle search results vs direct object return
-        result = None
-        if gutenberg_id:
-            result = data  # Direct ID returns the object
-        elif data.get("count", 0) > 0:
-            result = data["results"][0]  # Search returns list, take top match
-        
-        if not result:
-            return None
-        # Normalize output
-        authors = [a.get("name", "") for a in result.get("authors", [])]
-        
-        # Find text URL (prefer plain text)
-        formats = result.get("formats", {})
-        text_url = formats.get("text/plain; charset=utf-8") or formats.get("text/plain")
-        return {
-            "gutenberg_id": result.get("id"),
-            "title": result.get("title", ""),
-            "author": ", ".join(authors) if authors else "",
-            "language": result.get("languages", [""])[0],
-            "text_url": text_url
-        }
-
-    except Exception as e:
-        print(f"Warning: Gutendex lookup failed for {gutenberg_id or query}: {e}")
-        return None
+# --------------------------------------------------
+# Helper Functions - Gutenberg ID / Gutendex
+# --------------------------------------------------
 
 def extract_gutenberg_id(url: str) -> Optional[int]:
     """Extract the numeric ID from a Gutenberg URL.
-    @param url  e.g. 'https://www.gutenberg.org/ebooks/12345'
-    @return  12345 or None.
+    @param url  String provided by a dataset, e.g. 'https://www.gutenberg.org/ebooks/12345'
+    @return  Gutenberg ID, e.g. 12345 or None"""
+    match = re.search(r'gutenberg\.org/ebooks/(\d+)', url or "")
+    return int(match.group(1)) if match else None
+
+def gutendex_lookup_id(gutenberg_id: int) -> Optional[Dict[str, Any]]:
+    """Fetch metadata for a specific Gutenberg ID.
+    @param gutenberg_id  The numeric ID of the book.
+    @return  Metadata dict with keys: gutenberg_id, title, author, language, text_url.
+        Returns None if the ID does not exist or API fails.
     """
-    if not url:
+    url = f"{GUTENDEX_API}/{gutenberg_id}"
+    results = _request_gutendex(url)
+    return _unpack_gutendex(results.json())
+
+def gutendex_search_title(query: str, author: Optional[str] = None, min_fuzz: int = 85) -> Optional[Dict[str, Any]]:
+    """Search for a book by title (and optionally author) with fuzzy verification.
+    @param query  Title string to search for (natural language preferred).
+    @param author  Optional author name to filter/rank results.
+    @param min_fuzz  Minimum fuzzy match score (0-100) required to accept a result.
+    @return  Metadata dict with keys: gutenberg_id, title, author, language, text_url.
+        Returns None if no confident match is found.
+    """
+    if not query:  # Not defensive: Prevent bad request if bad input
         return None
-    # Flexible regex for http/https and trailing slashes
-    match = re.search(r'gutenberg\.org/ebooks/(\d+)', url)
-    if match:
-        return int(match.group(1))
+    candidates = _request_gutendex(url=GUTENDEX_API, params={"search": query, "languages": "en"})
+    if not candidates:
+        return None
+    return _filter_candidates(candidates, query, author, min_fuzz)
+
+def _request_gutendex(url: str, params: Dict[str, Any] = {}, timeout: int = 10, retry_delay: int = 2) -> d:
+    """ """
+    response = requests.get(url, params=params, timeout=timeout)
+    if resp.status_code == 429:  # throttled: too many requests
+        time.sleep(retry_delay)
+        response = requests.get(url, params=params, timeout=timeout)
+    if resp.status_code == 200:  # success
+        results = response.json().get("results", [])
+    return results
+
+def _unpack_gutendex(data: dict) -> dict:
+    """Normalize Gutendex JSON to our schema."""
+    authors = [a.get("name", "") for a in data.get("authors", [])]
+    formats = data.get("formats", {})
+    
+    # Priority: utf-8 -> ascii -> any plain text
+    text_url = (formats.get("text/plain; charset=utf-8") or 
+                formats.get("text/plain; charset=us-ascii") or 
+                formats.get("text/plain"))
+
+    return {
+        "gutenberg_id": data.get("id"),
+        "title": data.get("title", ""),
+        "author": ", ".join(authors),
+        "language": data.get("languages", [""])[0],
+        "text_url": text_url
+    }
+
+
+def _filter_candidates(candidates: List[dict], 
+                       query: str, 
+                       author: str | None, 
+                       min_score: int) -> Optional[dict]:
+    """Select best match from candidates using fuzzy logic."""
+    if not candidates:
+        return None
+
+    # Pre-process for fuzzy matching (spaces preferred over underscores)
+    clean_query = query.replace("_", " ")
+    clean_author = author.lower() if author else None
+    
+    best_match = None
+    best_score = 0
+
+    for cand in candidates:
+        # 1. Author Check (if provided)
+        if clean_author:
+            cand_authors = [a.get("name", "").lower() for a in cand.get("authors", [])]
+            # Return None if no author matches loosely (score < 70)
+            if not process.extractOne(clean_author, cand_authors, scorer=fuzz.token_set_ratio, score_cutoff=70):
+                continue
+
+        # 2. Title Score
+        cand_title = cand.get("title", "")
+        score = fuzz.token_sort_ratio(clean_query, cand_title)
+        
+        if score > best_score:
+            best_score = score
+            best_match = cand
+
+    if best_match and best_score >= min_score:
+        return _unpack_gutendex(best_match)
+    
     return None
+
+
 
 # --------------------------------------------------
 # Helper Functions - Text Similarity & Title Matching

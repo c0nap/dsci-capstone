@@ -142,7 +142,7 @@ class BookSumLoader(HuggingFaceLoader):
     def _extract_book_data(self, raw_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         raw_title = raw_item["title"]
         title = align.normalize_title(raw_title)
-        gutenberg_id = align.fetch_gutenberg_metadata(query=title)["gutenberg_id"]
+        gutenberg_id = align.gutendex_search_title(query=raw_title)["gutenberg_id"]
         booksum_id = raw_item["bid"]
 
         return {
@@ -181,7 +181,7 @@ class NarrativeQALoader(HuggingFaceLoader):
         raw_title = doc["title"]
         gutenberg_id = align.extract_gutenberg_id(url)
         if not gutenberg_id:
-            gutenberg_id = align.fetch_gutenberg_metadata(query=title)["gutenberg_id"]
+            gutenberg_id = align.gutendex_search_title(query=raw_title)["gutenberg_id"]
         title = align.normalize_title(raw_title)
         
         return {
