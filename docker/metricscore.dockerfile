@@ -19,10 +19,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY deps/metricscore.txt .
 RUN pip install --no-cache-dir -r metricscore.txt
+RUN python -m spacy download en_core_web_sm
 
 
 # Copy source code into the container (optional .dockerignore)
 COPY src/ src/
+COPY tests/ tests/
+COPY smoke/ smoke/
 COPY Makefile ./
 
 # Declare build args - whether to include .env or .env.dummy
@@ -33,6 +36,8 @@ COPY ${ENV_FILE} .env
 # Generate .env.docker with mapped hostnames
 RUN make env-docker
 RUN mv .env.docker .env
+
+COPY pyproject.toml pytest.ini conftest.py .
 
 # Supply task as command line flag to set worker behavior
 CMD ["python", "-m", "src.core.worker", "--task", "metricscore"]
