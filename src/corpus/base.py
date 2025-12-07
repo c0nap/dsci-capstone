@@ -231,60 +231,14 @@ def load_text_from_path(text_path: str) -> str:
         return f.read()
 
 
-def prune_references() -> int:
+def prune_bad_refs(df: DataFrame) -> DataFrame:
     """Remove index entries where text files no longer exist.
-    @return  Number of entries removed.
     @details
-    File-system integrity check: removes ghost entries from previous runs.
-    Does not handle deduplication or alignment logic.
+    - File-system integrity check: removes ghost entries from previous runs.
+    - Does not handle deduplication or alignment logic.
     """
-    index_file = DatasetLoader.INDEX_FILE
-    if not os.path.exists(index_file):
-        return 0
-
-    df = read_csv(index_file)
-    initial_count = len(df)
-
-    def file_exists(path):
-        return isinstance(path, str) and os.path.exists(path)
-
-    df = df[df['text_path'].apply(file_exists)]
-    
-    removed = initial_count - len(df)
-    if removed > 0:
-        df.to_csv(index_file, index=False)
-    
-    return removed
-
-
-def prune_keys() -> int:
-    """Remove entries with no usable identifier for alignment.
-    @return  Number of entries removed.
-    @details
-    An entry needs at least one identifier (gutenberg_id OR title) to be
-    aligned across datasets. This removes rows that have neither.
-    """
-    index_file = DatasetLoader.INDEX_FILE
-    if not os.path.exists(index_file):
-        return 0
-    
-    df = read_csv(index_file)
-    initial_count = len(df)
-    
-    def has_identifier(row):
-        has_gid = isinstance(row.get('gutenberg_id'), (int, float, str)) and \
-                  str(row['gutenberg_id']).strip() not in ['', 'nan', 'None']
-        has_title = isinstance(row.get('title'), str) and row['title'].strip() != ''
-        return has_gid or has_title
-    
-    df = df[df.apply(has_identifier, axis=1)]
-    
-    removed = initial_count - len(df)
-    if removed > 0:
-        df.to_csv(index_file, index=False)
-    
-    return removed
-
+    df = df[df['text_path'].apply(os.path.exists)]
+    return df
 
 
 

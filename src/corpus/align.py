@@ -31,7 +31,6 @@ def prune_duplicates() -> None:
 
     keys = ['title', 'gutenberg_id']
     df = df.drop_duplicates(subset=keys, keep='first')
-    df = df.sort_values('book_id')
     df.to_csv(index_file, index=False)
 
 # --------------------------------------------------
