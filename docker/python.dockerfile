@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY deps/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN python -m spacy download en_core_web_sm
+RUN python -m nltk.downloader punkt punkt_tab stopwords
 
 
 # Copy source code into the container (optional .dockerignore)
