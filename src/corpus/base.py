@@ -98,13 +98,13 @@ class DatasetLoader(ABC):
     # Global Index Management (Thread-Safe)
     # --------------------------------------------------
     _id_lock = threading.Lock()
-    _next_id: int = None
+    _next_id: int | None = None
 
     def consume_next_id(self) -> int:
         """Get next available book ID safely across multiple threads.
         @return  Next unique integer ID.
         @details
-        Justification: Atomicity is required for multi-threadeding.
+        Justification: Atomicity is required for multi-threading.
         Enables concurrent downloads / index updates.
         Without a lock, threads could read the same ID before incrementing, causing collisions.
         """
@@ -126,7 +126,7 @@ class DatasetLoader(ABC):
         with cls._id_lock:
             cls._next_id = next_id
 
-    def _read_max_id(self) -> None:
+    def _read_max_id(self) -> int:
         """Helper for consume_next_id to initialize _next_id using the index file saved on disk.
         @return  The highest book ID currently in index.csv (or 0).
         @details
