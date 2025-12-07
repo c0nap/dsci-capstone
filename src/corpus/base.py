@@ -98,52 +98,42 @@ class DatasetLoader(ABC):
     # Global Index Management (Thread-Safe)
     # --------------------------------------------------
     _id_lock = threading.Lock()
-    _current_global_id = None
-    
-    def _get_next_id(self) -> int:
+    _next_id: int = None
+
+    def consume_next_id(self) -> int:
         """Get next available book ID safely across multiple threads.
         @return  Next unique integer ID.
         @details
-        CRITICAL: ATOMICITY REQUIRED FOR MULTI-THREADING.
-        When running parallel downloads (e.g., ThreadPoolExecutor), multiple 
-        threads request IDs simultaneously. Without a Mutex (Lock), 
-        threads could read the same ID before incrementing, causing collisions.
+        Justification: Atomicity is required for multi-threadeding.
+        Enables concurrent downloads / index updates.
+        Without a lock, threads could read the same ID before incrementing, causing collisions.
         """
         with self._id_lock:
             # Lazy Initialization: Hydrate state on first access
-            if self._current_global_id is None:
-                self._current_global_id = self._initialize_id_counter()
+            if self._next_id is None:
+                self._next_id = self._read_max_id()
             
             # Increment and return
-            self._current_global_id += 1
-            return self._current_global_id
+            self._next_id += 1
+            return self._next_id
 
     @classmethod
-    def _set_next_id(cls, next_id: int) -> None:
+    def _set_last_id(cls, next_id: int) -> None:
         """Manually update the global counter.
         @param next_id  The integer value to set the counter to.
-        @details
-        Useful for maintenance tasks like 'reindex_rows' which compress the 
-        ID sequence. Using this helper ensures the thread lock is respected 
-        during manual updates.
+        @details  Using this helper ensures the thread lock is respected during manual updates.
         """
         with cls._id_lock:
-            cls._current_global_id = next_id
+            cls._next_id = next_id
 
-    def _initialize_id_counter(self) -> int:
-        """Hydrate in-memory counter from the filesystem.
+    def _read_max_id(self) -> None:
+        """Helper for consume_next_id to initialize _next_id using the index file saved on disk.
         @return  The highest book ID currently in index.csv (or 0).
         @details
-        JUSTIFICATION:
-        Since we are using an in-memory counter (for speed/thread-safety), 
-        we lose state when the program stops. This function scans the 
-        single source of truth (index.csv) at startup to determine the 
-        'High Water Mark', ensuring we continue numbering where we left off 
-        rather than overwriting existing IDs starting at 1.
+        Necessary to continue numbering where we left off, rather than overwriting existing IDs starting at 1.
         """
         if not os.path.exists(self.INDEX_FILE):
             return 0
-        
         try:
             # We only need the book_id column, which is fast to load
             df = read_csv(self.INDEX_FILE, usecols=['book_id'])
@@ -234,4 +224,4 @@ def reindex_rows() -> None:
         df.at[idx, 'text_path'] = new_path
     df = df.sort_values('book_id').reset_index(drop=True)
     save_as_index(df)
-    DatasetLoader._increment_id(len(df))
+    DatasetLoader._set_last_id(len(df))
