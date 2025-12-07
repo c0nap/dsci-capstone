@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from dotenv import load_dotenv
 from neo4j.graph import Node, Relationship
-from neomodel import config, db
+from neomodel import db, get_config
 import os
 from pandas import DataFrame, Series
 import re
@@ -26,7 +26,8 @@ class GraphConnector(DatabaseConnector):
         database = os.environ["DB_NAME"]
         super().configure("NEO4J", database)
         # Connect neomodel - URL never needs to change for Neo4j
-        config.DATABASE_URL = self.connection_string
+        config = get_config()
+        config.database_url = self.connection_string
 
         ## The name of a graph in the database; keeps queries short and readable, and matches the `kg` node property.
         self._graph_name: Optional[str] = "default"
@@ -84,7 +85,7 @@ class GraphConnector(DatabaseConnector):
             try:  # Create nodes, insert dummy data, and use get_dataframe
                 tmp_kg = "test_graph"
                 with self.temp_graph(tmp_kg):
-                    query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
+                    query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) DETACH DELETE n"
                     self.execute_query(query, _filter_results=False)
                     query = f"""CREATE (n1:TestPerson {{kg: '{self._graph_name}', name: 'Alice', age: 30}})
                                 CREATE (n2:TestPerson {{kg: '{self._graph_name}', name: 'Bob', age: 25}}) RETURN n1, n2"""
@@ -93,7 +94,7 @@ class GraphConnector(DatabaseConnector):
                     if df is None:
                         raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, Log.msg_none_df("graph", {tmp_kg}))
                     check_values([len(df)], [2], self.verbose, Log.gr_db, raise_error=True)
-                    query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) WHERE {self.NOT_DUMMY_()} DETACH DELETE n"
+                    query = f"MATCH (n:TestPerson {self.SAME_DB_KG_()}) DETACH DELETE n"
                     self.execute_query(query, _filter_results=False)
             except Exception as e:
                 raise Log.Failure(Log.gr_db + Log.test_ops + Log.test_df, Log.msg_unknown_error) from e
@@ -282,15 +283,12 @@ class GraphConnector(DatabaseConnector):
             # UNION automatically handles duplicates, and we only RETURN n or r, never m.
             query = f"""
             MATCH (n {self.SAME_DB_KG_()})
-            WHERE {self.NOT_DUMMY_('n')}
             RETURN n AS element
             UNION
             MATCH (n {self.SAME_DB_KG_()})-[r]->(m)
-            WHERE {self.NOT_DUMMY_('n')}
             RETURN r AS element
             UNION
             MATCH (n)-[r]->(m {self.SAME_DB_KG_()})
-            WHERE {self.NOT_DUMMY_('m')}
             RETURN r AS element
             """
         df = self.execute_query(query)

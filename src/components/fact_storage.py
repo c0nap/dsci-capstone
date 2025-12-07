@@ -1,15 +1,14 @@
 from pandas import concat, DataFrame, option_context
 import random
 import re
+import spacy
+from src.components.relation_extraction import Triple
 from src.connectors.graph import GraphConnector
 from src.util import Log
-from typing import Any, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Dict, List, Optional, Tuple
 
 
-class Triple(TypedDict):
-    s: str
-    r: str
-    o: str
+nlp = None  # module-level cache for lazy-loaded NLP model (used by sanitize_node)
 
 
 class KnowledgeGraph:
@@ -34,7 +33,7 @@ class KnowledgeGraph:
         @param subject  A string representing the entity performing an action.
         @param relation  A string describing the action.
         @param object_  A string representing the entity being acted upon.
-        @note  LLM output should be pre-normalized using @ref src.connectors.llm.LLMConnector.normalize_triples.
+        @note  LLM output should be pre-normalized using @ref src.connectors.llm.normalize_to_dict.
         @throws Log.Failure  If the triple cannot be added to our graph database.
         """
         if self._first_insert:
@@ -43,11 +42,12 @@ class KnowledgeGraph:
                 self.database.drop_graph(self.graph_name)
 
         # Normalize already-cleaned inputs for extra Cypher safety
-        relation = re.sub(r"[^A-Za-z0-9_]", "_", relation).upper().strip("_")
-        subject = re.sub(r"[^A-Za-z0-9_ ]", "_", subject).strip("_ ")
-        object_ = re.sub(r"[^A-Za-z0-9_ ]", "_", object_).strip("_ ")
-        if not relation or not subject or not object_:
-            raise Log.Failure(Log.kg, f"Invalid triple: ({subject})-[:{relation}]->({object_})")
+        if not subject or not relation or not object_:
+            Log.warn(Log.kg, f"Invalid triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+            return
+        relation = sanitize_relation(relation)
+        subject = sanitize_node(subject)
+        object_ = sanitize_node(object_)
 
         # Merge subject/object and connect via relation
         query = f"""
@@ -55,7 +55,7 @@ class KnowledgeGraph:
         MERGE (o {{name: '{object_}', kg: '{self.graph_name}'}})
         MERGE (s)-[r:{relation}]->(o)
         RETURN s, r, o
-        """  # NOTE: this query has a DIRECTED relationship! And in error messages
+        """  # NOTE: this query has a DIRECTED relationship! And in log messages.
         try:
             df = self.database.execute_query(query)
             if df is not None:
@@ -65,7 +65,7 @@ class KnowledgeGraph:
 
     def add_triples_json(self, triples_json: List[Triple]) -> None:
         """Add several semantic triples to the graph from pre-verified JSON.
-        @note  JSONshould be pre-normalized using @ref src.connectors.llm.LLMConnector.normalize_triples.
+        @note  JSON should be pre-normalized using @ref src.connectors.llm.normalize_to_dict.
         @param triples_json  A list of Triple dictionaries containing keys: 's', 'r', and 'o'.
         @throws Log.Failure  If any triple cannot be added to the graph database.
         """
@@ -320,7 +320,7 @@ class KnowledgeGraph:
         triples_df = self.get_subgraph_by_nodes(node_ids, id_columns=id_columns)
         return triples_df
 
-    def get_random_walk_sample(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
+    def get_random_walk(self, start_nodes: List[str], walk_length: int, num_walks: int = 1) -> DataFrame:
         """Sample subgraph using directed random walk traversal starting from specified nodes.
         @details
         - More diverse than degree-based filtering (nodes with many edges) and better preserves graph structure.
@@ -510,7 +510,7 @@ class KnowledgeGraph:
             triples_string += f"{subj} {rel} {obj}\n"
         return triples_string
 
-    def to_contextualized_string(self, focus_nodes: Optional[List[str]] = None, top_n: int = 5) -> str:
+    def to_context(self, focus_nodes: Optional[List[str]] = None, top_n: int = 5) -> str:
         """Convert triples to contextualized string grouped by focus nodes.
         @details  Groups triples by subject nodes and formats them with context headers.
         This provides better structure for LLM comprehension compared to flat triple lists.
@@ -632,3 +632,94 @@ class KnowledgeGraph:
         with option_context("display.max_rows", max_rows, "display.max_colwidth", max_col_width):
             print(f"Graph triples ({len(triples_df)} total):")
             print(triples_df)
+
+
+def sanitize_node(label: str) -> str:
+    """Clean node name for Cypher safety.
+    @details
+        - Joins lists/tuples into single string
+        - Replaces invalid characters with underscores
+        - Trims leading/trailing underscores and spaces
+        Used by KG systems before inserting nodes.
+    @param label  Raw node name (subject / object)
+    @return  Sanitized string suitable for node property
+    @throws ValueError  If result is empty after sanitization
+    """
+    # NLP-based cleaning: remove determiners, pronouns, particles
+    global nlp
+    if nlp is None:
+        # Auto-download if missing (Self-healing)
+        try:
+            nlp = spacy.load("en_core_web_sm")
+        except OSError:
+            print("Spacy model 'en_core_web_sm' not found. Downloading...")
+            spacy.cli.download("en_core_web_sm")  # type: ignore[attr-defined]
+            nlp = spacy.load("en_core_web_sm")
+
+    doc = nlp(label)
+    tokens = [token.text for token in doc if token.pos_ not in {"DET", "PRON", "PART"}]  # determiners, pronouns, particles
+    cleaned = " ".join(tokens)
+    if not cleaned:  # Revert back to input: a messy label is better than nothing.
+        cleaned = label
+
+    # Regex: collapse consecutive non-alphanumeric to single underscore, strip edges
+    sanitized = re.sub(r"[^A-Za-z0-9]+", "_", cleaned).strip("_")
+    if not sanitized:
+        raise ValueError(f"Node name cannot be empty after sanitization: '{label}' -> '{cleaned}'")
+    return sanitized
+
+
+def sanitize_relation(label: str, mode: str = "UPPER_CASE", default_relation: str = "RELATED_TO") -> str:
+    """Clean and normalize relation label for knowledge graphs.
+    @details
+        Supports two output modes:
+        - UPPER_CASE: Neo4j convention (e.g., RELATED_TO)
+        - camelCase: OWL/RDF convention (e.g., relatedTo)
+
+        Process:
+        - Replaces invalid characters with underscores
+        - Applies mode-specific casing rules
+        - Falls back to normalized default if empty or invalid start
+
+        Relations must start with alphabetic character.
+        Default relation is automatically normalized to match mode.
+    @param label  Raw relation label (string)
+    @param mode  Output format: "UPPER_CASE" or "camelCase"
+    @param default_relation  Fallback relation name (auto-normalized to mode)
+    @return  Sanitized relation label in specified mode
+    @throws ValueError  If mode is invalid
+    """
+    # 1. PRE-PROCESS: Inject underscores between CamelCase (e.g., "hasPart" -> "has_Part")
+    # This ensures re.split below sees distinct words.
+    pre_split = re.sub(r'([a-z])([A-Z])', r'\1_\2', label)
+
+    # 2. CLEAN: Replace invalid chars, split on underscores/spaces
+    cleaned = re.sub(r"[^A-Za-z0-9_ ]", "_", pre_split)
+    words = [w for w in re.split(r"[_ ]+", cleaned) if w]
+
+    # Normalize default_relation according to mode
+    default_cleaned = re.sub(r"[^A-Za-z0-9_ ]", "_", default_relation)
+    default_words = [w for w in re.split(r"[_ ]+", default_cleaned) if w]
+
+    if mode == "UPPER_CASE":
+        # Neo4j convention: SCREAMING_SNAKE_CASE
+        normalized_default = "_".join(w.upper() for w in default_words) if default_words else "RELATED_TO"
+        if not words:
+            return normalized_default
+
+        sanitized = "_".join(w.upper() for w in words)
+        if not sanitized or not sanitized[0].isalpha():
+            sanitized = normalized_default
+
+    elif mode == "camelCase":
+        # OWL convention: lowerCamelCase
+        normalized_default = default_words[0].lower() + "".join(w.capitalize() for w in default_words[1:]) if default_words else "relatedTo"
+        if not words:
+            return normalized_default
+
+        sanitized = words[0].lower() + "".join(w.capitalize() for w in words[1:])
+        if not sanitized or not sanitized[0].isalpha():
+            sanitized = normalized_default
+    else:
+        raise ValueError(f"Invalid mode: {mode}. Must be 'UPPER_CASE' or 'camelCase'")
+    return sanitized

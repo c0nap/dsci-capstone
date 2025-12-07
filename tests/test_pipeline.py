@@ -4,7 +4,7 @@ from pandas import DataFrame, read_csv
 import pytest
 from src.components.book_conversion import Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from src.core.stages import *
-from src.main import pipeline_A, pipeline_C, pipeline_E
+from src.main import pipeline_A, pipeline_C
 from src.util import Log
 
 
@@ -157,6 +157,94 @@ def book_2_data():
     }
 
 
+@pytest.fixture
+def llm_data(request):
+    """Realistic or malformed LLM response edge cases."""
+    return request.getfixturevalue(request.param)
+
+
+@pytest.fixture
+def llm_edge_case_1():
+    """Save tokens by reusing the original subject."""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":"Cyril","r":"participant in","o":"rapture"},\n'
+            '  {"s":"Mother", "rels": [{"r":"mother","o":"Jane"}, {"r":"speaks","o":"Of course, dear."}]}\n'
+            ']'
+        ),
+        "num_triples": 3,
+    }
+
+
+@pytest.fixture
+def llm_edge_case_2():
+    """Save tokens by providing multiple subjects."""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":"they","r":"said","o":"Oh!"},\n'
+            '  {"s":["Robert","Anthea"],"r":"held","o":"their breath"}\n'
+            ']'
+        ),
+        "num_triples": 3,
+    }
+
+
+@pytest.fixture
+def llm_edge_case_3():
+    """Combine subject: List[str] and relation-object: List[Dict[str, str]]"""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":["Cyril","Jane"], "rels": [{"r":"feels","o":"cold"}, {"r":"is","o":"uncomfortable"}]}\n'
+            ']'
+        ),
+        "num_triples": 4,
+    }
+
+
+@pytest.fixture
+def llm_edge_case_4():
+    """Same-length lists are also parsable."""
+    return {
+        "llm_triples_json": (
+            '{\n'
+            '  "s": ["egg","Cyril","Phoenix"],\n'
+            '  "r": ["location","speaks","speaks"],\n'
+            '  "o": ["altar","Oh","Ah, hum!"]\n'
+            '}'
+        ),
+        "num_triples": 3,
+    }
+
+
+@pytest.fixture
+def llm_edge_case_5():
+    """Mismatched-length lists: inferred as Cartesian Product."""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":["Robert","Anthea","Cyril"],"r":["held","felt chilled by"],"o":["breath","the handle"]}\n'
+            ']'
+        ),
+        "num_triples": 12,
+    }
+
+
+@pytest.fixture
+def llm_edge_case_6():
+    """Matched-length lists: inferred as Columnar (Zip)."""
+    return {
+        "llm_triples_json": (
+            '[\n'
+            '  {"s":["Robert","Anthea"],"r":["held","felt chilled by"],"o":["breath","the handle"]}\n'
+            ']'
+        ),
+        "num_triples": 2,
+    }
+
+
 ##########################################################################
 # Tests
 ##########################################################################
@@ -297,6 +385,7 @@ def test_job_13_concatenate_triples(book_data):
 
 @pytest.mark.task
 @pytest.mark.stage_B
+@pytest.mark.llm
 @pytest.mark.order(15)
 @pytest.mark.dependency(name="job_15_minimal", scope="session")
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
@@ -319,16 +408,28 @@ def test_job_15_sanitize_triples_llm(book_data):
         assert isinstance(triple["o"], str) and len(triple["o"]) > 0
 
 
-# @pytest.mark.task
-# @pytest.mark.stage_B
-# @pytest.mark.order(15)
-# @pytest.mark.dependency(name="task_15_comprehensive", scope="session", depends=["job_15_minimal"])
-# def test_job_15_comprehensive(book_data):
-#     """Test parsing realistic LLM JSON output."""
-#     triples = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
+@pytest.mark.task
+@pytest.mark.stage_B
+@pytest.mark.llm
+@pytest.mark.order(16)
+@pytest.mark.dependency(name="job_15_comprehensive", scope="session", depends=["job_15_minimal"])
+@pytest.mark.parametrize("llm_data", ["llm_edge_case_1", "llm_edge_case_2", "llm_edge_case_3", "llm_edge_case_4", "llm_edge_case_5"], indirect=True)
+def test_job_15_comprehensive(llm_data):
+    """Test parsing malformed LLM output."""
+    llm_output = llm_data["llm_triples_json"]
+    num_triples = llm_data["num_triples"]
+    triples = task_15_sanitize_triples_llm(llm_output)
 
-#     # TODO - normalize_triples with malformed llm output
-#     pass
+    assert isinstance(triples, list)
+    assert len(triples) == num_triples  # Matches fixture data
+    # Verify structure: each triple has s, r, o keys
+    for triple in triples:
+        assert "s" in triple
+        assert "r" in triple
+        assert "o" in triple
+        assert isinstance(triple["s"], str) and len(triple["s"]) > 0
+        assert isinstance(triple["r"], str) and len(triple["r"]) > 0
+        assert isinstance(triple["o"], str) and len(triple["o"]) > 0
 
 
 @pytest.mark.task
@@ -363,7 +464,7 @@ def test_job_21_describe_graph(main_graph, book_data):
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
     task_20_send_triples(triples_json)
 
-    edge_count_df = group_21_1_describe_graph()
+    edge_count_df = task_21_1_describe_graph()
 
     assert isinstance(edge_count_df, DataFrame)
     assert "node_name" in edge_count_df.columns
@@ -473,7 +574,7 @@ def test_pipeline_A_from_csv():
 @pytest.mark.dependency(name="stage_C_minimal", scope="session", depends=["job_20", "job_22"])
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_pipeline_C_minimal(main_graph, book_data):
-    """Test running pipeline_C with smoke test data."""
+    """Test running pipeline_C on checkpoint data."""
     json_triples = json.loads(book_data["llm_triples_json"])
 
     triples_string = pipeline_C(json_triples)
@@ -487,45 +588,3 @@ def test_pipeline_C_minimal(main_graph, book_data):
 
     assert isinstance(triples_string, str)
     assert len(triples_string) > 0
-
-
-@pytest.mark.pipeline
-@pytest.mark.stage_E
-@pytest.mark.order(150)
-@pytest.mark.dependency(name="stage_E_minimal", scope="session")
-@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_pipeline_E_minimal_summary_only(book_data):
-    """Test running pipeline_E with summary-only mode."""
-    summary = "The children discover a magical carpet with a Phoenix."
-    book_title = book_data["book_title"]
-    book_id = str(book_data["book_id"])
-
-    # TODO: Cannot verify output - need task_40_post_payload implementation
-
-    # Test summary-only path (no chunk parameter)
-    pipeline_E(summary, book_title, book_id)
-
-    assert True  # Placeholder - verifies no exceptions raised
-
-
-@pytest.mark.pipeline
-@pytest.mark.stage_E
-@pytest.mark.order(151)
-@pytest.mark.dependency(name="stage_E_payload", scope="session", depends=["stage_E_minimal"])
-@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_pipeline_E_minimal_full_payload(book_data):
-    """Test running pipeline_E with full payload including metrics."""
-    summary = "The children discover a magical carpet with a Phoenix."
-    book_title = book_data["book_title"]
-    book_id = str(book_data["book_id"])
-    chunk_text = book_data["sample_chunk"].text
-    gold_summary = "Children find magical carpet."
-    bookscore = 0.85
-    questeval = 0.92
-
-    # TODO: Cannot verify output - need task_40_post_payload implementation
-
-    # Test full payload path
-    pipeline_E(summary, book_title, book_id, chunk_text, gold_summary, bookscore, questeval)
-
-    assert True  # Placeholder - verifies no exceptions raised

@@ -77,7 +77,7 @@ docker-start:
 	# remove the container if it exists; silence errors if it doesn’t
 	docker rm -f $(NAME) 2>/dev/null || true
 	# create container with optional args and entrypoint
-	docker create --name $(NAME) -p $(PORT) $(IMG) $(CMD)
+	docker create --name $(NAME) -p $(PORT) $(MEM) $(IMG) $(CMD)
 	# add a secondary network to container (docker compose compatible) and apply service_name as alias
 	make docker-network   # if does not exist
 	docker network connect --alias $(HOST) $(NETWORK) $(NAME)
@@ -96,7 +96,7 @@ docker-blazor:
 docker-questeval:
 	make docker-start NAME="container-qeval" IMG="dsci-cap-img-qeval-dev:latest" \
 		HOST="qeval_worker" NETWORK="capstone_default" PORT="5001:5001" \
-		DETACHED=$(DETACHED) CMD="$(CMD)"
+		MEM="--memory=8g" DETACHED=$(DETACHED) CMD="$(CMD)"
 docker-bookscore:
 	make docker-start NAME="container-bscore" IMG="dsci-cap-img-bscore-dev:latest" \
 		HOST="bscore_worker" NETWORK="capstone_default" PORT="5002:5002" \
@@ -1079,6 +1079,17 @@ appsettings-docker:
 		fi
 		
 		# 8. Replace the host found in the JSON ($$JSON_HOST) with the final mapped value ($$FINAL_MAPPED)
-		replace_host_in_connstring "web-app/BlazorApp/appsettings.Docker.json" "ConnectionStrings.$(APPSET_DOCKER)" "$$FINAL_MAPPED"
+		replace_host_in_connstring "web-app/BlazorApp/appsettings.Docker.json" "ConnectionStrings.$(SERVICE_KEY)" "$$FINAL_MAPPED"
 	done
+
+	# 9. After the for SERVICE_KEY loop, add credential injection:
+	NEO4J_USER=$$(awk -F= '/^NEO4J_USERNAME=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	NEO4J_PASS=$$(awk -F= '/^NEO4J_PASSWORD=/{print $$2}' $(ENV_FILE) | tr -d '\r')
+	if [ -n "$$NEO4J_USER" ]; then
+	    replace_json_value "$(APPSET_DOCKER)" "Neo4j.Username" "$$NEO4J_USER"
+	fi
+	if [ -n "$$NEO4J_PASS" ]; then
+	    replace_json_value "$(APPSET_DOCKER)" "Neo4j.Password" "$$NEO4J_PASS"
+	fi
+
 	echo "✓ Generated $(APPSET_DOCKER)"

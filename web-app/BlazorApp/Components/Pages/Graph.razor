@@ -162,7 +162,7 @@
         try {
             //Logger.LogInformation("Running Cypher query...");
             var result = await session.RunAsync(@"
-                MATCH (n)-[r]->(m)
+                MATCH (n {db: 'conan_capstone', kg: 'main'})-[r]->(m {db: 'conan_capstone', kg: 'main'})
                 RETURN n, r, m
                 LIMIT 50
             ");

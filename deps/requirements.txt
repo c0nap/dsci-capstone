@@ -28,6 +28,8 @@ openai
 langchain
 langchain-openai
 spacy
+textacy
+stanza
 transformers
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch

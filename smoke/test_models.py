@@ -1,7 +1,9 @@
+from conftest import optional_param
 import pytest
 from src.components.book_conversion import Chunk
 from src.core.stages import *
-from src.main import pipeline_B, pipeline_D
+from src.main import pipeline_B, pipeline_D, pipeline_E
+from typing import Any, List
 
 
 @pytest.fixture
@@ -31,8 +33,11 @@ def book_data():
     )
 
     return {
+        "book_id": 1,
+        "book_title": "Five Children and It",
+        "summary": "The children discover a magical carpet with a Phoenix.",
+        "gold_summary": "Children find magical carpet.",
         "chunk": chunk,
-        "chunk_text": chunk_text,
         "rebel_triples": [
             "children  had  carpet",
             "carpet  arrived  nursery",
@@ -44,57 +49,105 @@ def book_data():
             "carpet  takes_to  anywhere",
             "Phoenix  recommends  Egypt",
             "children  want  adventures",
-        ],
+        ],  # used to test LLM triple sanitization
         "llm_triples_json": llm_triples_json,
+        "bookscore": 0.85,
+        "questeval": 0.92,
     }
 
 
+@pytest.fixture
+def rebel():
+    """Fixture returning the REBEL extraction function."""
+    return task_12_relation_extraction_rebel
+
+
+@pytest.fixture
+def openie():
+    """Fixture returning the OpenIE extraction function."""
+    return task_12_relation_extraction_openie
+
+
+@pytest.fixture
+def textacy():
+    """Fixture returning the Textacy extraction function."""
+    return task_12_relation_extraction_textacy
+
+
+@pytest.fixture
+def relation_extraction_task(request):
+    """Meta-fixture that returns the backend function specified by the parameter."""
+    return request.getfixturevalue(request.param)
+
+
+PARAMS_RELATION_EXTRACTORS: List[Any] = [  # ParameterSet is internal to PyTest
+    optional_param("rebel", "transformers"),
+    optional_param("openie", "stanza"),
+    pytest.param("textacy"),  # test always runs (no dependency)
+]
+
+
+@pytest.fixture
+def langchain():
+    """Fixture returning the LangChain LLM API."""
+    return task_14_relation_extraction_llm_langchain
+
+
+@pytest.fixture
+def openai():
+    """Fixture returning the OpenAI LLM API."""
+    return task_14_relation_extraction_llm_openai
+
+
+@pytest.fixture
+def llm_prompt_task(request):
+    """Meta-fixture that returns the backend function specified by the parameter."""
+    return request.getfixturevalue(request.param)
+
+
 @pytest.mark.task
 @pytest.mark.stage_B
+@pytest.mark.re
 @pytest.mark.smoke
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="job_12_rebel_minimal", scope="session")
-def test_job_12_rebel_minimal():
-    """Runs REBEL on a basic example."""
+@pytest.mark.dependency(name="job_12_extraction_minimal", scope="session")
+@pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
+def test_job_12_extraction_minimal(relation_extraction_task):
+    """Parametrized test to verify all extractors return a standard list of Triple dicts.
+    @note Relying on default args ensures REBEL parses output to Triples.
+    """
     sample_text = "Alice met Bob in the forest. Bob then went to the village."
-    extracted = task_12_relation_extraction_rebel(sample_text, parse_tuples=False)
+    extracted = relation_extraction_task(sample_text)
     assert isinstance(extracted, list)
-    assert len(extracted) >= 0
-    assert all(isinstance(triple, str) for triple in extracted)
-    # Verify REBEL's tuple delimiter present in raw output
-    assert any("  " in triple for triple in extracted)
+
+    # If the model extracted anything, ensure it conforms to the standard Triple dict
+    if len(extracted) > 0:
+        triple = extracted[0]
+        assert isinstance(triple, dict), f"Expected dict output, got {type(triple)}"
+        assert all(key in triple for key in ["s", "r", "o"]), "Triple must have keys 's', 'r', and 'o'"
+        assert all(isinstance(val, str) for val in triple.values())
 
 
 @pytest.mark.task
 @pytest.mark.stage_B
+@pytest.mark.re
 @pytest.mark.smoke
 @pytest.mark.order(12)
-@pytest.mark.dependency(name="job_12_rebel_chunk", scope="session", depends=["job_12_rebel_minimal"])
-def test_job_12_rebel_chunk(book_data):
-    """Runs REBEL on realistic pipeline data. Do not convert to tuples yet."""
-    extracted = task_12_relation_extraction_rebel(book_data["chunk_text"], parse_tuples=False)
+@pytest.mark.dependency(name="job_12_extraction_chunk", scope="session", depends=["job_12_extraction_minimal"])
+@pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
+def test_job_12_extraction(book_data, relation_extraction_task):
+    """Runs all extractors on realistic pipeline data."""
+    extracted = relation_extraction_task(book_data["chunk"].text)
 
     assert isinstance(extracted, list)
-    assert len(extracted) >= 5  # Realistic chunk should yield multiple triples
-    assert all(isinstance(triple, str) for triple in extracted)
-    # Verify REBEL's tuple delimiter present in raw output
-    assert any("  " in triple for triple in extracted)
+    # Flexible check: we expect some results, but exact count depends on the model
+    assert len(extracted) >= 1
+    assert all(isinstance(t, dict) for t in extracted)
 
-
-@pytest.mark.task
-@pytest.mark.stage_B
-@pytest.mark.smoke
-@pytest.mark.order(12)
-@pytest.mark.dependency(name="job_12_rebel_tuples", scope="session", depends=["job_12_rebel_minimal", "job_12_rebel_chunk"])
-def test_job_12_rebel_tuples(book_data):
-    """Runs REBEL with tuple parsing on realistic data."""
-    extracted = task_12_relation_extraction_rebel(book_data["chunk_text"], parse_tuples=True)
-
-    assert isinstance(extracted, list)
-    assert len(extracted) >= 5
-    assert all(isinstance(triple, tuple) and len(triple) == 3 for triple in extracted)
-    # Verify tuple structure: (subject, relation, object)
-    for subj, rel, obj in extracted:
+    for triple in extracted:
+        subj = triple["s"]
+        rel = triple["r"]
+        obj = triple["o"]
         assert isinstance(subj, str) and len(subj) > 0
         assert isinstance(rel, str) and len(rel) > 0
         assert isinstance(obj, str) and len(obj) > 0
@@ -102,18 +155,20 @@ def test_job_12_rebel_tuples(book_data):
 
 @pytest.mark.task
 @pytest.mark.stage_B
+@pytest.mark.llm
 @pytest.mark.smoke
 @pytest.mark.order(14)
 @pytest.mark.dependency(name="job_14_llm_minimal", scope="session")
-def test_job_14_llm_minimal(book_data):
+@pytest.mark.parametrize("llm_prompt_task", ["langchain", "openai"], indirect=True)
+def test_job_14_llm_minimal(book_data, llm_prompt_task):
     """Test LLM-based triple sanitization with realistic data."""
     triples_string = "\n".join(book_data["rebel_triples"])
 
-    prompt, llm_output = task_14_relation_extraction_llm(triples_string, book_data["chunk_text"])
+    prompt, llm_output = llm_prompt_task(triples_string, book_data["chunk"].text)
 
     assert isinstance(prompt, str)
     assert triples_string in prompt
-    assert book_data["chunk_text"] in prompt
+    assert book_data["chunk"].text in prompt
     assert isinstance(llm_output, str)
     assert len(llm_output) > 0
 
@@ -122,7 +177,7 @@ def test_job_14_llm_minimal(book_data):
 @pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(120)
-@pytest.mark.dependency(name="stage_B_minimal", scope="session", depends=["job_14_llm_minimal", "job_12_rebel_tuples"])
+@pytest.mark.dependency(name="stage_B_minimal", scope="session", depends=["job_14_llm_minimal", "job_12_extraction_chunk"])
 def test_pipeline_B_minimal(docs_db, book_data):
     """Test running the aggregate pipeline_B on smoke test data."""
     collection_name = "example_chunks"
@@ -154,11 +209,11 @@ def test_pipeline_B_minimal(docs_db, book_data):
 @pytest.mark.stage_D
 @pytest.mark.smoke
 @pytest.mark.order(140)
-@pytest.mark.dependency(name="stage_D_minimal", scope="session", depends=["pipeline_B_minimal"])
+@pytest.mark.dependency(name="stage_D_minimal", scope="session", depends=["stage_B_minimal"])
 def test_pipeline_D_minimal(docs_db, book_data):
     """Test running pipeline_D with smoke test data."""
     collection_name = "test_pipeline_d_smoke"
-    chunk = book_data["sample_chunk"]
+    chunk = book_data["chunk"]
     triples_string = "\n".join(book_data["rebel_triples"])
 
     # Insert chunk first - verified by pipeline_B_minimal
@@ -175,3 +230,47 @@ def test_pipeline_D_minimal(docs_db, book_data):
     doc = collection.find_one({"_id": chunk.get_chunk_id()})
     assert doc is not None
     assert doc["summary"] == summary
+
+
+@pytest.mark.pipeline
+@pytest.mark.stage_E
+@pytest.mark.smoke
+@pytest.mark.order(150)
+@pytest.mark.dependency(name="stage_E_minimal", scope="session")
+def test_pipeline_E_minimal_summary_only(book_data):
+    """Test running pipeline_E with summary-only mode.
+    @note  Requires Blazor to accept POST."""
+    summary = book_data["summary"]
+    book_title = book_data["book_title"]
+    book_id = str(book_data["book_id"])
+
+    # TODO: Cannot verify output - need task_40_post_payload implementation
+
+    # Test summary-only path (no chunk parameter)
+    pipeline_E(summary, book_title, book_id)
+
+    assert True  # Placeholder - verifies no exceptions raised
+
+
+@pytest.mark.pipeline
+@pytest.mark.stage_E
+@pytest.mark.smoke
+@pytest.mark.order(151)
+@pytest.mark.dependency(name="stage_E_payload", scope="session", depends=["stage_E_minimal"])
+def test_pipeline_E_minimal_full_payload(book_data):
+    """Test running pipeline_E with full payload including metrics.
+    @note  Requires Blazor to accept POST."""
+    summary = book_data["summary"]
+    book_title = book_data["book_title"]
+    book_id = str(book_data["book_id"])
+    chunk_text = book_data["chunk"].text
+    gold_summary = book_data["gold_summary"]
+    bookscore = book_data["bookscore"]
+    questeval = book_data["questeval"]
+
+    # TODO: Cannot verify output - need task_40_post_payload implementation
+
+    # Test full payload path
+    pipeline_E(summary, book_title, book_id, chunk_text, gold_summary, bookscore, questeval)
+
+    assert True  # Placeholder - verifies no exceptions raised

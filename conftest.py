@@ -1,3 +1,4 @@
+import importlib.util
 import pytest
 from src.components.fact_storage import KnowledgeGraph
 from src.connectors.document import DocumentConnector
@@ -8,21 +9,33 @@ from src.util import Log
 from typing import Any, Generator
 
 
-# Command-line flags for pytest
-# Usage: pytest --log-success --no-log-colors .
 def pytest_addoption(parser: Any) -> None:
+    """Command-line flags for pytest
+    @details  Usage: pytest --log-success --no-log-colors"""
     parser.addoption("--log-success", action="store_true", default=False)
     parser.addoption("--no-log-colors", action="store_false", default=True)
 
 
-@pytest.fixture(scope="session")
+def optional_param(name: str, package: str) -> Any:  # ParameterSet is internal to PyTest
+    """Return a pytest.param that is skipped if the given package is missing.
+    @param name  The fixture name to include in the parameter list.
+    @param package  The name of a Python package to check for.
+    @return  PyTest parameter with the skip flag set if package is not installed."""
+    exists = importlib.util.find_spec(package) is not None
+    return pytest.param(name, marks=pytest.mark.skipif(not exists, reason=f"{package} not installed"))
+
+
+@pytest.fixture(scope="session", autouse=True)
 def session(request: pytest.FixtureRequest) -> Generator[Session, None, None]:
-    """Fixture to create session."""
+    """Fixture to create session.
+    @details
+    - autouse=True ensures Session.setup() runs once for the whole suite.
+    - See smoke test for pipeline_E: helper function imports session, but the test doesn't ask for it."""
     # Parse control args
     verbose = request.config.getoption("--log-success")
     Log.USE_COLORS = request.config.getoption("--no-log-colors")
-    _session = get_session()
-    _session.verbose = verbose
+    _session = get_session(verbose=verbose)
+    _session.setup()
     yield _session
 
 
