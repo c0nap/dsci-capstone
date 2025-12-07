@@ -42,7 +42,6 @@ def normalize_title(title: str) -> str:
 # --------------------------------------------------
 # Helper Functions - Gutenberg ID / Gutendex
 # --------------------------------------------------
-
 def extract_gutenberg_id(url: str) -> Optional[int]:
     """Extract the numeric ID from a Gutenberg URL.
     @param url  String provided by a dataset, e.g. 'https://www.gutenberg.org/ebooks/12345'
@@ -50,15 +49,19 @@ def extract_gutenberg_id(url: str) -> Optional[int]:
     match = re.search(r'gutenberg\.org/ebooks/(\d+)', url or "")
     return int(match.group(1)) if match else None
 
+
 def gutendex_lookup_id(gutenberg_id: int) -> Optional[Dict[str, Any]]:
     """Fetch metadata for a specific Gutenberg ID.
     @param gutenberg_id  The numeric ID of the book.
     @return  Metadata dict with keys: gutenberg_id, title, author, language, text_url.
-        Returns None if the ID does not exist or API fails.
-    """
-    url = f"{GUTENDEX_API}/{gutenberg_id}"
-    results = _request_gutendex(url)
-    return _unpack_gutendex(results.json())
+        Returns None if the ID does not exist or API fails."""
+    try:
+        url = f"{GUTENDEX_API}/{gutenberg_id}"
+        results = _request_gutendex(url)
+        return _unpack_gutendex(results[0]) if results else None
+    except (requests.RequestException, IndexError):
+        return None
+
 
 def gutendex_search_title(query: str, author: Optional[str] = None, min_fuzz: int = 85) -> Optional[Dict[str, Any]]:
     """Search for a book by title (and optionally author) with fuzzy verification.
@@ -66,31 +69,44 @@ def gutendex_search_title(query: str, author: Optional[str] = None, min_fuzz: in
     @param author  Optional author name to filter/rank results.
     @param min_fuzz  Minimum fuzzy match score (0-100) required to accept a result.
     @return  Metadata dict with keys: gutenberg_id, title, author, language, text_url.
-        Returns None if no confident match is found.
-    """
-    if not query:  # Not defensive: Prevent bad request if bad input
+        Returns None if no confident match is found."""
+    if not query:
         return None
-    candidates = _request_gutendex(url=GUTENDEX_API, params={"search": query, "languages": "en"})
-    if not candidates:
+    
+    try:
+        results = _request_gutendex(GUTENDEX_API, params={"search": query, "languages": "en"})
+        return _filter_candidates(results, query, author, min_fuzz)
+    except requests.RequestException:
         return None
-    return _filter_candidates(candidates, query, author, min_fuzz)
 
-def _request_gutendex(url: str, params: Dict[str, Any] = {}, timeout: int = 10, retry_delay: int = 2) -> d:
-    """ """
+
+def _request_gutendex(url: str, params: Dict[str, Any] = None, timeout: int = 10) -> List[dict]:
+    """Fetch from Gutendex API with single retry on rate-limit.
+    @param url  Full API endpoint.
+    @param params  Query parameters (optional).
+    @param timeout  Request timeout in seconds.
+    @return  List of result dicts from API response.
+    @raises requests.RequestException  On HTTP errors or timeout."""
+    params = params or {}
+    
     response = requests.get(url, params=params, timeout=timeout)
-    if resp.status_code == 429:  # throttled: too many requests
-        time.sleep(retry_delay)
+    
+    # Single retry on throttle, then propagate
+    if response.status_code == 429:  # throttled: too many requests
+        time.sleep(2)
         response = requests.get(url, params=params, timeout=timeout)
-    if resp.status_code == 200:  # success
-        results = response.json().get("results", [])
-    return results
+    
+    response.raise_for_status()
+    return response.json().get("results", [])
+
 
 def _unpack_gutendex(data: dict) -> dict:
-    """Normalize Gutendex JSON to our schema."""
-    authors = [a.get("name", "") for a in data.get("authors", [])]
+    """Normalize Gutendex JSON to internal schema.
+    @param data  Raw JSON object from Gutendex API.
+    @return  Dict with keys: gutenberg_id, title, author, language, text_url."""
+    authors = [a["name"] for a in data.get("authors", []) if "name" in a]
     formats = data.get("formats", {})
     
-    # Priority: utf-8 -> ascii -> any plain text
     text_url = (formats.get("text/plain; charset=utf-8") or 
                 formats.get("text/plain; charset=us-ascii") or 
                 formats.get("text/plain"))
@@ -104,11 +120,13 @@ def _unpack_gutendex(data: dict) -> dict:
     }
 
 
-def _filter_candidates(candidates: List[dict], 
-                       query: str, 
-                       author: str | None, 
-                       min_score: int) -> Optional[dict]:
-    """Select best match from candidates using fuzzy logic."""
+def _filter_candidates(candidates: List[dict], query: str, author: Optional[str], min_score: int) -> Optional[dict]:
+    """Select best match from candidates using fuzzy logic.
+    @param candidates  List of raw Gutendex book dicts.
+    @param query  Title to match against.
+    @param author  Optional author name to filter results.
+    @param min_score  Minimum fuzzy match score (0-100) to accept.
+    @return  Normalized metadata dict or None if no match meets threshold."""
     if not candidates:
         return None
 
@@ -122,14 +140,13 @@ def _filter_candidates(candidates: List[dict],
     for cand in candidates:
         # 1. Author Check (if provided)
         if clean_author:
-            cand_authors = [a.get("name", "").lower() for a in cand.get("authors", [])]
-            # Return None if no author matches loosely (score < 70)
+            cand_authors = [a["name"].lower() for a in cand.get("authors", []) if "name" in a]
+            # Skip candidate if no author matches loosely (score < 70)
             if not process.extractOne(clean_author, cand_authors, scorer=fuzz.token_set_ratio, score_cutoff=70):
                 continue
 
         # 2. Title Score
-        cand_title = cand.get("title", "")
-        score = fuzz.token_sort_ratio(clean_query, cand_title)
+        score = fuzz.token_sort_ratio(clean_query, cand.get("title", ""))
         
         if score > best_score:
             best_score = score
