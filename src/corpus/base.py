@@ -3,6 +3,7 @@ from pandas import DataFrame, read_csv, concat
 from typing import Optional, Iterator
 import os
 import shutil
+import threading
 
 
 class DatasetLoader(ABC):
@@ -74,34 +75,62 @@ class DatasetLoader(ABC):
         save_as_index(df)
     
     # --------------------------------------------------
-    # Global Index Management
+    # Global Index Management (Thread-Safe)
     # --------------------------------------------------
-    
+    _id_lock = threading.Lock()
+    _current_global_id = None
     def _get_next_id(self) -> int:
-        """Get next available book ID and increment counter.
-        @return  Next book ID as integer.
+        """Get next available book ID safely across multiple threads.
+        @return  Next unique integer ID.
         @details
-        Atomically reads and increments the global ID counter in next_id.txt.
-        Creates the file with ID 1 if it doesn't exist.
+        CRITICAL: ATOMICITY REQUIRED FOR MULTI-THREADING.
+        When running parallel downloads (e.g., ThreadPoolExecutor), multiple 
+        threads request IDs simultaneously. Without a Mutex (Lock), 
+        threads could read the same ID before incrementing, causing collisions.
         """
-        os.makedirs(os.path.dirname(self.NEXT_ID_FILE), exist_ok=True)
-        
-        if not os.path.exists(self.NEXT_ID_FILE):
-            with open(self.NEXT_ID_FILE, "w") as f:
-                f.write("1")
-            return 1
-        
-        with open(self.NEXT_ID_FILE, "r") as f:
-            current_id = int(f.read().strip())
-        self._increment_id(current_id)
-        return current_id
+        with self._id_lock:
+            # Lazy Initialization: Hydrate state on first access
+            if self._current_global_id is None:
+                self._current_global_id = self._initialize_id_counter()
+            
+            # Increment and return
+            self._current_global_id += 1
+            return self._current_global_id
 
-    @staticmethod
-    def _increment_id(current_id: int) -> None:
-        """Increment counter by writing to the shared file.
-        @param current_id  Will write current_id + 1."""
-        with open(self.NEXT_ID_FILE, "w") as f:
-            f.write(str(current_id + 1))
+    @classmethod
+    def _set_next_id(cls, next_id: int) -> None:
+        """Manually update the global counter.
+        @param next_id  The integer value to set the counter to.
+        @details
+        Useful for maintenance tasks like 'reindex_rows' which compress the 
+        ID sequence. Using this helper ensures the thread lock is respected 
+        during manual updates.
+        """
+        with cls._id_lock:
+            cls._current_global_id = next_id
+
+    def _initialize_id_counter(self) -> int:
+        """Hydrate in-memory counter from the filesystem.
+        @return  The highest book ID currently in index.csv (or 0).
+        @details
+        JUSTIFICATION:
+        Since we are using an in-memory counter (for speed/thread-safety), 
+        we lose state when the program stops. This function scans the 
+        single source of truth (index.csv) at startup to determine the 
+        'High Water Mark', ensuring we continue numbering where we left off 
+        rather than overwriting existing IDs starting at 1.
+        """
+        if not os.path.exists(self.INDEX_FILE):
+            return 0
+        
+        try:
+            # We only need the book_id column, which is fast to load
+            df = read_csv(self.INDEX_FILE, usecols=['book_id'])
+            if df.empty:
+                return 0
+            return int(df['book_id'].max())
+        except (ValueError, KeyError):
+            return 0
     
     def save_text(self, book_id: int, title: str, text: str) -> str:
         """Save text to global texts directory.
