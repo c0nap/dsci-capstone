@@ -776,27 +776,70 @@ def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
     from sentence_transformers import CrossEncoder
     from nltk import sent_tokenize
     import numpy as np
-    
+    import math
+    import itertools
+    from scipy.special import softmax
+
+    # Configuration: sliding window size for premises and threshold for counting entailment
+    window_size = 1        # 1 = use individual source sentences; increase to 2 or 3 to include small context windows
+    entailment_threshold = 0.5  # threshold on entailment probability to count a sentence as 'entailed'
+
+    # Load model (same family as original; consider using v3 variant for better performance)
     model = CrossEncoder('cross-encoder/nli-deberta-base')
+
+    # Tokenize into sentences
     summary_sents = sent_tokenize(summary)
-    
+    source_sents = sent_tokenize(source)
+
     if not summary_sents:
         return {"nli_faithfulness": 0.0}
-    
-    # Prepare pairs: (premise, hypothesis) where premise is source
-    pairs = [(source, sent) for sent in summary_sents]
-    
-    # Get scores: shape (n_sentences, 3) for [contradiction, entailment, neutral]
-    scores = model.predict(pairs)
-    
-    # Get predicted labels (argmax across 3 classes)
-    predicted_labels = np.argmax(scores, axis=1)
-    
-    # Count entailments (label index 1)
-    entailed = np.sum(predicted_labels == 1)
-    faithfulness = entailed / len(summary_sents)
-    
-    return {"nli_faithfulness": float(faithfulness)}
+
+    # Build premises as sliding windows of source sentences (to provide small local context)
+    premises = []
+    if not source_sents:
+        # if source empty, all entailment probs are zero
+        premises = [""]
+    else:
+        for i in range(len(source_sents)):
+            window = source_sents[i:i + window_size]
+            premises.append(" ".join(window))
+
+    # Prepare all (premise, hypothesis) pairs
+    # We'll compute entailment probability for each pair and then take max over premises per hypothesis
+    pairs = []
+    hyp_to_indices = []  # map hypothesis index -> list of row indices in pairs
+    for hi, hyp in enumerate(summary_sents):
+        start_idx = len(pairs)
+        for p in premises:
+            pairs.append((p, hyp))
+        end_idx = len(pairs)
+        hyp_to_indices.append((start_idx, end_idx))
+
+    # Predict logits in batches (CrossEncoder.predict handles batching internally but passing full list is OK for small examples)
+    logits = model.predict(pairs, show_progress_bar=False)  # shape = (len(pairs), 3)
+
+    # Convert logits to probabilities and extract entailment probability (index 1)
+    # Note: label order is [contradiction=0, entailment=1, neutral=2] as documented for these cross-encoders
+    probs = softmax(logits, axis=1)  # shape (N, 3)
+    entail_probs = probs[:, 1]       # probability mass for 'entailment' class
+
+    # For each hypothesis take the max entailment prob across all its premises
+    hyp_entail_probs = []
+    for (start_idx, end_idx) in hyp_to_indices:
+        if end_idx <= start_idx:
+            hyp_entail_probs.append(0.0)
+        else:
+            hyp_entail_probs.append(float(np.max(entail_probs[start_idx:end_idx])))
+
+    # Two reasonable aggregates:
+    #  - continuous score: mean entailment probability across hypotheses
+    #  - fraction_entail: fraction of hypotheses whose max entailment prob >= threshold
+    mean_entail = float(np.mean(hyp_entail_probs))
+    fraction_entail = float(np.mean([1.0 if p >= entailment_threshold else 0.0 for p in hyp_entail_probs]))
+
+    # Return fraction_entail to match your previous 'percent of summary sentences entailed' behavior.
+    return {"nli_faithfulness": fraction_entail}
+
 
 
 def run_readability_delta(summary: str, source: str) -> Dict[str, float]:
