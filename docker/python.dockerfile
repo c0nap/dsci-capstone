@@ -42,7 +42,7 @@ COPY Makefile .
 RUN make env-docker
 RUN mv .env.docker .env
 
-COPY pyproject.toml pytest.ini conftest.py .
+COPY pyproject.toml pytest.ini .
 # Used to merge with time-elapsed data with existing
 COPY logs/elapsed_time.csv logs/
 
