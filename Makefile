@@ -196,15 +196,20 @@ docker-all-main:
 	make docker-python
 
 
-SMARGS ?= -m smoke
-
 # Run expensive smoke tests
+SMARGS ?= -m smoke
 docker-smoke:
 	make docker-python CMD="pytest $(SMARGS) smoke/"
-
 docker-smoke-dev:
 	make docker-build-dev-python
 	make docker-smoke SMARGS="$(SMARGS)"
+
+METARGS ?= -m 'smoke and eval'
+docker-smetrics:
+	make docker-metcore CMD="pytest $(METARGS) smoke/"
+docker-smetrics-dev:
+	make docker-build-dev-metcore
+	make docker-smetrics METARGS="$(METARGS)"
 
 
 ###############################################################################
