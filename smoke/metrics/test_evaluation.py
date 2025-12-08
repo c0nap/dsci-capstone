@@ -84,8 +84,8 @@ def book_data():
             "with pink eyes. The White Rabbit took a watch out of its waistcoat-pocket and "
             "looked at it. Alice followed the White Rabbit and saw it pop down a large rabbit-hole "
             "under the hedge. Alice went down the rabbit-hole after it. The rabbit-hole "
-            "went straight on like a tunnel and then dipped suddenly down. Alice fell very "
-            "slowly down the hole. She landed in a long low hall lit by lamps. The doors "
+            "took Alice straight on like a tunnel and then dipped suddenly down. Alice fell very "
+            "slowly down the hole. Alice landed in a long low hall lit by lamps. Alice saw the doors "
             "were all locked. Alice found a little table made of solid glass with a tiny "
             "golden key on it. Behind a curtain Alice found a door about fifteen inches high. "
             "The key fit the door but Alice could not squeeze through. Alice found a little "
@@ -93,8 +93,8 @@ def book_data():
             "now only ten inches high. But Alice had forgotten the key on the table above. "
             "Alice began crying and shed gallons of tears until there was a large pool. "
             "Alice heard feet and the White Rabbit appeared. The White Rabbit cried about the "
-            "Duchess and dropped his gloves and fan as he ran. Alice picked them up and "
-            "began fanning herself. Alice looked down and found she had put on one of the "
+            "Duchess and dropped his gloves and fan as he ran. Alice picked up the White Rabbit's "
+            "gloves and began fanning herself. Alice looked down and found she had put on one of the "
             "White Rabbit's little gloves. Alice was growing small again. Alice was about two feet "
             "high and shrinking rapidly. Alice dropped the fan hastily to avoid shrinking "
             "away altogether."
@@ -103,12 +103,12 @@ def book_data():
         "normal": (
             "Alice saw a White Rabbit with a watch and followed it down a rabbit hole. "
             "She fell down and landed in a hall with locked doors. Alice found a key on "
-            "a glass table and a small door. The key opened the door but Alice was too "
+            "a glass table and a small door. The key opened the door but she was too "
             "big to fit through. She drank from a bottle and became very small. Alice "
-            "could not reach the key anymore. Alice cried and made a pool of tears. "
+            "could not reach the key anymore. She cried and made a pool of tears. "
             "The White Rabbit came back and was worried about the Duchess. The Rabbit "
             "dropped his gloves and fan. Alice picked up the items and used the fan. "
-            "The fan made Alice shrink more. Alice dropped the fan quickly."
+            "The fan made her shrink more. She dropped the fan quickly."
         ),
         
         "terrible": (
