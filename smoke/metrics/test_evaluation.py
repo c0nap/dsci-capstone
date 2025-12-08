@@ -80,23 +80,23 @@ def book_data():
         ),
         
         "excellent": (
-            "Alice was sitting by her sister on the bank when she saw a White Rabbit "
-            "with pink eyes. The White Rabbit took a watch out of its waistcoat-pocket and "
-            "looked at it. Alice followed the White Rabbit and saw it pop down a large rabbit-hole "
-            "under the hedge. Alice went down the rabbit-hole after it. The rabbit-hole "
-            "took Alice straight on like a tunnel and then dipped suddenly down. Alice fell very "
-            "slowly down the hole. Alice landed in a long low hall lit by lamps. Alice saw the doors "
-            "were all locked. Alice found a little table made of solid glass with a tiny "
-            "golden key on it. Behind a curtain Alice found a door about fifteen inches high. "
-            "The key fit the door but Alice could not squeeze through. Alice found a little "
-            "bottle labeled DRINK ME. Alice tasted it and felt a curious feeling. Alice was "
-            "now only ten inches high. But Alice had forgotten the key on the table above. "
-            "Alice began crying and shed gallons of tears until there was a large pool. "
-            "Alice heard feet and the White Rabbit appeared. The White Rabbit cried about the "
-            "Duchess and dropped his gloves and fan as he ran. Alice picked up the White Rabbit's "
-            "gloves and began fanning herself. Alice looked down and found she had put on one of the "
-            "White Rabbit's little gloves. Alice was growing small again. Alice was about two feet "
-            "high and shrinking rapidly. Alice dropped the fan hastily to avoid shrinking "
+            "Alice was seated beside her sibling on the riverbank when she spotted a White Rabbit "
+            "with pink eyes. The White Rabbit extracted a timepiece from its waistcoat-pocket and "
+            "examined it. Alice pursued the White Rabbit and observed it pop down a large rabbit-hole "
+            "beneath the hedge. Alice descended the rabbit-hole after it. The rabbit-hole "
+            "led Alice straight onward like a tunnel and then dipped suddenly downward. Alice tumbled very "
+            "slowly down the shaft. Alice arrived in a lengthy low corridor illuminated by lamps. Alice noticed the doors "
+            "were all secured. Alice discovered a small table constructed of solid glass with a tiny "
+            "golden key upon it. Behind a curtain Alice located a doorway approximately fifteen inches tall. "
+            "The key unlocked the entrance but Alice could not squeeze through. Alice found a little "
+            "bottle labeled DRINK ME. Alice sampled it and experienced a curious sensation. Alice was "
+            "now merely ten inches in height. But Alice had neglected the key on the table above. "
+            "Alice began weeping and shed gallons of tears until there was a large pool. "
+            "Alice heard footsteps and the White Rabbit reappeared. The White Rabbit cried about the "
+            "Duchess and dropped his gloves and fan as he ran. Alice collected the White Rabbit's "
+            "gloves and began fanning herself. Alice glanced downward and realized she had donned one of the "
+            "White Rabbit's little gloves. Alice was shrinking small again. Alice measured approximately two feet "
+            "in height and diminishing rapidly. Alice released the fan hastily to avoid vanishing "
             "away altogether."
         ),
         
@@ -110,19 +110,19 @@ def book_data():
             "dropped his gloves and fan. Alice picked up the items and used the fan. "
             "The fan made her shrink more. She dropped the fan quickly."
         ),
-        
+
         "terrible": (
-            "Sarah was exploring the garden with her friend Emily when they saw a brown "
-            "bunny. The girls followed it to a secret cave filled with magical crystals. "
-            "Inside the cave they met a fairy princess named Luna. Luna gave Sarah the "
-            "power to fly and gave Emily the power to become invisible. A dragon named "
-            "Smokewing appeared and tried to steal all the magic from the kingdom. The "
-            "fairy princess gave the girls enchanted swords made of moonlight to fight "
-            "the dragon. After they defeated Smokewing they found a treasure chest with "
-            "gold coins and magical jewels inside. A wizard named Zephyr told them they "
-            "were the chosen ones from an ancient prophecy. Zephyr taught Sarah and Emily "
-            "spells to control fire and ice. The girls returned home as heroes and kept "
-            "their magic powers forever."
+            "Girl was walking in the garden with her friend when they saw a rabbit. "
+            "The girls followed it to a place with things. "
+            "Inside the place they met a person named Person. Person gave Girl the "
+            "thing to fly and gave her friend the thing to be invisible. A creature named "
+            "Creature came and tried to take all the magic from the place. The "
+            "person gave the girls things made of light to fight "
+            "the creature. After they beat Creature they found a thing with "
+            "coins and jewels inside. A man named Man told them they "
+            "were the special ones from an old story. Man taught Girl and her friend "
+            "ways to use fire and ice. The girls went home as heroes and kept "
+            "their magic things forever."
         ),
     }
 
