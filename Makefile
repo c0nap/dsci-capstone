@@ -199,14 +199,14 @@ docker-all-main:
 # Run expensive smoke tests
 SMARGS ?= -m smoke
 docker-smoke:
-	make docker-python CMD="pytest $(SMARGS) smoke/"
+	make docker-python CMD="pytest $(SMARGS) smoke/pipeline/"
 docker-smoke-dev:
 	make docker-build-dev-python
 	make docker-smoke SMARGS="$(SMARGS)"
 
 METARGS ?= -m 'smoke and eval'
 docker-smetrics:
-	make docker-metcore CMD="pytest $(METARGS) smoke/"
+	make docker-metcore CMD="pytest $(METARGS) smoke/metrics"
 docker-smetrics-dev:
 	make docker-build-dev-metcore
 	make docker-smetrics METARGS="$(METARGS)"
