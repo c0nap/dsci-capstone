@@ -18,7 +18,7 @@ from src.components.metrics import (
     run_novel_ngrams,
     run_jsd_distribution,
     run_entity_coverage,
-    run_ncd,
+    run_ncd_overlap,
     run_salience_recall,
     run_nli_faithfulness,
     run_readability_delta,
@@ -80,38 +80,49 @@ def book_data():
         ),
         
         "excellent": (
-            "Alice, bored while sitting with her sister by the riverbank, follows a White Rabbit "
-            "wearing a waistcoat and checking a pocket watch down a rabbit hole. She falls slowly "
-            "through a deep tunnel and lands in a long hall lit by lamps, finding all doors locked. "
-            "On a glass table she discovers a tiny golden key that unlocks a fifteen-inch door, but "
-            "she cannot fit through it. Alice finds a bottle labeled 'DRINK ME' and drinks it, "
-            "shrinking to ten inches tall—but she has left the key on the table above her, now "
-            "unreachable. Frustrated, Alice cries so much that she creates a large pool of tears. "
-            "The White Rabbit reappears, frantically worrying about the Duchess having him executed, "
-            "and drops his gloves and fan before rushing off. Alice picks up these items and begins "
-            "fanning herself while reflecting on the strange day. She suddenly realizes she is "
-            "shrinking again—the fan has magical properties. Alice hastily drops the fan just in "
-            "time to avoid vanishing completely."
+            "Alice was sitting by her sister on the bank when she saw a White Rabbit "
+            "with pink eyes. The Rabbit took a watch out of its waistcoat-pocket and "
+            "looked at it. Alice followed the Rabbit and saw it pop down a large rabbit-hole "
+            "under the hedge. Alice went down the rabbit-hole after it. The rabbit-hole "
+            "went straight on like a tunnel and then dipped suddenly down. Alice fell very "
+            "slowly down the hole. She landed in a long low hall lit by lamps. The doors "
+            "were all locked. Alice found a little table made of solid glass with a tiny "
+            "golden key on it. Behind a curtain she found a door about fifteen inches high. "
+            "The key fit the door but Alice could not squeeze through. She found a little "
+            "bottle labeled DRINK ME. Alice tasted it and felt a curious feeling. She was "
+            "now only ten inches high. But she had forgotten the key on the table above. "
+            "Alice began crying and shed gallons of tears until there was a large pool. "
+            "She heard feet and the White Rabbit appeared. The Rabbit cried about the "
+            "Duchess and dropped his gloves and fan as he ran. Alice picked them up and "
+            "began fanning herself. She looked down and found she had put on one of the "
+            "Rabbit's little gloves. Alice was growing small again. She was about two feet "
+            "high and shrinking rapidly. Alice dropped the fan hastily to avoid shrinking "
+            "away altogether."
         ),
         
         "normal": (
-            "A girl follows a rabbit down a hole and falls into a strange place. There are many "
-            "doors but they are all locked. She finds a key on a table and there is a small door "
-            "that the key opens. She drinks something from a bottle and gets very small. But then "
-            "she can't reach the key anymore because it's on the table. She cries a lot. The rabbit "
-            "comes back and drops his things. The girl picks them up and starts getting smaller again."
+            "Alice saw a White Rabbit with a watch and followed it down a rabbit hole. "
+            "She fell down and landed in a hall with locked doors. Alice found a key on "
+            "a glass table and a small door. The key opened the door but Alice was too "
+            "big to fit through. She drank from a bottle and became very small. Alice "
+            "could not reach the key anymore. Alice cried and made a pool of tears. "
+            "The White Rabbit came back and was worried about the Duchess. The Rabbit "
+            "dropped his gloves and fan. Alice picked up the items and used the fan. "
+            "The fan made Alice shrink more. Alice dropped the fan quickly."
         ),
         
         "terrible": (
-            "Sarah and her friend Emily are playing in the garden when they see a brown bunny. "
-            "They follow it to a secret cave filled with crystals. Inside the cave, they meet a "
-            "fairy princess named Luna who gives them magic powers. Sarah can fly and Emily can "
-            "become invisible. They fight an evil dragon named Smokewing who is trying to steal "
-            "all the magic from the kingdom. The fairy princess gives them enchanted swords made "
-            "of moonlight. After defeating the dragon, they find a treasure chest with gold coins "
-            "and magical jewels. A wizard named Zephyr appears and tells them they are the chosen "
-            "ones from an ancient prophecy. He teaches them spells to control fire and ice. "
-            "They return home as heroes and keep their magic powers forever."
+            "Sarah was exploring the garden with her friend Emily when they saw a brown "
+            "bunny. The girls followed it to a secret cave filled with magical crystals. "
+            "Inside the cave they met a fairy princess named Luna. Luna gave Sarah the "
+            "power to fly and gave Emily the power to become invisible. A dragon named "
+            "Smokewing appeared and tried to steal all the magic from the kingdom. The "
+            "fairy princess gave the girls enchanted swords made of moonlight to fight "
+            "the dragon. After they defeated Smokewing they found a treasure chest with "
+            "gold coins and magical jewels inside. A wizard named Zephyr told them they "
+            "were the chosen ones from an ancient prophecy. Zephyr taught Sarah and Emily "
+            "spells to control fire and ice. The girls returned home as heroes and kept "
+            "their magic powers forever."
         ),
     }
 
@@ -147,7 +158,7 @@ def metric_cache(book_data):
         cache[level]["novel_ngrams"] = run_novel_ngrams(summary, text)
         cache[level]["jsd_distribution"] = run_jsd_distribution(summary, text)
         cache[level]["entity_coverage"] = run_entity_coverage(summary, text)
-        cache[level]["ncd"] = run_ncd(summary, text)
+        cache[level]["ncd"] = run_ncd_overlap(summary, text)
         cache[level]["salience_recall"] = run_salience_recall(summary, text)
         cache[level]["nli_faithfulness"] = run_nli_faithfulness(summary, text)
         cache[level]["readability_delta"] = run_readability_delta(summary, text)
@@ -348,7 +359,7 @@ def test_identical_summary_and_source():
     assert bert["bertscore_f1"] > 0.99  # Allow small float error
     
     # Zero compression distance
-    ncd = run_ncd(text, text)
+    ncd = run_ncd_overlap(text, text)
     assert ncd["ncd"] < 0.01  # Should be nearly zero
 
 

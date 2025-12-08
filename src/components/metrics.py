@@ -648,8 +648,7 @@ def run_entity_coverage(summary: str, source: str) -> Dict[str, float]:
     Recall of entities present in summary. In narrative fiction, the goal is
     typically to capture important characters/locations from the source.
     Recall ensures missing entities are penalized, while allowing for creative
-    additions without negatively impacting the score. Optional entity types
-    (PERSON, LOC, DATE) can be broken out if desired.
+    additions without negatively impacting the score.
     @return: Dictionary containing coverage and hallucination ratios
     """
     import spacy
@@ -658,11 +657,20 @@ def run_entity_coverage(summary: str, source: str) -> Dict[str, float]:
     src = nlp(source)
     summ = nlp(summary)
 
-    src_ents = {e.text.lower() for e in src.ents}
-    sum_ents = {e.text.lower() for e in summ.ents}
+    # Normalize entity text for better matching (lower + strip)
+    src_ents = {e.text.lower().strip() for e in src.ents if e.text.strip()}
+    sum_ents = {e.text.lower().strip() for e in summ.ents if e.text.strip()}
 
-    coverage = len(src_ents & sum_ents) / (len(src_ents) or 1)
-    halluc = len(sum_ents - src_ents) / (len(sum_ents) or 1)
+    # Handle edge cases where no entities are found
+    if not src_ents:
+        coverage = 1.0 if not sum_ents else 0.0
+        halluc = 0.0
+    elif not sum_ents:
+        coverage = 0.0
+        halluc = 0.0
+    else:
+        coverage = len(src_ents & sum_ents) / len(src_ents)
+        halluc = len(sum_ents - src_ents) / len(sum_ents)
 
     return {"entity_coverage": coverage, "entity_hallucination": halluc}
 
@@ -671,7 +679,7 @@ def run_entity_coverage(summary: str, source: str) -> Dict[str, float]:
 # GROUP 2: HIGH-LEVEL COMPARISON
 # ==============================================================================
 
-def run_ncd(summary: str, source: str) -> Dict[str, float]:
+def run_ncd_overlap(summary: str, source: str) -> Dict[str, float]:
     """Normalized Compression Distance (NCD)
     @param summary: Summary text
     @param source: Source text
@@ -684,9 +692,14 @@ def run_ncd(summary: str, source: str) -> Dict[str, float]:
     Uses fast zlib compression to capture structural overlap. NCD formula:
     NCD(x,y) = (C(xy) - min(C(x),C(y))) / max(C(x),C(y))
     where C(x) is compressed size. Values range [0,1]: 0 = identical, 1 = unrelated.
+    Includes clamp to [0,1] to handle compression noise.
     @return: Dictionary containing NCD score
     """
     import zlib
+    
+    # Special case: identical texts should return perfect score (0.0 distance)
+    if summary == source:
+        return {"ncd": 0.0}
     
     x_bytes = summary.encode('utf-8')
     y_bytes = source.encode('utf-8')
@@ -697,7 +710,11 @@ def run_ncd(summary: str, source: str) -> Dict[str, float]:
     cxy = len(zlib.compress(xy_bytes))
     
     ncd_score = (cxy - min(cx, cy)) / max(cx, cy)
-    return {"ncd": ncd_score}
+    
+    # Clamp to [0, 1] range
+    ncd_score = max(0.0, min(1.0, ncd_score))
+    
+    return {"ncd": float(ncd_score)}
 
 
 def run_salience_recall(summary: str, source: str, top_k: int = 20) -> Dict[str, float]:
@@ -751,36 +768,35 @@ def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
     It is your "lie detector."
     @note
     Percent of summary sentences entailed by source is returned as a single
-    scalar. Uses lightweight cross-encoder for CPU efficiency. A single
-    entailment percentage simplifies interpretation while capturing logical
-    consistency. Global scalar gives high-level view without per-sentence
-    granularity.
+    scalar. Uses CrossEncoder which is more accurate than standard pipeline
+    classification for sentence pairs.
+    Label order: [contradiction=0, entailment=1, neutral=2].
     @return: Dictionary containing entailment percentage
     """
-    from transformers import pipeline, AutoTokenizer
+    from sentence_transformers import CrossEncoder
     from nltk import sent_tokenize
+    import numpy as np
     
-    model_name = "cross-encoder/nli-deberta-base"
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_name,
-        use_fast=False  # Force slow tokenizer (fast crashes on 3.12)
-    )
-    nli = pipeline(
-        "text-classification",
-        model=model_name,
-        tokenizer=tokenizer,
-        device=-1,  # CPU
-        top_k=1
-    )
+    model = CrossEncoder('cross-encoder/nli-deberta-base')
     summary_sents = sent_tokenize(summary)
-    entailed = 0
     
-    for sent in summary_sents:
-        out = nli({"text": source, "text_pair": sent})[0]
-        if out["label"].upper() == "ENTAILMENT":
-            entailed += 1
-    faithfulness = entailed / (len(summary_sents) or 1)
-    return {"nli_faithfulness": faithfulness}
+    if not summary_sents:
+        return {"nli_faithfulness": 0.0}
+    
+    # Prepare pairs: (premise, hypothesis) where premise is source
+    pairs = [(source, sent) for sent in summary_sents]
+    
+    # Get scores: shape (n_sentences, 3) for [contradiction, entailment, neutral]
+    scores = model.predict(pairs)
+    
+    # Get predicted labels (argmax across 3 classes)
+    predicted_labels = np.argmax(scores, axis=1)
+    
+    # Count entailments (label index 1)
+    entailed = np.sum(predicted_labels == 1)
+    faithfulness = entailed / len(summary_sents)
+    
+    return {"nli_faithfulness": float(faithfulness)}
 
 
 def run_readability_delta(summary: str, source: str) -> Dict[str, float]:
@@ -873,8 +889,17 @@ def run_entity_grid_coherence(summary: str) -> Dict[str, float]:
     entity_grids = []
     for sent in sents:
         doc = nlp(sent)
-        entities = {ent.text.lower(): ent.root.dep_ for ent in doc.ents}
+        entities = {}
+        for ent in doc.ents:
+            if ent.text.strip():
+                entities[ent.text.lower().strip()] = ent.root.dep_
         entity_grids.append(entities)
+    
+    # Filter out sentences with no entities found
+    entity_grids = [eg for eg in entity_grids if eg]
+    
+    if len(entity_grids) < 2:
+        return {"entity_grid_coherence": 0.0}
     
     transitions = 0
     smooth = 0
@@ -882,14 +907,17 @@ def run_entity_grid_coherence(summary: str) -> Dict[str, float]:
     for i in range(len(entity_grids) - 1):
         curr_ents = set(entity_grids[i].keys())
         next_ents = set(entity_grids[i+1].keys())
-        overlap = curr_ents & next_ents
         
-        if overlap:
+        if curr_ents and next_ents:
+            overlap = curr_ents & next_ents
             smooth += len(overlap)
-        transitions += max(len(curr_ents), len(next_ents))
+            transitions += max(len(curr_ents), len(next_ents))
     
-    coherence = smooth / (transitions or 1)
-    return {"entity_grid_coherence": coherence}
+    if transitions == 0:
+        return {"entity_grid_coherence": 0.0}
+        
+    coherence = smooth / transitions
+    return {"entity_grid_coherence": float(coherence)}
 
 
 def run_lexical_diversity(summary: str) -> Dict[str, float]:
