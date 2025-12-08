@@ -38,7 +38,7 @@ COPY ${ENV_FILE} .env
 RUN make env-docker
 RUN mv .env.docker .env
 
-COPY pyproject.toml pytest.ini .
+COPY pyproject.toml pytest.ini conftest.py .
 
 # Supply task as command line flag to set worker behavior
 CMD ["python", "-m", "src.core.worker", "--task", "metricscore"]

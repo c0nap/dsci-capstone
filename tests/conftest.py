@@ -5,14 +5,7 @@ from src.connectors.graph import GraphConnector
 from src.connectors.relational import RelationalConnector
 from src.core.context import get_session, Session
 from src.util import Log
-from typing import Any, Generator
-
-
-def pytest_addoption(parser: Any) -> None:
-    """Command-line flags for pytest
-    @details  Usage: pytest --log-success --no-log-colors"""
-    parser.addoption("--log-success", action="store_true", default=False)
-    parser.addoption("--no-log-colors", action="store_false", default=True)
+from typing import Generator
 
 
 @pytest.fixture(scope="session", autouse=True)

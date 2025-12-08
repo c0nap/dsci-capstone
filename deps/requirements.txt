@@ -10,7 +10,7 @@ lxml
 rapidfuzz
 flask
 
-# Metrics
+# Metrics - TODO REMOVE
 numpy
 evaluate
 rouge_score
