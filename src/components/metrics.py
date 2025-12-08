@@ -615,9 +615,10 @@ def run_jsd_distribution(summary: str, source: str) -> Dict[str, float]:
     @return: Dictionary containing JSD value between token distributions
     """
     from scipy.stats import entropy
+    from numpy.typing import NDArray
     import numpy as np
 
-    def jsd(p: np.ndarray, q: np.ndarray) -> float:
+    def jsd(p: NDArray[np.float64], q: NDArray[np.float64]) -> float:
         p = p / p.sum()
         q = q / q.sum()
         m = 0.5 * (p + q)
