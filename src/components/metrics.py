@@ -566,7 +566,9 @@ def run_bertscore(summary: str, source: str) -> Dict[str, float]:
     result = model.compute(
         predictions=[summary],
         references=[source],
-        model_type="distilroberta-base"
+        model_type="distilroberta-base",
+        rescale_with_baseline=True,
+        lang="en"
     )
     return {"bertscore_f1": result["f1"][0]}
 
