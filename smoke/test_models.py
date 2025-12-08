@@ -1,4 +1,4 @@
-from conftest import optional_param
+from tests.helpers import optional_param
 import pytest
 from src.components.book_conversion import Chunk
 from src.core.stages import *

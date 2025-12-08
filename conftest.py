@@ -1,4 +1,3 @@
-import importlib.util
 import pytest
 from src.components.fact_storage import KnowledgeGraph
 from src.connectors.document import DocumentConnector
@@ -14,15 +13,6 @@ def pytest_addoption(parser: Any) -> None:
     @details  Usage: pytest --log-success --no-log-colors"""
     parser.addoption("--log-success", action="store_true", default=False)
     parser.addoption("--no-log-colors", action="store_false", default=True)
-
-
-def optional_param(name: str, package: str) -> Any:  # ParameterSet is internal to PyTest
-    """Return a pytest.param that is skipped if the given package is missing.
-    @param name  The fixture name to include in the parameter list.
-    @param package  The name of a Python package to check for.
-    @return  PyTest parameter with the skip flag set if package is not installed."""
-    exists = importlib.util.find_spec(package) is not None
-    return pytest.param(name, marks=pytest.mark.skipif(not exists, reason=f"{package} not installed"))
 
 
 @pytest.fixture(scope="session", autouse=True)

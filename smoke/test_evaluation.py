@@ -8,7 +8,7 @@ These are not validation tests, they confirm the pipeline works.
 import importlib.util
 from typing import Any, List
 import pytest
-from conftest import optional_param
+from tests.helpers import optional_param
 from src.components.metrics import (
     run_rouge_l,
     run_bertscore,
