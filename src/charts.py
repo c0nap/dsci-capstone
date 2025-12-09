@@ -136,6 +136,30 @@ class Plot:
         Log.chart("Average Function Runtime Comparison", filename)
 
 
+
+    CORE_METRICS: Dict[str, str] = {
+        "rougeL_recall" : "ROUGE-L (Recall)",
+        "bertscore" : "BERTScore (F1)",
+        "novel_ngrams" : "Novel N-Grams",
+        "jsd_stats" : "JSD",
+        "entity_coverage" : "entity_coverage",
+        "entity_hallucination" : "entity_hallucination",
+        "ncd_overlap" : "NCD",
+        "salience_recall" : "Saliance (Recall)",
+        "nli_faithfulness" : "Faithfulness",
+        "readability_delta" : "Readability Delta",
+        "sentence_coherence" : "Sentence Coherence",
+        "entity_grid_coherence" : "Entity Grid Coherence",
+        "lexical_diversity" : "Lexical Diversity (TTR)",
+        "stopword_ratio" : "Stopword Ratio",
+        "bookscore" : "BooookScore",
+        "questeval" : "QuestEval",
+    }
+
+    @staticmethod
+    def summary_results(metrics: Dict[str, float]) -> None:
+
+
 if __name__ == "__main__":
     import argparse
 
