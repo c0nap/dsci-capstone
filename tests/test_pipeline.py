@@ -477,14 +477,33 @@ def test_job_21_describe_graph(main_graph, book_data):
 @pytest.mark.order(22)
 @pytest.mark.dependency(name="job_22", scope="session", depends=["job_20", "job_15_minimal"])
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_job_22_verbalize_triples(main_graph, book_data):
+def test_job_22_fetch_subgraph(main_graph, book_data):
     """Test converting high-degree triples to string format."""
     triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
     # First insert triples, treat task_20 as a helper function
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
     task_20_send_triples(triples_json)
 
-    triples_string = task_22_verbalize_triples()
+    triples_df = task_22_fetch_subgraph()
+
+    assert isinstance(triples_df, DataFrame)
+    assert not triples_df.empty
+
+
+@pytest.mark.task
+@pytest.mark.stage_C
+@pytest.mark.order(23)
+@pytest.mark.dependency(name="job_23", scope="session", depends=["job_22", "job_20", "job_15_minimal"])
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_job_23_verbalize_triples(main_graph, book_data):
+    """Test converting high-degree triples to string format."""
+    triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
+    # First insert triples, treat task_20 as a helper function
+    # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
+    task_20_send_triples(triples_json)
+    triples_df = task_22_fetch_subgraph()
+
+    triples_string = task_23_verbalize_triples(triples_df)
 
     assert isinstance(triples_string, str)
     assert len(triples_string) > 0

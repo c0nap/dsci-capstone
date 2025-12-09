@@ -81,7 +81,8 @@ def pipeline_C(json_triples):
     print("\nMost relevant nodes:")
     print(edge_count_df)
 
-    triples_string = stages.task_22_verbalize_triples()
+    triples_df = task_22_fetch_subgraph()
+    triples_string = stages.task_23_verbalize_triples(triples_df)
     print("\nTriples which best represent the graph:")
     print(triples_string)
     return triples_string
