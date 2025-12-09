@@ -91,9 +91,10 @@ def pipeline_C(json_triples):
 
 
 @Log.time
-def pipeline_D(collection_name, triples_string, chunk_id):
+def pipeline_D(collection_name, triples_string, chunk_id, text):
     """Generate chunk summary"""
-    _, summary = stages.task_30_summarize_llm(triples_string)
+    #_, summary = stages.task_30_summarize_llm(triples_string)
+    _, summary = stages.task_30_summarize_llm_only(text)
     print("\nGenerated summary:")
     print(summary)
 
@@ -269,7 +270,7 @@ CHAPTER 12. THE END OF THE END\n
 
     post_story_status(BOSS_PORT, story_id, 'summarization', 'in-progress')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'in-progress')
-    summary = pipeline_D(COLLECTION, triples_string, chunk.get_chunk_id())
+    summary = pipeline_D(COLLECTION, triples_string, chunk.get_chunk_id(), chunk.text)
     post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
 

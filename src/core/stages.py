@@ -114,16 +114,16 @@ from src.components.metrics import (
 
 
 class Config:
-    relation_extractor_type="openie"
-    validation_llm_engine="langchain"
-    moderation_llm_engine="langchain"
-    moderation_strategy="resolve"
-    graph_lookup_mode="community"
-    verbalize_triples_mode="context"
-    summary_llm_engine="langchain"
+    relation_extractor_type="textacy"
+    validation_llm_engine="openai"
+    moderation_llm_engine="openai"
+    moderation_strategy="drop"
+    graph_lookup_mode="popular"
+    verbalize_triples_mode="raw"
+    summary_llm_engine="openai"
 
-    # gpt-5-nano only supports temperature 1
-    temperature=0.1
+    # gpt-5 only supports temperature 1
+    temperature=1
     reasoning_effort="high"
     model_name="gpt-5"
 
@@ -459,6 +459,20 @@ def task_30_summarize_llm(triples_string: str) -> Tuple[str, str]:
         prompt += "Output your generated summary and nothing else."
         summary = llm.execute_query(prompt)
         return (prompt, summary)
+
+def task_30_summarize_llm_only(text: str) -> Tuple[str, str]:
+    """Prompt LLM to generate summary"""
+    llm_connector_type = Config.summary_llm_engine
+    with Log.timer(config = f"[{llm_connector_type}]"):
+        # TOOD: reasoning_effort, model_name, prompt_basic
+        system_prompt = "You are a helpful assistant that summarizes text."
+        llm = Config.get_llm(llm_connector_type, system_prompt)
+        prompt = f"Here is a story chunk:\n{text}\n"
+        prompt += "Transform this into a coherent, factual, and concise summary. Some details may be irrelevant, so don't force yourself to include every single one.\n"
+        prompt += "Output your generated summary and nothing else."
+        summary = llm.execute_query(prompt)
+        return (prompt, summary)
+
 
 
 
