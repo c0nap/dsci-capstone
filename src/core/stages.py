@@ -8,7 +8,7 @@ from src.util import Log
 
 # unused?
 import traceback
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from src.components.metrics import (
     run_rouge_l,
     run_bertscore,
@@ -123,32 +123,32 @@ class Config:
 
     @staticmethod
     def check_values():
-        _check_extractor(Config.relation_extractor_type)
-        _check_llm_engine(Config.validation_llm_engine)
-        _check_extractor(Config.graph_lookup_mode)
-        _check_extractor(Config.verbalize_triples_mode)
-        _check_llm_engine(Config.summary_llm_engine)
+        Config._check_extractor(Config.relation_extractor_type)
+        Config._check_llm_engine(Config.validation_llm_engine)
+        Config._check_subgraph_mode(Config.graph_lookup_mode)
+        Config._check_verbal_mode(Config.verbalize_triples_mode)
+        Config._check_llm_engine(Config.summary_llm_engine)
 
     @staticmethod
     def _check_extractor(value: Any):
-        _check_val(value, "extractor_type", [ 'textacy', 'openie', 'rebel'])
+        Config._check_val(value, "extractor_type", [ 'textacy', 'openie', 'rebel'])
 
     @staticmethod
     def _check_llm_engine(value: Any):
-        _check_val(value, "llm_connector_type", ['langchain', 'openai'])
+        Config._check_val(value, "llm_connector_type", ['langchain', 'openai'])
+
+    @staticmethod
+    def _check_subgraph_mode(value: Any):
+        Config._check_val(value, "subgraph_mode", ['popular', 'local', 'explore', 'community'])
 
     @staticmethod
     def _check_verbal_mode(value: Any):
-        _check_val(value, "subgraph_mode", ['popular', 'local', 'explore', 'community'])
-
-    @staticmethod
-    def _check_verbal_mode(value: Any):
-        _check_val(value, "verbalization_mode", ['triple', 'natural', 'json', 'context'])
+        Config._check_val(value, "verbalization_mode", ['triple', 'natural', 'json', 'context'])
 
     @staticmethod
     def _check_val(value: Any, name: str, allowed: List[Any]) -> None:
-        if verbal_mode not in allowed:
-            raise ValueError(f"Invalid {name}: {verbal_mode}. Expected: {str(allowed)}")
+        if value not in allowed:
+            raise ValueError(f"Invalid {name}: {value}. Expected: {str(allowed)}")
 
 
     @staticmethod

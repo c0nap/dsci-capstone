@@ -81,7 +81,7 @@ def pipeline_C(json_triples):
     print("\nMost relevant nodes:")
     print(edge_count_df)
 
-    triples_df = task_22_fetch_subgraph()
+    triples_df = stages.task_22_fetch_subgraph()
     triples_string = stages.task_23_verbalize_triples(triples_df)
     print("\nTriples which best represent the graph:")
     print(triples_string)
@@ -194,8 +194,11 @@ CHAPTER 12. THE END OF THE END\n
 
 if __name__ == "__main__":
     from src.core.context import session
+    from src.core.stages import Config
 
     session.setup()
+    Config.check_values()
+
     # TODO: handle this better - half env parsing is here, half is in boss.py
     load_dotenv(".env")
     DB_NAME = os.environ["DB_NAME"]
