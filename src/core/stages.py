@@ -213,7 +213,8 @@ def _task_12_get_re(extractor_type: str) -> RelationExtractor:
         # Initialize Textacy wrapper (pure Python backup)
         return RelationExtractorTextacy()
 
-    return None  # TODO: ValueError
+    raise ValueError(f"Invalid extractor_type: {extractor_type}. Expected: 'textacy', 'openie', or 'rebel'.")
+
     
 
 def task_12_relation_extraction(text: str, extractor_type: str = "textacy") -> Tuple[str, str]:
@@ -246,7 +247,7 @@ def _task_14_get_llm(llm_connector_type: str, temperature: float, system_prompt:
             temperature=temperature,
             system_prompt=system_prompt,
         )
-    return None  # TODO: ValueError
+    raise ValueError(f"Invalid llm_connector_type: {llm_connector_type}. Expected: 'langchain', or 'openai'.")
     
 
 def task_14_validate_llm(triples_string: str, text: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
@@ -346,7 +347,7 @@ def _task_22_get_triples(lookup_mode):
         session.main_graph.detect_community_clusters(method="leiden")
         community_id = session.main_graph.get_community_largest()
         return session.main_graph.get_community_subgraph(community_id)
-    return None  # TODO: ValueError
+    raise ValueError(f"Invalid lookup_mode: {lookup_mode}. Expected: 'popular', 'local', 'explore', or 'community'.")
 
 def task_22_fetch_subgraph(lookup_mode="degree"):
     with Log.timer(config = f"[{lookup_mode}]"):
@@ -379,7 +380,8 @@ def _task_30_get_llm(llm_connector_type: str, temperature: float, system_prompt:
             temperature=temperature,
             system_prompt=system_prompt,
         )
-    return None  # TODO: ValueError
+    raise ValueError(f"Invalid llm_connector_type: {llm_connector_type}. Expected: 'langchain', or 'openai'.")
+
 
 def task_30_summarize_llm(triples_string: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
     """Prompt LLM to generate summary"""
