@@ -353,38 +353,12 @@ def task_16_moderate_triples_llm(triples: List[Triple], text: str) -> List[Tripl
     @return Safe triples for knowledge graph insertion."""
     moderation_strategy = Config.moderation_strategy
     with Log.timer(config = f"[{moderation_strategy}]"):
-        from src.connectors.llm import moderate_triples
-        safe, bad = moderate_triples(triples, Config.moderation_thresholds)
+        from src.connectors.llm import flag_triples
+        safe, bad = flag_triples(triples, Config.moderation_thresholds)
         if moderation_strategy == "drop":
-            return _task_16_drop_strategy(bad, Config.moderation_thresholds)
+            return safe
         if moderation_strategy == "resolve":
-            return _task_16_resolve_strategy(bad, text, Config.moderation_thresholds)
-
-
-def _task_16_drop_strategy(
-    triples: List[Triple], 
-    thresholds: Dict[str, float]
-) -> Tuple[List[Triple], List[Tuple[Triple, Dict[str, float]]]]:
-    """Filter triples containing offensive content.
-    @details
-    - Separates safe content from violations based on thresholds
-    @param triples  List of dicts with 's', 'r', 'o' keys
-    @param thresholds  Dict of category->threshold
-    @return Tuple (safe_triples, bad_triples_with_reasons)
-    """
-    texts = [f"{t['s']} {t['r']} {t['o']}" for t in triples]
-    results = moderate_texts(texts, thresholds)
-
-    safe_triples = []
-    bad_triples = []
-
-    for triple, violations in zip(triples, results):
-        if not violations:
-            safe_triples.append(triple)
-        else:
-            bad_triples.append((triple, violations))
-
-    return safe_triples, bad_triples
+            return _task_16_resolve_strategy(bad, text)
 
 
 def _task_16_resolve_strategy(

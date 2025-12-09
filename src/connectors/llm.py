@@ -326,6 +326,34 @@ def moderate_texts(
     return all_violations
 
 
+
+def flag_triples(
+    triples: List[Triple], 
+    thresholds: Dict[str, float]
+) -> Tuple[List[Triple], List[Tuple[Triple, Dict[str, float]]]]:
+    """
+    Filter triples containing offensive content.
+    Returns: (safe_triples, bad_triples_with_reasons)
+    """
+    # 1. Flatten to strings for the API
+    texts = [f"{t['s']} {t['r']} {t['o']}" for t in triples]
+    
+    # 2. Get scores (delegates to your existing moderate_texts)
+    results = moderate_texts(texts, thresholds)
+
+    safe_triples = []
+    bad_triples = []
+
+    # 3. Split based on results
+    for triple, violations in zip(triples, results):
+        if not violations:
+            safe_triples.append(triple)
+        else:
+            bad_triples.append((triple, violations))
+
+    return safe_triples, bad_triples
+
+
 def parse_llm_triples(llm_output: str) -> List[Triple]:
     """Load normalized triples from LLM strings."""
     # TODO: rely on robust LLM connector logic to assume json
