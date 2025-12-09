@@ -247,7 +247,7 @@ def _task_14_get_llm(llm_connector_type: str, temperature: float, system_prompt:
     return None  # TODO: ValueError
     
 
-def task_14_relation_extraction_llm(triples_string: str, text: str, llm_connector_type: str = "langchain", temperature: float = 1) -> Tuple[str, str]:
+def task_14_relation_extraction_llm(triples_string: str, text: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
     with Log.timer(f"[{llm_connector_type}_temp-{temperature}]"):
         # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
@@ -327,37 +327,35 @@ def task_22_verbalize_triples(mode="triple"):
 
 
 # PIPELINE STAGE D - CONSOLIDATE / GRAPH -> SUMMARY
-def _task_30_summarize_llm(triples_string: str, llm: LLMConnector) -> Tuple[str, str]:
-    prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-    prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
-    prompt += "Output your generated summary and nothing else."
-    summary = llm.execute_query(prompt)
-    return (prompt, summary)
-
-
-def task_30_summarize_llm_langchain(triples_string: str) -> Tuple[str, str]:
-    """Prompt LLM to generate summary"""
-    with Log.timer():
+def _task_30_get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
+    # TODO: move to session.llm?
+    if llm_connector_type == "langchain":
         from src.connectors.llm import LangChainConnector
-
-        # TODO: move to session.llm
-        llm = LangChainConnector(
-            temperature=1,  # gpt-5-nano only supports temperature 1
-            system_prompt="You are a helpful assistant that processes semantic triples.",
+        return LangChainConnector(
+            temperature=temperature,
+            system_prompt=system_prompt,
         )
-        return _task_30_summarize_llm(triples_string, llm)
-
-def task_30_summarize_llm_openai(triples_string: str) -> Tuple[str, str]:
-    """Prompt LLM to generate summary"""
-    with Log.timer():
+    if llm_connector_type == "openai":
         from src.connectors.llm import OpenAIConnector
-
-        # TODO: move to session.llm
-        llm = OpenAIConnector(
-            temperature=1,  # gpt-5-nano only supports temperature 1
-            system_prompt="You are a helpful assistant that processes semantic triples.",
+        return OpenAIConnector(
+            temperature=temperature,
+            system_prompt=system_prompt,
         )
-        return _task_30_summarize_llm(triples_string, llm)
+    return None  # TODO: ValueError
+
+def task_30_summarize_llm(triples_string: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
+    """Prompt LLM to generate summary"""
+    with Log.timer(f"[{llm_connector_type}_temp-{temperature}]"):
+        # gpt-5-nano only supports temperature 1
+        # TOOD: reasoning_effort, model_name, prompt_basic
+        system_prompt = "You are a helpful assistant that summarizes text."
+        llm = _task_30_get_llm(llm_connector_type, temperature, system_prompt)
+        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+        prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
+        prompt += "Output your generated summary and nothing else."
+        summary = llm.execute_query(prompt)
+        return (prompt, summary)
+
 
 
 def task_31_send_summary(summary, collection_name, chunk_id):

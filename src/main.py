@@ -105,7 +105,7 @@ def pipeline_C(json_triples):
 @Log.time
 def pipeline_D(collection_name, triples_string, chunk_id):
     """Generate chunk summary"""
-    _, summary = stages.task_30_summarize_llm_openai(triples_string)
+    _, summary = stages.task_30_summarize_llm(triples_string)
     print("\nGenerated summary:")
     print(summary)
 
