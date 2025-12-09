@@ -269,6 +269,7 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
 
 
 
+
 def moderate_texts(
     texts: List[str],
     thresholds: Dict[str, float]
@@ -285,6 +286,8 @@ def moderate_texts(
     """
     if not texts:
         return []
+    
+    # Initialize client locally as requested
     client = OpenAI()
 
     batch_size = 32
@@ -304,7 +307,7 @@ def moderate_texts(
                     # Sanitize category name: "sexual/minors" -> "sexual_minors"
                     config_key = category.replace('/', '_').replace('-', '_')
                     
-                    # Use .get() for dict access, default to loose threshold if missing
+                    # Use .get() default to 1.0 (loose) to avoid false positives on missing keys
                     limit = thresholds.get(config_key, 1.0)
 
                     if score > limit:
@@ -318,7 +321,6 @@ def moderate_texts(
             all_violations.extend([{} for _ in batch])
 
     return all_violations
-
 
 
 

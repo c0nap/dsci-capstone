@@ -360,23 +360,18 @@ def task_15_sanitize_triples_llm(llm_output: str) -> List[Triple]:
         return norm_triples
 
 
-def task_16_moderate_triples_llm(triples: List[Triple]) -> List[Triple]:
+def task_16_moderate_triples_llm(triples: List[Triple], text: str) -> List[Triple]:
     """Filter offensive content from literary triples.
     @param triples  Normalized triples in JSON format.
     @return Safe triples for knowledge graph insertion."""
-    llm_connector_type = Config.moderation_llm_engine
     moderation_strategy = Config.moderation_strategy
-    with Log.timer(config = f"[{llm_connector_type}-{moderation_strategy}]"): # _{temperature:.2f}
+    with Log.timer(config = f"[{moderation_strategy}]"): # _{temperature:.2f}
         from src.connectors.llm import moderate_triples
         safe, bad = moderate_triples(triples, Config.moderation_thresholds)
         if moderation_strategy == "drop":
-            triples = _task_16_drop_strategy(triples)
+            return _task_16_drop_strategy(bad, Config.moderation_thresholds)
         if moderation_strategy == "resolve":
-            triples = _task_16_resolve_strategy(triples)
-
-        llm_output = llm.execute_query(prompt)
-
-
+            return _task_16_resolve_strategy(bad, text, Config.moderation_thresholds)
 
 
 def _task_16_drop_strategy(
@@ -405,20 +400,19 @@ def _task_16_drop_strategy(
     return safe_triples, bad_triples
 
 
-
 def _task_16_resolve_strategy(
     bad_triples: List[Tuple[Triple, Dict[str, float]]],
-    original_text: str
+    text: str,
 ) -> List[Triple]:
     """Attempt to fix flagged triples using context from original text.
     @details
     - Uses LLM to distinguish between malicious content and literary depictions
     - Drops triples that cannot be redeemed
     @param bad_triples  List of (triple, reasons) tuples
-    @param original_text  The source text chunk
-    @param llm  Initialized LLM connector instance
+    @param text  The source text chunk
     @return List of corrected/sanitized triples
     """
+    llm_connector_type = Config.moderation_llm_engine
     # Format the bad triples for the prompt
     triples_string = "\n".join([
         f"- {t['s']} {t['r']} {t['o']} (Flagged: {list(reasons.keys())})" 
@@ -427,19 +421,17 @@ def _task_16_resolve_strategy(
     # triples_string = RelationExtractor.to_triples_string(bad)
 
     system_prompt = "You are a helpful assistant that corrects harmful content in old fiction."
+    llm = Config.get_llm(llm_connector_type)
     prompt = f"Here are some flagged triples extracted from a story chunk:\n{triples_string}\n"
     prompt += f"And here is the original text:\n{text}\n\n"
     prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
     prompt += "For each triple you must fix the harmful content by inspecting the intent of the original text."
     prompt += "If the original text has genuinely harmful content represented by this triple, then drop this triple."
 
-    try:
-        # executing query via the passed LLM instance
-        response = llm.execute_query(prompt)
-        
-        # assuming you have a parser in your RelationExtractor or similar util
-        from src.utils import RelationExtractor
-        return RelationExtractor.parse_json_response(response)
+    response = llm.execute_query(prompt)
+    # return RelationExtractor.parse_json_response(response)
+
+
 
 
 # PIPELINE STAGE C - ENRICHMENT / TRIPLES -> GRAPH
