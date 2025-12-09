@@ -277,7 +277,7 @@ class Plot:
                 group_ticks.append((group_center, group_name))
                 x += spacing  # add extra space after group
 
-        bar_width = 0.8 / len(labels)
+        bar_width = 0.9 / len(labels)
 
         plt.figure(figsize=(max(12, len(x_labels)*0.5), 6))
 
@@ -288,19 +288,25 @@ class Plot:
             values = [merged.loc[merged["metric"] == lbl, label].values[0] for lbl in x_labels]
             plt.bar([pos + offset for pos in x_positions], values, width=bar_width, label=label, color=color)
 
-        plt.xticks(x_positions, x_labels, rotation=45, ha="right")
+        plt.xticks(x_positions, x_labels, rotation=20, ha="right")  # slightly tilted
         plt.ylabel("Score")
         title = "Quality Comparison (Chunk-Level Summary)"
         plt.title(title)
         plt.legend()
 
-        # Draw vertical lines between groups
-        for center, name in group_ticks[:-1]:
-            plt.axvline(x=center + 0.5, color="gray", linestyle="dotted")
+        # Manually define the x positions for the group separators
+        group_lines_x = [4.75, 9.25]  # example positions between groups
+        group_labels = ["BASIC COMPARISON", "HIGH-LEVEL COMPARISON", "REFERENCE-FREE"]
+        group_label_y = max(merged[labels].max().max(), 1) - 0.02  # vertical position for headers
 
-        # Add group labels above bars
-        for center, name in group_ticks:
-            plt.text(center, max(merged[labels].max().max(), 1) * 1.02, name, fontsize=10, fontweight="bold", ha="center", va="bottom")
+        # Draw dotted lines
+        for x in group_lines_x:
+            plt.axvline(x=x, color="gray", linestyle="dotted", linewidth=1)
+
+        # Draw header labels
+        for x, label in zip([2.5, 7, 11.5], group_labels):  # adjust x for label centers
+            plt.text(x, group_label_y, label, fontsize=10, fontweight="bold",
+                     ha="center", va="bottom")
 
         plt.tight_layout()
         os.makedirs(os.path.dirname(filename), exist_ok=True)
