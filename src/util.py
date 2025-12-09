@@ -16,6 +16,8 @@ class Log:
     USE_COLORS = True
     ## Enable time-logging with the 'Log.time' decorator
     RECORD_TIME = True
+    ## Option to globally disable the 'Log.timer' config argument, i.e. 'calculate[multiply]' instead of just 'calculate'
+    USE_TIME_LABELS = True
     ## Print the entire DataFrame to console
     FULL_DF = False
 
@@ -258,7 +260,7 @@ class Log:
     # Advantage over @Log.time: Cleaner traceback
     @staticmethod
     @contextmanager
-    def timer(name: str = None, label: str = "") -> Generator[None, None, None]:
+    def timer(name: str = None, config: str = "") -> Generator[None, None, None]:
         """Context manager for recording the execution time of code blocks.
         @param name  Optional name for the timed block. If not provided, uses caller function name.
         Usage:
@@ -278,9 +280,10 @@ class Log:
                 if func_name not in ['timer', '__enter__', '__exit__']:
                     name = func_name
                     break
-        name += label
 
         call_chain = Log.format_call_chain(stack, name)
+        if Log.USE_TIME_LABELS:
+            name += config
         start = time.time()
         try:
             yield  # If an exception happens here... (see below)

@@ -248,7 +248,7 @@ def _task_14_get_llm(llm_connector_type: str, temperature: float, system_prompt:
     
 
 def task_14_relation_extraction_llm(triples_string: str, text: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
-    with Log.timer(f"[{llm_connector_type}_temp-{temperature}]"):
+    with Log.timer(config = f"[{llm_connector_type}_{temperature:.2f}]"):
         # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON."
@@ -345,7 +345,7 @@ def _task_30_get_llm(llm_connector_type: str, temperature: float, system_prompt:
 
 def task_30_summarize_llm(triples_string: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
     """Prompt LLM to generate summary"""
-    with Log.timer(f"[{llm_connector_type}_temp-{temperature}]"):
+    with Log.timer(config = f"[{llm_connector_type}_{temperature:.2f}]"):
         # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that summarizes text."
