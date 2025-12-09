@@ -320,41 +320,5 @@ def moderate_texts(
     return all_violations
 
 
-def filter_triples(
-    triples: List[Dict[str, str]],
-    thresholds: Dict[str, float]
-) -> Tuple[List[Dict[str, str]], List[Tuple[Dict[str, str], Dict[str, float]]]]:
-    """Separates triples into 'safe' and 'rejected' lists based on content.
-    @details
-    - Enables logging bad triples for model improvement
-    - Allows manual review of edge cases
-    - Preserves violation details for analysis
-    @param triples  List of dicts with 's', 'r', 'o' keys
-    @param thresholds  Dict of category->threshold (e.g., {"hate": 0.4})
-    @return Tuple of (safe_triples, bad_triples_with_reasons)
-            bad_triples_with_reasons = [(triple, bad_categories), ...]
-    """
-    # 1. Flatten triples to strings for the API
-    texts = [f"{t['s']} {t['r']} {t['o']}" for t in triples]
-    
-    # 2. Get verification results (List of dicts)
-    # Note: We pass the heavy lifting to the function above
-    results = moderate_texts(texts, thresholds)
 
-    safe_triples = []
-    rejected_triples = []
 
-    # 3. Zip input data with results to filter
-    for triple, violations in zip(triples, results):
-        if not violations:
-            # Empty dict implies False -> Safe
-            safe_triples.append(triple)
-        else:
-            # Populated dict implies True -> Unsafe
-            rejected_triples.append((triple, violations))
-
-    rejected_count = len(triples) - len(safe_triples)
-    if rejected_count > 0:
-        print(f"Moderation: filtered {rejected_count}/{len(triples)} triples")
-
-    return safe_triples, rejected_triples
