@@ -117,30 +117,35 @@ def pipeline_D(collection_name, triples_string, chunk_id):
 @Log.time
 def pipeline_E(
     summary: str, book_title: str, book_id: str, chunk: str = "", gold_summary: str = "", bookscore: float = None, questeval: float = None
-) -> None:
+) -> Dict[str, float]:
     """Compute metrics and send available data to Blazor"""
     if chunk != "":
-        rougeL_recall = task_45_eval_rouge(summary, chunk)["rougeL_recall"]
-        bertscore = task_45_eval_bertscore(summary, chunk)["bertscore_f1"]
-        novel_ngrams = task_45_eval_ngrams(summary, chunk)["novel_ngram_pct"]
-        jsd_stats = task_45_eval_jsd(summary, chunk)["jsd"]
         _entity_coverage = task_45_eval_coverage(summary, chunk)
-        entity_coverage = _entity_coverage["entity_coverage"]
-        entity_hallucination = _entity_coverage["entity_hallucination"]
-        ncd_overlap = task_45_eval_ncd(summary, chunk)["ncd"]
-        salience_recall = task_45_eval_salience(summary, chunk)["salience_recall"]
-        nli_faithfulness = task_45_eval_faithfulness(summary, chunk)["nli_faithfulness"]
-        readability_delta = task_45_eval_readability(summary, chunk)["readability_delta"]
-        sentence_coherence = task_45_eval_sentence_coherence(summary)["sentence_coherence"]
-        entity_grid_coherence = task_45_eval_entity_grid(summary)["entity_grid_coherence"]
-        lexical_diversity = task_45_eval_diversity(summary)["lexical_diversity"]
-        stopword_ratio = task_45_eval_stopwords(summary)["stopword_ratio"]
+        CORE_METRICS: Dict[str, float] = {
+            "rougeL_recall" : task_45_eval_rouge(summary, chunk)["rougeL_recall"],
+            "bertscore" : task_45_eval_bertscore(summary, chunk)["bertscore_f1"],
+            "novel_ngrams" : task_45_eval_ngrams(summary, chunk)["novel_ngram_pct"],
+            "jsd_stats" : task_45_eval_jsd(summary, chunk)["jsd"],
+            "entity_coverage" : _entity_coverage["entity_coverage"],
+            "entity_hallucination" : _entity_coverage["entity_hallucination"],
+            "ncd_overlap" : task_45_eval_ncd(summary, chunk)["ncd"],
+            "salience_recall" : task_45_eval_salience(summary, chunk)["salience_recall"],
+            "nli_faithfulness" : task_45_eval_faithfulness(summary, chunk)["nli_faithfulness"],
+            "readability_delta" : task_45_eval_readability(summary, chunk)["readability_delta"],
+            "sentence_coherence" : task_45_eval_sentence_coherence(summary)["sentence_coherence"],
+            "entity_grid_coherence" : task_45_eval_entity_grid(summary)["entity_grid_coherence"],
+            "lexical_diversity" : task_45_eval_diversity(summary)["lexical_diversity"],
+            "stopword_ratio" : task_45_eval_stopwords(summary)["stopword_ratio"],
+            "bookscore" : bookscore,
+            "questeval" : questeval,
+        }
 
     if chunk == "":
         stages.task_40_post_summary(book_id, book_title, summary)
     else:
         stages.task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval)
     print("\nOutput sent to web app.")
+    return CORE_METRICS
 
 
 @Log.time
