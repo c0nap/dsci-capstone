@@ -482,7 +482,7 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
 # ------------------------------------------------------------------------------
 # GROUP 1: BASIC COMPARISON OF SUMMARY / SOURCE TEXT
 # ------------------------------------------------------------------------------
-# run_rougeL_recall            [BASELINE] Longest common subsequence recall (source as reference). Library: rouge_score
+# run_rouge_l                  [BASELINE] Longest common subsequence recall (source as reference). Library: rouge_score
 # run_bertscore                [MEANING] Average F1 over all tokens. Library: evaluate
 # run_novel_ngrams             [ABSTRACTIVENESS] % of new 3-grams in summary. Library: nltk
 # run_jsd_stats                [DISTRIBUTION] Jensen-Shannon divergence of word frequency distributions. Library: scipy
@@ -601,7 +601,7 @@ def run_novel_ngrams(summary: str, source: str, n: int = 3) -> Dict[str, float]:
     return {"novel_ngram_pct": pct}
 
 
-def run_jsd_distribution(summary: str, source: str) -> Dict[str, float]:
+def run_jsd_stats(summary: str, source: str) -> Dict[str, float]:
     """Jensen-Shannon Divergence (JSD)
     @param summary: Summary text
     @param source: Source text

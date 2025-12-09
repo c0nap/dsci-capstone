@@ -11,21 +11,22 @@ from src.core.boss import (
 )
 from src.util import Log
 import time
-from src.components.metrics import (
-    run_rouge_l,
-    run_bertscore,
-    run_novel_ngrams,
-    run_jsd_distribution,
-    run_entity_coverage,
-    run_ncd_overlap,
-    run_salience_recall,
-    run_nli_faithfulness,
-    run_readability_delta,
-    run_sentence_coherence,
-    run_entity_grid_coherence,
-    run_lexical_diversity,
-    run_stopword_ratio,
+from src.core.stages import (
+    task_45_eval_rouge,
+    task_45_eval_bertscore,
+    task_45_eval_ngrams,
+    task_45_eval_jsd,
+    task_45_eval_coverage,
+    task_45_eval_ncd,
+    task_45_eval_salience,
+    task_45_eval_faithfulness,
+    task_45_eval_readability,
+    task_45_eval_sentence_coherence,
+    task_45_eval_entity_grid,
+    task_45_eval_diversity,
+    task_45_eval_stopwords,
 )
+from typing import Dict
 
 
 @Log.time

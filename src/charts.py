@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import seaborn as sns
 from src.util import Log
-from typing import Optional
+from typing import Optional, Dict, List
 
 
 class Plot:

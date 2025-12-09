@@ -8,7 +8,21 @@ from src.util import Log
 # unused?
 import traceback
 from typing import Dict, List, Optional, Tuple
-
+from src.components.metrics import (
+    run_rouge_l,
+    run_bertscore,
+    run_novel_ngrams,
+    run_jsd_stats,
+    run_entity_coverage,
+    run_ncd_overlap,
+    run_salience_recall,
+    run_nli_faithfulness,
+    run_readability_delta,
+    run_sentence_coherence,
+    run_entity_grid_coherence,
+    run_lexical_diversity,
+    run_stopword_ratio,
+)
 
 ### Will revisit later - Book classes need refactoring ###
 
@@ -376,7 +390,7 @@ def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, book
 def task_45_eval_rouge(summary, chunk):
     """Compute metric for ROUGE-L Recall (Coverage Score)"""
     with Log.timer():
-        return run_rougeL_recall(summary, chunk)
+        return run_rouge_l(summary, chunk)
 
 def task_45_eval_bertscore(summary, chunk):
     """Compute metric for BERTScore embedding similarity"""
