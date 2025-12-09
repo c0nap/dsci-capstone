@@ -191,71 +191,97 @@ class Plot:
         Log.chart("Saved summary metrics CSV", filename)
 
 
+
+    METRIC_GROUPS = [
+        ("BASIC COMPARISON", ["rougeL_recall", "bertscore", "novel_ngrams", "jsd_stats", "entity_coverage"]),
+        ("HIGH-LEVEL COMPARISON", ["ncd_overlap", "salience_recall", "nli_faithfulness", "readability_delta"]),
+        ("REFERENCE-FREE", ["sentence_coherence", "entity_grid_coherence", "lexical_diversity", "stopword_ratio", "bookscore", "questeval"]),
+    ]
+
+
     @staticmethod
     def summary_comparison(filename: str, paths: list[str], fixed_colors: List[str], labels: List[str]) -> None:
-        """Compare metrics across an arbitrary number of metric CSV files."""
+        """Compare metrics across an arbitrary number of metric CSV files, with grouped metric labels."""
         import matplotlib.pyplot as plt
-
+        import numpy as np
+    
         merged = None
-
+    
         # Load each CSV and align metrics
         for i, path in enumerate(paths):
-            # Determine label
             if i < len(labels):
                 label = labels[i]
             else:
                 label = os.path.splitext(os.path.basename(path))[0]
                 labels.append(label)
-
+    
             df = pd.read_csv(path)   # expects columns: metric, value
             df = df.rename(columns={"value": label})
-
+    
             if merged is None:
                 merged = df
             else:
                 merged = pd.merge(merged, df, on="metric", how="outer")
-
+    
         # Pretty names for metrics
-        merged["metric"] = merged["metric"].apply(
-            lambda k: Plot.METRIC_NAMES.get(k, k)
-        )
-        merged = merged.sort_values("metric")
-
-        # Plot setup
-        plt.figure(figsize=(12, len(merged) * 0.6))
-
-        y_positions = range(len(merged))
+        merged["metric"] = merged["metric"].apply(lambda k: Plot.METRIC_NAMES.get(k, k))
+    
+        # Compute y positions and insert extra spacing between groups
+        y_positions = []
+        y_labels = []
+        group_ticks = []
+        spacing = 0.5  # extra space between groups
+        y = 0
+        for group_name, metrics in METRIC_GROUPS:
+            group_indices = []
+            for m in metrics:
+                # Find metric index in merged
+                idx = merged.index[merged["metric"] == Plot.METRIC_NAMES.get(m, m)].tolist()
+                if idx:
+                    y_positions.append(y)
+                    y_labels.append(merged.loc[idx[0], "metric"])
+                    group_indices.append(y)
+                    y += 1
+            if group_indices:
+                group_center = np.mean(group_indices)
+                group_ticks.append((group_center, group_name))
+                y += spacing  # add extra space after group
+    
         bar_height = 0.8 / len(labels)
-
-        # Draw bars for each dataset
+    
+        plt.figure(figsize=(12, y * 0.6))
+    
+        # Draw bars
         for i, label in enumerate(labels):
-            if i < len(fixed_colors):
-                color = fixed_colors[i]
-            else:
-                color = None  # auto color
-
+            color = fixed_colors[i] if i < len(fixed_colors) else None
             offset = (i - (len(labels) - 1) / 2) * bar_height
-
-            plt.barh(
-                [y + offset for y in y_positions],
-                merged[label],
-                height=bar_height,
-                label=label,
-                color=color,
-            )
-
-        plt.yticks(range(len(merged)), merged["metric"])
+            values = []
+            for lbl in y_labels:
+                # Fetch value by metric name
+                match = merged[merged["metric"] == lbl][label]
+                values.append(match.values[0] if not match.empty else 0)
+            plt.barh([y + offset for y in range(len(values))], values, height=bar_height, label=label, color=color)
+    
+        plt.yticks(range(len(y_labels)), y_labels)
         plt.xlabel("Score")
         plt.title("Metric Comparison Across Summaries")
         plt.legend()
+    
+        # Draw vertical dotted lines between groups
+        for idx, (center, name) in enumerate(group_ticks[:-1]):
+            plt.axhline(y=center + 0.5, color="gray", linestyle="dotted")  # dotted line between groups
+    
+        # Add group labels at top interior
+        for center, name in group_ticks:
+            plt.text(-0.05 * max(merged[labels].max().max(), 1), center, name, fontsize=10, fontweight="bold", va="center", ha="right")
+    
         plt.tight_layout()
-
-        # Save
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         plt.savefig(filename)
         plt.close()
-
+    
         Log.chart("Metric Comparison", filename)
+
 
 
 
