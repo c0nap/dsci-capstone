@@ -166,7 +166,7 @@ def test_job_14_llm_minimal(book_data, llm_connector_type):
     """Test LLM-based triple sanitization with realistic data."""
     triples_string = "\n".join(book_data["rebel_triples"])
 
-    prompt, llm_output = task_14_validate_llm(triples_string, book_data["chunk"].text)
+    prompt, llm_output, _ = task_14_validate_llm(triples_string, book_data["chunk"].text)
 
     assert isinstance(prompt, str)
     assert triples_string in prompt

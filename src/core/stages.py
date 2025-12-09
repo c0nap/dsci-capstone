@@ -197,7 +197,7 @@ class Config:
             from src.components.relation_extraction import RelationExtractorOpenIE
 
             # Initialize OpenIE wrapper (handles CoreNLP server internally)
-            return RelationExtractorOpenIE(memory=memory)
+            return RelationExtractorOpenIE(memory="4G")
 
         if extractor_type == "textacy":
             from src.components.relation_extraction import RelationExtractorTextacy
