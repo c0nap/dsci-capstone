@@ -91,17 +91,17 @@ PARAMS_RELATION_EXTRACTORS: List[Any] = [  # ParameterSet is internal to PyTest
 @pytest.fixture
 def langchain():
     """Fixture returning the LangChain LLM API."""
-    return task_14_relation_extraction_llm_langchain
+    return "langchain"
 
 
 @pytest.fixture
 def openai():
     """Fixture returning the OpenAI LLM API."""
-    return task_14_relation_extraction_llm_openai
+    return "openai"
 
 
 @pytest.fixture
-def llm_prompt_task(request):
+def llm_connector_type(request):
     """Meta-fixture that returns the backend function specified by the parameter."""
     return request.getfixturevalue(request.param)
 
@@ -160,12 +160,12 @@ def test_job_12_extraction(book_data, relation_extraction_task):
 @pytest.mark.smoke
 @pytest.mark.order(14)
 @pytest.mark.dependency(name="job_14_llm_minimal", scope="session")
-@pytest.mark.parametrize("llm_prompt_task", ["langchain", "openai"], indirect=True)
-def test_job_14_llm_minimal(book_data, llm_prompt_task):
+@pytest.mark.parametrize("llm_connector_type", ["langchain", "openai"], indirect=True)
+def test_job_14_llm_minimal(book_data, llm_connector_type):
     """Test LLM-based triple sanitization with realistic data."""
     triples_string = "\n".join(book_data["rebel_triples"])
 
-    prompt, llm_output = llm_prompt_task(triples_string, book_data["chunk"].text)
+    prompt, llm_output = task_14_relation_extraction_llm(triples_string, book_data["chunk"].text, llm_connector_type=llm_connector_type)
 
     assert isinstance(prompt, str)
     assert triples_string in prompt

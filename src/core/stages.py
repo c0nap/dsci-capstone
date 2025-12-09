@@ -230,44 +230,43 @@ def task_13_concatenate_triples(extracted):
         return triples_string
 
 
-def _task_14_relation_extraction_llm(triples_string: str, text: str, llm: LLMConnector) -> Tuple[str, str]:
-    prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-    prompt += f"And here is the original text:\n{text}\n\n"
-    prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
-    prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
-    llm_output = llm.execute_query(prompt)
-    # # TODO - move retry logic to LLMConnector
-    # # Enforce valid JSON
-    # attempts = 10
-    # while not json.loads(llm_output) and attempts > 0:
-    #     llm_output = llm.execute_query(prompt)
-    #     attempts -= 1
-    # if attempts == 0:
-    #     raise Log.Failure()
-    return (prompt, llm_output)
-
-def task_14_relation_extraction_llm_langchain(triples_string: str, text: str) -> Tuple[str, str]:
-    with Log.timer():
+def _task_14_get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
+    # TODO: move to session.llm?
+    if llm_connector_type == "langchain":
         from src.connectors.llm import LangChainConnector
-
-        # TODO: move to session.llm
-        llm = LangChainConnector(
-            temperature=1,  # gpt-5-nano only supports temperature 1
-            system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
+        return LangChainConnector(
+            temperature=temperature,
+            system_prompt=system_prompt,
         )
-        return _task_14_relation_extraction_llm(triples_string, text, llm)
-        
-
-def task_14_relation_extraction_llm_openai(triples_string: str, text: str) -> Tuple[str, str]:
-    with Log.timer():
+    if llm_connector_type == "openai":
         from src.connectors.llm import OpenAIConnector
-
-        # TODO: move to session.llm
-        llm = OpenAIConnector(
-            temperature=1,  # gpt-5-nano only supports temperature 1
-            system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
+        return OpenAIConnector(
+            temperature=temperature,
+            system_prompt=system_prompt,
         )
-        return _task_14_relation_extraction_llm(triples_string, text, llm)
+    return None  # TODO: ValueError
+    
+
+def task_14_relation_extraction_llm(triples_string: str, text: str, llm_connector_type: str = "langchain", temperature: float = 1) -> Tuple[str, str]:
+    with Log.timer(f"[{llm_connector_type}_temp-{temperature}]"):
+        # gpt-5-nano only supports temperature 1
+        # TOOD: reasoning_effort, model_name, prompt_basic
+        system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON."
+        llm = _task_14_get_llm(llm_connector_type, temperature, system_prompt)
+        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+        prompt += f"And here is the original text:\n{text}\n\n"
+        prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
+        prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
+        llm_output = llm.execute_query(prompt)
+        # # TODO - move retry logic to LLMConnector
+        # # Enforce valid JSON
+        # attempts = 10
+        # while not json.loads(llm_output) and attempts > 0:
+        #     llm_output = llm.execute_query(prompt)
+        #     attempts -= 1
+        # if attempts == 0:
+        #     raise Log.Failure()
+        return (prompt, llm_output)
 
 
 def task_15_sanitize_triples_llm(llm_output: str) -> List[Dict[str, str]]:

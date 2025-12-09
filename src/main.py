@@ -68,7 +68,7 @@ def pipeline_B(collection_name, chunks, book_title):
     print()
     triples_string = stages.task_13_concatenate_triples(extracted)
 
-    prompt, llm_output = stages.task_14_relation_extraction_llm_openai(triples_string, c.text)
+    prompt, llm_output = stages.task_14_relation_extraction_llm(triples_string, c.text)
     print("\n    LLM prompt:")
     print(prompt)
     print("\n    LLM output:")
