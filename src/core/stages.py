@@ -114,18 +114,18 @@ from src.components.metrics import (
 
 
 class Config:
-    relation_extractor_type="textacy"
-    validation_llm_engine="openai"
-    moderation_llm_engine="openai"
-    moderation_strategy="drop"
-    graph_lookup_mode="popular"
-    verbalize_triples_mode="raw"
-    summary_llm_engine="openai"
+    relation_extractor_type="openie"
+    validation_llm_engine="langchain"
+    moderation_llm_engine="langchain"
+    moderation_strategy="resolve"
+    graph_lookup_mode="community"
+    verbalize_triples_mode="context"
+    summary_llm_engine="langchain"
 
     # gpt-5-nano only supports temperature 1
-    temperature=1
-    reasoning_effort="minimal"
-    model_name="gpt-5-nano"
+    temperature=0.1
+    reasoning_effort="high"
+    model_name="gpt-5"
 
     # Moderation thresholds for Gutenberg (historical fiction)
     moderation_thresholds = {
@@ -297,6 +297,7 @@ def task_03_chunk_story(story, max_chunk_length=1500):
 
 # PIPELINE STAGE B - RELATION EXTRACTION / CHUNKS -> TRIPLES
 def task_10_random_chunk(chunks):
+    return (18, chunks[18])
     unique_numbers, sample = task_10_sample_chunks(chunks, n_sample=1)
     return (unique_numbers[0], sample[0])
 
