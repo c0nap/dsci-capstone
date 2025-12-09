@@ -258,7 +258,7 @@ class Log:
     # Advantage over @Log.time: Cleaner traceback
     @staticmethod
     @contextmanager
-    def timer(name: str = None) -> Generator[None, None, None]:
+    def timer(name: str = None, label: str = "") -> Generator[None, None, None]:
         """Context manager for recording the execution time of code blocks.
         @param name  Optional name for the timed block. If not provided, uses caller function name.
         Usage:
@@ -278,6 +278,7 @@ class Log:
                 if func_name not in ['timer', '__enter__', '__exit__']:
                     name = func_name
                     break
+        name += label
 
         call_chain = Log.format_call_chain(stack, name)
         start = time.time()
