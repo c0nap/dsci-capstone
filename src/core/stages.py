@@ -327,7 +327,7 @@ def task_12_relation_extraction(text: str) -> List[Triple]:
         return extracted
 
 
-def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, str]:
+def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, str, List[Triple]]:
     llm_connector_type = Config.validation_llm_engine
     with Log.timer(config = f"[{llm_connector_type}]"): # _{temperature:.2f}
         triples_string = RelationExtractor.to_triples_string(triples)
@@ -338,16 +338,9 @@ def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, str]:
         prompt += f"And here is the original text:\n{text}\n\n"
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
         prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
-        llm_output = llm.execute_query(prompt)
-        # # TODO - move retry logic to LLMConnector
-        # # Enforce valid JSON
-        # attempts = 10
-        # while not json.loads(llm_output) and attempts > 0:
-        #     llm_output = llm.execute_query(prompt)
-        #     attempts -= 1
-        # if attempts == 0:
-        #     raise Log.Failure()
-        return (prompt, llm_output)
+        response = llm.execute_query(prompt)
+        triples = parse_llm_triples(response)
+        return (prompt, response, triples)
 
 
 def task_16_moderate_triples_llm(triples: List[Triple], text: str) -> List[Triple]:
@@ -419,7 +412,7 @@ def _task_16_resolve_strategy(
     prompt += "If the original text has genuinely harmful content represented by this triple, then drop this triple."
 
     response = llm.execute_query(prompt)
-    # return RelationExtractor.parse_json_response(response)
+    triples = parse_llm_triples(response)
 
 
 

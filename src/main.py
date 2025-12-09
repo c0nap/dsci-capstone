@@ -52,14 +52,13 @@ def pipeline_B(collection_name, chunks, book_title):
         print(triple)
     print()
 
-    prompt, llm_output = stages.task_14_validate_llm(extracted, c.text)
+    prompt, llm_output, triples = stages.task_14_validate_llm(extracted, c.text)
     print("\n    LLM prompt:")
     print(prompt)
     print("\n    LLM output:")
     print(llm_output)
     print("\n" + "=" * 50 + "\n")
 
-    triples = stages.task_15_sanitize_triples_llm(llm_output)
     triples = stages.task_16_moderate_triples_llm(triples)
     print("\nValid JSON")
     return triples, c
