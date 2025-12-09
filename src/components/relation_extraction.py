@@ -25,13 +25,22 @@ class RelationExtractor(ABC):
     """
 
     @abstractmethod
-    def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
+    def extract(self, text: str) -> List[Triple]:
         """Extract relations from the provided text.
         @param text  The raw input text to process.
-        @param parse_tuples  Retained for API compatibility; extraction always returns structured Triples.
         @return  A list of Triple dictionaries {'s': ..., 'r': ..., 'o': ...}.
         """
         pass
+
+    @staticmethod
+    def to_triples_string(extracted: List[Triple]) -> str:
+        """Concatenate triples into a form usable in a LLM prompt.
+        @param extracted  A list of extracted relations.
+        @return  String with one triple per line."""
+        triples_string = ""
+            for triple in extracted:
+                triples_string += str(triple) + "\n"
+            return triples_string
 
 
 class RelationExtractorREBEL(RelationExtractor):
@@ -59,13 +68,12 @@ class RelationExtractorREBEL(RelationExtractor):
         self.tokenizer: Optional[transformers.PreTrainedTokenizer] = None
         self.model: Any = None  # AutoModelForSeq2SeqLM.from_pretrained() return type - internal factory messes up typing
 
-    def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
+    def extract(self, text: str) -> List[Triple]:
         """Perform extraction on the text using the generative model.
         @details
             The text is first segmented into sentences because RE models degrade
             significantly in performance on long, multi-sentence paragraphs.
         @param text  The input narrative text.
-        @param parse_tuples  Unused (Always parses to Triples).
         @return  A list of extracted relations.
         """
         # 1. Lazy Imports & Setup (Run once)
@@ -147,14 +155,13 @@ class RelationExtractorOpenIE(RelationExtractor):
             'be_quiet': True,
         }
 
-    def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
+    def extract(self, text: str) -> List[Triple]:
         """Extract triples using the Stanford OpenIE pipeline.
         @details
             Uses a context manager to spin up the Java server via CoreNLPClient.
             This ensures the heavy Java process (which requires ~4GB RAM) is
             terminated immediately after processing, freeing resources.
         @param text  The raw narrative text.
-        @param parse_tuples  Unused (Always parses to Triples).
         @return  A list of extracted relations.
         """
         # Lazy Import
@@ -199,10 +206,9 @@ class RelationExtractorTextacy(RelationExtractor):
         self.nlp: Optional[spacy.language.Language] = None
         self.model_name: str = "en_core_web_sm"
 
-    def extract(self, text: str, parse_tuples: bool = True) -> List[Triple]:
+    def extract(self, text: str) -> List[Triple]:
         """Extract SVO triples.
         @param text  The raw input text.
-        @param parse_tuples  Unused (Always parses to Triples).
         @return  A list of extracted relations.
         """
         # Lazy Imports

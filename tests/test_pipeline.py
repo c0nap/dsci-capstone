@@ -372,9 +372,10 @@ def test_job_11_send_chunk(docs_db, book_data):
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_13_concatenate_triples(book_data):
     """Test converting extracted triples to newline-delimited string."""
+    from src.components.relation_extraction import RelationExtractor
     extracted = book_data["rebel_triples"]
 
-    triples_string = task_13_concatenate_triples(extracted)
+    triples_string = RelationExtractor.to_triples_string(extracted)
 
     assert isinstance(triples_string, str)
     assert triples_string.count("\n") == len(extracted)

@@ -325,18 +325,10 @@ def task_12_relation_extraction(text: str) -> List[Triple]:
         return extracted
 
 
-def task_13_concatenate_triples(extracted: List[Triple]) -> str:
-    with Log.timer():
-        # TODO: to_triples_string in RelationExtractor?
-        triples_string = ""
-        for triple in extracted:
-            triples_string += str(triple) + "\n"
-        return triples_string
-
-
-def task_14_validate_llm(triples_string: str, text: str, temperature: float = 1) -> Tuple[str, str]:
+def task_14_validate_llm(triples: List[Triple], text: str, temperature: float = 1) -> Tuple[str, str]:
     llm_connector_type = Config.validation_llm_engine
     with Log.timer(config = f"[{llm_connector_type}]"): # _{temperature:.2f}
+        triples_string = RelationExtractor.to_triples_string(triples)
         # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON."
@@ -357,7 +349,7 @@ def task_14_validate_llm(triples_string: str, text: str, temperature: float = 1)
         return (prompt, llm_output)
 
 
-def task_15_sanitize_triples_llm(llm_output: str) -> List[Dict[str, str]]:
+def task_15_sanitize_triples_llm(llm_output: str) -> List[Triple]:
     with Log.timer():
         # TODO: rely on robust LLM connector logic to assume json
         llm_output = clean_json_block(llm_output)
@@ -367,7 +359,7 @@ def task_15_sanitize_triples_llm(llm_output: str) -> List[Dict[str, str]]:
         return norm_triples
 
 
-def task_16_moderate_triples_llm(triples: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def task_16_moderate_triples_llm(triples: List[Triple]) -> List[Triple]:
     """Filter offensive content from literary triples.
     @param triples  Normalized triples in JSON format.
     @return Safe triples for knowledge graph insertion."""
@@ -393,7 +385,7 @@ def task_16_moderate_triples_llm(triples: List[Dict[str, str]]) -> List[Dict[str
 
 
 # PIPELINE STAGE C - ENRICHMENT / TRIPLES -> GRAPH
-def task_20_send_triples(triples):
+def task_20_send_triples(triples: List[Triple]):
     with Log.timer():
         session.main_graph.add_triples_json(triples)
 

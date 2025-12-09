@@ -51,9 +51,8 @@ def pipeline_B(collection_name, chunks, book_title):
     for triple in extracted:
         print(triple)
     print()
-    triples_string = stages.task_13_concatenate_triples(extracted)
 
-    prompt, llm_output = stages.task_14_validate_llm(triples_string, c.text)
+    prompt, llm_output = stages.task_14_validate_llm(extracted, c.text)
     print("\n    LLM prompt:")
     print(prompt)
     print("\n    LLM output:")
