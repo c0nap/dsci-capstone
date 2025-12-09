@@ -196,17 +196,18 @@ class Plot:
         """Compare metrics across an arbitrary number of metric CSV files."""
         import matplotlib.pyplot as plt
 
-        # Load all CSVs into aligned DataFrames
         merged = None
 
-        for path in paths:
-            # Choose color: first 3 fixed, others auto
+        # Load each CSV and align metrics
+        for i, path in enumerate(paths):
+            # Determine label
             if i < len(labels):
                 label = labels[i]
             else:
                 label = os.path.splitext(os.path.basename(path))[0]
                 labels.append(label)
-            df = pd.read_csv(path)  # expects: metric, value
+
+            df = pd.read_csv(path)   # expects columns: metric, value
             df = df.rename(columns={"value": label})
 
             if merged is None:
@@ -214,24 +215,24 @@ class Plot:
             else:
                 merged = pd.merge(merged, df, on="metric", how="outer")
 
-        # Pretty names
+        # Pretty names for metrics
         merged["metric"] = merged["metric"].apply(
             lambda k: Plot.METRIC_NAMES.get(k, k)
         )
         merged = merged.sort_values("metric")
 
-        # Plot
+        # Plot setup
         plt.figure(figsize=(12, len(merged) * 0.6))
 
         y_positions = range(len(merged))
         bar_height = 0.8 / len(labels)
 
+        # Draw bars for each dataset
         for i, label in enumerate(labels):
-            # Choose color: first 3 fixed, others auto
             if i < len(fixed_colors):
                 color = fixed_colors[i]
             else:
-                color = None  # Matplotlib chooses default
+                color = None  # auto color
 
             offset = (i - (len(labels) - 1) / 2) * bar_height
 
@@ -240,7 +241,7 @@ class Plot:
                 merged[label],
                 height=bar_height,
                 label=label,
-                color=color
+                color=color,
             )
 
         plt.yticks(range(len(merged)), merged["metric"])
