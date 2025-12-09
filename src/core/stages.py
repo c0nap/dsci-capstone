@@ -293,19 +293,17 @@ def task_03_chunk_story(story, max_chunk_length=1500):
 
 # PIPELINE STAGE B - RELATION EXTRACTION / CHUNKS -> TRIPLES
 def task_10_random_chunk(chunks):
-    with Log.timer():
-        unique_numbers, sample = task_10_sample_chunks(chunks, n_sample=1)
-        return (unique_numbers[0], sample[0])
+    unique_numbers, sample = task_10_sample_chunks(chunks, n_sample=1)
+    return (unique_numbers[0], sample[0])
 
 
 def task_10_sample_chunks(chunks, n_sample):
-    with Log.timer():
-        unique_numbers = random.sample(range(len(chunks)), n_sample)
-        sample = []
-        for i in unique_numbers:
-            c = chunks[i]
-            sample.append(c)
-        return (unique_numbers, sample)
+    unique_numbers = random.sample(range(len(chunks)), n_sample)
+    sample = []
+    for i in unique_numbers:
+        c = chunks[i]
+        sample.append(c)
+    return (unique_numbers, sample)
 
 
 def task_11_send_chunk(c, collection_name, book_title):
