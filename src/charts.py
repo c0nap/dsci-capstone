@@ -137,7 +137,7 @@ class Plot:
 
 
 
-    CORE_METRICS: Dict[str, str] = {
+    METRIC_NAMES: Dict[str, str] = {
         "rougeL_recall" : "ROUGE-L (Recall)",
         "bertscore" : "BERTScore (F1)",
         "novel_ngrams" : "Novel N-Grams",
@@ -158,6 +158,17 @@ class Plot:
 
     @staticmethod
     def summary_results(metrics: Dict[str, float]) -> None:
+        """Generate a bar chart showing metrics for a single summary."""
+        # Convert keys to display names
+        names = [METRIC_NAMES[k] for k in metrics.keys()]
+        values = [metrics[k] for k in metrics.keys()]
+
+        plt.figure(figsize=(len(metrics) * 0.8, 8))
+        plt.barh(names, values)
+        plt.xlabel("Score")
+        plt.title("Evaluation of Single Summary")
+        plt.tight_layout()
+        plt.show()
 
 
 if __name__ == "__main__":
