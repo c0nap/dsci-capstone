@@ -114,9 +114,104 @@ from src.components.metrics import (
 
 
 
+class Config:
+    relation_extractor_type="textacy"
+    validation_llm_engine="openai"
+    graph_lookup_mode="popular"
+    verbalize_triples_mode="triple"
+    summary_llm_engine="openai"
+
+    def _task_12_get_re(extractor_type: str) -> RelationExtractor:
+        # TODO: move to session.extractor?
+        if extractor_type == "rebel":
+            from src.components.relation_extraction import RelationExtractorREBEL
+
+            # TODO: move to session.rel_extract
+            re_rebel = "Babelscape/rebel-large"
+            # TODO: different models
+            # re_rst = "GAIR/rst-information-extraction-11b"
+            # ner_renard = "compnet-renard/bert-base-cased-literary-NER"
+            return RelationExtractorREBEL(model_name=re_rebel, max_tokens=1024)
+
+        if extractor_type == "openie":
+            from src.components.relation_extraction import RelationExtractorOpenIE
+
+            # Initialize OpenIE wrapper (handles CoreNLP server internally)
+            return RelationExtractorOpenIE(memory=memory)
+
+        if extractor_type == "textacy":
+            from src.components.relation_extraction import RelationExtractorTextacy
+
+            # Initialize Textacy wrapper (pure Python backup)
+            return RelationExtractorTextacy()
+
+        raise ValueError(f"Invalid extractor_type: {extractor_type}. Expected: 'textacy', 'openie', or 'rebel'.")
+
+    def _task_14_get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
+        # TODO: move to session.llm?
+        if llm_connector_type == "langchain":
+            from src.connectors.llm import LangChainConnector
+            return LangChainConnector(
+                temperature=temperature,
+                system_prompt=system_prompt,
+            )
+        if llm_connector_type == "openai":
+            from src.connectors.llm import OpenAIConnector
+            return OpenAIConnector(
+                temperature=temperature,
+                system_prompt=system_prompt,
+            )
+        raise ValueError(f"Invalid llm_connector_type: {llm_connector_type}. Expected: 'langchain', or 'openai'.")
+
+    def _task_22_get_triples(lookup_mode):
+        """Select subgraph retrieval strategy based on use case."""
+        
+        if lookup_mode == "popular":
+            # FAST: Degree-based filtering for hub entities
+            return session.main_graph.get_by_ranked_degree(
+                worst_rank=5, 
+                enforce_count=True, 
+                id_columns=["subject_id"]
+            )
+        
+        if lookup_mode == "local":
+            # FAST: Multi-hop exploration from most connected node
+            center_node = session.main_graph.get_node_most_popular()
+            return session.main_graph.get_neighborhood(center_node, depth=2)
+        
+        if lookup_mode == "explore":
+            # MEDIUM: Structural exploration via random walks
+            start_nodes = session.main_graph.get_nodes_top_degree(k=3)
+            return session.main_graph.get_random_walk(
+                start_nodes, 
+                walk_length=5, 
+                num_walks=3
+            )
+        
+        if lookup_mode == "community":
+            # HEAVY: Community-based retrieval (run detection once, query many times)
+            session.main_graph.detect_community_clusters(method="leiden")
+            community_id = session.main_graph.get_community_largest()
+            return session.main_graph.get_community_subgraph(community_id)
+        
+        raise ValueError(f"Invalid lookup_mode: {lookup_mode}. Expected: 'popular', 'local', 'explore', or 'community'.")
 
 
-
+    def _task_30_get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
+        # TODO: move to session.llm?
+        if llm_connector_type == "langchain":
+            from src.connectors.llm import LangChainConnector
+            return LangChainConnector(
+                temperature=temperature,
+                system_prompt=system_prompt,
+            )
+        if llm_connector_type == "openai":
+            from src.connectors.llm import OpenAIConnector
+            return OpenAIConnector(
+                temperature=temperature,
+                system_prompt=system_prompt,
+            )
+        raise ValueError(f"Invalid llm_connector_type: {llm_connector_type}. Expected: 'langchain', or 'openai'.")
 
 
 ##########################################################################
@@ -186,40 +281,12 @@ def task_11_send_chunk(c, collection_name, book_title):
 
 # TODO: 11, 12, 13 fit better as preprocessing tasks
 # tied to pipeline_B -> pipeline_A
-
-
-
-def _task_12_get_re(extractor_type: str) -> RelationExtractor:
-    # TODO: move to session.extractor?
-    if extractor_type == "rebel":
-        from src.components.relation_extraction import RelationExtractorREBEL
-
-        # TODO: move to session.rel_extract
-        re_rebel = "Babelscape/rebel-large"
-        # TODO: different models
-        # re_rst = "GAIR/rst-information-extraction-11b"
-        # ner_renard = "compnet-renard/bert-base-cased-literary-NER"
-        return RelationExtractorREBEL(model_name=re_rebel, max_tokens=1024)
-
-    if extractor_type == "openie":
-        from src.components.relation_extraction import RelationExtractorOpenIE
-
-        # Initialize OpenIE wrapper (handles CoreNLP server internally)
-        return RelationExtractorOpenIE(memory=memory)
-
-    if extractor_type == "textacy":
-        from src.components.relation_extraction import RelationExtractorTextacy
-
-        # Initialize Textacy wrapper (pure Python backup)
-        return RelationExtractorTextacy()
-
-    raise ValueError(f"Invalid extractor_type: {extractor_type}. Expected: 'textacy', 'openie', or 'rebel'.")
-
     
 
-def task_12_relation_extraction(text: str, extractor_type: str = "textacy") -> Tuple[str, str]:
+def task_12_relation_extraction(text: str) -> Tuple[str, str]:
+    extractor_type = Config.relation_extractor_type
     with Log.timer(config = f"[{extractor_type}]"):
-        re = _task_12_get_re(extractor_type)
+        re = Config._task_12_get_re(extractor_type)
         extracted = re.extract(text)
         return extracted
 
@@ -233,29 +300,13 @@ def task_13_concatenate_triples(extracted):
         return triples_string
 
 
-def _task_14_get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
-    # TODO: move to session.llm?
-    if llm_connector_type == "langchain":
-        from src.connectors.llm import LangChainConnector
-        return LangChainConnector(
-            temperature=temperature,
-            system_prompt=system_prompt,
-        )
-    if llm_connector_type == "openai":
-        from src.connectors.llm import OpenAIConnector
-        return OpenAIConnector(
-            temperature=temperature,
-            system_prompt=system_prompt,
-        )
-    raise ValueError(f"Invalid llm_connector_type: {llm_connector_type}. Expected: 'langchain', or 'openai'.")
-    
-
 def task_14_validate_llm(triples_string: str, text: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
+    llm_connector_type = Config.validation_llm_engine
     with Log.timer(config = f"[{llm_connector_type}]"): # _{temperature:.2f}
         # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON."
-        llm = _task_14_get_llm(llm_connector_type, temperature, system_prompt)
+        llm = Config._task_14_get_llm(llm_connector_type, temperature, system_prompt)
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
         prompt += f"And here is the original text:\n{text}\n\n"
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
@@ -320,50 +371,19 @@ def task_21_3_post_statistics():
         # TODO: notify blazor
         pass
 
-def _task_22_get_triples(lookup_mode):
-    """Select subgraph retrieval strategy based on use case."""
-    
-    if lookup_mode == "popular":
-        # FAST: Degree-based filtering for hub entities
-        return session.main_graph.get_by_ranked_degree(
-            worst_rank=5, 
-            enforce_count=True, 
-            id_columns=["subject_id"]
-        )
-    
-    if lookup_mode == "local":
-        # FAST: Multi-hop exploration from most connected node
-        center_node = session.main_graph.get_node_most_popular()
-        return session.main_graph.get_neighborhood(center_node, depth=2)
-    
-    if lookup_mode == "explore":
-        # MEDIUM: Structural exploration via random walks
-        start_nodes = session.main_graph.get_nodes_top_degree(k=3)
-        return session.main_graph.get_random_walk(
-            start_nodes, 
-            walk_length=5, 
-            num_walks=3
-        )
-    
-    if lookup_mode == "community":
-        # HEAVY: Community-based retrieval (run detection once, query many times)
-        session.main_graph.detect_community_clusters(method="leiden")
-        community_id = session.main_graph.get_community_largest()
-        return session.main_graph.get_community_subgraph(community_id)
-    
-    raise ValueError(f"Invalid lookup_mode: {lookup_mode}. Expected: 'popular', 'local', 'explore', or 'community'.")
 
-
-def task_22_fetch_subgraph(lookup_mode="popular"):
+def task_22_fetch_subgraph():
     """Retrieve and convert subgraph to named triples."""
+    lookup_mode = Config.graph_lookup_mode
     with Log.timer(config=f"[{lookup_mode}]"):
-        triples_df = _task_22_get_triples(lookup_mode)
+        triples_df = Config._task_22_get_triples(lookup_mode)
         triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
         return triples_df
 
 
-def task_23_verbalize_triples(triples_df, verbal_mode="triple"):
+def task_23_verbalize_triples(triples_df):
     """Convert triples to string format for LLM consumption."""
+    verbal_mode = Config.verbalize_triples_mode
     with Log.timer(config=f"[{verbal_mode}]"):
         if verbal_mode not in ['triple', 'natural', 'json', 'context']:
             raise ValueError(f"Invalid verbal_mode: {verbal_mode}. Expected: 'triple', 'natural', 'json', or 'context'.")
@@ -372,30 +392,14 @@ def task_23_verbalize_triples(triples_df, verbal_mode="triple"):
 
 
 # PIPELINE STAGE D - CONSOLIDATE / GRAPH -> SUMMARY
-def _task_30_get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
-    # TODO: move to session.llm?
-    if llm_connector_type == "langchain":
-        from src.connectors.llm import LangChainConnector
-        return LangChainConnector(
-            temperature=temperature,
-            system_prompt=system_prompt,
-        )
-    if llm_connector_type == "openai":
-        from src.connectors.llm import OpenAIConnector
-        return OpenAIConnector(
-            temperature=temperature,
-            system_prompt=system_prompt,
-        )
-    raise ValueError(f"Invalid llm_connector_type: {llm_connector_type}. Expected: 'langchain', or 'openai'.")
-
-
-def task_30_summarize_llm(triples_string: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
+def task_30_summarize_llm(triples_string: str, temperature: float = 1) -> Tuple[str, str]:
     """Prompt LLM to generate summary"""
+    llm_connector_type = Config.summary_llm_engine
     with Log.timer(config = f"[{llm_connector_type}]"): # _{temperature:.2f}
         # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that summarizes text."
-        llm = _task_30_get_llm(llm_connector_type, temperature, system_prompt)
+        llm = Config._task_30_get_llm(llm_connector_type, temperature, system_prompt)
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
         prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
         prompt += "Output your generated summary and nothing else."
