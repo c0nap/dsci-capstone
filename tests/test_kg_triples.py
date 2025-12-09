@@ -752,7 +752,7 @@ def test_to_triples_string_triple_mode(nature_scene_graph: KnowledgeGraph) -> No
     triples_df = kg.get_all_triples()
     triple_names_df = kg.triples_to_names(triples_df.head(3), drop_ids=True)
     
-    result = kg.to_triples_string(triple_names_df, mode="triple")
+    result = kg.to_triples_string(triple_names_df, mode="raw")
     assert result is not None
     assert isinstance(result, str)
     
@@ -901,13 +901,13 @@ def test_to_triples_string_edge_cases(nature_scene_graph: KnowledgeGraph) -> Non
     # Test 1: Empty DataFrame
     empty_df = DataFrame(columns=["subject", "relation", "object"])
     
-    assert kg.to_triples_string(empty_df, mode="triple") == ""
+    assert kg.to_triples_string(empty_df, mode="raw") == ""
     assert kg.to_triples_string(empty_df, mode="natural") == ""
     assert kg.to_triples_string(empty_df, mode="json") == "[]"
     assert kg.to_triples_string(empty_df, mode="context") == ""
     
     # Test 2: None input (should fetch all triples)
-    result = kg.to_triples_string(None, mode="triple")
+    result = kg.to_triples_string(None, mode="raw")
     assert result is not None
     assert len(result) > 0  # Should have content from nature_scene_graph
     
@@ -942,7 +942,7 @@ def test_to_triples_string_comprehensive(nature_scene_graph: KnowledgeGraph) -> 
     triple_names_df = kg.triples_to_names(triples_df, drop_ids=True)
     
     # Generate all formats
-    triple_output = kg.to_triples_string(triple_names_df, mode="triple")
+    triple_output = kg.to_triples_string(triple_names_df, mode="raw")
     natural_output = kg.to_triples_string(triple_names_df, mode="natural")
     json_output = kg.to_triples_string(triple_names_df, mode="json")
     context_output = kg.to_triples_string(triple_names_df, mode="context")

@@ -550,19 +550,19 @@ class KnowledgeGraph:
     # Verbalization Formats
     # ------------------------------------------------------------------------
 
-    def to_triples_string(self, triple_names_df: Optional[DataFrame] = None, mode: str = "triple") -> str:
+    def to_triples_string(self, triple_names_df: Optional[DataFrame] = None, mode: str = "raw") -> str:
         """Convert triples to string representation in various formats.
         @details  Supports multiple output formats for LLM consumption:
         - "natural": Human-readable sentences (e.g., "Alice is employed by Bob.")
-        - "triple": Raw triple format (e.g., "Alice employedBy Bob")
+        - "raw": Raw triple format (e.g., "Alice employedBy Bob")
         - "json": JSON array of objects with s/r/o keys
         - "context": Grouped by subject with context headers
         @param triple_names_df  DataFrame with subject, relation, object columns. If None, uses all triples from this graph.
-        @param mode  Output format: "natural", "triple", "json", or "context" (default: "triple").
+        @param mode  Output format: "natural", "raw", "json", or "context" (default: "raw").
         @return  String representation of triples in the specified format.
         @throws ValueError  If format is not recognized.
         """
-        accepted_modes = ["natural", "triple", "json", "context"]
+        accepted_modes = ["natural", "raw", "json", "context"]
         if mode not in accepted_modes:
             raise ValueError(f"Invalid mode '{mode}'; expected one of {accepted_modes}")
 
@@ -573,7 +573,7 @@ class KnowledgeGraph:
         if triple_names_df.empty:
             return "" if mode != "json" else "[]"
 
-        if mode == "triple":
+        if mode == "raw":
             lines = []
             for _, triple in triple_names_df.iterrows():
                 lines.append(f"{triple['subject']} {triple['relation']} {triple['object']}")

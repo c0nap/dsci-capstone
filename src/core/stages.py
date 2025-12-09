@@ -118,7 +118,7 @@ class Config:
     relation_extractor_type="textacy"
     validation_llm_engine="openai"
     graph_lookup_mode="popular"
-    verbalize_triples_mode="triple"
+    verbalize_triples_mode="raw"
     summary_llm_engine="openai"
 
     @staticmethod
@@ -143,7 +143,7 @@ class Config:
 
     @staticmethod
     def _check_verbal_mode(value: Any):
-        Config._check_val(value, "verbalization_mode", ['triple', 'natural', 'json', 'context'])
+        Config._check_val(value, "verbalization_mode", ['raw', 'natural', 'json', 'context'])
 
     @staticmethod
     def _check_val(value: Any, name: str, allowed: List[Any]) -> None:
