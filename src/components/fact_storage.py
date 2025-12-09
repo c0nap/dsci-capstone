@@ -476,6 +476,77 @@ class KnowledgeGraph:
         Log.success(Log.kg + Log.gr_rag, f"Community detection ({method}) complete.", self.database.verbose)
 
     # ------------------------------------------------------------------------
+    # Helper Functions for Practical Usage
+    # ------------------------------------------------------------------------
+
+    def get_node_most_popular(self) -> str:
+        """Return the node ID with highest degree (most connections).
+        @return  Element ID of the most connected node.
+        @throws Log.Failure  If graph is empty or query fails.
+        """
+        edge_counts = self.get_edge_counts(top_n=1)
+        if edge_counts.empty:
+            raise Log.Failure(Log.kg, "Cannot find most popular node: graph is empty.")
+        return edge_counts.iloc[0]["node_id"]
+
+
+    def get_nodes_top_degree(self, k: int = 5) -> List[str]:
+        """Return node IDs for the k most connected nodes.
+        @param k  Number of top nodes to return (default: 5).
+        @return  List of node element IDs ordered by degree descending.
+        @throws Log.Failure  If graph is empty or query fails.
+        """
+        edge_counts = self.get_edge_counts(top_n=k)
+        if edge_counts.empty:
+            raise Log.Failure(Log.kg, f"Cannot find top {k} nodes: graph is empty.")
+        return edge_counts["node_id"].tolist()
+
+
+    def get_community_largest(self) -> int:
+        """Return the community ID with the most nodes.
+        @details  Requires community detection to have been run first via detect_community_clusters().
+        @return  Community ID of the largest cluster.
+        @throws Log.Failure  If community detection has not been run or graph is empty.
+        """
+        df = self.get_triple_properties()
+        if df is None or df.empty:
+            raise Log.Failure(Log.kg + Log.gr_rag, "Cannot find largest community: graph is empty.")
+        
+        if "n1.community_id" not in df.columns:
+            raise Log.Failure(
+                Log.kg + Log.gr_rag, 
+                "Community detection must be run first. Call detect_community_clusters()."
+            )
+        
+        # Count nodes per community (use n1 only to avoid double-counting)
+        community_sizes = df["n1.community_id"].value_counts()
+        if community_sizes.empty:
+            raise Log.Failure(Log.kg + Log.gr_rag, "No communities found in graph.")
+        
+        return int(community_sizes.idxmax())
+
+
+    def get_community_ids(self) -> List[int]:
+        """Return all community IDs present in the graph.
+        @details  Requires community detection to have been run first via detect_community_clusters().
+        @return  Sorted list of unique community IDs.
+        @throws Log.Failure  If community detection has not been run or graph is empty.
+        """
+        df = self.get_triple_properties()
+        if df is None or df.empty:
+            raise Log.Failure(Log.kg + Log.gr_rag, "Cannot retrieve communities: graph is empty.")
+        
+        if "n1.community_id" not in df.columns:
+            raise Log.Failure(
+                Log.kg + Log.gr_rag,
+                "Community detection must be run first. Call detect_community_clusters()."
+            )
+        
+        community_ids = df["n1.community_id"].dropna().unique()
+        return sorted([int(cid) for cid in community_ids])
+
+
+    # ------------------------------------------------------------------------
     # Verbalization Formats
     # ------------------------------------------------------------------------
 
@@ -539,6 +610,7 @@ class KnowledgeGraph:
         @throws ValueError  If strategy is not recognized.
         """
         pass
+
 
     # ------------------------------------------------------------------------
     # Graph Statistics and Metadata
