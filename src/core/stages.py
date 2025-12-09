@@ -324,16 +324,18 @@ def _task_22_get_triples(lookup_mode):
     """Select subgraph retrieval strategy based on use case."""
     
     if lookup_mode == "popular":
-        # FAST: Degree-based filtering
+        # FAST: Degree-based filtering for hub entities
         return session.main_graph.get_by_ranked_degree(
             worst_rank=5, 
             enforce_count=True, 
             id_columns=["subject_id"]
         )
+    
     if lookup_mode == "local":
-        # FAST: Multi-hop exploration from most popular
+        # FAST: Multi-hop exploration from most connected node
         center_node = session.main_graph.get_node_most_popular()
         return session.main_graph.get_neighborhood(center_node, depth=2)
+    
     if lookup_mode == "explore":
         # MEDIUM: Structural exploration via random walks
         start_nodes = session.main_graph.get_nodes_top_degree(k=3)
@@ -342,26 +344,30 @@ def _task_22_get_triples(lookup_mode):
             walk_length=5, 
             num_walks=3
         )
+    
     if lookup_mode == "community":
-        # HEAVY: Community-based retrieval (run once, query many times)
+        # HEAVY: Community-based retrieval (run detection once, query many times)
         session.main_graph.detect_community_clusters(method="leiden")
         community_id = session.main_graph.get_community_largest()
         return session.main_graph.get_community_subgraph(community_id)
+    
     raise ValueError(f"Invalid lookup_mode: {lookup_mode}. Expected: 'popular', 'local', 'explore', or 'community'.")
 
-def task_22_fetch_subgraph(lookup_mode="degree"):
-    with Log.timer(config = f"[{lookup_mode}]"):
-        triples_df = _task_22_get_triples(cluster_mode)
+
+def task_22_fetch_subgraph(lookup_mode="popular"):
+    """Retrieve and convert subgraph to named triples."""
+    with Log.timer(config=f"[{lookup_mode}]"):
+        triples_df = _task_22_get_triples(lookup_mode)
         triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
         return triples_df
 
-def _task_23_to_string(triples_df, verbal_mode):
-    if lookup_mode == "triple":
-        return session.main_graph.to_triples_string(triples_df, mode=mode)
 
 def task_23_verbalize_triples(triples_df, verbal_mode="triple"):
-    with Log.timer(config = f"[{verbal_mode}]"):
-        triples_string = _task_23_to_string(triples_df, verbal_mode)
+    """Convert triples to string format for LLM consumption."""
+    with Log.timer(config=f"[{verbal_mode}]"):
+        if verbal_mode not in ['triple', 'natural', 'json', 'context']:
+            raise ValueError(f"Invalid verbal_mode: {verbal_mode}. Expected: 'triple', 'natural', 'json', or 'context'.")
+        triples_string = session.main_graph.to_triples_string(triples_df, verbal_mode)
         return triples_string
 
 
