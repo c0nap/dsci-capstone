@@ -6,6 +6,7 @@ from src.components.book_conversion import Chunk, EPUBToTEI, ParagraphStreamTEI,
 from src.core.stages import *
 from src.main import pipeline_A, pipeline_C
 from src.util import Log
+from src.components.llm import parse_llm_triples
 
 
 ##########################################################################
@@ -395,7 +396,7 @@ def test_job_15_sanitize_triples_llm(book_data):
     llm_output = book_data["llm_triples_json"]
     num_triples = book_data["num_triples"]
 
-    triples = task_15_sanitize_triples_llm(llm_output)
+    triples = parse_llm_triples(llm_output)
 
     assert isinstance(triples, list)
     assert len(triples) == num_triples  # Matches fixture data
@@ -419,7 +420,7 @@ def test_job_15_comprehensive(llm_data):
     """Test parsing malformed LLM output."""
     llm_output = llm_data["llm_triples_json"]
     num_triples = llm_data["num_triples"]
-    triples = task_15_sanitize_triples_llm(llm_output)
+    triples = parse_llm_triples(llm_output)
 
     assert isinstance(triples, list)
     assert len(triples) == num_triples  # Matches fixture data
@@ -440,7 +441,7 @@ def test_job_15_comprehensive(llm_data):
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_20_send_triples(main_graph, book_data):
     """Test inserting triples into knowledge graph."""
-    triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
+    triples_json = parse_llm_triples(book_data["llm_triples_json"])
 
     task_20_send_triples(triples_json)
 
@@ -459,7 +460,7 @@ def test_job_20_send_triples(main_graph, book_data):
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_21_describe_graph(main_graph, book_data):
     """Test generating edge count summary of knowledge graph."""
-    triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
+    triples_json = parse_llm_triples(book_data["llm_triples_json"])
 
     # First insert triples, treat task_20 as a helper function
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
@@ -480,7 +481,7 @@ def test_job_21_describe_graph(main_graph, book_data):
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_22_fetch_subgraph(main_graph, book_data):
     """Test converting high-degree triples to string format."""
-    triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
+    triples_json = parse_llm_triples(book_data["llm_triples_json"])
     # First insert triples, treat task_20 as a helper function
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
     task_20_send_triples(triples_json)
@@ -498,7 +499,7 @@ def test_job_22_fetch_subgraph(main_graph, book_data):
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_23_verbalize_triples(main_graph, book_data):
     """Test converting high-degree triples to string format."""
-    triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
+    triples_json = parse_llm_triples(book_data["llm_triples_json"])
     # First insert triples, treat task_20 as a helper function
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
     task_20_send_triples(triples_json)

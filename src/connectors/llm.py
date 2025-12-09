@@ -323,4 +323,10 @@ def moderate_texts(
     return all_violations
 
 
-
+def parse_llm_triples(llm_output: str) -> List[Triple]:
+    """Load normalized triples from LLM strings."""
+    # TODO: rely on robust LLM connector logic to assume json
+    cleaned = clean_json_block(llm_output)
+    json_triples = json.loads(cleaned)
+    # TODO: should LLM connector run sanitization internally?
+    return normalize_to_dict(json_triples, keys=["s", "r", "o"])

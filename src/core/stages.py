@@ -1,7 +1,7 @@
 import json
 import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
-from src.connectors.llm import LLMConnector, clean_json_block, normalize_to_dict
+from src.connectors.llm import LLMConnector, parse_llm_triples
 from src.components.relation_extraction import RelationExtractor, Triple
 from src.core.context import session
 from src.util import Log
@@ -348,16 +348,6 @@ def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, str]:
         # if attempts == 0:
         #     raise Log.Failure()
         return (prompt, llm_output)
-
-
-def task_15_sanitize_triples_llm(llm_output: str) -> List[Triple]:
-    with Log.timer():
-        # TODO: rely on robust LLM connector logic to assume json
-        llm_output = clean_json_block(llm_output)
-        json_triples = json.loads(llm_output)
-        # TODO: should LLM connector run sanitization internally?
-        norm_triples = normalize_to_dict(json_triples, keys=["s", "r", "o"])
-        return norm_triples
 
 
 def task_16_moderate_triples_llm(triples: List[Triple], text: str) -> List[Triple]:
