@@ -2,7 +2,7 @@ import json
 import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from src.connectors.llm import LLMConnector, clean_json_block, normalize_to_dict
-from src.components.relation_extraction import RelationExtractor
+from src.components.relation_extraction import RelationExtractor, Triple
 from src.core.context import session
 from src.util import Log
 
@@ -117,6 +117,8 @@ from src.components.metrics import (
 class Config:
     relation_extractor_type="textacy"
     validation_llm_engine="openai"
+    moderation_llm_engine="openai"
+    moderation_strategy="drop"
     graph_lookup_mode="popular"
     verbalize_triples_mode="raw"
     summary_llm_engine="openai"
@@ -142,6 +144,8 @@ class Config:
     def check_values():
         Config._check_extractor(Config.relation_extractor_type)
         Config._check_llm_engine(Config.validation_llm_engine)
+        Config._check_llm_engine(Config.moderation_llm_engine)
+        Config._check_moderate_strategy(Config.moderation_strategy)
         Config._check_subgraph_mode(Config.graph_lookup_mode)
         Config._check_verbal_mode(Config.verbalize_triples_mode)
         Config._check_llm_engine(Config.summary_llm_engine)
@@ -153,6 +157,10 @@ class Config:
     @staticmethod
     def _check_llm_engine(value: Any):
         Config._check_val(value, "llm_connector_type", ['langchain', 'openai'])
+
+    @staticmethod
+    def _check_moderate_strategy(value: Any):
+        Config._check_val(value, "moderation_strategy", [ 'drop', 'resolve'])
 
     @staticmethod
     def _check_subgraph_mode(value: Any):
@@ -330,7 +338,7 @@ def task_11_send_chunk(c, collection_name, book_title):
 # tied to pipeline_B -> pipeline_A
     
 
-def task_12_relation_extraction(text: str) -> Tuple[str, str]:
+def task_12_relation_extraction(text: str) -> List[Triple]:
     extractor_type = Config.relation_extractor_type
     with Log.timer(config = f"[{extractor_type}]"):
         re = Config._task_12_get_re(extractor_type)
@@ -338,7 +346,7 @@ def task_12_relation_extraction(text: str) -> Tuple[str, str]:
         return extracted
 
 
-def task_13_concatenate_triples(extracted):
+def task_13_concatenate_triples(extracted: List[Triple]) -> str:
     with Log.timer():
         # TODO: to_triples_string in RelationExtractor?
         triples_string = ""
@@ -347,7 +355,7 @@ def task_13_concatenate_triples(extracted):
         return triples_string
 
 
-def task_14_validate_llm(triples_string: str, text: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
+def task_14_validate_llm(triples_string: str, text: str, temperature: float = 1) -> Tuple[str, str]:
     llm_connector_type = Config.validation_llm_engine
     with Log.timer(config = f"[{llm_connector_type}]"): # _{temperature:.2f}
         # gpt-5-nano only supports temperature 1
@@ -384,9 +392,24 @@ def task_16_moderate_triples_llm(triples: List[Dict[str, str]]) -> List[Dict[str
     """Filter offensive content from literary triples.
     @param triples  Normalized triples in JSON format.
     @return Safe triples for knowledge graph insertion."""
-    with Log.timer():
+    llm_connector_type = Config.moderation_llm_engine
+    moderate_strategy = Config.moderation_strategy
+    with Log.timer(config = f"[{llm_connector_type}-{moderate_strategy}]"): # _{temperature:.2f}
+        safe, bad = moderate_triples(triples, Config.moderation_thresholds)
+
+        triples_string = RelationExtractor.to_triples_string(bad)
+        system_prompt = "You are a helpful assistant that corrects harmful content in old fiction."
+        llm = Config._task_16_get_llm(llm_connector_type, temperature, system_prompt)
+        prompt = f"Here are some flagged triples extracted from a story chunk:\n{triples_string}\n"
+        prompt += f"And here is the original text:\n{text}\n\n"
+        prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
+        prompt += "For each triple you must fix the harmful content by inspecting the intent of the original text."
+        prompt += "If the original text has genuinely harmful content represented by this triple, then drop this triple."
+        llm_output = llm.execute_query(prompt)
+
         from src.connectors.llm import moderate_triples
 
+        
         return moderate_triples(triples)
 
 

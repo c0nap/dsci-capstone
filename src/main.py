@@ -77,9 +77,10 @@ def pipeline_C(json_triples):
     stages.task_20_send_triples(json_triples)
 
     # basic linear verbalization of triples (concatenate)
-    edge_count_df = stages.task_21_1_describe_graph()
-    print("\nMost relevant nodes:")
-    print(edge_count_df)
+    # TODO
+    # edge_count_df = stages.task_21_1_describe_graph()
+    # print("\nMost relevant nodes:")
+    # print(edge_count_df)
 
     triples_df = stages.task_22_fetch_subgraph()
     triples_string = stages.task_23_verbalize_triples(triples_df)
