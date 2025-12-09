@@ -2,6 +2,7 @@ import json
 import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from src.connectors.llm import LLMConnector, clean_json_block, normalize_to_dict
+from src.components.relation_extraction import RelationExtractor
 from src.core.context import session
 from src.util import Log
 
@@ -188,9 +189,9 @@ def task_11_send_chunk(c, collection_name, book_title):
 
 
 
-def _task_12_get_re(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
+def _task_12_get_re(extractor_type: str) -> RelationExtractor:
     # TODO: move to session.extractor?
-    if llm_connector_type == "rebel":
+    if extractor_type == "rebel":
         from src.components.relation_extraction import RelationExtractorREBEL
 
         # TODO: move to session.rel_extract
@@ -200,13 +201,13 @@ def _task_12_get_re(llm_connector_type: str, temperature: float, system_prompt: 
         # ner_renard = "compnet-renard/bert-base-cased-literary-NER"
         return RelationExtractorREBEL(model_name=re_rebel, max_tokens=1024)
 
-    if llm_connector_type == "openie":
+    if extractor_type == "openie":
         from src.components.relation_extraction import RelationExtractorOpenIE
 
         # Initialize OpenIE wrapper (handles CoreNLP server internally)
-        return = RelationExtractorOpenIE(memory=memory)
+        return RelationExtractorOpenIE(memory=memory)
 
-    if llm_connector_type == "textacy":
+    if extractor_type == "textacy":
         from src.components.relation_extraction import RelationExtractorTextacy
 
         # Initialize Textacy wrapper (pure Python backup)
@@ -217,7 +218,7 @@ def _task_12_get_re(llm_connector_type: str, temperature: float, system_prompt: 
 
 def task_12_relation_extraction(text: str, extractor_type: str = "textacy") -> Tuple[str, str]:
     with Log.timer(config = f"[{extractor_type}]"):
-        re = _task_14_get_llm(llm_connector_type, temperature, system_prompt)
+        re = _task_12_get_re(extractor_type)
         extracted = re.extract(text)
         return extracted
 
@@ -248,8 +249,8 @@ def _task_14_get_llm(llm_connector_type: str, temperature: float, system_prompt:
     return None  # TODO: ValueError
     
 
-def task_14_relation_extraction_llm(triples_string: str, text: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
-    with Log.timer(config = f"[{llm_connector_type}_{temperature:.2f}]"):
+def task_14_validate_llm(triples_string: str, text: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
+    with Log.timer(config = f"[{llm_connector_type}]"): # _{temperature:.2f}
         # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON."
@@ -346,7 +347,7 @@ def _task_30_get_llm(llm_connector_type: str, temperature: float, system_prompt:
 
 def task_30_summarize_llm(triples_string: str, llm_connector_type: str = "openai", temperature: float = 1) -> Tuple[str, str]:
     """Prompt LLM to generate summary"""
-    with Log.timer(config = f"[{llm_connector_type}_{temperature:.2f}]"):
+    with Log.timer(config = f"[{llm_connector_type}]"): # _{temperature:.2f}
         # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that summarizes text."

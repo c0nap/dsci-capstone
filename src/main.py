@@ -11,21 +11,6 @@ from src.core.boss import (
 )
 from src.util import Log
 import time
-from src.core.stages import (
-    task_45_eval_rouge,
-    task_45_eval_bertscore,
-    task_45_eval_ngrams,
-    task_45_eval_jsd,
-    task_45_eval_coverage,
-    task_45_eval_ncd,
-    task_45_eval_salience,
-    task_45_eval_faithfulness,
-    task_45_eval_readability,
-    task_45_eval_sentence_coherence,
-    task_45_eval_entity_grid,
-    task_45_eval_diversity,
-    task_45_eval_stopwords,
-)
 from typing import Dict
 
 
@@ -61,14 +46,14 @@ def pipeline_B(collection_name, chunks, book_title):
     stages.task_11_send_chunk(c, collection_name, book_title)
     print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
 
-    extracted = stages.task_12_relation_extraction_textacy(c.text)
+    extracted = stages.task_12_relation_extraction(c.text)
     print(f"\nNLP output:")
     for triple in extracted:
         print(triple)
     print()
     triples_string = stages.task_13_concatenate_triples(extracted)
 
-    prompt, llm_output = stages.task_14_relation_extraction_llm(triples_string, c.text)
+    prompt, llm_output = stages.task_14_validate_llm(triples_string, c.text)
     print("\n    LLM prompt:")
     print(prompt)
     print("\n    LLM output:")
@@ -120,6 +105,21 @@ def pipeline_E(
     summary: str, book_title: str, book_id: str, chunk: str = "", gold_summary: str = "", bookscore: float = None, questeval: float = None
 ) -> Dict[str, float]:
     """Compute metrics and send available data to Blazor"""
+    from src.core.stages import (
+        task_45_eval_rouge,
+        task_45_eval_bertscore,
+        task_45_eval_ngrams,
+        task_45_eval_jsd,
+        task_45_eval_coverage,
+        task_45_eval_ncd,
+        task_45_eval_salience,
+        task_45_eval_faithfulness,
+        task_45_eval_readability,
+        task_45_eval_sentence_coherence,
+        task_45_eval_entity_grid,
+        task_45_eval_diversity,
+        task_45_eval_stopwords,
+    )
     if chunk != "":
         _entity_coverage = task_45_eval_coverage(summary, chunk)
         CORE_METRICS: Dict[str, float] = {

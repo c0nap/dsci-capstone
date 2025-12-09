@@ -60,23 +60,23 @@ def book_data():
 @pytest.fixture
 def rebel():
     """Fixture returning the REBEL extraction function."""
-    return task_12_relation_extraction_rebel
+    return "rebel"
 
 
 @pytest.fixture
 def openie():
     """Fixture returning the OpenIE extraction function."""
-    return task_12_relation_extraction_openie
+    return "openie"
 
 
 @pytest.fixture
 def textacy():
     """Fixture returning the Textacy extraction function."""
-    return task_12_relation_extraction_textacy
+    return "textacy"
 
 
 @pytest.fixture
-def relation_extraction_task(request):
+def extractor_type(request):
     """Meta-fixture that returns the backend function specified by the parameter."""
     return request.getfixturevalue(request.param)
 
@@ -112,13 +112,13 @@ def llm_connector_type(request):
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_minimal", scope="session")
-@pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
-def test_job_12_extraction_minimal(relation_extraction_task):
+@pytest.mark.parametrize("extractor_type", PARAMS_RELATION_EXTRACTORS, indirect=True)
+def test_job_12_extraction_minimal(extractor_type):
     """Parametrized test to verify all extractors return a standard list of Triple dicts.
     @note Relying on default args ensures REBEL parses output to Triples.
     """
     sample_text = "Alice met Bob in the forest. Bob then went to the village."
-    extracted = relation_extraction_task(sample_text)
+    extracted = task_12_relation_extraction(sample_text, extractor_type)
     assert isinstance(extracted, list)
 
     # If the model extracted anything, ensure it conforms to the standard Triple dict
@@ -135,10 +135,10 @@ def test_job_12_extraction_minimal(relation_extraction_task):
 @pytest.mark.smoke
 @pytest.mark.order(12)
 @pytest.mark.dependency(name="job_12_extraction_chunk", scope="session", depends=["job_12_extraction_minimal"])
-@pytest.mark.parametrize("relation_extraction_task", PARAMS_RELATION_EXTRACTORS, indirect=True)
-def test_job_12_extraction(book_data, relation_extraction_task):
+@pytest.mark.parametrize("extractor_type", PARAMS_RELATION_EXTRACTORS, indirect=True)
+def test_job_12_extraction(book_data, extractor_type):
     """Runs all extractors on realistic pipeline data."""
-    extracted = relation_extraction_task(book_data["chunk"].text)
+    extracted = task_12_relation_extraction(book_data["chunk"].text, extractor_type)
 
     assert isinstance(extracted, list)
     # Flexible check: we expect some results, but exact count depends on the model
@@ -165,7 +165,7 @@ def test_job_14_llm_minimal(book_data, llm_connector_type):
     """Test LLM-based triple sanitization with realistic data."""
     triples_string = "\n".join(book_data["rebel_triples"])
 
-    prompt, llm_output = task_14_relation_extraction_llm(triples_string, book_data["chunk"].text, llm_connector_type=llm_connector_type)
+    prompt, llm_output = task_14_validate_llm(triples_string, book_data["chunk"].text, llm_connector_type=llm_connector_type)
 
     assert isinstance(prompt, str)
     assert triples_string in prompt
