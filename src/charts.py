@@ -108,8 +108,8 @@ class Plot:
 
         # Plot bars going inward from center
         y_pos = range(len(merged))
-        ax.barh(y_pos, -merged['elapsed_left'], align='center', label='Improved')
-        ax.barh(y_pos, merged['elapsed_right'], align='center', label='Original')
+        ax.barh(y_pos, -merged['elapsed_left'], align='center', label='Improved', color='tab:blue')
+        ax.barh(y_pos, merged['elapsed_right'], align='center', label='Original', color='tab:orange')
 
         # Configure axes with log scale to handle outliers
         if log_scale:
@@ -171,7 +171,102 @@ class Plot:
         plt.show()
 
 
+    # TODO: refactor
+    @staticmethod
+    def save_metrics_csv(metrics: Dict[str, float], filename: str = "./logs/metrics/chunk_summary.csv") -> None:
+        """Save a metrics dict to CSV using pandas."""
+        # Convert to a simple 2-column DataFrame
+        df = pd.DataFrame([
+            {"metric": key, "value": value}
+            for key, value in metrics.items()
+        ])
+
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+        # Save CSV
+        df.to_csv(filename, index=False)
+
+        # Optional: log the output path
+        Log.chart("Saved summary metrics CSV", filename)
+
+
+    @staticmethod
+    def summary_comparison(filename: str, paths: list[str], fixed_colors: List[str], labels: List[str]) -> None:
+        """Compare metrics across an arbitrary number of metric CSV files."""
+        import matplotlib.pyplot as plt
+
+        # Load all CSVs into aligned DataFrames
+        merged = None
+
+        for path in paths:
+            # Choose color: first 3 fixed, others auto
+            if i < len(labels):
+                label = labels[i]
+            else:
+                label = os.path.splitext(os.path.basename(path))[0]
+                labels.append(label)
+            df = pd.read_csv(path)  # expects: metric, value
+            df = df.rename(columns={"value": label})
+
+            if merged is None:
+                merged = df
+            else:
+                merged = pd.merge(merged, df, on="metric", how="outer")
+
+        # Pretty names
+        merged["metric"] = merged["metric"].apply(
+            lambda k: Plot.METRIC_NAMES.get(k, k)
+        )
+        merged = merged.sort_values("metric")
+
+        # Plot
+        plt.figure(figsize=(12, len(merged) * 0.6))
+
+        y_positions = range(len(merged))
+        bar_height = 0.8 / len(labels)
+
+        for i, label in enumerate(labels):
+            # Choose color: first 3 fixed, others auto
+            if i < len(fixed_colors):
+                color = fixed_colors[i]
+            else:
+                color = None  # Matplotlib chooses default
+
+            offset = (i - (len(labels) - 1) / 2) * bar_height
+
+            plt.barh(
+                [y + offset for y in y_positions],
+                merged[label],
+                height=bar_height,
+                label=label,
+                color=color
+            )
+
+        plt.yticks(range(len(merged)), merged["metric"])
+        plt.xlabel("Score")
+        plt.title("Metric Comparison Across Summaries")
+        plt.legend()
+        plt.tight_layout()
+
+        # Save
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        plt.savefig(filename)
+        plt.close()
+
+        Log.chart("Metric Comparison", filename)
+
+
+
+
+
 if __name__ == "__main__":
+    # plot_time_comparison()
+    plot_metrics_comparison()
+
+
+def plot_time_comparison():
+    # make docker-python-dev CMD="src.charts './logs/elapsed_time_best.csv' './logs/elapsed_time_worst.csv' --output='./logs/charts/runtime_comparison.png'"
     import argparse
 
     parser = argparse.ArgumentParser(description='Compare function runtimes from two CSV files')
@@ -182,3 +277,20 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=False, log_scale=False, cap_outliers=0.06)
+
+def plot_metrics_comparison():
+    # make docker-python-dev CMD="src.charts './logs/metrics/chunk_summary_best.csv' './logs/metrics/chunk_summary_worst.csv' './logs/metrics/chunk_summary_llm.csv' --output='./logs/charts/metrics_comparison.png'"
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Compare function runtimes from two CSV files')
+    parser.add_argument('csv1', help='Path to first CSV file')
+    parser.add_argument('csv2', help='Path to second CSV file')
+    parser.add_argument('csv3', help='Path to third CSV file')
+    parser.add_argument('--output', default='./logs/charts/runtime_comparison.png', help='Output filename for chart')
+
+    args = parser.parse_args()
+
+    Plot.summary_comparison(filename=args.output, paths=[args.csv1, args.csv2, args.csv3], fixed_colors=["tab:blue", "tab:orange", "tab:green"], labels=["Best", "Fast", "LLM-Only"])
+
+
+

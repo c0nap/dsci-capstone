@@ -386,6 +386,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     Log.print_timing_summary()
                     Log.dump_timing_csv()
                     Plot.time_elapsed_by_names()
+                    Plot.save_metrics_csv(CORE_METRICS)
                     Plot.summary_results(CORE_METRICS)
 
         elif "failed" in status:
