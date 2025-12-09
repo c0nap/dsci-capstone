@@ -553,58 +553,71 @@ class KnowledgeGraph:
     def to_triples_string(self, triple_names_df: Optional[DataFrame] = None, mode: str = "triple") -> str:
         """Convert triples to string representation in various formats.
         @details  Supports multiple output formats for LLM consumption:
-        - "natural": Human-readable sentences (e.g., "Alice employed by Bob.")
+        - "natural": Human-readable sentences (e.g., "Alice is employed by Bob.")
         - "triple": Raw triple format (e.g., "Alice employedBy Bob")
         - "json": JSON array of objects with s/r/o keys
+        - "context": Grouped by subject with context headers
         @param triple_names_df  DataFrame with subject, relation, object columns. If None, uses all triples from this graph.
-        @param mode  Output format: "natural", "triple", or "json" (default: "triple").
+        @param mode  Output format: "natural", "triple", "json", or "context" (default: "triple").
         @return  String representation of triples in the specified format.
         @throws ValueError  If format is not recognized.
         """
-        accepted_modes = ["natural", "triple", "json"]
+        accepted_modes = ["natural", "triple", "json", "context"]
         if mode not in accepted_modes:
-            raise ValueError(f"Invalid triple string format {mode}; expected {accepted_modes}")
+            raise ValueError(f"Invalid mode '{mode}'; expected one of {accepted_modes}")
 
         if triple_names_df is None:
             triples_df = self.get_all_triples()
             triple_names_df = self.triples_to_names(triples_df, drop_ids=True)
 
-        # TODO: Simplify & add other modes
-        if mode != "triple":
-            return "TODO"
+        if triple_names_df.empty:
+            return "" if mode != "json" else "[]"
 
-        triples_string = ""
-        for _, triple in triple_names_df.iterrows():
-            subj = triple["subject"]
-            rel = triple["relation"]
-            obj = triple["object"]
-            triples_string += f"{subj} {rel} {obj}\n"
-        return triples_string
+        if mode == "triple":
+            lines = []
+            for _, triple in triple_names_df.iterrows():
+                lines.append(f"{triple['subject']} {triple['relation']} {triple['object']}")
+            return "\n".join(lines)
 
-    def to_context(self, focus_nodes: Optional[List[str]] = None, top_n: int = 5) -> str:
-        """Convert triples to contextualized string grouped by focus nodes.
-        @details  Groups triples by subject nodes and formats them with context headers.
-        This provides better structure for LLM comprehension compared to flat triple lists.
-        If focus_nodes is None, uses the top_n most connected nodes.
-        Example output:
-            Facts about Alice:
-              - knows Bob
-              - works_at Company
-              - lives_in City
-        @param focus_nodes  List of node names to group by. If None, uses top_n by degree.
-        @param top_n  Number of top nodes to use if focus_nodes is None (default: 5).
-        @return  Formatted string with contextualized triple groups.
-        """
-        pass
+        elif mode == "natural":
+            lines = []
+            for _, triple in triple_names_df.iterrows():
+                # Convert relation to natural language (e.g., "KNOWS" -> "knows", "HAS_PART" -> "has part")
+                relation = triple['relation'].replace('_', ' ').lower()
+                lines.append(f"{triple['subject']} {relation} {triple['object']}.")
+            return "\n".join(lines)
 
-    def to_narrative(self, strategy: str = "path", start_node: Optional[str] = None, max_triples: int = 50) -> str:
+        elif mode == "json":
+            triples_list = []
+            for _, triple in triple_names_df.iterrows():
+                triples_list.append({
+                    "s": triple['subject'],
+                    "r": triple['relation'],
+                    "o": triple['object']
+                })
+            import json
+            return json.dumps(triples_list, indent=2)
+
+        elif mode == "context":
+            # Group triples by subject
+            grouped = triple_names_df.groupby('subject')
+            lines = []
+            
+            for subject, group in grouped:
+                lines.append(f"Facts about {subject}:")
+                for _, triple in group.iterrows():
+                    # Format: "  - relation object"
+                    relation = triple['relation'].replace('_', ' ').lower()
+                    lines.append(f"  - {relation} {triple['object']}")
+                lines.append("")  # Empty line between subjects
+            
+            return "\n".join(lines).rstrip()  # Remove trailing newline
+
+    def to_narrative(self, start_node: Optional[str] = None, max_triples: int = 50) -> str:
         """Convert graph to narrative text using specified strategy.
         @details  Transforms structured triples into natural language narrative:
-        - "path": Follow edges sequentially from start_node, creating a story-like flow
-        - "cluster": Group related entities and describe them thematically
-        - "summary": High-level overview of graph contents and structure
-        @param strategy  Narrative generation strategy: "path", "cluster", or "summary" (default: "path").
-        @param start_node  Starting node for "path" strategy. If None, uses highest-degree node.
+        - Follow edges sequentially from start_node, creating a story-like flow
+        @param start_node  Starting node. If None, uses highest-degree node.
         @param max_triples  Maximum number of triples to include (default: 50).
         @return  Natural language narrative describing the graph.
         @throws ValueError  If strategy is not recognized.
