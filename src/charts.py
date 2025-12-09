@@ -4,7 +4,6 @@ import pandas as pd
 import seaborn as sns
 from src.util import Log
 from typing import Optional, Dict, List
-import numpy as np
 
 
 class Plot:
@@ -258,61 +257,56 @@ class Plot:
         # Then rename metrics for display
         merged["metric"] = merged["metric"].apply(lambda k: Plot.METRIC_NAMES.get(k, k))
 
-        # Compute y positions and insert extra spacing between groups
-        y_positions = []
-        y_labels = []
+        # Compute x positions and spacing for groups
+        x_positions = []
+        x_labels = []
         group_ticks = []
         spacing = 0.5  # extra space between groups
-        y = 0
+        x = 0
         for group_name, metrics in Plot.METRIC_GROUPS:
             group_indices = []
             for m in metrics:
-                # Find metric index in merged
                 idx = merged.index[merged["metric"] == Plot.METRIC_NAMES.get(m, m)].tolist()
                 if idx:
-                    y_positions.append(y)
-                    y_labels.append(merged.loc[idx[0], "metric"])
-                    group_indices.append(y)
-                    y += 1
+                    x_positions.append(x)
+                    x_labels.append(merged.loc[idx[0], "metric"])
+                    group_indices.append(x)
+                    x += 1
             if group_indices:
                 group_center = np.mean(group_indices)
                 group_ticks.append((group_center, group_name))
-                y += spacing  # add extra space after group
-    
-        bar_height = 0.8 / len(labels)
-    
-        plt.figure(figsize=(12, y * 0.6))
-    
-        # Draw bars
+                x += spacing  # add extra space after group
+
+        bar_width = 0.8 / len(labels)
+
+        plt.figure(figsize=(max(12, len(x_labels)*0.5), 6))
+
+        # Draw vertical bars
         for i, label in enumerate(labels):
             color = fixed_colors[i] if i < len(fixed_colors) else None
-            offset = (i - (len(labels) - 1) / 2) * bar_height
-            values = []
-            for lbl in y_labels:
-                # Fetch value by metric name
-                match = merged[merged["metric"] == lbl][label]
-                values.append(match.values[0] if not match.empty else 0)
-            plt.barh([y + offset for y in range(len(values))], values, height=bar_height, label=label, color=color)
-    
-        plt.yticks(range(len(y_labels)), y_labels)
-        plt.xlabel("Score")
+            offset = (i - (len(labels)-1)/2) * bar_width
+            values = [merged.loc[merged["metric"] == lbl, label].values[0] for lbl in x_labels]
+            plt.bar([pos + offset for pos in x_positions], values, width=bar_width, label=label, color=color)
+
+        plt.xticks(x_positions, x_labels, rotation=45, ha="right")
+        plt.ylabel("Score")
         title = "Quality Comparison (Chunk-Level Summary)"
         plt.title(title)
         plt.legend()
-    
-        # Draw vertical dotted lines between groups
-        for idx, (center, name) in enumerate(group_ticks[:-1]):
-            plt.axhline(y=center + 0.5, color="gray", linestyle="dotted")  # dotted line between groups
-    
-        # Add group labels at top interior
+
+        # Draw vertical lines between groups
+        for center, name in group_ticks[:-1]:
+            plt.axvline(x=center + 0.5, color="gray", linestyle="dotted")
+
+        # Add group labels above bars
         for center, name in group_ticks:
-            plt.text(-0.05 * max(merged[labels].max().max(), 1), center, name, fontsize=10, fontweight="bold", va="center", ha="right")
-    
+            plt.text(center, max(merged[labels].max().max(), 1) * 1.02, name, fontsize=10, fontweight="bold", ha="center", va="bottom")
+
         plt.tight_layout()
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         plt.savefig(filename)
         plt.close()
-    
+
         Log.chart(title, filename)
 
 
