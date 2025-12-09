@@ -238,8 +238,14 @@ class Plot:
             else:
                 merged = pd.merge(merged, df, on="metric", how="outer")
     
+        # Normalize metrics for each label column
+        for col in merged.columns:
+            if col != "metric":
+                merged[col] = normalize_metrics(merged[col].to_dict())
+                merged[col] = pd.Series(merged[col])
+
         # Pretty names for metrics
-        merged["metric"] = merged["metric"].apply(lambda k: Plot.Plot.METRIC_NAMES.get(k, k))
+        merged["metric"] = merged["metric"].apply(lambda k: Plot.METRIC_NAMES.get(k, k))
     
         # Compute y positions and insert extra spacing between groups
         y_positions = []
@@ -251,7 +257,7 @@ class Plot:
             group_indices = []
             for m in metrics:
                 # Find metric index in merged
-                idx = merged.index[merged["metric"] == Plot.Plot.METRIC_NAMES.get(m, m)].tolist()
+                idx = merged.index[merged["metric"] == Plot.METRIC_NAMES.get(m, m)].tolist()
                 if idx:
                     y_positions.append(y)
                     y_labels.append(merged.loc[idx[0], "metric"])
