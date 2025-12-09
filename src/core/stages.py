@@ -359,7 +359,10 @@ def task_16_moderate_triples_llm(triples: List[Triple], text: str) -> List[Tripl
         if moderation_strategy == "drop":
             return safe
         if moderation_strategy == "resolve":
-            return _task_16_resolve_strategy(bad, text)
+            if not bad:  # Optimization: If nothing is bad, skip the expensive LLM call
+                return safe
+            fixed = _task_16_resolve_strategy(bad, text)
+            return safe + fixed
 
 
 def _task_16_resolve_strategy(
@@ -392,6 +395,7 @@ def _task_16_resolve_strategy(
 
     response = llm.execute_query(prompt)
     triples = parse_llm_triples(response)
+    return triples
 
 
 
