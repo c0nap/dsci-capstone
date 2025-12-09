@@ -139,22 +139,37 @@ class Plot:
 
     METRIC_NAMES: Dict[str, str] = {
         "rougeL_recall" : "ROUGE-L (Recall)",
-        "bertscore" : "BERTScore (F1)",
-        "novel_ngrams" : "Novel N-Grams",
-        "jsd_stats" : "JSD",
-        "entity_coverage" : "entity_coverage",
-        "entity_hallucination" : "entity_hallucination",
-        "ncd_overlap" : "NCD",
-        "salience_recall" : "Saliance (Recall)",
-        "nli_faithfulness" : "Faithfulness",
-        "readability_delta" : "Readability Delta",
+        "bertscore" : "Clamped BERTScore (F1)",
+        "novel_ngrams" : "Inverted N-Gram Hallucination",
+        "jsd_stats" : "Inverted JSD",
+        "entity_coverage" : "Entity Coverage",
+        "entity_hallucination" : "Inverted Entity Hallucination",
+        "ncd_overlap" : "Inverted NCD Similarity",
+        "salience_recall" : "Salience (Recall)",
+        "nli_faithfulness" : "Entailed Faithfulness",
+        "readability_delta" : "Clamped Readability Delta",
         "sentence_coherence" : "Sentence Coherence",
         "entity_grid_coherence" : "Entity Grid Coherence",
         "lexical_diversity" : "Lexical Diversity (TTR)",
         "stopword_ratio" : "Stopword Ratio",
-        "bookscore" : "BooookScore",
-        "questeval" : "QuestEval",
+        "bookscore" : "BooookScore Coherence",
+        "questeval" : "QuestEval Factuality",
     }
+    def normalize_metrics(metrics: Dict[str, float]) ->  Dict[str, float]:
+        for key, value in metrics.items():
+            if key == "readability_delta":
+                # Clamp to [0, 1] range
+                bound = 10
+                normalized = max(-bound, min(bound, value))
+                # map [-10, +10] -> [0, 1]
+                normalized = (normalized + bound) / (2 * bound)
+                metrics[key] = normalized
+            if key == "bertscore":
+                # Clamp to [0, 1] range
+                normalized = max(0.0, min(1.0, value))
+                metrics[key] = normalized
+            if key in ["jsd_stats", "novel_ngrams", "ncd_overlap", "entity_hallucination"]:
+                metrics[key] = 1 - value
 
     @staticmethod
     def summary_results(metrics: Dict[str, float]) -> None:
