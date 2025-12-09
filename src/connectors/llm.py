@@ -82,7 +82,7 @@ class OpenAIConnector(LLMConnector):
     def __init__(self, model_name: str, temperature: float = 0, reasoning_effort: str = None, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
-        super().__init__(temperature, system_prompt)
+        super().__init__(model_name, temperature, reasoning_effort, system_prompt, verbose)
         self.client: OpenAI = None
         self.configure()
 
@@ -124,7 +124,7 @@ class LangChainConnector(LLMConnector):
     def __init__(self, model_name: str, temperature: float = 0, reasoning_effort: str = None, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
-        super().__init__(temperature, system_prompt)
+        super().__init__(model_name, temperature, reasoning_effort, system_prompt, verbose)
         self.client: ChatOpenAI = None
         self.configure()
 
