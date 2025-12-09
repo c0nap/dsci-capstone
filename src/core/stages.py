@@ -121,6 +121,37 @@ class Config:
     verbalize_triples_mode="triple"
     summary_llm_engine="openai"
 
+    @staticmethod
+    def check_values():
+        _check_extractor(Config.relation_extractor_type)
+        _check_llm_engine(Config.validation_llm_engine)
+        _check_extractor(Config.graph_lookup_mode)
+        _check_extractor(Config.verbalize_triples_mode)
+        _check_llm_engine(Config.summary_llm_engine)
+
+    @staticmethod
+    def _check_extractor(value: Any):
+        _check_val(value, "extractor_type", [ 'textacy', 'openie', 'rebel'])
+
+    @staticmethod
+    def _check_llm_engine(value: Any):
+        _check_val(value, "llm_connector_type", ['langchain', 'openai'])
+
+    @staticmethod
+    def _check_verbal_mode(value: Any):
+        _check_val(value, "subgraph_mode", ['popular', 'local', 'explore', 'community'])
+
+    @staticmethod
+    def _check_verbal_mode(value: Any):
+        _check_val(value, "verbalization_mode", ['triple', 'natural', 'json', 'context'])
+
+    @staticmethod
+    def _check_val(value: Any, name: str, allowed: List[Any]) -> None:
+        if verbal_mode not in allowed:
+            raise ValueError(f"Invalid {name}: {verbal_mode}. Expected: {str(allowed)}")
+
+
+    @staticmethod
     def _task_12_get_re(extractor_type: str) -> RelationExtractor:
         # TODO: move to session.extractor?
         if extractor_type == "rebel":
@@ -145,8 +176,8 @@ class Config:
             # Initialize Textacy wrapper (pure Python backup)
             return RelationExtractorTextacy()
 
-        raise ValueError(f"Invalid extractor_type: {extractor_type}. Expected: 'textacy', 'openie', or 'rebel'.")
 
+    @staticmethod
     def _task_14_get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
         # TODO: move to session.llm?
         if llm_connector_type == "langchain":
@@ -161,8 +192,9 @@ class Config:
                 temperature=temperature,
                 system_prompt=system_prompt,
             )
-        raise ValueError(f"Invalid llm_connector_type: {llm_connector_type}. Expected: 'langchain', or 'openai'.")
 
+
+    @staticmethod
     def _task_22_get_triples(lookup_mode):
         """Select subgraph retrieval strategy based on use case."""
         
@@ -193,10 +225,9 @@ class Config:
             session.main_graph.detect_community_clusters(method="leiden")
             community_id = session.main_graph.get_community_largest()
             return session.main_graph.get_community_subgraph(community_id)
-        
-        raise ValueError(f"Invalid lookup_mode: {lookup_mode}. Expected: 'popular', 'local', 'explore', or 'community'.")
 
 
+    @staticmethod
     def _task_30_get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
         # TODO: move to session.llm?
         if llm_connector_type == "langchain":
@@ -211,7 +242,6 @@ class Config:
                 temperature=temperature,
                 system_prompt=system_prompt,
             )
-        raise ValueError(f"Invalid llm_connector_type: {llm_connector_type}. Expected: 'langchain', or 'openai'.")
 
 
 ##########################################################################
@@ -385,8 +415,6 @@ def task_23_verbalize_triples(triples_df):
     """Convert triples to string format for LLM consumption."""
     verbal_mode = Config.verbalize_triples_mode
     with Log.timer(config=f"[{verbal_mode}]"):
-        if verbal_mode not in ['triple', 'natural', 'json', 'context']:
-            raise ValueError(f"Invalid verbal_mode: {verbal_mode}. Expected: 'triple', 'natural', 'json', or 'context'.")
         triples_string = session.main_graph.to_triples_string(triples_df, verbal_mode)
         return triples_string
 
