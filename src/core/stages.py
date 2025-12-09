@@ -187,8 +187,10 @@ def task_11_send_chunk(c, collection_name, book_title):
 # tied to pipeline_B -> pipeline_A
 
 
-def task_12_relation_extraction_rebel(text, max_tokens=1024):
-    with Log.timer():
+
+def _task_12_get_re(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
+    # TODO: move to session.extractor?
+    if llm_connector_type == "rebel":
         from src.components.relation_extraction import RelationExtractorREBEL
 
         # TODO: move to session.rel_extract
@@ -196,28 +198,27 @@ def task_12_relation_extraction_rebel(text, max_tokens=1024):
         # TODO: different models
         # re_rst = "GAIR/rst-information-extraction-11b"
         # ner_renard = "compnet-renard/bert-base-cased-literary-NER"
-        nlp = RelationExtractorREBEL(model_name=re_rebel, max_tokens=max_tokens)
-        extracted = nlp.extract(text)
-        return extracted
+        return RelationExtractorREBEL(model_name=re_rebel, max_tokens=1024)
 
-
-def task_12_relation_extraction_openie(text, memory='4G'):
-    with Log.timer():
+    if llm_connector_type == "openie":
         from src.components.relation_extraction import RelationExtractorOpenIE
 
         # Initialize OpenIE wrapper (handles CoreNLP server internally)
-        nlp = RelationExtractorOpenIE(memory=memory)
-        extracted = nlp.extract(text)
-        return extracted
+        return = RelationExtractorOpenIE(memory=memory)
 
-
-def task_12_relation_extraction_textacy(text):
-    with Log.timer():
+    if llm_connector_type == "textacy":
         from src.components.relation_extraction import RelationExtractorTextacy
 
         # Initialize Textacy wrapper (pure Python backup)
-        nlp = RelationExtractorTextacy()
-        extracted = nlp.extract(text)
+        return RelationExtractorTextacy()
+
+    return None  # TODO: ValueError
+    
+
+def task_12_relation_extraction(text: str, extractor_type: str = "textacy") -> Tuple[str, str]:
+    with Log.timer(config = f"[{extractor_type}]"):
+        re = _task_14_get_llm(llm_connector_type, temperature, system_prompt)
+        extracted = re.extract(text)
         return extracted
 
 
