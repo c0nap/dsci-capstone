@@ -16,7 +16,7 @@ from src.components.metrics import (
     run_rouge_l,
     run_bertscore,
     run_novel_ngrams,
-    run_jsd_distribution,
+    run_jsd_stats,
     run_entity_coverage,
     run_ncd_overlap,
     run_salience_recall,
@@ -155,7 +155,7 @@ def metric_cache(book_data):
         cache[level]["rouge_l"] = run_rouge_l(summary, text)
         cache[level]["bertscore"] = run_bertscore(summary, text)
         cache[level]["novel_ngrams"] = run_novel_ngrams(summary, text)
-        cache[level]["jsd_distribution"] = run_jsd_distribution(summary, text)
+        cache[level]["jsd_distribution"] = run_jsd_stats(summary, text)
         cache[level]["entity_coverage"] = run_entity_coverage(summary, text)
         cache[level]["ncd"] = run_ncd_overlap(summary, text)
         cache[level]["salience_recall"] = run_salience_recall(summary, text)
