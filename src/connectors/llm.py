@@ -22,7 +22,7 @@ class LLMConnector(Connector, ABC):
         We prefer creating a separate wrapper instance for reusable hard-coded configurations.
     """
 
-    def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
+    def __init__(self, temperature: float = 0, reasoning_effort: str = None, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
         """Initialize common LLM connector properties."""
         self.temperature: float = temperature
         self.system_prompt: str = system_prompt
@@ -48,12 +48,6 @@ class LLMConnector(Connector, ABC):
         if not success and raise_error:
             raise Log.Failure(f"{log_source}: Connection check failed")
         return success
-
-    def _load_env(self) -> None:
-        """Load environment variables and set model name.
-        @details Called by subclasses during configure() to ensure consistent env loading."""
-        load_dotenv(".env")
-        self.model_name = os.environ["LLM_MODEL"]
 
     @abstractmethod
     def configure(self) -> None:
@@ -82,7 +76,7 @@ class LLMConnector(Connector, ABC):
 class OpenAIConnector(LLMConnector):
     """Lightweight LLM interface for faster response times."""
 
-    def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
+    def __init__(self, temperature: float = 0, reasoning_effort: str = None, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
         super().__init__(temperature, system_prompt)
@@ -91,7 +85,7 @@ class OpenAIConnector(LLMConnector):
 
     def configure(self) -> None:
         """Initialize the OpenAI client."""
-        self._load_env()
+        load_dotenv(".env")
         self.client = OpenAI()
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
@@ -99,7 +93,7 @@ class OpenAIConnector(LLMConnector):
         @param system_prompt  Instructions for the LLM.
         @param human_prompt  The user input or query.
         @return Raw LLM response as a string."""
-        try:
+        if self.reasoning_effort is None:
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
@@ -107,9 +101,8 @@ class OpenAIConnector(LLMConnector):
                     {"role": "user", "content": human_prompt},
                 ],
                 temperature=self.temperature,
-                reasoning_effort="minimal",
             )
-        except BadRequestError:
+        else:
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
@@ -117,6 +110,7 @@ class OpenAIConnector(LLMConnector):
                     {"role": "user", "content": human_prompt},
                 ],
                 temperature=self.temperature,
+                reasoning_effort=self.reasoning_effort,
             )
         return str(response.choices[0].message.content)
 
@@ -124,7 +118,7 @@ class OpenAIConnector(LLMConnector):
 class LangChainConnector(LLMConnector):
     """Fully-featured API to prompt across various LLM providers."""
 
-    def __init__(self, temperature: float = 0, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
+    def __init__(self, temperature: float = 0, reasoning_effort: str = None, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
         super().__init__(temperature, system_prompt)
@@ -135,10 +129,12 @@ class LangChainConnector(LLMConnector):
         """Initialize the LangChain LLM using environment credentials.
         @details
             Reads:
-                - OPENAI_API_KEY from .env for authentication
-                - LLM_MODEL and LLM_TEMPERATURE to override defaults"""
-        self._load_env()
-        self.client = ChatOpenAI(model=self.model_name, temperature=self.temperature, reasoning={"effort": "minimal"})
+                - OPENAI_API_KEY from .env for authentication"""
+        load_dotenv(".env")
+        if self.reasoning_effort is None:
+            self.client = ChatOpenAI(model=self.model_name, temperature=self.temperature)
+        else:
+            self.client = ChatOpenAI(model=self.model_name, temperature=self.temperature, reasoning={"effort": self.reasoning_effort})
 
     def execute_full_query(self, system_prompt: str, human_prompt: str) -> str:
         """Send a single prompt to the LLM with separate system and human instructions.

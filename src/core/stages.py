@@ -125,6 +125,7 @@ class Config:
 
     # gpt-5-nano only supports temperature 1
     temperature=1
+    reasoning_effort="minimal"
 
     # Moderation thresholds for Gutenberg (historical fiction)
     moderation_thresholds = {
