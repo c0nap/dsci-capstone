@@ -40,18 +40,18 @@ def book_data():
         "summary": "The children discover a magical carpet with a Phoenix.",
         "gold_summary": "Children find magical carpet.",
         "chunk": chunk,
-        "rebel_triples": [
-            "children  had  carpet",
-            "carpet  arrived  nursery",
-            "egg  was_in  carpet",
-            "egg  hatched  Phoenix",
-            "Phoenix  can  talk",
-            "Phoenix  is  ancient",
-            "carpet  is  wishing_carpet",
-            "carpet  takes_to  anywhere",
-            "Phoenix  recommends  Egypt",
-            "children  want  adventures",
-        ],  # used to test LLM triple sanitization
+        "json_triples" : [
+            {"s": "children", "r": "had", "o": "carpet"},
+            {"s": "carpet", "r": "arrived", "o": "nursery"},
+            {"s": "egg", "r": "was_in", "o": "carpet"},
+            {"s": "egg", "r": "hatched", "o": "Phoenix"},
+            {"s": "Phoenix", "r": "can", "o": "talk"},
+            {"s": "Phoenix", "r": "is", "o": "ancient"},
+            {"s": "carpet", "r": "is", "o": "wishing_carpet"},
+            {"s": "carpet", "r": "takes_to", "o": "anywhere"},
+            {"s": "Phoenix", "r": "recommends", "o": "Egypt"},
+            {"s": "children", "r": "want", "o": "adventures"},
+        ],
         "llm_triples_json": llm_triples_json,
         "bookscore": 0.85,
         "questeval": 0.92,
@@ -164,12 +164,11 @@ def test_job_12_extraction(book_data, extractor_type):
 @pytest.mark.parametrize("llm_connector_type", ["langchain", "openai"], indirect=True)
 def test_job_14_llm_minimal(book_data, llm_connector_type):
     """Test LLM-based triple sanitization with realistic data."""
-    triples_string = "\n".join(book_data["rebel_triples"])
-
-    prompt, llm_output, _ = task_14_validate_llm(triples_string, book_data["chunk"].text)
+    triples = book_data["json_triples"]
+    prompt, llm_output, _ = task_14_validate_llm(triples, book_data["chunk"].text)
 
     assert isinstance(prompt, str)
-    assert triples_string in prompt
+    assert str(triples) in prompt
     assert book_data["chunk"].text in prompt
     assert isinstance(llm_output, str)
     assert len(llm_output) > 0
@@ -216,7 +215,7 @@ def test_pipeline_D_minimal(docs_db, book_data):
     """Test running pipeline_D with smoke test data."""
     collection_name = "test_pipeline_d_smoke"
     chunk = book_data["chunk"]
-    triples_string = "\n".join(book_data["rebel_triples"])
+    triples_string = "\n".join(book_data["json_triples"])
 
     # Insert chunk first - verified by pipeline_B_minimal
     task_11_send_chunk(chunk, collection_name, book_data["book_title"])

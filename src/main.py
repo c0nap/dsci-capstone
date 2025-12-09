@@ -146,7 +146,8 @@ def pipeline_E(
     else:
         stages.task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval)
     print("\nOutput sent to web app.")
-    return CORE_METRICS
+    if chunk != "":
+        return CORE_METRICS
 
 
 @Log.time

@@ -150,11 +150,7 @@ class LangChainConnector(LLMConnector):
                 ("human", human_prompt),
             ]
         )
-        try:
-            response = self.client.invoke(prompt.format_messages())
-        except BadRequestError:
-            self.client = ChatOpenAI(model=self.model_name, temperature=self.temperature)
-            response = self.client.invoke(prompt.format_messages())
+        response = self.client.invoke(prompt.format_messages())
         return str(response.content)
 
 
