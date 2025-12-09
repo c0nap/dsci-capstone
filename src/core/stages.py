@@ -177,7 +177,7 @@ class Config:
 
 
     @staticmethod
-    def _task_12_get_re(extractor_type: str) -> RelationExtractor:
+    def get_extractor(extractor_type: str) -> RelationExtractor:
         # TODO: move to session.extractor?
         if extractor_type == "rebel":
             from src.components.relation_extraction import RelationExtractorREBEL
@@ -203,7 +203,7 @@ class Config:
 
 
     @staticmethod
-    def _task_14_get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
+    def get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
         # TODO: move to session.llm?
         if llm_connector_type == "langchain":
             from src.connectors.llm import LangChainConnector
@@ -220,9 +220,8 @@ class Config:
 
 
     @staticmethod
-    def _task_22_get_triples(lookup_mode):
+    def get_subgraph(lookup_mode):
         """Select subgraph retrieval strategy based on use case."""
-        
         if lookup_mode == "popular":
             # FAST: Degree-based filtering for hub entities
             return session.main_graph.get_by_ranked_degree(
@@ -230,12 +229,10 @@ class Config:
                 enforce_count=True, 
                 id_columns=["subject_id"]
             )
-        
         if lookup_mode == "local":
             # FAST: Multi-hop exploration from most connected node
             center_node = session.main_graph.get_node_most_popular()
             return session.main_graph.get_neighborhood(center_node, depth=2)
-        
         if lookup_mode == "explore":
             # MEDIUM: Structural exploration via random walks
             start_nodes = session.main_graph.get_nodes_top_degree(k=3)
@@ -244,29 +241,11 @@ class Config:
                 walk_length=5, 
                 num_walks=3
             )
-        
         if lookup_mode == "community":
             # HEAVY: Community-based retrieval (run detection once, query many times)
             session.main_graph.detect_community_clusters(method="leiden")
             community_id = session.main_graph.get_community_largest()
             return session.main_graph.get_community_subgraph(community_id)
-
-
-    @staticmethod
-    def _task_30_get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
-        # TODO: move to session.llm?
-        if llm_connector_type == "langchain":
-            from src.connectors.llm import LangChainConnector
-            return LangChainConnector(
-                temperature=temperature,
-                system_prompt=system_prompt,
-            )
-        if llm_connector_type == "openai":
-            from src.connectors.llm import OpenAIConnector
-            return OpenAIConnector(
-                temperature=temperature,
-                system_prompt=system_prompt,
-            )
 
 
 ##########################################################################
@@ -341,7 +320,7 @@ def task_11_send_chunk(c, collection_name, book_title):
 def task_12_relation_extraction(text: str) -> List[Triple]:
     extractor_type = Config.relation_extractor_type
     with Log.timer(config = f"[{extractor_type}]"):
-        re = Config._task_12_get_re(extractor_type)
+        re = Config.get_extractor(extractor_type)
         extracted = re.extract(text)
         return extracted
 
@@ -361,7 +340,7 @@ def task_14_validate_llm(triples_string: str, text: str, temperature: float = 1)
         # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON."
-        llm = Config._task_14_get_llm(llm_connector_type, temperature, system_prompt)
+        llm = Config.get_llm(llm_connector_type, temperature, system_prompt)
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
         prompt += f"And here is the original text:\n{text}\n\n"
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
@@ -446,7 +425,7 @@ def task_22_fetch_subgraph():
     """Retrieve and convert subgraph to named triples."""
     lookup_mode = Config.graph_lookup_mode
     with Log.timer(config=f"[{lookup_mode}]"):
-        triples_df = Config._task_22_get_triples(lookup_mode)
+        triples_df = Config.get_subgraph(lookup_mode)
         triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
         return triples_df
 
@@ -467,7 +446,7 @@ def task_30_summarize_llm(triples_string: str, temperature: float = 1) -> Tuple[
         # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that summarizes text."
-        llm = Config._task_30_get_llm(llm_connector_type, temperature, system_prompt)
+        llm = Config.get_llm(llm_connector_type, temperature, system_prompt)
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
         prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
         prompt += "Output your generated summary and nothing else."
