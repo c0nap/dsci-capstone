@@ -80,22 +80,22 @@ def book_data():
         ),
         
         "excellent": (
-            "Alice was sitting by her sister on the bank when she saw a White Rabbit "
+            "Alice was sitting by her sister on the bank. She saw a White Rabbit "
             "with pink eyes. The White Rabbit took a watch out of its waistcoat-pocket and "
-            "looked at it. Alice followed the White Rabbit and saw it pop down a large rabbit-hole "
-            "under the hedge. Alice went down the rabbit-hole after it. The rabbit-hole "
+            "looked at it. Alice ran across the field after it and saw it pop down a large rabbit-hole "
+            "under the hedge. Alice went down after it. The rabbit-hole "
             "went straight on like a tunnel and then dipped suddenly down. Alice fell very "
-            "slowly down the hole. Alice landed in a long low hall lit by lamps. "
-            "The doors were all locked. Alice discovered a little table made of solid glass with a tiny "
-            "golden key on it. Behind a curtain Alice found a door about fifteen inches high. "
-            "The key fit but Alice could not squeeze through. Alice went back to the table and found a little "
+            "slowly. Alice landed in a long low hall lit by a row of lamps. "
+            "The doors were all locked. Alice found a little three-legged table made of solid glass with a tiny "
+            "golden key upon it. Behind a low curtain Alice found a door about fifteen inches high. "
+            "The key fit but Alice could not squeeze through. Alice found a little "
             "bottle labeled DRINK ME. It was not marked poison. Alice ventured to taste it. Alice was "
             "now only ten inches high. Alice had forgotten the key on the table above. "
-            "Alice cried and shed gallons of tears until there was a large pool. "
-            "Alice heard a pattering of feet and the White Rabbit appeared. "
+            "Alice shed gallons of tears until there was a large pool. "
+            "The White Rabbit appeared. "
             "The White Rabbit dropped his gloves and fan as he ran. Alice picked them up and began fanning herself. "
-            "Alice had put on one of the Rabbit's little gloves. "
-            "Alice was about two feet high and shrinking rapidly. Alice dropped the fan hastily to avoid shrinking "
+            "Alice found that she had put on one of the Rabbit's little gloves. "
+            "Alice was about two feet high and shrinking rapidly. Alice dropped the fan hastily just in time to avoid shrinking "
             "away altogether."
         ),
         
