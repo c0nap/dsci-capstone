@@ -319,12 +319,34 @@ def task_21_3_post_statistics():
         # TODO: notify blazor
         pass
 
+def _task_22_get_triples(lookup_mode):
+    if lookup_mode == "degree":
+        return session.main_graph.get_by_ranked_degree(worst_rank=3, enforce_count=True, id_columns=["subject_id"])
+    if lookup_mode == "radius":
+        center_node = None
+        return session.main_graph.get_neighborhood(center_node, depth=3) 
+    if lookup_mode == "walk":
+        start_nodes = []
+        return session.main_graph.get_random_walk(start_nodes, walk_length=3, num_walks=2)
+    if lookup_mode == "community":
+        session.main_graph.detect_community_clusters()
+        community_id = session.main_graph.get_community_subgraph
+        return session.main_graph.get_community_subgraph(community_id)
+    return None  # TODO: ValueError
 
-def task_22_verbalize_triples(mode="triple"):
-    with Log.timer():
-        triples_df = session.main_graph.get_by_ranked_degree(worst_rank=3, enforce_count=True, id_columns=["subject_id"])
+def task_22_fetch_subgraph(lookup_mode="degree"):
+    with Log.timer(config = f"[{lookup_mode}]"):
+        triples_df = _task_22_get_triples(cluster_mode)
         triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
-        triples_string = session.main_graph.to_triples_string(triples_df, mode=mode)
+        return triples_df
+
+def _task_23_to_string(triples_df, verbal_mode):
+    if lookup_mode == "triple":
+        return session.main_graph.to_triples_string(triples_df, mode=mode)
+
+def task_23_verbalize_triples(triples_df, verbal_mode="triple"):
+    with Log.timer(config = f"[{verbal_mode}]"):
+        triples_string = _task_23_to_string(triples_df, verbal_mode)
         return triples_string
 
 
