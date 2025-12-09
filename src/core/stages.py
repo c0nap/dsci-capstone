@@ -121,6 +121,23 @@ class Config:
     verbalize_triples_mode="raw"
     summary_llm_engine="openai"
 
+    # Moderation thresholds for Gutenberg (historical fiction)
+    moderation_thresholds = {
+        "hate": 0.4,                      # Period racism in dialogue
+        "harassment": 0.4,                # Victorian class conflict
+        "violence": 0.5,                  # Gothic/adventure violence
+        "sexual": 0.3,                    # Euphemistic Victorian content
+        "self_harm": 0.3,                 # Tragic death scenes
+        "hate_threatening": 0.2,          # Filter overt calls to violence
+        "harassment_threatening": 0.2,
+        "violence_graphic": 0.3,
+        "sexual_minors": 0.0,             # Zero tolerance
+        "self_harm_intent": 0.1,
+        "self_harm_instructions": 0.1,
+        "illicit": 0.05,
+        "illicit_violent": 0.05,
+    }
+
     @staticmethod
     def check_values():
         Config._check_extractor(Config.relation_extractor_type)

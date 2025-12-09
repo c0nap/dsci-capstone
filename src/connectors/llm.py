@@ -11,7 +11,7 @@ import os
 import re
 from src.connectors.base import Connector
 from src.util import Log
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 
 
 class LLMConnector(Connector, ABC):
@@ -272,10 +272,21 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
     return expanded
 
 
-def moderate_texts(texts: List[str]) -> List[bool]:
-    """Check if texts contain offensive content using OpenAI moderation API.
-    @param texts  List of text strings to moderate.
-    @return List of booleans - True if safe, False if flagged.
+
+def moderate_texts(
+    texts: List[str],
+    thresholds: Dict[str, float],
+) -> List[Tuple[bool, Optional[Dict[str, float]]]]:
+    """Check texts for offensive content using OpenAI moderation API.
+    @details
+    - Returns flagged categories so caller can log/analyze violations
+    - Config object encodes domain knowledge about acceptable thresholds
+    - Batch processing amortizes API latency across multiple texts
+    @param texts  List of text strings to moderate
+    @param thresholds  Dict of category->threshold (e.g., {"hate": 0.4})
+    @return List of (is_safe, flagged_categories) tuples
+            is_safe=True if all scores below thresholds
+            flagged_categories=dict of exceeded categories, None if safe
     """
     from openai import OpenAI
 
@@ -284,8 +295,9 @@ def moderate_texts(texts: List[str]) -> List[bool]:
 
     load_dotenv()
     client = OpenAI()
+
     batch_size = 32  # OpenAI's max per request
-    safe_flags = []
+    results = []
 
     for i in range(0, len(texts), batch_size):
         batch = texts[i : i + batch_size]
@@ -293,29 +305,57 @@ def moderate_texts(texts: List[str]) -> List[bool]:
         try:
             response = client.moderations.create(input=batch)
 
-            # Focus on hate/harassment for old fiction content
             for result in response.results:
-                is_safe = not (result.categories.hate or result.categories.harassment)
-                safe_flags.append(is_safe)
+                scores = result.category_scores.model_dump()
+                
+                # Check each category against configured threshold
+                flagged = {}
+                for category, score in scores.items():
+                    # Map API category names to config attributes
+                    config_attr = category.replace('/', '_').replace('-', '_')
+                    threshold = getattr(thresholds, config_attr, 0.01)
+                    
+                    if score > threshold:
+                        flagged[category] = score
+                
+                is_safe = len(flagged) == 0
+                results.append((is_safe, None if is_safe else flagged))
 
         except Exception as e:
             Log.warn(f"Moderation API failed: {e}, marking batch as safe")
-            safe_flags.extend([True] * len(batch))
+            results.extend([(True, None)] * len(batch))
 
-    return safe_flags
+    return results
 
 
-def moderate_triples(triples: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def moderate_triples(
+    triples: List[Dict[str, str]],
+    thresholds: Dict[str, float],
+) -> Tuple[List[Dict[str, str]], List[Tuple[Dict[str, str], Dict[str, float]]]]:
     """Filter triples containing offensive content.
-    @param triples  List of dicts with 's', 'r', 'o' keys.
-    @return Filtered list of safe triples.
+    @details
+    - Enables logging bad triples for model improvement
+    - Allows manual review of edge cases
+    - Preserves violation details for analysis
+    @param triples  List of dicts with 's', 'r', 'o' keys
+    @param thresholds  Dict of category->threshold (e.g., {"hate": 0.4})
+    @return Tuple of (safe_triples, bad_triples_with_reasons)
+            bad_triples_with_reasons = [(triple, bad_categories), ...]
     """
     texts = [f"{t['s']} {t['r']} {t['o']}" for t in triples]
-    safe_flags = moderate_texts(texts)
+    moderation_results = moderate_texts(texts, thresholds)
 
-    safe_triples = [t for t, is_safe in zip(triples, safe_flags) if is_safe]
+    safe_triples = []
+    bad_triples = []
+
+    for triple, (is_safe, flagged_cats) in zip(triples, moderation_results):
+        if is_safe:
+            safe_triples.append(triple)
+        else:
+            bad_triples.append((triple, flagged_cats))
 
     filtered_count = len(triples) - len(safe_triples)
     Log.success(f"Moderation: filtered {filtered_count}/{len(triples)} triples")
 
-    return safe_triples
+    return safe_triples, bad_triples
+
