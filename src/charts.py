@@ -160,7 +160,7 @@ class Plot:
     def summary_results(metrics: Dict[str, float]) -> None:
         """Generate a bar chart showing metrics for a single summary."""
         # Convert keys to display names
-        names = [METRIC_NAMES[k] for k in metrics.keys()]
+        names = [Plot.METRIC_NAMES[k] for k in metrics.keys()]
         values = [metrics[k] for k in metrics.keys()]
 
         plt.figure(figsize=(len(metrics) * 0.8, 8))
@@ -224,7 +224,7 @@ class Plot:
                 merged = pd.merge(merged, df, on="metric", how="outer")
     
         # Pretty names for metrics
-        merged["metric"] = merged["metric"].apply(lambda k: Plot.METRIC_NAMES.get(k, k))
+        merged["metric"] = merged["metric"].apply(lambda k: Plot.Plot.METRIC_NAMES.get(k, k))
     
         # Compute y positions and insert extra spacing between groups
         y_positions = []
@@ -232,11 +232,11 @@ class Plot:
         group_ticks = []
         spacing = 0.5  # extra space between groups
         y = 0
-        for group_name, metrics in METRIC_GROUPS:
+        for group_name, metrics in Plot.METRIC_GROUPS:
             group_indices = []
             for m in metrics:
                 # Find metric index in merged
-                idx = merged.index[merged["metric"] == Plot.METRIC_NAMES.get(m, m)].tolist()
+                idx = merged.index[merged["metric"] == Plot.Plot.METRIC_NAMES.get(m, m)].tolist()
                 if idx:
                     y_positions.append(y)
                     y_labels.append(merged.loc[idx[0], "metric"])
