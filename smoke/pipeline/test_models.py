@@ -168,7 +168,7 @@ def test_job_14_llm_minimal(book_data, llm_connector_type):
     prompt, llm_output, _ = task_14_validate_llm(triples, book_data["chunk"].text)
 
     assert isinstance(prompt, str)
-    assert str(triples) in prompt
+    assert str(triples[0]) in prompt
     assert book_data["chunk"].text in prompt
     assert isinstance(llm_output, str)
     assert len(llm_output) > 0

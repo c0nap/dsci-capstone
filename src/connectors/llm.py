@@ -1,10 +1,6 @@
 from abc import ABC, abstractmethod
 from dotenv import load_dotenv
-from langchain_core.prompts import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate,
-)
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from openai import OpenAI
 import os
@@ -144,13 +140,14 @@ class LangChainConnector(LLMConnector):
         @param system_prompt  Instructions for the LLM.
         @param human_prompt  The user input or query.
         @return Raw LLM response as a string."""
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", system_prompt),
-                ("human", human_prompt),
-            ]
-        )
-        response = self.client.invoke(prompt.format_messages())
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=human_prompt)
+        ]
+        response = self.client.invoke(messages)
+
+        if isinstance(response.content, list):
+            return "".join(block["text"] for block in response.content if "text" in block)
         return str(response.content)
 
 
