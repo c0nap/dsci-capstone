@@ -126,7 +126,8 @@ class Plot:
             ax.set_xlabel("Average elapsed seconds (log scale)")
         else:
             ax.set_xlabel("Average elapsed time (seconds)")
-        ax.set_title("Average Function Runtime Comparison")
+        title = "Function Runtime Comparison (Single Chunk)"
+        ax.set_title(title)
         ax.legend()
 
         plt.tight_layout()
@@ -135,7 +136,7 @@ class Plot:
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         plt.savefig(filename)
         plt.close()
-        Log.chart("Average Function Runtime Comparison", filename)
+        Log.chart(title, filename)
 
 
 
@@ -287,7 +288,8 @@ class Plot:
     
         plt.yticks(range(len(y_labels)), y_labels)
         plt.xlabel("Score")
-        plt.title("Metric Comparison Across Summaries")
+        title = "Quality Comparison (Chunk-Level Summary)"
+        plt.title(title)
         plt.legend()
     
         # Draw vertical dotted lines between groups
@@ -303,7 +305,7 @@ class Plot:
         plt.savefig(filename)
         plt.close()
     
-        Log.chart("Metric Comparison", filename)
+        Log.chart(title, filename)
 
 
 
@@ -322,9 +324,9 @@ def plot_time_comparison():
 
     args = parser.parse_args()
 
-    #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False)
+    Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False)
     #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=True)
-    Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False, cap_outliers=0.06)
+    #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False, cap_outliers=0.06)
 
 def plot_metrics_comparison():
     # make docker-python-dev CMD="src.charts './logs/metrics/chunk_summary_best.csv' './logs/metrics/chunk_summary_worst.csv' './logs/metrics/chunk_summary_llm.csv' --output='./logs/charts/metrics_comparison.png'"
