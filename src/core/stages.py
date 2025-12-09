@@ -1,4 +1,3 @@
-import json
 import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from src.connectors.llm import LLMConnector, parse_llm_triples

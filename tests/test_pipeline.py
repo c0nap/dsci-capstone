@@ -6,7 +6,7 @@ from src.components.book_conversion import Chunk, EPUBToTEI, ParagraphStreamTEI,
 from src.core.stages import *
 from src.main import pipeline_A, pipeline_C
 from src.util import Log
-from src.components.llm import parse_llm_triples
+from src.connectors.llm import parse_llm_triples
 
 
 ##########################################################################

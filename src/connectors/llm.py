@@ -13,6 +13,7 @@ from src.connectors.base import Connector
 from src.components.relation_extraction import Triple
 from src.util import Log
 from typing import Any, Dict, List, Tuple, Optional
+import json
 
 
 class LLMConnector(Connector, ABC):
