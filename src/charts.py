@@ -244,7 +244,7 @@ class Plot:
         # Normalize metrics for each label column
         for col in merged.columns:
             if col != "metric":
-                merged[col] = normalize_metrics(merged[col].to_dict())
+                merged[col] = Plot.normalize_metrics(merged[col].to_dict())
                 merged[col] = pd.Series(merged[col])
 
         # Pretty names for metrics
@@ -329,10 +329,11 @@ def plot_time_comparison():
     #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False, cap_outliers=0.06)
 
 def plot_metrics_comparison():
-    # make docker-python-dev CMD="src.charts './logs/metrics/chunk_summary_best.csv' './logs/metrics/chunk_summary_worst.csv' './logs/metrics/chunk_summary_llm.csv' --output='./logs/charts/metrics_comparison.png'"
+    # python -m src.charts './logs/metrics/chunk_summary_best.csv' './logs/metrics/chunk_summary_worst.csv' './logs/metrics/chunk_summary_llm.csv' --output='./logs/charts/metrics_comparison.png'
+
     import argparse
 
-    parser = argparse.ArgumentParser(description='Compare function runtimes from two CSV files')
+    parser = argparse.ArgumentParser(description='Compare metrics from three CSV files')
     parser.add_argument('csv1', help='Path to first CSV file')
     parser.add_argument('csv2', help='Path to second CSV file')
     parser.add_argument('csv3', help='Path to third CSV file')
@@ -344,5 +345,5 @@ def plot_metrics_comparison():
 
 
 if __name__ == "__main__":
-    plot_time_comparison()
-    # plot_metrics_comparison()
+    # plot_time_comparison()
+    plot_metrics_comparison()
