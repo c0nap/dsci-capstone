@@ -627,6 +627,120 @@ def test_ranked_degree_ties(main_graph: KnowledgeGraph) -> None:
     assert empty_result.empty, "No rank-2 nodes exist, should return empty"
 
 
+
+@pytest.mark.kg
+@pytest.mark.order(26)
+@pytest.mark.dependency(name="helper_most_popular", depends=["degree_rank"], scope="session")
+def test_get_node_most_popular(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test retrieval of highest-degree node.
+    @details  Validates that get_node_most_popular returns the node with most connections.
+    """
+    kg = nature_scene_graph
+    
+    # Get most popular node
+    most_popular_id = kg.get_node_most_popular()
+    assert most_popular_id is not None
+    assert isinstance(most_popular_id, str)
+    
+    # Verify it's actually the highest-degree node
+    degree_df = kg.get_edge_counts()
+    expected_id = degree_df.iloc[0]["node_id"]
+    assert most_popular_id == expected_id
+    
+    # Verify it has the maximum edge count
+    max_degree = degree_df["edge_count"].max()
+    actual_degree = degree_df[degree_df["node_id"] == most_popular_id]["edge_count"].iloc[0]
+    assert actual_degree == max_degree
+
+
+@pytest.mark.kg
+@pytest.mark.order(27)
+@pytest.mark.dependency(name="helper_top_degree", depends=["helper_most_popular"], scope="session")
+def test_get_nodes_top_degree(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test retrieval of top-k highest-degree nodes.
+    @details  Validates that get_nodes_top_degree returns correct number of nodes in order.
+    """
+    kg = nature_scene_graph
+    
+    # Get top 3 nodes
+    top_nodes = kg.get_nodes_top_degree(k=3)
+    assert top_nodes is not None
+    assert isinstance(top_nodes, list)
+    assert len(top_nodes) == 3
+    
+    # Verify they're in descending degree order
+    degree_df = kg.get_edge_counts(top_n=3)
+    expected_ids = degree_df["node_id"].tolist()
+    assert top_nodes == expected_ids
+    
+    # Test single node retrieval
+    top_1 = kg.get_nodes_top_degree(k=1)
+    assert len(top_1) == 1
+    assert top_1[0] == kg.get_node_most_popular()
+
+
+@pytest.mark.kg
+@pytest.mark.order(28)
+@pytest.mark.dependency(name="helper_largest_community", depends=["community_detection_minimal"], scope="session")
+def test_get_community_largest(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test retrieval of largest community ID.
+    @details  Validates that get_community_largest returns the community with most nodes.
+    """
+    kg = nature_scene_graph
+    
+    # Run community detection first
+    kg.detect_community_clusters(method="leiden")
+    
+    # Get largest community
+    largest_comm_id = kg.get_community_largest()
+    assert largest_comm_id is not None
+    assert isinstance(largest_comm_id, int)
+    
+    # Verify it's actually the largest
+    df = kg.get_triple_properties()
+    community_sizes = df["n1.community_id"].value_counts()
+    expected_largest = int(community_sizes.idxmax())
+    assert largest_comm_id == expected_largest
+    
+    # Test error when detection not run
+    kg_empty = KnowledgeGraph("empty_test", kg.database)
+    with pytest.raises(Log.Failure):
+        kg_empty.get_community_largest()
+
+
+@pytest.mark.kg
+@pytest.mark.order(29)
+@pytest.mark.dependency(name="helper_community_ids", depends=["helper_largest_community"], scope="session")
+def test_get_community_ids(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test retrieval of all community IDs.
+    @details  Validates that get_community_ids returns sorted list of unique communities.
+    """
+    kg = nature_scene_graph
+    
+    # Run community detection first
+    kg.detect_community_clusters(method="leiden")
+    
+    # Get all community IDs
+    comm_ids = kg.get_community_ids()
+    assert comm_ids is not None
+    assert isinstance(comm_ids, list)
+    assert len(comm_ids) > 0
+    
+    # Verify sorted and unique
+    assert comm_ids == sorted(set(comm_ids))
+    
+    # Verify matches actual communities in graph
+    df = kg.get_triple_properties()
+    expected_ids = sorted(df["n1.community_id"].dropna().unique().astype(int).tolist())
+    assert comm_ids == expected_ids
+    
+    # Test error when detection not run
+    kg_empty = KnowledgeGraph("empty_test_2", kg.database)
+    with pytest.raises(Log.Failure):
+        kg_empty.get_community_ids()
+
+
+
 # ==========================================
 # NODE AND EDGE LABEL SANITIZATION
 # ==========================================
