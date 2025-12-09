@@ -320,17 +320,31 @@ def task_21_3_post_statistics():
         pass
 
 def _task_22_get_triples(lookup_mode):
-    if lookup_mode == "degree":
-        return session.main_graph.get_by_ranked_degree(worst_rank=3, enforce_count=True, id_columns=["subject_id"])
-    if lookup_mode == "radius":
-        center_node = None
-        return session.main_graph.get_neighborhood(center_node, depth=3) 
-    if lookup_mode == "walk":
-        start_nodes = []
-        return session.main_graph.get_random_walk(start_nodes, walk_length=3, num_walks=2)
+    """Select subgraph retrieval strategy based on use case."""
+    
+    if lookup_mode == "popular":
+        # FAST: Degree-based filtering
+        return session.main_graph.get_by_ranked_degree(
+            worst_rank=5, 
+            enforce_count=True, 
+            id_columns=["subject_id"]
+        )
+    if lookup_mode == "local":
+        # FAST: Multi-hop exploration from most popular
+        center_node = session.main_graph.get_node_most_popular()
+        return session.main_graph.get_neighborhood(center_node, depth=2)
+    if lookup_mode == "explore":
+        # MEDIUM: Structural exploration via random walks
+        start_nodes = session.main_graph.get_nodes_top_degree(k=3)
+        return session.main_graph.get_random_walk(
+            start_nodes, 
+            walk_length=5, 
+            num_walks=3
+        )
     if lookup_mode == "community":
-        session.main_graph.detect_community_clusters()
-        community_id = session.main_graph.get_community_subgraph
+        # HEAVY: Community-based retrieval (run once, query many times)
+        session.main_graph.detect_community_clusters(method="leiden")
+        community_id = session.main_graph.get_community_largest()
         return session.main_graph.get_community_subgraph(community_id)
     return None  # TODO: ValueError
 
