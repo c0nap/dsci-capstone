@@ -97,19 +97,21 @@ class Plot:
             return per_run_avg.groupby('function')['elapsed'].mean().reset_index()
 
         if only_pipeline is not None:
-            avg1 = process_df(df1, only_pipeline)
-            avg2 = process_df(df2, only_pipeline)
+            df1 = process_df(df1, only_pipeline)
+            df2 = process_df(df2, only_pipeline)
 
         # Merge on function names to align bars
-        merged = pd.merge(avg1, avg2, on='function', suffixes=('_left', '_right'))
+        merged = pd.merge(df1, df2, on='function', suffixes=('_left', '_right'))
+        merged = merged.sort_values(by=['function'], ascending=False).reset_index(drop=True)
 
         # Create figure
-        fig, ax = plt.subplots(figsize=(10, len(merged) * 0.5))
+        height = max(1, len(merged) * 0.4)
+        fig, ax = plt.subplots(figsize=(10, height))
 
         # Plot bars going inward from center
         y_pos = range(len(merged))
-        ax.barh(y_pos, -merged['elapsed_left'], align='center', label='Improved', color='tab:blue')
-        ax.barh(y_pos, merged['elapsed_right'], align='center', label='Original', color='tab:orange')
+        ax.barh(y_pos, -merged['elapsed_left'], align='center', label='Best', color='tab:blue')
+        ax.barh(y_pos, merged['elapsed_right'], align='center', label='Fast', color='tab:orange')
 
         # Configure axes with log scale to handle outliers
         if log_scale:
@@ -308,13 +310,9 @@ class Plot:
 
 
 
-if __name__ == "__main__":
-    # plot_time_comparison()
-    plot_metrics_comparison()
-
 
 def plot_time_comparison():
-    # make docker-python-dev CMD="src.charts './logs/elapsed_time_best.csv' './logs/elapsed_time_worst.csv' --output='./logs/charts/runtime_comparison.png'"
+    # python -m src.charts './logs/elapsed_time_best.csv' './logs/elapsed_time_worst.csv' --output='./logs/charts/runtime_comparison.png'
     import argparse
 
     parser = argparse.ArgumentParser(description='Compare function runtimes from two CSV files')
@@ -324,7 +322,9 @@ def plot_time_comparison():
 
     args = parser.parse_args()
 
-    Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=False, log_scale=False, cap_outliers=0.06)
+    #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False)
+    #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=True)
+    Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False, cap_outliers=0.06)
 
 def plot_metrics_comparison():
     # make docker-python-dev CMD="src.charts './logs/metrics/chunk_summary_best.csv' './logs/metrics/chunk_summary_worst.csv' './logs/metrics/chunk_summary_llm.csv' --output='./logs/charts/metrics_comparison.png'"
@@ -341,4 +341,6 @@ def plot_metrics_comparison():
     Plot.summary_comparison(filename=args.output, paths=[args.csv1, args.csv2, args.csv3], fixed_colors=["tab:blue", "tab:orange", "tab:green"], labels=["Best", "Fast", "LLM-Only"])
 
 
-
+if __name__ == "__main__":
+    plot_time_comparison()
+    # plot_metrics_comparison()
