@@ -373,6 +373,75 @@ def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, book
         session.metrics.post_basic(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
 
 
+def task_45_eval_rouge(summary, chunk):
+    """Compute metric for ROUGE-L Recall (Coverage Score)"""
+    with Log.timer():
+        return run_rougeL_recall(summary, chunk)
+
+def task_45_eval_bertscore(summary, chunk):
+    """Compute metric for BERTScore embedding similarity"""
+    with Log.timer():
+        return run_bertscore(summary, chunk)
+
+def task_45_eval_ngrams(summary, chunk):
+    """Compute metric for Novel n-gram Percentage"""
+    with Log.timer():
+        return run_novel_ngrams(summary, chunk)
+
+def task_45_eval_jsd(summary, chunk):
+    """Compute metric for Jensen-Shannon Divergence (JSD)"""
+    with Log.timer():
+        return run_jsd_stats(summary, chunk)
+
+def task_45_eval_coverage(summary, chunk):
+    """Compute metric for Entity Coverage & Hallucination (spaCy)"""
+    with Log.timer():
+        return run_entity_coverage(summary, chunk)
+
+def task_45_eval_ncd(summary, chunk):
+    """Compute metric for Normalized Compression Distance (NCD)"""
+    with Log.timer():
+        return run_ncd_overlap(summary, chunk)
+
+def task_45_eval_salience(summary, chunk):
+    """Compute metric for TF-IDF Salience Recall"""
+    with Log.timer():
+        return run_salience_recall(summary, chunk)
+
+def task_45_eval_faithfulness(summary, chunk):
+    """Compute metric for NLI-based Faithfulness Score"""
+    with Log.timer():
+        return run_nli_faithfulness(summary, chunk)
+
+def task_45_eval_readability(summary, chunk):
+    """Compute metric for Readability Delta (textstats)"""
+    with Log.timer():
+        return run_readability_delta(summary, chunk)
+
+def task_45_eval_sentence_coherence(summary):
+    """Compute metric for Sentence Coherence (Adjacent Embedding Similarity)"""
+    with Log.timer():
+        return run_sentence_coherence(summary)
+
+def task_45_eval_entity_grid(summary):
+    """Compute metric for Entity Grid Coherence (Discourse Structure)"""
+    with Log.timer():
+        return run_entity_grid_coherence(summary)
+
+def task_45_eval_diversity(summary):
+    """Compute metric for Lexical Diversity (Type-Token Ratio)"""
+    with Log.timer():
+        return run_lexical_diversity(summary)
+
+def task_45_eval_stopwords(summary):
+    """Compute metric for Stopword Ratio (Content Density)"""
+    with Log.timer():
+        return run_stopword_ratio(summary)
+
+
+
+
+
 # TODO: move rouge / bertscore out of post function
 # TODO: move post out of metrics
 
