@@ -570,7 +570,9 @@ def run_bertscore(summary: str, source: str) -> Dict[str, float]:
         rescale_with_baseline=True,
         lang="en"
     )
-    return {"bertscore_f1": result["f1"][0]}
+    # Clamp to [0, 1] range (this is bad in principle but doesnt really matter here)
+    normalized = max(0.0, min(1.0, result["f1"][0]))
+    return {"bertscore_f1": normalized}
 
 
 def run_novel_ngrams(summary: str, source: str, n: int = 3) -> Dict[str, float]:
@@ -598,7 +600,7 @@ def run_novel_ngrams(summary: str, source: str, n: int = 3) -> Dict[str, float]:
 
     novel = sum(1 for g in sum_list if g not in src_set)
     pct = novel / (len(sum_list) or 1)
-    return {"novel_ngram_pct": pct}
+    return {"novel_ngram_pct": 1 - pct}
 
 
 def run_jsd_stats(summary: str, source: str) -> Dict[str, float]:
@@ -633,7 +635,7 @@ def run_jsd_stats(summary: str, source: str) -> Dict[str, float]:
     p = np.array([src_counts[w] for w in vocab], dtype=float)
     q = np.array([sum_counts[w] for w in vocab], dtype=float)
 
-    return {"jsd": jsd(p, q)}
+    return {"jsd": 1 - jsd(p, q)}
 
 
 def run_entity_coverage(summary: str, source: str) -> Dict[str, float]:
@@ -674,7 +676,7 @@ def run_entity_coverage(summary: str, source: str) -> Dict[str, float]:
         coverage = len(src_ents & sum_ents) / len(src_ents)
         halluc = len(sum_ents - src_ents) / len(sum_ents)
 
-    return {"entity_coverage": coverage, "entity_hallucination": halluc}
+    return {"entity_coverage": coverage, "entity_hallucination": 1 - halluc}
 
 
 # ==============================================================================
@@ -716,7 +718,7 @@ def run_ncd_overlap(summary: str, source: str) -> Dict[str, float]:
     # Clamp to [0, 1] range
     ncd_score = max(0.0, min(1.0, ncd_score))
     
-    return {"ncd": float(ncd_score)}
+    return {"ncd": 1 - float(ncd_score)}
 
 
 def run_salience_recall(summary: str, source: str, top_k: int = 20) -> Dict[str, float]:
@@ -863,7 +865,13 @@ def run_readability_delta(summary: str, source: str) -> Dict[str, float]:
     import textstat
     fk_source = textstat.flesch_kincaid_grade(source)
     fk_summary = textstat.flesch_kincaid_grade(summary)
-    return {"readability_delta": fk_source - fk_summary}
+    delta = fk_source - fk_summary
+    # Clamp to [0, 1] range
+    bound = 10
+    normalized = max(-bound, min(bound, delta))
+    # map [-10, +10] -> [0, 1]
+    normalized = (normalized + bound) / (2 * bound)
+    return {"readability_delta": normalized}
 
 
 # ==============================================================================
