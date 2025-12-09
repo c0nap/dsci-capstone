@@ -123,6 +123,9 @@ class Config:
     verbalize_triples_mode="raw"
     summary_llm_engine="openai"
 
+    # gpt-5-nano only supports temperature 1
+    temperature=1
+
     # Moderation thresholds for Gutenberg (historical fiction)
     moderation_thresholds = {
         "hate": 0.4,                      # Period racism in dialogue
@@ -325,14 +328,13 @@ def task_12_relation_extraction(text: str) -> List[Triple]:
         return extracted
 
 
-def task_14_validate_llm(triples: List[Triple], text: str, temperature: float = 1) -> Tuple[str, str]:
+def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, str]:
     llm_connector_type = Config.validation_llm_engine
     with Log.timer(config = f"[{llm_connector_type}]"): # _{temperature:.2f}
         triples_string = RelationExtractor.to_triples_string(triples)
-        # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON."
-        llm = Config.get_llm(llm_connector_type, temperature, system_prompt)
+        llm = Config.get_llm(llm_connector_type, Config.temperature, system_prompt)
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
         prompt += f"And here is the original text:\n{text}\n\n"
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
@@ -370,7 +372,7 @@ def task_16_moderate_triples_llm(triples: List[Triple]) -> List[Triple]:
 
         triples_string = RelationExtractor.to_triples_string(bad)
         system_prompt = "You are a helpful assistant that corrects harmful content in old fiction."
-        llm = Config._task_16_get_llm(llm_connector_type, temperature, system_prompt)
+        llm = Config._task_16_get_llm(llm_connector_type, Config.temperature, system_prompt)
         prompt = f"Here are some flagged triples extracted from a story chunk:\n{triples_string}\n"
         prompt += f"And here is the original text:\n{text}\n\n"
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
@@ -431,14 +433,13 @@ def task_23_verbalize_triples(triples_df):
 
 
 # PIPELINE STAGE D - CONSOLIDATE / GRAPH -> SUMMARY
-def task_30_summarize_llm(triples_string: str, temperature: float = 1) -> Tuple[str, str]:
+def task_30_summarize_llm(triples_string: str) -> Tuple[str, str]:
     """Prompt LLM to generate summary"""
     llm_connector_type = Config.summary_llm_engine
     with Log.timer(config = f"[{llm_connector_type}]"): # _{temperature:.2f}
-        # gpt-5-nano only supports temperature 1
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that summarizes text."
-        llm = Config.get_llm(llm_connector_type, temperature, system_prompt)
+        llm = Config.get_llm(llm_connector_type, Config.temperature, system_prompt)
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
         prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
         prompt += "Output your generated summary and nothing else."
