@@ -10,6 +10,7 @@ from openai import OpenAI
 import os
 import re
 from src.connectors.base import Connector
+from src.components.relation_extraction import Triple
 from src.util import Log
 from typing import Any, Dict, List, Tuple, Optional
 
@@ -22,11 +23,12 @@ class LLMConnector(Connector, ABC):
         We prefer creating a separate wrapper instance for reusable hard-coded configurations.
     """
 
-    def __init__(self, temperature: float = 0, reasoning_effort: str = None, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
+    def __init__(self, model_name: str, temperature: float = 0, reasoning_effort: str = None, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
         """Initialize common LLM connector properties."""
+        self.model_name: str = model_name
         self.temperature: float = temperature
+        self.reasoning_effort: str = reasoning_effort
         self.system_prompt: str = system_prompt
-        self.model_name: str = None
         self.verbose: bool = verbose
 
     def test_operations(self, raise_error: bool = True) -> bool:
@@ -76,7 +78,7 @@ class LLMConnector(Connector, ABC):
 class OpenAIConnector(LLMConnector):
     """Lightweight LLM interface for faster response times."""
 
-    def __init__(self, temperature: float = 0, reasoning_effort: str = None, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
+    def __init__(self, model_name: str, temperature: float = 0, reasoning_effort: str = None, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
         super().__init__(temperature, system_prompt)
@@ -118,7 +120,7 @@ class OpenAIConnector(LLMConnector):
 class LangChainConnector(LLMConnector):
     """Fully-featured API to prompt across various LLM providers."""
 
-    def __init__(self, temperature: float = 0, reasoning_effort: str = None, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
+    def __init__(self, model_name: str, temperature: float = 0, reasoning_effort: str = None, system_prompt: str = "You are a helpful assistant.", verbose: bool = True):
         """Initialize the connector.
         @note  Model name is specified in the .env file."""
         super().__init__(temperature, system_prompt)

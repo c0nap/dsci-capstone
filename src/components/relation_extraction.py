@@ -38,9 +38,9 @@ class RelationExtractor(ABC):
         @param extracted  A list of extracted relations.
         @return  String with one triple per line."""
         triples_string = ""
-            for triple in extracted:
-                triples_string += str(triple) + "\n"
-            return triples_string
+        for triple in extracted:
+            triples_string += str(triple) + "\n"
+        return triples_string
 
 
 class RelationExtractorREBEL(RelationExtractor):

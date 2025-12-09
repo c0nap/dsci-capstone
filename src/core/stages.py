@@ -126,6 +126,7 @@ class Config:
     # gpt-5-nano only supports temperature 1
     temperature=1
     reasoning_effort="minimal"
+    model_name="gpt-5-nano"
 
     # Moderation thresholds for Gutenberg (historical fiction)
     moderation_thresholds = {
@@ -207,18 +208,22 @@ class Config:
 
 
     @staticmethod
-    def get_llm(llm_connector_type: str, temperature: float, system_prompt: str) -> LLMConnector:
+    def get_llm(llm_connector_type: str, system_prompt: str) -> LLMConnector:
         # TODO: move to session.llm?
         if llm_connector_type == "langchain":
             from src.connectors.llm import LangChainConnector
             return LangChainConnector(
-                temperature=temperature,
+                model_name=Config.model_name,
+                temperature=Config.temperature,
+                reasoning_effort=Config.reasoning_effort,
                 system_prompt=system_prompt,
             )
         if llm_connector_type == "openai":
             from src.connectors.llm import OpenAIConnector
             return OpenAIConnector(
-                temperature=temperature,
+                model_name=Config.model_name,
+                temperature=Config.temperature,
+                reasoning_effort=Config.reasoning_effort,
                 system_prompt=system_prompt,
             )
 
@@ -329,11 +334,11 @@ def task_12_relation_extraction(text: str) -> List[Triple]:
 
 def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, str, List[Triple]]:
     llm_connector_type = Config.validation_llm_engine
-    with Log.timer(config = f"[{llm_connector_type}]"): # _{temperature:.2f}
+    with Log.timer(config = f"[{llm_connector_type}]"):
         triples_string = RelationExtractor.to_triples_string(triples)
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON."
-        llm = Config.get_llm(llm_connector_type, Config.temperature, system_prompt)
+        llm = Config.get_llm(llm_connector_type, system_prompt)
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
         prompt += f"And here is the original text:\n{text}\n\n"
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
@@ -348,7 +353,7 @@ def task_16_moderate_triples_llm(triples: List[Triple], text: str) -> List[Tripl
     @param triples  Normalized triples in JSON format.
     @return Safe triples for knowledge graph insertion."""
     moderation_strategy = Config.moderation_strategy
-    with Log.timer(config = f"[{moderation_strategy}]"): # _{temperature:.2f}
+    with Log.timer(config = f"[{moderation_strategy}]"):
         from src.connectors.llm import moderate_triples
         safe, bad = moderate_triples(triples, Config.moderation_thresholds)
         if moderation_strategy == "drop":
@@ -404,7 +409,7 @@ def _task_16_resolve_strategy(
     # triples_string = RelationExtractor.to_triples_string(bad)
 
     system_prompt = "You are a helpful assistant that corrects harmful content in old fiction."
-    llm = Config.get_llm(llm_connector_type)
+    llm = Config.get_llm(llm_connector_type, system_prompt)
     prompt = f"Here are some flagged triples extracted from a story chunk:\n{triples_string}\n"
     prompt += f"And here is the original text:\n{text}\n\n"
     prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
@@ -467,10 +472,10 @@ def task_23_verbalize_triples(triples_df):
 def task_30_summarize_llm(triples_string: str) -> Tuple[str, str]:
     """Prompt LLM to generate summary"""
     llm_connector_type = Config.summary_llm_engine
-    with Log.timer(config = f"[{llm_connector_type}]"): # _{temperature:.2f}
+    with Log.timer(config = f"[{llm_connector_type}]"):
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that summarizes text."
-        llm = Config.get_llm(llm_connector_type, Config.temperature, system_prompt)
+        llm = Config.get_llm(llm_connector_type, system_prompt)
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
         prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
         prompt += "Output your generated summary and nothing else."
