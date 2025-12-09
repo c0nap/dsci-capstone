@@ -137,7 +137,7 @@ class Config:
         "hate_threatening": 0.2,          # Filter overt calls to violence
         "harassment_threatening": 0.2,
         "violence_graphic": 0.3,
-        "sexual_minors": 0.0,             # Zero tolerance
+        "sexual_minors": 0.01,            # Zero tolerance
         "self_harm_intent": 0.1,
         "self_harm_instructions": 0.1,
         "illicit": 0.05,

@@ -50,7 +50,7 @@ def book_data():
             {"s": "carpet", "r": "is", "o": "wishing_carpet"},
             {"s": "carpet", "r": "takes_to", "o": "anywhere"},
             {"s": "Phoenix", "r": "recommends", "o": "Egypt"},
-            {"s": "children", "r": "want", "o": "adventures"},
+            {"s": "children", "r": "want", "o": "adventures"}
         ],
         "llm_triples_json": llm_triples_json,
         "bookscore": 0.85,

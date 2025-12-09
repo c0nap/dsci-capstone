@@ -59,8 +59,11 @@ def pipeline_B(collection_name, chunks, book_title):
     print(llm_output)
     print("\n" + "=" * 50 + "\n")
 
+    n_removed = len(triples)
     triples = stages.task_16_moderate_triples_llm(triples, c.text)
-    print("\nValid JSON")
+    n_removed -= len(triples)
+    print(f"\nModeration removed {n_removed} triples")
+    print("Valid JSON")
     return triples, c
 
 
