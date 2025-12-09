@@ -92,25 +92,19 @@ class OpenAIConnector(LLMConnector):
         @param system_prompt  Instructions for the LLM.
         @param human_prompt  The user input or query.
         @return Raw LLM response as a string."""
-        if self.reasoning_effort is None:
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": human_prompt},
-                ],
-                temperature=self.temperature,
-            )
-        else:
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": human_prompt},
-                ],
-                temperature=self.temperature,
-                reasoning_effort=self.reasoning_effort,
-            )
+        extra_args = {}
+        if self.reasoning_effort is not None:
+            extra_args["reasoning_effort"] = self.reasoning_effort
+
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": human_prompt},
+            ],
+            temperature=self.temperature,
+            **extra_args
+        )
         return str(response.choices[0].message.content)
 
 
