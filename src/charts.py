@@ -4,6 +4,7 @@ import pandas as pd
 import seaborn as sns
 from src.util import Log
 from typing import Optional, Dict, List
+import numpy as np
 
 
 class Plot:
@@ -167,12 +168,16 @@ class Plot:
                 # map [-10, +10] -> [0, 1]
                 normalized = (normalized + bound) / (2 * bound)
                 metrics[key] = normalized
+                continue
             if key == "bertscore":
                 # Clamp to [0, 1] range
                 normalized = max(0.0, min(1.0, value))
                 metrics[key] = normalized
+                continue
             if key in ["jsd_stats", "novel_ngrams", "ncd_overlap", "entity_hallucination"]:
                 metrics[key] = 1 - value
+                continue
+        return metrics
 
     @staticmethod
     def summary_results(metrics: Dict[str, float]) -> None:
@@ -244,12 +249,15 @@ class Plot:
         # Normalize metrics for each label column
         for col in merged.columns:
             if col != "metric":
-                merged[col] = Plot.normalize_metrics(merged[col].to_dict())
-                merged[col] = pd.Series(merged[col])
+                # Create a dict keyed by original metric names
+                metric_to_val = dict(zip(merged["metric"], merged[col]))
+                normalized = Plot.normalize_metrics(metric_to_val)
+                # Re-align the normalized values back to the DataFrame column
+                merged[col] = merged["metric"].map(normalized)
 
-        # Pretty names for metrics
+        # Then rename metrics for display
         merged["metric"] = merged["metric"].apply(lambda k: Plot.METRIC_NAMES.get(k, k))
-    
+
         # Compute y positions and insert extra spacing between groups
         y_positions = []
         y_labels = []
