@@ -142,16 +142,16 @@ class Plot:
 
     METRIC_NAMES: Dict[str, str] = {
         "rougeL_recall" : "ROUGE-L (Recall)",
-        "bertscore" : "Clamped BERTScore (F1)",
-        "novel_ngrams" : "Inverted N-Gram Hallucination",
-        "jsd_stats" : "Inverted JSD",
+        "bertscore" : "BERTScore (F1)",
+        "novel_ngrams" : "Repeated N-Grams",
+        "jsd_stats" : "JSD Alignment",
         "entity_coverage" : "Entity Coverage",
-        "entity_hallucination" : "Inverted Entity Hallucination",
-        "ncd_overlap" : "Inverted NCD Similarity",
-        "salience_recall" : "Salience (Recall)",
-        "nli_faithfulness" : "Entailed Faithfulness",
-        "readability_delta" : "Clamped Readability Delta",
-        "sentence_coherence" : "Sentence Coherence",
+        "entity_hallucination" : "Lack of Hallucination",
+        "ncd_overlap" : "NCD Overlap",
+        "salience_recall" : "Salience Recall",
+        "nli_faithfulness" : "Entailment Faithfulness",
+        "readability_delta" : "Readability Delta",
+        "sentence_coherence" : "Embedding Coherence",
         "entity_grid_coherence" : "Entity Grid Coherence",
         "lexical_diversity" : "Lexical Diversity (TTR)",
         "stopword_ratio" : "Stopword Ratio",
@@ -167,15 +167,15 @@ class Plot:
                 # map [-10, +10] -> [0, 1]
                 normalized = (normalized + bound) / (2 * bound)
                 metrics[key] = normalized
-                continue
-            if key == "bertscore":
+            elif key == "bertscore":
                 # Clamp to [0, 1] range
                 normalized = max(0.0, min(1.0, value))
                 metrics[key] = normalized
-                continue
-            if key in ["jsd_stats", "novel_ngrams", "ncd_overlap", "entity_hallucination"]:
+            elif key in ["jsd_stats", "novel_ngrams", "ncd_overlap", "entity_hallucination"]:
                 metrics[key] = 1 - value
-                continue
+            value = metrics[key]
+            if value == 0:
+                metrics[key] = 0.01
         return metrics
 
     @staticmethod
@@ -215,9 +215,9 @@ class Plot:
 
 
     METRIC_GROUPS = [
-        ("BASIC COMPARISON", ["rougeL_recall", "bertscore", "novel_ngrams", "jsd_stats", "entity_coverage"]),
-        ("HIGH-LEVEL COMPARISON", ["ncd_overlap", "salience_recall", "nli_faithfulness", "readability_delta"]),
-        ("REFERENCE-FREE", ["sentence_coherence", "entity_grid_coherence", "lexical_diversity", "stopword_ratio", "bookscore", "questeval"]),
+        ("SOURCE SIMILARITY", ["rougeL_recall", "bertscore", "jsd_stats", "ncd_overlap", "novel_ngrams"]),
+        ("FACTUALITY", ["entity_coverage", "entity_hallucination", "questeval"  "ncd_overlap", "salience_recall", "nli_faithfulness"]),
+        ("NARRATIVE FLOW", ["sentence_coherence", "entity_grid_coherence", "bookscore", "readability_delta", "lexical_diversity", "stopword_ratio"]),
     ]
 
 
@@ -295,8 +295,8 @@ class Plot:
         plt.legend()
 
         # Manually define the x positions for the group separators
-        group_lines_x = [4.75, 9.25]  # example positions between groups
-        group_labels = ["BASIC COMPARISON", "HIGH-LEVEL COMPARISON", "REFERENCE-FREE"]
+        group_lines_x = [5.25, 10]  # example positions between groups
+        group_labels = ["HALLUCINATION", "HIGH-LEVEL COMPARISON", "REFERENCE-FREE"]
         group_label_y = max(merged[labels].max().max(), 1) - 0.02  # vertical position for headers
 
         # Draw dotted lines
@@ -304,7 +304,7 @@ class Plot:
             plt.axvline(x=x, color="gray", linestyle="dotted", linewidth=1)
 
         # Draw header labels
-        for x, label in zip([2.5, 7, 11.5], group_labels):  # adjust x for label centers
+        for x, label in zip([2.25, 7, 11.5], group_labels):  # adjust x for label centers
             plt.text(x, group_label_y, label, fontsize=10, fontweight="bold",
                      ha="center", va="bottom")
 
