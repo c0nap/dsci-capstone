@@ -15,32 +15,32 @@
 #4 DONE 0.0s
 
 #5 [internal] load build context
-#5 transferring context: 9.80kB 1.0s done
-#5 DONE 1.0s
+#5 transferring context: 9.80kB 1.1s done
+#5 DONE 1.1s
 
-#6 [ 5/16] RUN pip install --no-cache-dir -r requirements.txt
+#6 [ 3/16] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     make     pandoc     default-jre-headless  && pip install --upgrade pip setuptools wheel build  && rm -rf /var/lib/apt/lists/*
 #6 CACHED
 
-#7 [ 6/16] RUN python -m spacy download en_core_web_sm
+#7 [ 4/16] COPY deps/requirements.txt .
 #7 CACHED
 
-#8 [ 2/16] WORKDIR /pipeline
+#8 [ 5/16] RUN pip install --no-cache-dir -r requirements.txt
 #8 CACHED
 
-#9 [ 3/16] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     make     pandoc     default-jre-headless  && pip install --upgrade pip setuptools wheel build  && rm -rf /var/lib/apt/lists/*
+#9 [ 6/16] RUN python -m spacy download en_core_web_sm
 #9 CACHED
 
-#10 [ 4/16] COPY deps/requirements.txt .
+#10 [ 2/16] WORKDIR /pipeline
 #10 CACHED
 
 #11 [ 7/16] RUN python -m nltk.downloader punkt punkt_tab stopwords
 #11 CACHED
 
 #12 [ 8/16] COPY src/ src/
-#12 DONE 0.1s
+#12 DONE 0.2s
 
 #13 [ 9/16] COPY tests/ tests/
-#13 DONE 0.1s
+#13 DONE 0.2s
 
 #14 [10/16] COPY smoke/ smoke/
 #14 DONE 0.1s
@@ -55,23 +55,23 @@
 #17 DONE 0.1s
 
 #18 [14/16] RUN make env-docker
-#18 0.454 ✓ Generated .env.docker
-#18 DONE 0.5s
+#18 0.422 ✓ Generated .env.docker
+#18 DONE 0.4s
 
 #19 [15/16] RUN mv .env.docker .env
-#19 DONE 0.3s
+#19 DONE 0.6s
 
 #20 [16/16] COPY pyproject.toml pytest.ini conftest.py .
-#20 DONE 0.1s
+#20 DONE 0.3s
 
 #21 exporting to image
 #21 exporting layers
 #21 exporting layers 0.2s done
-#21 writing image sha256:0d5d2cc2f564884f81990e4ad14fdca4b1539352ea5c3d9b4805ced20f8c5f9b done
+#21 writing image sha256:d531eb9d151e741a3fa142e50cffc76c6932cb2c9d8198a8b1fb230417a692f3 done
 #21 naming to docker.io/library/dsci-cap-img-python-dev:latest done
 #21 DONE 0.2s
 container-python
-c1b22268e193209c890f9a5c814b0282e9292acde47a2d9a0dfd4337a68485d5
+0b82e7dfab8b53f1191b24982ccfae384b8771a7a98cb957663e62d1f7508588
 Network 'capstone_default' already exists; continue...
 Deleted old chunks...
  * Serving Flask app 'src.core.boss'
@@ -82,23 +82,23 @@ Deleted old chunks...
  * Running on http://172.17.0.5:5054
 [33mPress CTRL+C to quit[0m
 [STATUS] Story 1: preprocessing -> in-progress
-127.0.0.1 - - [10/Dec/2025 07:15:36] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:26:08] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> in-progress
-127.0.0.1 - - [10/Dec/2025 07:15:36] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:26:08] "POST /status/story HTTP/1.1" 200 -
 
 ==================================================
 Processing: ./tests/examples-pipeline/epub/trilogy-wishes-2.epub
-[96m[TIME] [93mtask_01_convert_epub took 2.351s[0m
-[96m[TIME] [93mtask_02_parse_chapters took 0.032s[0m
+[96m[TIME] [93mtask_01_convert_epub took 2.054s[0m
+[96m[TIME] [93mtask_02_parse_chapters took 0.041s[0m
 [96m[TIME] [93mtask_03_chunk_story took 0.015s[0m
 
 === STORY SUMMARY ===
 Total chunks: 254
-[96m[TIME] [93mpipeline_A took 2.484s[0m
+[96m[TIME] [93mpipeline_A took 2.192s[0m
 [STATUS] Story 1: preprocessing -> completed
-127.0.0.1 - - [10/Dec/2025 07:15:38] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:26:10] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> completed
-127.0.0.1 - - [10/Dec/2025 07:15:38] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:26:10] "POST /status/story HTTP/1.1" 200 -
 
 Chunk details:
   index: 181
@@ -109,9 +109,9 @@ Chunk details:
 ‘Yes,’ said the bird, ‘eleven thousand nine hundred and forty of them—I daresay you noticed? I should be surprised if these had not left their mark.’
 ‘Good gracious,’ said Jane, sitting down suddenly on the floor, and patting the edge of the carpet softly; ‘do you mean it’s WEARING OUT?’
 ‘Its life with you has not been a luxurious one,’ said the Phoenix.
-[96m[TIME] [93mtask_11_send_chunk took 0.028s[0m
+[96m[TIME] [93mtask_11_send_chunk took 0.030s[0m
     [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-14_p.15915]
-[96m[TIME] [93mtask_12_relation_extraction[textacy] took 1.994s[0m
+[96m[TIME] [93mtask_12_relation_extraction[textacy] took 1.660s[0m
 
 NLP output:
 {'s': 'Anthea', 'r': 'urged', 'o': 'do n’t talk in that horrid lecturing tone'}
@@ -130,7 +130,7 @@ NLP output:
 {'s': 'these', 'r': 'had not left', 'o': 'mark'}
 {'s': 'it', 'r': '’s WEARING', 'o': 'OUT'}
 
-[96m[TIME] [93mtask_14_validate_llm[openai] took 6.756s[0m
+[96m[TIME] [93mtask_14_validate_llm[openai] took 131.935s[0m
 
     LLM prompt:
 Here are some semantic triples extracted from a story chunk:
@@ -163,265 +163,295 @@ Remove nonsensical triples but otherwise retain all relevant entries, and add ne
 
     LLM output:
 [
-  {"s": "Anthea", "r": "urged", "o": "don’t talk in that horrid lecturing tone"},
-  {"s": "I", "r": "’d done", "o": "something"},
-  {"s": "we", "r": "have n’t done", "o": "anything"},
-  {"s": "wishes", "r": "repeated", "o": "Phoenix"},
-  {"s": "you", "r": "did hear", "o": "carpet"},
-  {"s": "you", "r": "had", "o": "wish"},
-  {"s": "fabric one", "r": "removed", "o": "boots"},
-  {"s": "carpet", "r": "stood", "o": "boots"},
-  {"s": "carpet", "r": "never flinched", "o": "boots"},
-  {"s": "you", "r": "asked", "o": "what"},
-  {"s": "I", "r": "do n’t blame", "o": "you"},
-  {"s": "carpet", "r": "could stand", "o": "cow"},
+  {"s": "Anthea", "r": "urged", "o": "Phoenix not to talk in a horrid lecturing tone"},
+  {"s": "Anthea", "r": "felt", "o": "as if she had done something wrong"},
+  {"s": "Anthea", "r": "said", "o": "the carpet is a wishing carpet"},
+  {"s": "the children", "r": "had not done", "o": "anything to the carpet except make wishes"},
+  {"s": "Phoenix", "r": "repeated", "o": "Only wishes"},
+  {"s": "Phoenix", "r": "spoke", "o": "angrily"},
+  {"s": "Phoenix", "r": "ruffled", "o": "its neck feathers"},
+  {"s": "Phoenix", "r": "criticized", "o": "wishes like making people be in a good temper"},
+  {"s": "the children", "r": "wished", "o": "people to be in a good temper"},
+  {"s": "Phoenix", "r": "asked", "o": "what carpet had ever been asked for such a wish"},
+  {"s": "Phoenix", "r": "called", "o": "the carpet a noble fabric"},
+  {"s": "Phoenix", "r": "said", "o": "you trample the carpet recklessly"},
+  {"s": "everyone", "r": "removed", "o": "boots from the carpet"},
+  {"s": "everyone", "r": "stood on", "o": "the linoleum"},
+  {"s": "carpet", "r": "never flinched", "o": "despite trampling"},
+  {"s": "carpet", "r": "did", "o": "what the children asked"},
+  {"s": "Phoenix", "r": "said", "o": "the wear and tear must have been awful"},
+  {"s": "Phoenix", "r": "did not blame", "o": "the children for the cats and rats"},
+  {"s": "cats and rats", "r": "were", "o": "the carpet's own choice"},
+  {"s": "a heavy cow", "r": "hung on", "o": "one corner of the carpet"},
+  {"s": "Phoenix", "r": "questioned", "o": "what carpet could stand a heavy cow hanging on one corner"},
   {"s": "Robert", "r": "said", "o": "look at all their claws"},
-  {"s": "these", "r": "had not left", "o": "mark"},
-  {"s": "it", "r": "’s WEARING", "o": "OUT"},
-  {"s": "Phoenix", "r": "is", "o": "a wishing carpet"},
-  {"s": "carpet", "r": "took", "o": "wear and tear"},
-  {"s": "cat and rat", "r": "were", "o": "its own choice"},
-  {"s": "carpet", "r": "could stand", "o": "a heavy cow hanging on to it"},
-  {"s": "Jane", "r": "patting", "o": "the edge of the carpet softly"},
-  {"s": "Jane", "r": "said", "o": "do you mean it’s WEARING OUT?"},
-  {"s": "Phoenix", "r": "said", "o": "Its life with you has not been a luxurious one"}
+  {"s": "Robert", "r": "thought", "o": "the cats and rats were worse than the cow"},
+  {"s": "Phoenix", "r": "said", "o": "there were 11940 claws"},
+  {"s": "claws", "r": "left", "o": "marks on the carpet"},
+  {"s": "Jane", "r": "sat down", "o": "on the floor"},
+  {"s": "Jane", "r": "patted", "o": "the edge of the carpet"},
+  {"s": "Jane", "r": "asked", "o": "is the carpet wearing out"},
+  {"s": "carpet", "r": "is", "o": "wearing out"},
+  {"s": "Phoenix", "r": "said", "o": "its life with you has not been a luxurious one"},
+  {"s": "carpet", "r": "is", "o": "a wishing carpet"}
 ]
 
 ==================================================
 
-[96m[TIME] [93mtask_16_moderate_triples_llm[drop] took 2.278s[0m
+[96m[TIME] [93mtask_16_moderate_triples_llm[drop] took 0.840s[0m
 
 Moderation removed 0 triples
 Valid JSON
-[96m[TIME] [93mpipeline_B took 11.258s[0m
+[96m[TIME] [93mpipeline_B took 134.642s[0m
 Checkpoint saved to ./datasets/checkpoint.pkl
 [STATUS] Chunk story-1_book-2_chapter-14_p.15915: relation_extraction -> in-progress
-127.0.0.1 - - [10/Dec/2025 07:15:50] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:28:25] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-14_p.15915: llm_inference -> in-progress
-127.0.0.1 - - [10/Dec/2025 07:15:50] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:28:25] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-14_p.15915: relation_extraction -> completed
-127.0.0.1 - - [10/Dec/2025 07:15:50] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:28:25] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-14_p.15915: llm_inference -> completed
-127.0.0.1 - - [10/Dec/2025 07:15:50] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:28:25] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-14_p.15915: graph_verbalization -> in-progress
-127.0.0.1 - - [10/Dec/2025 07:15:50] "POST /status/chunk HTTP/1.1" 200 -
-Anthea urged don’t talk in that horrid lecturing tone
-I ’d done something
-we have n’t done anything
-wishes repeated Phoenix
-you did hear carpet
-you had wish
-fabric one removed boots
-carpet stood boots
-carpet never flinched boots
-you asked what
-I do n’t blame you
-carpet could stand cow
+127.0.0.1 - - [10/Dec/2025 07:28:25] "POST /status/chunk HTTP/1.1" 200 -
+Anthea urged Phoenix not to talk in a horrid lecturing tone
+Anthea felt as if she had done something wrong
+Anthea said the carpet is a wishing carpet
+the children had not done anything to the carpet except make wishes
+Phoenix repeated Only wishes
+Phoenix spoke angrily
+Phoenix ruffled its neck feathers
+Phoenix criticized wishes like making people be in a good temper
+the children wished people to be in a good temper
+Phoenix asked what carpet had ever been asked for such a wish
+Phoenix called the carpet a noble fabric
+Phoenix said you trample the carpet recklessly
+everyone removed boots from the carpet
+everyone stood on the linoleum
+carpet never flinched despite trampling
+carpet did what the children asked
+Phoenix said the wear and tear must have been awful
+Phoenix did not blame the children for the cats and rats
+cats and rats were the carpet's own choice
+a heavy cow hung on one corner of the carpet
+Phoenix questioned what carpet could stand a heavy cow hanging on one corner
 Robert said look at all their claws
-these had not left mark
-it ’s WEARING OUT
-Phoenix is a wishing carpet
-carpet took wear and tear
-cat and rat were its own choice
-carpet could stand a heavy cow hanging on to it
-Jane patting the edge of the carpet softly
-Jane said do you mean it’s WEARING OUT?
-Phoenix said Its life with you has not been a luxurious one
-[96m[TIME] [93mtask_20_send_triples took 4.735s[0m
-[96m[TIME] [93mtask_22_fetch_subgraph[popular] took 0.383s[0m
+Robert thought the cats and rats were worse than the cow
+Phoenix said there were 11940 claws
+claws left marks on the carpet
+Jane sat down on the floor
+Jane patted the edge of the carpet
+Jane asked is the carpet wearing out
+carpet is wearing out
+Phoenix said its life with you has not been a luxurious one
+carpet is a wishing carpet
+[96m[TIME] [93mtask_20_send_triples took 5.131s[0m
+[96m[TIME] [93mtask_22_fetch_subgraph[popular] took 0.307s[0m
 [96m[TIME] [93mtask_23_verbalize_triples[raw] took 0.001s[0m
 
 Triples which best represent the graph:
-I D_DONE something
-I DO_N_T_BLAME you
-you DID_HEAR carpet
-you HAD wish
-carpet NEVER_FLINCHED boots
-carpet STOOD boots
-you ASKED what
-carpet COULD_STAND cow
-Phoenix IS wishing_carpet
-carpet TOOK wear_and_tear
-carpet COULD_STAND heavy_cow_hanging_on_to
+Phoenix RUFFLED neck_feathers
+Phoenix CRITICIZED wishes_like_making_people_be_in_good_temper
+Phoenix ASKED carpet_had_ever_been_asked_for_wish
+Phoenix CALLED carpet_noble_fabric
+Phoenix SAID trample_carpet_recklessly
+everyone REMOVED boots_from_carpet
+everyone STOOD_ON linoleum
+Anthea URGED Phoenix_talk_in_horrid_lecturing_tone
+carpet NEVER_FLINCHED despite_trampling
+carpet DID children_asked
+Phoenix SAID wear_and_tear_must_have_been_awful
+Phoenix DID_NOT_BLAME children_for_cats_and_rats
+Phoenix QUESTIONED carpet_could_stand_heavy_cow_hanging_on_one_corner
+Anthea FELT as_if_had_done_wrong
+Anthea SAID carpet_is_wishing_carpet
+Phoenix SAID were_11940_claws
+Jane SAT_DOWN on_floor
+Jane PATTED edge_of_carpet
+Jane ASKED is_carpet_wearing_out
+carpet IS wearing_out
 Phoenix SAID life_with_has_been_luxurious_one
-[96m[TIME] [93mpipeline_C took 5.218s[0m
+carpet IS wishing_carpet
+Phoenix REPEATED Only_wishes
+Phoenix SPOKE angrily
+[96m[TIME] [93mpipeline_C took 5.521s[0m
 [STATUS] Chunk story-1_book-2_chapter-14_p.15915: graph_verbalization -> completed
-127.0.0.1 - - [10/Dec/2025 07:15:55] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:28:30] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Story 1: summarization -> in-progress
-127.0.0.1 - - [10/Dec/2025 07:15:55] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:28:30] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-14_p.15915: summarization -> in-progress
-127.0.0.1 - - [10/Dec/2025 07:15:55] "POST /status/chunk HTTP/1.1" 200 -
-[96m[TIME] [93mtask_30_summarize_llm[triples] took 2.290s[0m
+127.0.0.1 - - [10/Dec/2025 07:28:30] "POST /status/chunk HTTP/1.1" 200 -
+[96m[TIME] [93mtask_30_summarize_llm[text] took 23.144s[0m
 
 Generated summary:
-A person named Phoenix is associated with a wishing carpet. The carpet remains steadfast and unflinching, standing firm despite wear and tear. It can bear a heavy cow hanging on it, suggesting resilience. Someone asks a question, and the carpet is capable of standing up to the weight and conditions described. Phoenix remarks that life with the carpet has been luxurious. Overall, the carpet demonstrates durability and support, while Phoenix expresses a sense of luxury in their life with it.
+Anthea protests the Phoenix’s scolding, but the Phoenix rebukes the children for overtaxing their wishing carpet—making it grant unusual wishes, endure thousands of cats’ and rats’ claws (even if those were the carpet’s own choice), and even support a cow hanging from one corner. Jane realizes the carpet may be wearing out, and the Phoenix confirms its life with them has been anything but gentle.
 [96m[TIME] [93mtask_31_send_summary took 0.001s[0m
     [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-14_p.15915]
-[96m[TIME] [93mpipeline_D took 2.347s[0m
+[96m[TIME] [93mpipeline_D took 23.204s[0m
 [STATUS] Story 1: summarization -> completed
-127.0.0.1 - - [10/Dec/2025 07:15:57] "POST /status/story HTTP/1.1" 200 -
-127.0.0.1 - - [10/Dec/2025 07:15:57] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:28:54] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-14_p.15915: summarization -> completed
+127.0.0.1 - - [10/Dec/2025 07:28:54] "POST /status/chunk HTTP/1.1" 200 -
 [ASSIGNED] chunk 'story-1_book-2_chapter-14_p.15915' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [10/Dec/2025 07:15:57] "POST /process_story HTTP/1.1" 200 -
-Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
+127.0.0.1 - - [10/Dec/2025 07:28:54] "POST /process_story HTTP/1.1" 200 -
 [CALLBACK] chunk_id=story-1_book-2_chapter-14_p.15915, task=questeval, status=started
-172.18.0.2 - - [10/Dec/2025 07:15:57] "POST /callback HTTP/1.1" 200 -
+Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
+172.18.0.2 - - [10/Dec/2025 07:28:54] "POST /callback HTTP/1.1" 200 -
 [ASSIGNED] chunk 'story-1_book-2_chapter-14_p.15915' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [10/Dec/2025 07:15:57] "POST /process_story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:28:54] "POST /process_story HTTP/1.1" 200 -
 Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}
 
 === TIMING SUMMARY ===
-                                      calls      total        avg        min        max
-function                                                                               
-pipeline_A                                1   2.484268   2.484268   2.484268   2.484268
-pipeline_B                                1  11.258413  11.258413  11.258413  11.258413
-pipeline_C                                1   5.217855   5.217855   5.217855   5.217855
-pipeline_D                                1   2.347193   2.347193   2.347193   2.347193
-task_01_convert_epub                      1   2.350951   2.350951   2.350951   2.350951
-task_02_parse_chapters                    1   0.031893   0.031893   0.031893   0.031893
-task_03_chunk_story                       1   0.014784   0.014784   0.014784   0.014784
-task_11_send_chunk                        1   0.027634   0.027634   0.027634   0.027634
-task_12_relation_extraction[textacy]      1   1.994322   1.994322   1.994322   1.994322
-task_14_validate_llm[openai]              1   6.756496   6.756496   6.756496   6.756496
-task_16_moderate_triples_llm[drop]        1   2.278370   2.278370   2.278370   2.278370
-task_20_send_triples                      1   4.735494   4.735494   4.735494   4.735494
-task_22_fetch_subgraph[popular]           1   0.382789   0.382789   0.382789   0.382789
-task_23_verbalize_triples[raw]            1   0.000737   0.000737   0.000737   0.000737
-task_30_summarize_llm[triples]            1   2.289695   2.289695   2.289695   2.289695
-task_31_send_summary                      1   0.001326   0.001326   0.001326   0.001326
+                                      calls       total         avg         min         max
+function                                                                                   
+pipeline_A                                1    2.192297    2.192297    2.192297    2.192297
+pipeline_B                                1  134.641826  134.641826  134.641826  134.641826
+pipeline_C                                1    5.520977    5.520977    5.520977    5.520977
+pipeline_D                                1   23.203793   23.203793   23.203793   23.203793
+task_01_convert_epub                      1    2.054454    2.054454    2.054454    2.054454
+task_02_parse_chapters                    1    0.040647    0.040647    0.040647    0.040647
+task_03_chunk_story                       1    0.015330    0.015330    0.015330    0.015330
+task_11_send_chunk                        1    0.029713    0.029713    0.029713    0.029713
+task_12_relation_extraction[textacy]      1    1.660219    1.660219    1.660219    1.660219
+task_14_validate_llm[openai]              1  131.935019  131.935019  131.935019  131.935019
+task_16_moderate_triples_llm[drop]        1    0.840021    0.840021    0.840021    0.840021
+task_20_send_triples                      1    5.131433    5.131433    5.131433    5.131433
+task_22_fetch_subgraph[popular]           1    0.306553    0.306553    0.306553    0.306553
+task_23_verbalize_triples[raw]            1    0.001126    0.001126    0.001126    0.001126
+task_30_summarize_llm[text]               1   23.143599   23.143599   23.143599   23.143599
+task_31_send_summary                      1    0.001498    0.001498    0.001498    0.001498
 
-Total execution time: 42.172s
+Total execution time: 330.719s
 [CALLBACK] chunk_id=story-1_book-2_chapter-14_p.15915, task=bookscore, status=started
-172.18.0.3 - - [10/Dec/2025 07:15:58] "POST /callback HTTP/1.1" 200 -
+172.18.0.3 - - [10/Dec/2025 07:28:54] "POST /callback HTTP/1.1" 200 -
 [96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
 [90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
 Initial processing complete. Server listening for additional requests from Blazor...
 Press Ctrl+C to stop.
 [CALLBACK] chunk_id=story-1_book-2_chapter-14_p.15915, task=bookscore, status=completed
-[96m[TIME] [93mworker_metric_bookscore took 11.125s[0m
+[96m[TIME] [93mworker_metric_bookscore took 5.229s[0m
 [STORY COMPLETE] All chunks completed metric_bookscore for story 1
 
 === TIMING SUMMARY ===
-                                      calls      total        avg        min        max
-function                                                                               
-pipeline_A                                1   2.484268   2.484268   2.484268   2.484268
-pipeline_B                                1  11.258413  11.258413  11.258413  11.258413
-pipeline_C                                1   5.217855   5.217855   5.217855   5.217855
-pipeline_D                                1   2.347193   2.347193   2.347193   2.347193
-task_01_convert_epub                      1   2.350951   2.350951   2.350951   2.350951
-task_02_parse_chapters                    1   0.031893   0.031893   0.031893   0.031893
-task_03_chunk_story                       1   0.014784   0.014784   0.014784   0.014784
-task_11_send_chunk                        1   0.027634   0.027634   0.027634   0.027634
-task_12_relation_extraction[textacy]      1   1.994322   1.994322   1.994322   1.994322
-task_14_validate_llm[openai]              1   6.756496   6.756496   6.756496   6.756496
-task_16_moderate_triples_llm[drop]        1   2.278370   2.278370   2.278370   2.278370
-task_20_send_triples                      1   4.735494   4.735494   4.735494   4.735494
-task_22_fetch_subgraph[popular]           1   0.382789   0.382789   0.382789   0.382789
-task_23_verbalize_triples[raw]            1   0.000737   0.000737   0.000737   0.000737
-task_30_summarize_llm[triples]            1   2.289695   2.289695   2.289695   2.289695
-task_31_send_summary                      1   0.001326   0.001326   0.001326   0.001326
-worker_metric_bookscore                   1  11.125016  11.125016  11.125016  11.125016
+                                      calls       total         avg         min         max
+function                                                                                   
+pipeline_A                                1    2.192297    2.192297    2.192297    2.192297
+pipeline_B                                1  134.641826  134.641826  134.641826  134.641826
+pipeline_C                                1    5.520977    5.520977    5.520977    5.520977
+pipeline_D                                1   23.203793   23.203793   23.203793   23.203793
+task_01_convert_epub                      1    2.054454    2.054454    2.054454    2.054454
+task_02_parse_chapters                    1    0.040647    0.040647    0.040647    0.040647
+task_03_chunk_story                       1    0.015330    0.015330    0.015330    0.015330
+task_11_send_chunk                        1    0.029713    0.029713    0.029713    0.029713
+task_12_relation_extraction[textacy]      1    1.660219    1.660219    1.660219    1.660219
+task_14_validate_llm[openai]              1  131.935019  131.935019  131.935019  131.935019
+task_16_moderate_triples_llm[drop]        1    0.840021    0.840021    0.840021    0.840021
+task_20_send_triples                      1    5.131433    5.131433    5.131433    5.131433
+task_22_fetch_subgraph[popular]           1    0.306553    0.306553    0.306553    0.306553
+task_23_verbalize_triples[raw]            1    0.001126    0.001126    0.001126    0.001126
+task_30_summarize_llm[text]               1   23.143599   23.143599   23.143599   23.143599
+task_31_send_summary                      1    0.001498    0.001498    0.001498    0.001498
+worker_metric_bookscore                   1    5.228989    5.228989    5.228989    5.228989
 
-Total execution time: 53.297s
+Total execution time: 335.947s
 [96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
 [90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
-172.18.0.3 - - [10/Dec/2025 07:16:09] "POST /callback HTTP/1.1" 200 -
+172.18.0.3 - - [10/Dec/2025 07:28:59] "POST /callback HTTP/1.1" 200 -
 [CALLBACK] chunk_id=story-1_book-2_chapter-14_p.15915, task=questeval, status=completed
-[96m[TIME] [93mworker_metric_questeval took 184.455s[0m
+[96m[TIME] [93mworker_metric_questeval took 202.764s[0m
 [STORY COMPLETE] All chunks completed metric_questeval for story 1
 
 === TIMING SUMMARY ===
                                       calls       total         avg         min         max
 function                                                                                   
-pipeline_A                                1    2.484268    2.484268    2.484268    2.484268
-pipeline_B                                1   11.258413   11.258413   11.258413   11.258413
-pipeline_C                                1    5.217855    5.217855    5.217855    5.217855
-pipeline_D                                1    2.347193    2.347193    2.347193    2.347193
-task_01_convert_epub                      1    2.350951    2.350951    2.350951    2.350951
-task_02_parse_chapters                    1    0.031893    0.031893    0.031893    0.031893
-task_03_chunk_story                       1    0.014784    0.014784    0.014784    0.014784
-task_11_send_chunk                        1    0.027634    0.027634    0.027634    0.027634
-task_12_relation_extraction[textacy]      1    1.994322    1.994322    1.994322    1.994322
-task_14_validate_llm[openai]              1    6.756496    6.756496    6.756496    6.756496
-task_16_moderate_triples_llm[drop]        1    2.278370    2.278370    2.278370    2.278370
-task_20_send_triples                      1    4.735494    4.735494    4.735494    4.735494
-task_22_fetch_subgraph[popular]           1    0.382789    0.382789    0.382789    0.382789
-task_23_verbalize_triples[raw]            1    0.000737    0.000737    0.000737    0.000737
-task_30_summarize_llm[triples]            1    2.289695    2.289695    2.289695    2.289695
-task_31_send_summary                      1    0.001326    0.001326    0.001326    0.001326
-worker_metric_bookscore                   1   11.125016   11.125016   11.125016   11.125016
-worker_metric_questeval                   1  184.454554  184.454554  184.454554  184.454554
+pipeline_A                                1    2.192297    2.192297    2.192297    2.192297
+pipeline_B                                1  134.641826  134.641826  134.641826  134.641826
+pipeline_C                                1    5.520977    5.520977    5.520977    5.520977
+pipeline_D                                1   23.203793   23.203793   23.203793   23.203793
+task_01_convert_epub                      1    2.054454    2.054454    2.054454    2.054454
+task_02_parse_chapters                    1    0.040647    0.040647    0.040647    0.040647
+task_03_chunk_story                       1    0.015330    0.015330    0.015330    0.015330
+task_11_send_chunk                        1    0.029713    0.029713    0.029713    0.029713
+task_12_relation_extraction[textacy]      1    1.660219    1.660219    1.660219    1.660219
+task_14_validate_llm[openai]              1  131.935019  131.935019  131.935019  131.935019
+task_16_moderate_triples_llm[drop]        1    0.840021    0.840021    0.840021    0.840021
+task_20_send_triples                      1    5.131433    5.131433    5.131433    5.131433
+task_22_fetch_subgraph[popular]           1    0.306553    0.306553    0.306553    0.306553
+task_23_verbalize_triples[raw]            1    0.001126    0.001126    0.001126    0.001126
+task_30_summarize_llm[text]               1   23.143599   23.143599   23.143599   23.143599
+task_31_send_summary                      1    0.001498    0.001498    0.001498    0.001498
+worker_metric_bookscore                   1    5.228989    5.228989    5.228989    5.228989
+worker_metric_questeval                   1  202.764167  202.764167  202.764167  202.764167
 
-Total execution time: 237.752s
+Total execution time: 538.712s
 [96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
 [90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
-[96m[TIME] [93mtask_45_eval_coverage took 0.949s[0m
-[96m[TIME] [93mtask_45_eval_rouge took 1.595s[0m
-Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 7.95kB [00:00, 18.3MB/s]
-[96m[TIME] [93mtask_45_eval_bertscore took 23.868s[0m
-[96m[TIME] [93mtask_45_eval_ngrams took 0.302s[0m
-[96m[TIME] [93mtask_45_eval_jsd took 0.009s[0m
+[96m[TIME] [93mtask_45_eval_coverage took 2.163s[0m
+[96m[TIME] [93mtask_45_eval_rouge took 0.600s[0m
+Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 7.95kB [00:00, 27.0MB/s]
+[96m[TIME] [93mtask_45_eval_bertscore took 17.100s[0m
+[96m[TIME] [93mtask_45_eval_ngrams took 0.025s[0m
+[96m[TIME] [93mtask_45_eval_jsd took 0.008s[0m
 [96m[TIME] [93mtask_45_eval_ncd took 0.001s[0m
-[96m[TIME] [93mtask_45_eval_salience took 0.015s[0m
-[96m[TIME] [93mtask_45_eval_faithfulness took 28.282s[0m
-[96m[TIME] [93mtask_45_eval_readability took 1.487s[0m
-[96m[TIME] [93mtask_45_eval_sentence_coherence took 5.030s[0m
-[96m[TIME] [93mtask_45_eval_entity_grid took 0.714s[0m
-[96m[TIME] [93mtask_45_eval_diversity took 0.001s[0m
+[96m[TIME] [93mtask_45_eval_salience took 0.013s[0m
+[96m[TIME] [93mtask_45_eval_faithfulness took 24.711s[0m
+[96m[TIME] [93mtask_45_eval_readability took 1.595s[0m
+[96m[TIME] [93mtask_45_eval_sentence_coherence took 5.095s[0m
+[96m[TIME] [93mtask_45_eval_entity_grid took 0.582s[0m
+[96m[TIME] [93mtask_45_eval_diversity took 0.000s[0m
 [96m[TIME] [93mtask_45_eval_stopwords took 0.002s[0m
-Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 6.14kB [00:00, 5.93MB/s]
+Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 6.14kB [00:00, 5.03MB/s]
 Some weights of RobertaModel were not initialized from the model checkpoint at roberta-large and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'A person named Phoenix is associated with a wishing carpet. The carpet remains steadfast and unflinching, standing firm despite wear and tear. It can bear a heavy cow hanging on it, suggesting resilience. Someone asks a question, and the carpet is capable of standing up to the weight and conditions described. Phoenix remarks that life with the carpet has been luxurious. Overall, the carpet demonstrates durability and support, while Phoenix expresses a sense of luxury in their life with it.', 'goldSummaryText': '‘Dear Phoenix,’ Anthea urged, ‘don’t talk in that horrid lecturing tone. You make me feel as if I’d done something wrong. And really it is a wishing carpet, and we haven’t done anything else to it—only wishes.’\n‘Only wishes,’ repeated the Phoenix, ruffling its neck feathers angrily, ‘and what sort of wishes? Wishing people to be in a good temper, for instance. What carpet did you ever hear of that had such a wish asked of it? But this noble fabric, on which you trample so recklessly’ (every one removed its boots from the carpet and stood on the linoleum), ‘this carpet never flinched. It did what you asked, but the wear and tear ', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8375005125999451, 'recall': 0.8016574382781982, 'f1Score': 0.8191870450973511}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0.5}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.31056856599851446}, {'name': 'ROUGE-1', 'value': 0.31313131313131315}, {'name': 'ROUGE-2', 'value': 0.05102040816326531}, {'name': 'ROUGE-L', 'value': 0.1616161616161616}, {'name': 'ROUGE-Lsum', 'value': 0.1919191919191919}]}, 'qaResults': []}
-[96m[TIME] [93mtask_40_post_payload took 45.658s[0m
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Anthea protests the Phoenix’s scolding, but the Phoenix rebukes the children for overtaxing their wishing carpet—making it grant unusual wishes, endure thousands of cats’ and rats’ claws (even if those were the carpet’s own choice), and even support a cow hanging from one corner. Jane realizes the carpet may be wearing out, and the Phoenix confirms its life with them has been anything but gentle.', 'goldSummaryText': '‘Dear Phoenix,’ Anthea urged, ‘don’t talk in that horrid lecturing tone. You make me feel as if I’d done something wrong. And really it is a wishing carpet, and we haven’t done anything else to it—only wishes.’\n‘Only wishes,’ repeated the Phoenix, ruffling its neck feathers angrily, ‘and what sort of wishes? Wishing people to be in a good temper, for instance. What carpet did you ever hear of that had such a wish asked of it? But this noble fabric, on which you trample so recklessly’ (every one removed its boots from the carpet and stood on the linoleum), ‘this carpet never flinched. It did what you asked, but the wear and tear ', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8372820615768433, 'recall': 0.8213052153587341, 'f1Score': 0.8292167782783508}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 1}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.24595983081927283}, {'name': 'ROUGE-1', 'value': 0.2903225806451613}, {'name': 'ROUGE-2', 'value': 0.04347826086956522}, {'name': 'ROUGE-L', 'value': 0.15053763440860216}, {'name': 'ROUGE-Lsum', 'value': 0.19354838709677422}]}, 'qaResults': []}
+[96m[TIME] [93mtask_40_post_payload took 28.530s[0m
 
 Output sent to web app.
-[96m[TIME] [93mpipeline_E took 107.934s[0m
+[96m[TIME] [93mpipeline_E took 80.442s[0m
 [PIPELINE FINALIZED] Story 1 fully processed
 
 === TIMING SUMMARY ===
                                       calls       total         avg         min         max
 function                                                                                   
-pipeline_A                                1    2.484268    2.484268    2.484268    2.484268
-pipeline_B                                1   11.258413   11.258413   11.258413   11.258413
-pipeline_C                                1    5.217855    5.217855    5.217855    5.217855
-pipeline_D                                1    2.347193    2.347193    2.347193    2.347193
-pipeline_E                                1  107.933617  107.933617  107.933617  107.933617
-task_01_convert_epub                      1    2.350951    2.350951    2.350951    2.350951
-task_02_parse_chapters                    1    0.031893    0.031893    0.031893    0.031893
-task_03_chunk_story                       1    0.014784    0.014784    0.014784    0.014784
-task_11_send_chunk                        1    0.027634    0.027634    0.027634    0.027634
-task_12_relation_extraction[textacy]      1    1.994322    1.994322    1.994322    1.994322
-task_14_validate_llm[openai]              1    6.756496    6.756496    6.756496    6.756496
-task_16_moderate_triples_llm[drop]        1    2.278370    2.278370    2.278370    2.278370
-task_20_send_triples                      1    4.735494    4.735494    4.735494    4.735494
-task_22_fetch_subgraph[popular]           1    0.382789    0.382789    0.382789    0.382789
-task_23_verbalize_triples[raw]            1    0.000737    0.000737    0.000737    0.000737
-task_30_summarize_llm[triples]            1    2.289695    2.289695    2.289695    2.289695
-task_31_send_summary                      1    0.001326    0.001326    0.001326    0.001326
-task_40_post_payload                      1   45.657501   45.657501   45.657501   45.657501
-task_45_eval_bertscore                    1   23.867656   23.867656   23.867656   23.867656
-task_45_eval_coverage                     1    0.949317    0.949317    0.949317    0.949317
-task_45_eval_diversity                    1    0.000533    0.000533    0.000533    0.000533
-task_45_eval_entity_grid                  1    0.713610    0.713610    0.713610    0.713610
-task_45_eval_faithfulness                 1   28.282022   28.282022   28.282022   28.282022
-task_45_eval_jsd                          1    0.009402    0.009402    0.009402    0.009402
-task_45_eval_ncd                          1    0.001286    0.001286    0.001286    0.001286
-task_45_eval_ngrams                       1    0.301803    0.301803    0.301803    0.301803
-task_45_eval_readability                  1    1.487151    1.487151    1.487151    1.487151
-task_45_eval_rouge                        1    1.595283    1.595283    1.595283    1.595283
-task_45_eval_salience                     1    0.015313    0.015313    0.015313    0.015313
-task_45_eval_sentence_coherence           1    5.030103    5.030103    5.030103    5.030103
-task_45_eval_stopwords                    1    0.002303    0.002303    0.002303    0.002303
-worker_metric_bookscore                   1   11.125016   11.125016   11.125016   11.125016
-worker_metric_questeval                   1  184.454554  184.454554  184.454554  184.454554
+pipeline_A                                1    2.192297    2.192297    2.192297    2.192297
+pipeline_B                                1  134.641826  134.641826  134.641826  134.641826
+pipeline_C                                1    5.520977    5.520977    5.520977    5.520977
+pipeline_D                                1   23.203793   23.203793   23.203793   23.203793
+pipeline_E                                1   80.442474   80.442474   80.442474   80.442474
+task_01_convert_epub                      1    2.054454    2.054454    2.054454    2.054454
+task_02_parse_chapters                    1    0.040647    0.040647    0.040647    0.040647
+task_03_chunk_story                       1    0.015330    0.015330    0.015330    0.015330
+task_11_send_chunk                        1    0.029713    0.029713    0.029713    0.029713
+task_12_relation_extraction[textacy]      1    1.660219    1.660219    1.660219    1.660219
+task_14_validate_llm[openai]              1  131.935019  131.935019  131.935019  131.935019
+task_16_moderate_triples_llm[drop]        1    0.840021    0.840021    0.840021    0.840021
+task_20_send_triples                      1    5.131433    5.131433    5.131433    5.131433
+task_22_fetch_subgraph[popular]           1    0.306553    0.306553    0.306553    0.306553
+task_23_verbalize_triples[raw]            1    0.001126    0.001126    0.001126    0.001126
+task_30_summarize_llm[text]               1   23.143599   23.143599   23.143599   23.143599
+task_31_send_summary                      1    0.001498    0.001498    0.001498    0.001498
+task_40_post_payload                      1   28.530226   28.530226   28.530226   28.530226
+task_45_eval_bertscore                    1   17.099982   17.099982   17.099982   17.099982
+task_45_eval_coverage                     1    2.162992    2.162992    2.162992    2.162992
+task_45_eval_diversity                    1    0.000363    0.000363    0.000363    0.000363
+task_45_eval_entity_grid                  1    0.582321    0.582321    0.582321    0.582321
+task_45_eval_faithfulness                 1   24.711029   24.711029   24.711029   24.711029
+task_45_eval_jsd                          1    0.008376    0.008376    0.008376    0.008376
+task_45_eval_ncd                          1    0.001277    0.001277    0.001277    0.001277
+task_45_eval_ngrams                       1    0.025163    0.025163    0.025163    0.025163
+task_45_eval_readability                  1    1.595126    1.595126    1.595126    1.595126
+task_45_eval_rouge                        1    0.600271    0.600271    0.600271    0.600271
+task_45_eval_salience                     1    0.012508    0.012508    0.012508    0.012508
+task_45_eval_sentence_coherence           1    5.094863    5.094863    5.094863    5.094863
+task_45_eval_stopwords                    1    0.002363    0.002363    0.002363    0.002363
+worker_metric_bookscore                   1    5.228989    5.228989    5.228989    5.228989
+worker_metric_questeval                   1  202.764167  202.764167  202.764167  202.764167
 
-Total execution time: 453.599s
+Total execution time: 699.581s
 [96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
 [90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
 [90m[CHART] [93mSaved chart 'Saved summary metrics CSV' to ./logs/metrics/chunk_summary.csv[0m
-172.18.0.2 - - [10/Dec/2025 07:20:51] "POST /callback HTTP/1.1" 200 -
-INFO:werkzeug:172.18.0.2 - - [10/Dec/2025 07:20:51] "POST /callback HTTP/1.1" 200 -
+172.18.0.2 - - [10/Dec/2025 07:33:38] "POST /callback HTTP/1.1" 200 -
+INFO:werkzeug:172.18.0.2 - - [10/Dec/2025 07:33:38] "POST /callback HTTP/1.1" 200 -
