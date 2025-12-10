@@ -367,7 +367,7 @@ def task_03_chunk_story(story, max_chunk_length=1500):
 
 # PIPELINE STAGE B - RELATION EXTRACTION / CHUNKS -> TRIPLES
 def task_10_random_chunk(chunks):
-    return (18, chunks[18])
+    return (140, chunks[140])
     unique_numbers, sample = task_10_sample_chunks(chunks, n_sample=1)
     return (unique_numbers[0], sample[0])
 
