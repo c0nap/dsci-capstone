@@ -521,7 +521,12 @@ def task_30_summarize_llm(triples_string: str = None, text: str = None) -> Tuple
     """Prompt LLM to generate summary"""
     use_triples = Config.triples_visible
     use_text = Config.source_text_visible
-    with Log.timer(config = f"[{llm_connector_type}]"):
+    # TODO: maybe make this a string config instead of 2 bools
+    if use_triples and use_text:
+        config = "all"
+    else:
+        config = "triples" if use_triples else "text"
+    with Log.timer(config = f"[{config}]"):
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that summarizes text."
         llm = Config.get_llm(llm_connector_type, system_prompt)
