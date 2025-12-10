@@ -1,0 +1,85 @@
+function,elapsed,call_chain,run_id
+task_01_convert_epub,2.4839870929718018,_run_module_as_main -> _run_code -> pipeline_A -> task_01_convert_epub -> task_01_convert_epub,1
+task_02_parse_chapters,0.04702401161193848,_run_module_as_main -> _run_code -> pipeline_A -> task_02_parse_chapters -> task_02_parse_chapters,1
+task_03_chunk_story,0.019110679626464844,_run_module_as_main -> _run_code -> pipeline_A -> task_03_chunk_story -> task_03_chunk_story,1
+pipeline_A,2.649674654006958,_run_module_as_main -> _run_code -> pipeline_A,1
+task_11_send_chunk,0.03727221488952637,_run_module_as_main -> _run_code -> pipeline_B -> task_11_send_chunk -> task_11_send_chunk,1
+task_12_relation_extraction[textacy],1.818263292312622,_run_module_as_main -> _run_code -> pipeline_B -> task_12_relation_extraction -> task_12_relation_extraction,1
+task_14_validate_llm[openai],142.01183342933655,_run_module_as_main -> _run_code -> pipeline_B -> task_14_validate_llm -> task_14_validate_llm,1
+task_16_moderate_triples_llm[drop],5.203606367111206,_run_module_as_main -> _run_code -> pipeline_B -> task_16_moderate_triples_llm -> task_16_moderate_triples_llm,1
+pipeline_B,149.26296520233154,_run_module_as_main -> _run_code -> pipeline_B,1
+task_20_send_triples,4.936485052108765,_run_module_as_main -> _run_code -> pipeline_C -> task_20_send_triples -> task_20_send_triples,1
+task_22_fetch_subgraph[popular],0.30060791969299316,_run_module_as_main -> _run_code -> pipeline_C -> task_22_fetch_subgraph -> task_22_fetch_subgraph,1
+task_23_verbalize_triples[raw],0.0007510185241699219,_run_module_as_main -> _run_code -> pipeline_C -> task_23_verbalize_triples -> task_23_verbalize_triples,1
+pipeline_C,5.321179151535034,_run_module_as_main -> _run_code -> pipeline_C,1
+task_30_summarize_llm[text],20.20514178276062,_run_module_as_main -> _run_code -> pipeline_D -> task_30_summarize_llm -> task_30_summarize_llm,1
+task_31_send_summary,0.0016810894012451172,_run_module_as_main -> _run_code -> pipeline_D -> task_31_send_summary -> task_31_send_summary,1
+pipeline_D,20.260666608810425,_run_module_as_main -> _run_code -> pipeline_D,1
+task_01_convert_epub,2.4839870929718018,_run_module_as_main -> _run_code -> pipeline_A -> task_01_convert_epub -> task_01_convert_epub,1
+task_02_parse_chapters,0.04702401161193848,_run_module_as_main -> _run_code -> pipeline_A -> task_02_parse_chapters -> task_02_parse_chapters,1
+task_03_chunk_story,0.019110679626464844,_run_module_as_main -> _run_code -> pipeline_A -> task_03_chunk_story -> task_03_chunk_story,1
+pipeline_A,2.649674654006958,_run_module_as_main -> _run_code -> pipeline_A,1
+task_11_send_chunk,0.03727221488952637,_run_module_as_main -> _run_code -> pipeline_B -> task_11_send_chunk -> task_11_send_chunk,1
+task_12_relation_extraction[textacy],1.818263292312622,_run_module_as_main -> _run_code -> pipeline_B -> task_12_relation_extraction -> task_12_relation_extraction,1
+task_14_validate_llm[openai],142.01183342933655,_run_module_as_main -> _run_code -> pipeline_B -> task_14_validate_llm -> task_14_validate_llm,1
+task_16_moderate_triples_llm[drop],5.203606367111206,_run_module_as_main -> _run_code -> pipeline_B -> task_16_moderate_triples_llm -> task_16_moderate_triples_llm,1
+pipeline_B,149.26296520233154,_run_module_as_main -> _run_code -> pipeline_B,1
+task_20_send_triples,4.936485052108765,_run_module_as_main -> _run_code -> pipeline_C -> task_20_send_triples -> task_20_send_triples,1
+task_22_fetch_subgraph[popular],0.30060791969299316,_run_module_as_main -> _run_code -> pipeline_C -> task_22_fetch_subgraph -> task_22_fetch_subgraph,1
+task_23_verbalize_triples[raw],0.0007510185241699219,_run_module_as_main -> _run_code -> pipeline_C -> task_23_verbalize_triples -> task_23_verbalize_triples,1
+pipeline_C,5.321179151535034,_run_module_as_main -> _run_code -> pipeline_C,1
+task_30_summarize_llm[text],20.20514178276062,_run_module_as_main -> _run_code -> pipeline_D -> task_30_summarize_llm -> task_30_summarize_llm,1
+task_31_send_summary,0.0016810894012451172,_run_module_as_main -> _run_code -> pipeline_D -> task_31_send_summary -> task_31_send_summary,1
+pipeline_D,20.260666608810425,_run_module_as_main -> _run_code -> pipeline_D,1
+worker_metric_bookscore,5.16132664680481,story-1_book-2_chapter-12_p.20963,1
+task_01_convert_epub,2.4839870929718018,_run_module_as_main -> _run_code -> pipeline_A -> task_01_convert_epub -> task_01_convert_epub,1
+task_02_parse_chapters,0.04702401161193848,_run_module_as_main -> _run_code -> pipeline_A -> task_02_parse_chapters -> task_02_parse_chapters,1
+task_03_chunk_story,0.019110679626464844,_run_module_as_main -> _run_code -> pipeline_A -> task_03_chunk_story -> task_03_chunk_story,1
+pipeline_A,2.649674654006958,_run_module_as_main -> _run_code -> pipeline_A,1
+task_11_send_chunk,0.03727221488952637,_run_module_as_main -> _run_code -> pipeline_B -> task_11_send_chunk -> task_11_send_chunk,1
+task_12_relation_extraction[textacy],1.818263292312622,_run_module_as_main -> _run_code -> pipeline_B -> task_12_relation_extraction -> task_12_relation_extraction,1
+task_14_validate_llm[openai],142.01183342933655,_run_module_as_main -> _run_code -> pipeline_B -> task_14_validate_llm -> task_14_validate_llm,1
+task_16_moderate_triples_llm[drop],5.203606367111206,_run_module_as_main -> _run_code -> pipeline_B -> task_16_moderate_triples_llm -> task_16_moderate_triples_llm,1
+pipeline_B,149.26296520233154,_run_module_as_main -> _run_code -> pipeline_B,1
+task_20_send_triples,4.936485052108765,_run_module_as_main -> _run_code -> pipeline_C -> task_20_send_triples -> task_20_send_triples,1
+task_22_fetch_subgraph[popular],0.30060791969299316,_run_module_as_main -> _run_code -> pipeline_C -> task_22_fetch_subgraph -> task_22_fetch_subgraph,1
+task_23_verbalize_triples[raw],0.0007510185241699219,_run_module_as_main -> _run_code -> pipeline_C -> task_23_verbalize_triples -> task_23_verbalize_triples,1
+pipeline_C,5.321179151535034,_run_module_as_main -> _run_code -> pipeline_C,1
+task_30_summarize_llm[text],20.20514178276062,_run_module_as_main -> _run_code -> pipeline_D -> task_30_summarize_llm -> task_30_summarize_llm,1
+task_31_send_summary,0.0016810894012451172,_run_module_as_main -> _run_code -> pipeline_D -> task_31_send_summary -> task_31_send_summary,1
+pipeline_D,20.260666608810425,_run_module_as_main -> _run_code -> pipeline_D,1
+worker_metric_bookscore,5.16132664680481,story-1_book-2_chapter-12_p.20963,1
+worker_metric_questeval,169.16746020317078,story-1_book-2_chapter-12_p.20963,1
+task_01_convert_epub,2.4839870929718018,_run_module_as_main -> _run_code -> pipeline_A -> task_01_convert_epub -> task_01_convert_epub,1
+task_02_parse_chapters,0.04702401161193848,_run_module_as_main -> _run_code -> pipeline_A -> task_02_parse_chapters -> task_02_parse_chapters,1
+task_03_chunk_story,0.019110679626464844,_run_module_as_main -> _run_code -> pipeline_A -> task_03_chunk_story -> task_03_chunk_story,1
+pipeline_A,2.649674654006958,_run_module_as_main -> _run_code -> pipeline_A,1
+task_11_send_chunk,0.03727221488952637,_run_module_as_main -> _run_code -> pipeline_B -> task_11_send_chunk -> task_11_send_chunk,1
+task_12_relation_extraction[textacy],1.818263292312622,_run_module_as_main -> _run_code -> pipeline_B -> task_12_relation_extraction -> task_12_relation_extraction,1
+task_14_validate_llm[openai],142.01183342933655,_run_module_as_main -> _run_code -> pipeline_B -> task_14_validate_llm -> task_14_validate_llm,1
+task_16_moderate_triples_llm[drop],5.203606367111206,_run_module_as_main -> _run_code -> pipeline_B -> task_16_moderate_triples_llm -> task_16_moderate_triples_llm,1
+pipeline_B,149.26296520233154,_run_module_as_main -> _run_code -> pipeline_B,1
+task_20_send_triples,4.936485052108765,_run_module_as_main -> _run_code -> pipeline_C -> task_20_send_triples -> task_20_send_triples,1
+task_22_fetch_subgraph[popular],0.30060791969299316,_run_module_as_main -> _run_code -> pipeline_C -> task_22_fetch_subgraph -> task_22_fetch_subgraph,1
+task_23_verbalize_triples[raw],0.0007510185241699219,_run_module_as_main -> _run_code -> pipeline_C -> task_23_verbalize_triples -> task_23_verbalize_triples,1
+pipeline_C,5.321179151535034,_run_module_as_main -> _run_code -> pipeline_C,1
+task_30_summarize_llm[text],20.20514178276062,_run_module_as_main -> _run_code -> pipeline_D -> task_30_summarize_llm -> task_30_summarize_llm,1
+task_31_send_summary,0.0016810894012451172,_run_module_as_main -> _run_code -> pipeline_D -> task_31_send_summary -> task_31_send_summary,1
+pipeline_D,20.260666608810425,_run_module_as_main -> _run_code -> pipeline_D,1
+worker_metric_bookscore,5.16132664680481,story-1_book-2_chapter-12_p.20963,1
+worker_metric_questeval,169.16746020317078,story-1_book-2_chapter-12_p.20963,1
+task_45_eval_coverage,0.8651266098022461,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_coverage -> task_45_eval_coverage,1
+task_45_eval_rouge,1.8128821849822998,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_rouge -> task_45_eval_rouge,1
+task_45_eval_bertscore,20.07517719268799,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_bertscore -> task_45_eval_bertscore,1
+task_45_eval_ngrams,0.022032976150512695,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_ngrams -> task_45_eval_ngrams,1
+task_45_eval_jsd,0.008855342864990234,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_jsd -> task_45_eval_jsd,1
+task_45_eval_ncd,0.00012969970703125,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_ncd -> task_45_eval_ncd,1
+task_45_eval_salience,0.013577461242675781,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_salience -> task_45_eval_salience,1
+task_45_eval_faithfulness,28.833139657974243,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_faithfulness -> task_45_eval_faithfulness,1
+task_45_eval_readability,1.49442458152771,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_readability -> task_45_eval_readability,1
+task_45_eval_sentence_coherence,7.591373443603516,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_sentence_coherence -> task_45_eval_sentence_coherence,1
+task_45_eval_entity_grid,0.5428962707519531,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_entity_grid -> task_45_eval_entity_grid,1
+task_45_eval_diversity,0.0002818107604980469,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_diversity -> task_45_eval_diversity,1
+task_45_eval_stopwords,0.0017616748809814453,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_45_eval_stopwords -> task_45_eval_stopwords,1
+task_40_post_payload,31.0573947429657,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E -> task_40_post_payload -> task_40_post_payload,1
+pipeline_E,92.33399081230164,_bootstrap -> _bootstrap_inner -> run -> process_request_thread -> finish_request -> __init__ -> handle -> handle -> handle_one_request -> run_wsgi -> execute -> __call__ -> wsgi_app -> full_dispatch_request -> dispatch_request -> callback -> pipeline_E,1
