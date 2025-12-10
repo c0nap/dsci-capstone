@@ -216,7 +216,7 @@ class Plot:
 
     METRIC_GROUPS = {
         "SOURCE SIMILARITY": ["bertscore", "rougeL_recall", "jsd_stats", "ncd_overlap", "novel_ngrams"],
-        "FACTUALITY": ["salience_recall", "entity_coverage", "entity_hallucination", "questeval"  "ncd_overlap", "nli_faithfulness"],
+        "FACTUALITY": ["salience_recall", "entity_coverage", "entity_hallucination", "questeval", "nli_faithfulness"],
         "NARRATIVE FLOW": ["readability_delta", "lexical_diversity", "stopword_ratio", "entity_grid_coherence", "sentence_coherence", "bookscore"],
     }
 
@@ -295,7 +295,7 @@ class Plot:
         plt.legend()
 
         # Manually define the x positions for the group separators
-        group_lines_x = [4.75, 9.25]  # example positions between groups
+        group_lines_x = [4.75, 10.25]  # example positions between groups
         group_label_y = max(merged[labels].max().max(), 1) - 0.02  # vertical position for headers
 
         # Draw dotted lines
@@ -303,7 +303,7 @@ class Plot:
             plt.axvline(x=x, color="gray", linestyle="dotted", linewidth=1)
 
         # Draw header labels
-        for x, label in zip([2.25, 5.75, 11], Plot.METRIC_GROUPS.keys()):  # adjust x for label centers
+        for x, label in zip([2.25, 5.75, 12], Plot.METRIC_GROUPS.keys()):  # adjust x for label centers
             plt.text(x, group_label_y, label, fontsize=10, fontweight="bold",
                      ha="center", va="bottom")
 
