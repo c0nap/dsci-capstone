@@ -2,11 +2,7 @@
 set -e
 
 # Start Docker without needing a password
-sudo service docker start
-
-# Clear old results (TMP)
-sleep 3
-docker rm container-python
+sudo service docker start || true
 
 # Move into your project directory
 cd /mnt/c/dsci-cap/capstone

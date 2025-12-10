@@ -44,7 +44,7 @@ RUN mv .env.docker .env
 
 COPY pyproject.toml pytest.ini conftest.py .
 # Used to merge with time-elapsed data with existing
-COPY logs/elapsed_time.csv logs/
+# COPY logs/elapsed_time.csv logs/
 
 # default command
 CMD ["python", "-m", "src.main"]
