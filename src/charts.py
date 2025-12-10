@@ -150,7 +150,7 @@ class Plot:
 
         # Save the figure
         os.makedirs(os.path.dirname(filename), exist_ok=True)
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
         plt.close()
         Log.chart(title, filename)
 
@@ -190,7 +190,7 @@ class Plot:
             elif key in ["jsd_stats", "novel_ngrams", "ncd_overlap", "entity_hallucination"]:
                 metrics[key] = 1 - value
             value = metrics[key]
-            if value == 0:
+            if value <= 0:
                 metrics[key] = 0.01
         return metrics
 
@@ -325,7 +325,7 @@ class Plot:
 
         plt.tight_layout()
         os.makedirs(os.path.dirname(filename), exist_ok=True)
-        plt.savefig(filename)
+        plt.savefig(filename, bbox_inches='tight')
         plt.close()
 
         Log.chart(title, filename)
@@ -348,13 +348,14 @@ def plot_time_comparison():
 
     args = parser.parse_args()
 
-    #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False)
-    #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=True)
-    Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False, cap_outliers=0.06)
+    #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=False, log_scale=False)
+    #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=False, log_scale=True)
+    Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=False, log_scale=False, cap_outliers=0.06)
 
 def plot_metrics_comparison():
-    # python -m src.charts './logs/metrics/chunk_summary_best.csv' './logs/metrics/chunk_summary_worst.csv' './logs/metrics/chunk_summary_llm.csv' --output='./logs/charts/metrics_comparison.png'
+    # python -m src.charts './logs/results/chunk_18/chunk_summary_best.csv' './logs/results/chunk_18/chunk_summary_fast.csv' './logs/results/chunk_18/chunk_summary_llm.csv' --output='./logs/charts/chunk_18/metrics_comparison.png'
     # python -m src.charts './logs/results/chunk_summary_best_3x.csv' './logs/results/chunk_summary_fast_3x.csv' './logs/results/chunk_summary_llm_3x.csv' --output='./logs/charts/metrics_comparison_3x.png'
+    # .pdf for higher quality
     import argparse
 
     parser = argparse.ArgumentParser(description='Compare metrics from three CSV files')
@@ -369,5 +370,5 @@ def plot_metrics_comparison():
 
 
 if __name__ == "__main__":
-    plot_time_comparison()
-    #plot_metrics_comparison()
+    #plot_time_comparison()
+    plot_metrics_comparison()
