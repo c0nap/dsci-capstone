@@ -1,2 +1,379 @@
+conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python-dev
+[+] Building 4.1s (22/22) FINISHED                                                                       docker:default
+ => [internal] load build definition from python.dockerfile                                                        0.0s
+ => => transferring dockerfile: 1.54kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.1s
+ => [internal] load .dockerignore                                                                                  0.1s
+ => => transferring context: 79B                                                                                   0.1s
+ => [ 1/17] FROM docker.io/library/python:3.12-slim@sha256:590cad70271b6c1795c6a11fb5c110efca593adbd0d4883cd19c36  0.0s
+ => [internal] load build context                                                                                  0.8s
+ => => transferring context: 9.87kB                                                                                0.8s
+ => CACHED [ 2/17] WORKDIR /pipeline                                                                               0.0s
+ => CACHED [ 3/17] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     make   0.0s
+ => CACHED [ 4/17] COPY deps/requirements.txt .                                                                    0.0s
+ => CACHED [ 5/17] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
+ => CACHED [ 6/17] RUN python -m spacy download en_core_web_sm                                                     0.0s
+ => CACHED [ 7/17] RUN python -m nltk.downloader punkt punkt_tab stopwords                                         0.0s
+ => [ 8/17] COPY src/ src/                                                                                         0.1s
+ => [ 9/17] COPY tests/ tests/                                                                                     0.1s
+ => [10/17] COPY smoke/ smoke/                                                                                     0.1s
+ => [11/17] COPY datasets/ datasets/                                                                               0.1s
+ => [12/17] COPY .env .env                                                                                         0.1s
+ => [13/17] COPY Makefile .                                                                                        0.1s
+ => [14/17] RUN make env-docker                                                                                    0.6s
+ => [15/17] RUN mv .env.docker .env                                                                                0.4s
+ => [16/17] COPY pyproject.toml pytest.ini conftest.py .                                                           0.1s
+ => [17/17] COPY logs/elapsed_time.csv logs/                                                                       0.1s
+ => exporting to image                                                                                             0.4s
+ => => exporting layers                                                                                            0.3s
+ => => writing image sha256:ebf49f15ca02aae68f3dd50dac7d15b8925b6d302aef7a17eafe5776116e5801                       0.0s
+ => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                                  0.0s
+container-python
+af39928dcd7f05b371d249d828ff4aa346c0bbec786a93065debb88c65599443
+Network 'capstone_default' already exists; continue...
+Deleted old chunks...
+ * Serving Flask app 'src.core.boss'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5054
+ * Running on http://172.17.0.4:5054
+Press CTRL+C to quit
+[STATUS] Story 1: preprocessing -> in-progress
+127.0.0.1 - - [10/Dec/2025 03:44:58] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Story 1: chunking -> in-progress
+127.0.0.1 - - [10/Dec/2025 03:44:58] "POST /status/story HTTP/1.1" 200 -
+
+==================================================
+Processing: ./tests/examples-pipeline/epub/trilogy-wishes-2.epub
+[TIME] task_01_convert_epub took 1.968s
+[TIME] task_02_parse_chapters took 0.035s
+[TIME] task_03_chunk_story took 0.018s
+
+=== STORY SUMMARY ===
+Total chunks: 254
+[TIME] pipeline_A took 2.103s
+[STATUS] Story 1: preprocessing -> completed
+127.0.0.1 - - [10/Dec/2025 03:45:00] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Story 1: chunking -> completed
+127.0.0.1 - - [10/Dec/2025 03:45:00] "POST /status/story HTTP/1.1" 200 -
+
+Chunk details:
+  index: 140
+
+The latch rattled, and clicked. Then the flap of the letter-box lifted itself—every one saw it by the flickering light of the gas-lamp that shone through the leafless lime-tree by the gate—a golden eye seemed to wink at them through the letter-slit, and a cautious beak whispered—
+‘Are you alone?’
+‘It’s the Phoenix,’ said every one, in a voice so joyous, and so full of relief, as to be a sort of whispered shout.
+‘Hush!’ said the voice from the letter-box slit. ‘Your slaves have gone a-merry-making. The latch of this portal is too stiff for my beak. But at the side—the little window above the shelf whereon your bread lies—it is not fastened.’
+‘Righto!’ said Cyril.
+And Anthea added, ‘I wish you’d meet us there, dear Phoenix.’
+The children crept round to the pantry window. It is at the side of the house, and there is a green gate labelled ‘Tradesmen’s Entrance’, which is always kept bolted. But if you get one foot on the fence between you and next door, and one on the handle of the gate, you are over before you know where you are. This, at least, was the experience of Cyril and Robert, and even, if the truth must be told, of Anthea and Jane. So in almost no time all four were in the narrow gravelled passage that runs between that house and the next.
+[TIME] task_11_send_chunk took 0.023s
+    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-12_p.20963]
+[TIME] task_12_relation_extraction[textacy] took 1.432s
+
+NLP output:
+{'s': 'flap', 'r': 'lifted', 'o': 'itself'}
+{'s': 'one', 'r': 'saw', 'o': 'it'}
+{'s': 'eye', 'r': 'seemed', 'o': 'to wink at them through the letter - slit'}
+{'s': 'beak', 'r': 'whispered', 'o': 'Are you alone'}
+{'s': 'slaves', 'r': 'have gone', 'o': 'merry making'}
+{'s': 'it', 'r': 'is not fastened', 'o': '‘ Righto ! ’'}
+{'s': 'I', 'r': 'wish', 'o': 'you'}
+{'s': 'which', 'r': 'is kept', 'o': 'bolted'}
+{'s': 'you', 'r': 'get', 'o': 'foot'}
+
+[TIME] task_14_validate_llm[openai] took 125.364s
+
+    LLM prompt:
+Here are some semantic triples extracted from a story chunk:
+{'s': 'flap', 'r': 'lifted', 'o': 'itself'}
+{'s': 'one', 'r': 'saw', 'o': 'it'}
+{'s': 'eye', 'r': 'seemed', 'o': 'to wink at them through the letter - slit'}
+{'s': 'beak', 'r': 'whispered', 'o': 'Are you alone'}
+{'s': 'slaves', 'r': 'have gone', 'o': 'merry making'}
+{'s': 'it', 'r': 'is not fastened', 'o': '‘ Righto ! ’'}
+{'s': 'I', 'r': 'wish', 'o': 'you'}
+{'s': 'which', 'r': 'is kept', 'o': 'bolted'}
+{'s': 'you', 'r': 'get', 'o': 'foot'}
+
+And here is the original text:
+The latch rattled, and clicked. Then the flap of the letter-box lifted itself—every one saw it by the flickering light of the gas-lamp that shone through the leafless lime-tree by the gate—a golden eye seemed to wink at them through the letter-slit, and a cautious beak whispered—
+‘Are you alone?’
+‘It’s the Phoenix,’ said every one, in a voice so joyous, and so full of relief, as to be a sort of whispered shout.
+‘Hush!’ said the voice from the letter-box slit. ‘Your slaves have gone a-merry-making. The latch of this portal is too stiff for my beak. But at the side—the little window above the shelf whereon your bread lies—it is not fastened.’
+‘Righto!’ said Cyril.
+And Anthea added, ‘I wish you’d meet us there, dear Phoenix.’
+The children crept round to the pantry window. It is at the side of the house, and there is a green gate labelled ‘Tradesmen’s Entrance’, which is always kept bolted. But if you get one foot on the fence between you and next door, and one on the handle of the gate, you are over before you know where you are. This, at least, was the experience of Cyril and Robert, and even, if the truth must be told, of Anthea and Jane. So in almost no time all four were in the narrow gravelled passage that runs between that house and the next.
+
+Output JSON with keys: s (subject), r (relation), o (object).
+Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
+
+    LLM output:
+[
+  {"s": "letter-box latch", "r": "produced", "o": "rattling and clicking"},
+  {"s": "letter-box flap", "r": "lifted", "o": "itself"},
+  {"s": "everyone", "r": "saw", "o": "the flap lift"},
+  {"s": "gas-lamp", "r": "shone through", "o": "leafless lime-tree by the gate"},
+  {"s": "golden eye", "r": "seemed to wink at", "o": "the children through the letter-slit"},
+  {"s": "cautious beak", "r": "whispered", "o": "Are you alone?"},
+  {"s": "everyone", "r": "said", "o": "It’s the Phoenix."},
+  {"s": "voice from the letter-box slit", "r": "said", "o": "Hush!"},
+  {"s": "Phoenix", "r": "spoke from", "o": "the letter-box slit"},
+  {"s": "voice", "r": "said", "o": "Your slaves have gone a-merry-making."},
+  {"s": "voice", "r": "said", "o": "The latch of this portal is too stiff for my beak."},
+  {"s": "latch of this portal", "r": "is too stiff for", "o": "the Phoenix’s beak"},
+  {"s": "voice", "r": "said", "o": "At the side—the little window above the bread shelf—is not fastened."},
+  {"s": "little window above the bread shelf", "r": "is", "o": "not fastened"},
+  {"s": "Cyril", "r": "said", "o": "Righto!"},
+  {"s": "Anthea", "r": "said", "o": "I wish you’d meet us there, dear Phoenix."},
+  {"s": "children", "r": "crept round to", "o": "the pantry window"},
+  {"s": "pantry window", "r": "is at", "o": "the side of the house"},
+  {"s": "green gate labeled Tradesmen’s Entrance", "r": "is kept", "o": "bolted"},
+  {"s": "you", "r": "can get over", "o": "the gate by putting one foot on the fence and one on the handle"},
+  {"s": "Cyril and Robert", "r": "got over", "o": "the gate quickly"},
+  {"s": "Anthea and Jane", "r": "got over", "o": "the gate quickly"},
+  {"s": "all four children", "r": "were in", "o": "the narrow gravelled passage between the houses"},
+  {"s": "bread", "r": "lies on", "o": "the shelf beneath the little window"},
+  {"s": "children", "r": "planned to meet", "o": "the Phoenix at the pantry window"}
+]
+
+==================================================
+
+[TIME] task_16_moderate_triples_llm[drop] took 1.919s
+
+Moderation removed 0 triples
+Valid JSON
+[TIME] pipeline_B took 128.895s
+Checkpoint saved to ./datasets/checkpoint.pkl
+[STATUS] Chunk story-1_book-2_chapter-12_p.20963: relation_extraction -> in-progress
+127.0.0.1 - - [10/Dec/2025 03:47:09] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.20963: llm_inference -> in-progress
+127.0.0.1 - - [10/Dec/2025 03:47:09] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.20963: relation_extraction -> completed
+127.0.0.1 - - [10/Dec/2025 03:47:09] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.20963: llm_inference -> completed
+127.0.0.1 - - [10/Dec/2025 03:47:09] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.20963: graph_verbalization -> in-progress
+127.0.0.1 - - [10/Dec/2025 03:47:09] "POST /status/chunk HTTP/1.1" 200 -
+letter-box latch produced rattling and clicking
+letter-box flap lifted itself
+everyone saw the flap lift
+gas-lamp shone through leafless lime-tree by the gate
+golden eye seemed to wink at the children through the letter-slit
+cautious beak whispered Are you alone?
+everyone said It’s the Phoenix.
+voice from the letter-box slit said Hush!
+Phoenix spoke from the letter-box slit
+voice said Your slaves have gone a-merry-making.
+voice said The latch of this portal is too stiff for my beak.
+latch of this portal is too stiff for the Phoenix’s beak
+voice said At the side—the little window above the bread shelf—is not fastened.
+little window above the bread shelf is not fastened
+Cyril said Righto!
+Anthea said I wish you’d meet us there, dear Phoenix.
+children crept round to the pantry window
+pantry window is at the side of the house
+green gate labeled Tradesmen’s Entrance is kept bolted
+you can get over the gate by putting one foot on the fence and one on the handle
+Cyril and Robert got over the gate quickly
+Anthea and Jane got over the gate quickly
+all four children were in the narrow gravelled passage between the houses
+bread lies on the shelf beneath the little window
+children planned to meet the Phoenix at the pantry window
+[TIME] task_20_send_triples took 4.453s
+[TIME] task_22_fetch_subgraph[popular] took 0.308s
+[TIME] task_23_verbalize_triples[raw] took 0.001s
+
+Triples which best represent the graph:
+everyone SAW flap_lift
+everyone SAID s_Phoenix
+voice SAID slaves_have_gone_merry_making
+voice SAID latch_of_portal_is_too_stiff_for_beak
+voice SAID At_side_little_window_above_bread_shelf_is_fastened
+children CREPT_ROUND_TO pantry_window
+pantry_window IS_AT side_of_house
+children PLANNED_TO_MEET Phoenix_at_pantry_window
+[TIME] pipeline_C took 4.845s
+[STATUS] Chunk story-1_book-2_chapter-12_p.20963: graph_verbalization -> completed
+127.0.0.1 - - [10/Dec/2025 03:47:14] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Story 1: summarization -> in-progress
+127.0.0.1 - - [10/Dec/2025 03:47:14] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.20963: summarization -> in-progress
+127.0.0.1 - - [10/Dec/2025 03:47:14] "POST /status/chunk HTTP/1.1" 200 -
+[TIME] task_30_summarize_llm[text] took 18.153s
+
 Generated summary:
-Cyril recites a traditional account of the Phoenix: eagle-sized with a golden crest and neck, purple body, white tail, star-like eyes, living about 500 years, then burning itself on a fragrant pyre so a worm rises from its ashes to become the new bird. The Phoenix interrupts, calling this wrong: its body isn’t purple, its tail isn’t white, and there’s no worm; instead, it builds the pyre, lays an egg, burns itself, awakens inside the egg, hatches, and repeats the cycle—though it’s tired of the endless repetition. Anthea then asks how the Phoenix’s egg came to be here.
+The Phoenix peers through the letterbox and softly asks if the children are alone, noting the servants are out and the front latch is too stiff but the pantry window is unfastened. It tells them to meet it there. The children climb over the bolted tradesmen’s gate and slip into the side passage by the pantry to let it in.
+[TIME] task_31_send_summary took 0.002s
+    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-12_p.20963]
+[TIME] pipeline_D took 18.214s
+[STATUS] Story 1: summarization -> completed
+127.0.0.1 - - [10/Dec/2025 03:47:32] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-12_p.20963: summarization -> completed
+127.0.0.1 - - [10/Dec/2025 03:47:32] "POST /status/chunk HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.20963' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [10/Dec/2025 03:47:32] "POST /process_story HTTP/1.1" 200 -
+Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
+[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=questeval, status=started
+172.18.0.2 - - [10/Dec/2025 03:47:32] "POST /callback HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.20963' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [10/Dec/2025 03:47:32] "POST /process_story HTTP/1.1" 200 -
+Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}
+
+=== TIMING SUMMARY ===
+                                      calls       total         avg         min         max
+function
+pipeline_A                                1    2.102543    2.102543    2.102543    2.102543
+pipeline_B                                1  128.895388  128.895388  128.895388  128.895388
+pipeline_C                                1    4.845426    4.845426    4.845426    4.845426
+pipeline_D                                1   18.213799   18.213799   18.213799   18.213799
+task_01_convert_epub                      1    1.968289    1.968289    1.968289    1.968289
+task_02_parse_chapters                    1    0.034718    0.034718    0.034718    0.034718
+task_03_chunk_story                       1    0.017950    0.017950    0.017950    0.017950
+task_11_send_chunk                        1    0.022836    0.022836    0.022836    0.022836
+task_12_relation_extraction[textacy]      1    1.432138    1.432138    1.432138    1.432138
+task_14_validate_llm[openai]              1  125.363742  125.363742  125.363742  125.363742
+task_16_moderate_triples_llm[drop]        1    1.918582    1.918582    1.918582    1.918582
+task_20_send_triples                      1    4.453176    4.453176    4.453176    4.453176
+task_22_fetch_subgraph[popular]           1    0.307765    0.307765    0.307765    0.307765
+task_23_verbalize_triples[raw]            1    0.000569    0.000569    0.000569    0.000569
+task_30_summarize_llm[text]               1   18.153496   18.153496   18.153496   18.153496
+task_31_send_summary                      1    0.001818    0.001818    0.001818    0.001818
+
+Total execution time: 307.732s
+[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=bookscore, status=started
+172.18.0.3 - - [10/Dec/2025 03:47:32] "POST /callback HTTP/1.1" 200 -
+[DUMP] Saved time records to './logs/elapsed_time.csv'
+[CHART] Saved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png
+Initial processing complete. Server listening for additional requests from Blazor...
+Press Ctrl+C to stop.
+[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=bookscore, status=completed
+[TIME] worker_metric_bookscore took 13.573s
+[STORY COMPLETE] All chunks completed metric_bookscore for story 1
+
+=== TIMING SUMMARY ===
+                                      calls       total         avg         min         max
+function
+pipeline_A                                1    2.102543    2.102543    2.102543    2.102543
+pipeline_B                                1  128.895388  128.895388  128.895388  128.895388
+pipeline_C                                1    4.845426    4.845426    4.845426    4.845426
+pipeline_D                                1   18.213799   18.213799   18.213799   18.213799
+task_01_convert_epub                      1    1.968289    1.968289    1.968289    1.968289
+task_02_parse_chapters                    1    0.034718    0.034718    0.034718    0.034718
+task_03_chunk_story                       1    0.017950    0.017950    0.017950    0.017950
+task_11_send_chunk                        1    0.022836    0.022836    0.022836    0.022836
+task_12_relation_extraction[textacy]      1    1.432138    1.432138    1.432138    1.432138
+task_14_validate_llm[openai]              1  125.363742  125.363742  125.363742  125.363742
+task_16_moderate_triples_llm[drop]        1    1.918582    1.918582    1.918582    1.918582
+task_20_send_triples                      1    4.453176    4.453176    4.453176    4.453176
+task_22_fetch_subgraph[popular]           1    0.307765    0.307765    0.307765    0.307765
+task_23_verbalize_triples[raw]            1    0.000569    0.000569    0.000569    0.000569
+task_30_summarize_llm[text]               1   18.153496   18.153496   18.153496   18.153496
+task_31_send_summary                      1    0.001818    0.001818    0.001818    0.001818
+worker_metric_bookscore                   1   13.573135   13.573135   13.573135   13.573135
+
+Total execution time: 321.305s
+[DUMP] Saved time records to './logs/elapsed_time.csv'
+[CHART] Saved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png
+172.18.0.3 - - [10/Dec/2025 03:47:47] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=questeval, status=completed
+[TIME] worker_metric_questeval took 173.197s
+[STORY COMPLETE] All chunks completed metric_questeval for story 1
+
+=== TIMING SUMMARY ===
+                                      calls       total         avg         min         max
+function
+pipeline_A                                1    2.102543    2.102543    2.102543    2.102543
+pipeline_B                                1  128.895388  128.895388  128.895388  128.895388
+pipeline_C                                1    4.845426    4.845426    4.845426    4.845426
+pipeline_D                                1   18.213799   18.213799   18.213799   18.213799
+task_01_convert_epub                      1    1.968289    1.968289    1.968289    1.968289
+task_02_parse_chapters                    1    0.034718    0.034718    0.034718    0.034718
+task_03_chunk_story                       1    0.017950    0.017950    0.017950    0.017950
+task_11_send_chunk                        1    0.022836    0.022836    0.022836    0.022836
+task_12_relation_extraction[textacy]      1    1.432138    1.432138    1.432138    1.432138
+task_14_validate_llm[openai]              1  125.363742  125.363742  125.363742  125.363742
+task_16_moderate_triples_llm[drop]        1    1.918582    1.918582    1.918582    1.918582
+task_20_send_triples                      1    4.453176    4.453176    4.453176    4.453176
+task_22_fetch_subgraph[popular]           1    0.307765    0.307765    0.307765    0.307765
+task_23_verbalize_triples[raw]            1    0.000569    0.000569    0.000569    0.000569
+task_30_summarize_llm[text]               1   18.153496   18.153496   18.153496   18.153496
+task_31_send_summary                      1    0.001818    0.001818    0.001818    0.001818
+worker_metric_bookscore                   1   13.573135   13.573135   13.573135   13.573135
+worker_metric_questeval                   1  173.197163  173.197163  173.197163  173.197163
+
+Total execution time: 494.503s
+[DUMP] Saved time records to './logs/elapsed_time.csv'
+[CHART] Saved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png
+[TIME] task_45_eval_coverage took 0.930s
+[TIME] task_45_eval_rouge took 2.932s
+Downloading builder script: 7.95kB [00:00, 15.2MB/s]
+[TIME] task_45_eval_bertscore took 24.493s
+[TIME] task_45_eval_ngrams took 0.022s
+[TIME] task_45_eval_jsd took 0.008s
+[TIME] task_45_eval_ncd took 0.000s
+[TIME] task_45_eval_salience took 0.012s
+[TIME] task_45_eval_faithfulness took 31.497s
+[TIME] task_45_eval_readability took 1.150s
+[TIME] task_45_eval_sentence_coherence took 7.413s
+[TIME] task_45_eval_entity_grid took 0.535s
+[TIME] task_45_eval_diversity took 0.000s
+[TIME] task_45_eval_stopwords took 0.002s
+Downloading builder script: 6.14kB [00:00, 4.18MB/s]
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-large and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Sending payload to Blazor at http://blazor_service:5055/api/metrics
+Request failed: HTTPConnectionPool(host='blazor_service', port=5055): Max retries exceeded with url: /api/metrics (Caused by NameResolutionError("HTTPConnection(host='blazor_service', port=5055): Failed to resolve 'blazor_service' ([Errno -3] Temporary failure in name resolution)"))
+[TIME] task_40_post_payload took 40.962s
+
+Output sent to web app.
+[TIME] pipeline_E took 109.971s
+[PIPELINE FINALIZED] Story 1 fully processed
+
+=== TIMING SUMMARY ===
+                                      calls       total         avg         min         max
+function
+pipeline_A                                1    2.102543    2.102543    2.102543    2.102543
+pipeline_B                                1  128.895388  128.895388  128.895388  128.895388
+pipeline_C                                1    4.845426    4.845426    4.845426    4.845426
+pipeline_D                                1   18.213799   18.213799   18.213799   18.213799
+pipeline_E                                1  109.971410  109.971410  109.971410  109.971410
+task_01_convert_epub                      1    1.968289    1.968289    1.968289    1.968289
+task_02_parse_chapters                    1    0.034718    0.034718    0.034718    0.034718
+task_03_chunk_story                       1    0.017950    0.017950    0.017950    0.017950
+task_11_send_chunk                        1    0.022836    0.022836    0.022836    0.022836
+task_12_relation_extraction[textacy]      1    1.432138    1.432138    1.432138    1.432138
+task_14_validate_llm[openai]              1  125.363742  125.363742  125.363742  125.363742
+task_16_moderate_triples_llm[drop]        1    1.918582    1.918582    1.918582    1.918582
+task_20_send_triples                      1    4.453176    4.453176    4.453176    4.453176
+task_22_fetch_subgraph[popular]           1    0.307765    0.307765    0.307765    0.307765
+task_23_verbalize_triples[raw]            1    0.000569    0.000569    0.000569    0.000569
+task_30_summarize_llm[text]               1   18.153496   18.153496   18.153496   18.153496
+task_31_send_summary                      1    0.001818    0.001818    0.001818    0.001818
+task_40_post_payload                      1   40.962445   40.962445   40.962445   40.962445
+task_45_eval_bertscore                    1   24.492970   24.492970   24.492970   24.492970
+task_45_eval_coverage                     1    0.929720    0.929720    0.929720    0.929720
+task_45_eval_diversity                    1    0.000302    0.000302    0.000302    0.000302
+task_45_eval_entity_grid                  1    0.535417    0.535417    0.535417    0.535417
+task_45_eval_faithfulness                 1   31.496939   31.496939   31.496939   31.496939
+task_45_eval_jsd                          1    0.008038    0.008038    0.008038    0.008038
+task_45_eval_ncd                          1    0.000132    0.000132    0.000132    0.000132
+task_45_eval_ngrams                       1    0.022212    0.022212    0.022212    0.022212
+task_45_eval_readability                  1    1.149945    1.149945    1.149945    1.149945
+task_45_eval_rouge                        1    2.932385    2.932385    2.932385    2.932385
+task_45_eval_salience                     1    0.012056    0.012056    0.012056    0.012056
+task_45_eval_sentence_coherence           1    7.413206    7.413206    7.413206    7.413206
+task_45_eval_stopwords                    1    0.001822    0.001822    0.001822    0.001822
+worker_metric_bookscore                   1   13.573135   13.573135   13.573135   13.573135
+worker_metric_questeval                   1  173.197163  173.197163  173.197163  173.197163
+
+Total execution time: 714.432s
+[DUMP] Saved time records to './logs/elapsed_time.csv'
+[CHART] Saved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png
+[CHART] Saved chart 'Saved summary metrics CSV' to ./logs/metrics/chunk_summary.csv
+172.18.0.2 - - [10/Dec/2025 03:52:16] "POST /callback HTTP/1.1" 200 -
+INFO:werkzeug:172.18.0.2 - - [10/Dec/2025 03:52:16] "POST /callback HTTP/1.1" 200 -
+^Cmake[2]: *** [Makefile:77: docker-start] Interrupt
+make[1]: *** [Makefile:89: docker-python] Interrupt
+make: *** [Makefile:137: docker-python-dev] Interrupt
