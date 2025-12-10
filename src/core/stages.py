@@ -122,36 +122,64 @@ class Config:
     verbalize_triples_mode: str
     summary_llm_engine: str
 
+    source_text_visible: bool
+    triples_visible: bool
+
     # gpt-5 only supports temperature 1
     temperature: float
     reasoning_effort: str
     model_name: str
 
+    @staticmethod
     def load_fast():
-        relation_extractor_type = "textacy"
-        validation_llm_engine = "openai"
-        moderation_llm_engine = "openai"
-        moderation_strategy = "drop"
-        graph_lookup_mode = "popular"
-        verbalize_triples_mode = "raw"
-        summary_llm_engine = "openai"
-    
-        temperature = 1
-        reasoning_effort = "minimal"
-        model_name = "gpt-5-nano"
+        Config.relation_extractor_type = "textacy"
+        Config.validation_llm_engine = "openai"
+        Config.moderation_llm_engine = "openai"
+        Config.moderation_strategy = "drop"
+        Config.graph_lookup_mode = "popular"
+        Config.verbalize_triples_mode = "raw"
+        Config.summary_llm_engine = "openai"
 
+        Config.source_text_visible = False
+        Config.triples_visible = True
+
+        Config.temperature = 1
+        Config.reasoning_effort = "minimal"
+        Config.model_name = "gpt-5-nano"
+
+    @staticmethod
     def load_best():
-        relation_extractor_type = "openie"
-        validation_llm_engine = "langchain"
-        moderation_llm_engine = "langchain"
-        moderation_strategy = "resolve"
-        graph_lookup_mode = "community"
-        verbalize_triples_mode = "context"
-        summary_llm_engine = "langchain"
-    
-        temperature = 1
-        reasoning_effort = "high"
-        model_name = "gpt-5"
+        Config.relation_extractor_type = "openie"
+        Config.validation_llm_engine = "langchain"
+        Config.moderation_llm_engine = "langchain"
+        Config.moderation_strategy = "resolve"
+        Config.graph_lookup_mode = "community"
+        Config.verbalize_triples_mode = "context"
+        Config.summary_llm_engine = "langchain"
+        
+        Config.source_text_visible = False
+        Config.triples_visible = True
+
+        Config.temperature = 1
+        Config.reasoning_effort = "high"
+        Config.model_name = "gpt-5"
+
+    @staticmethod
+    def load_baseline():
+        Config.relation_extractor_type = "textacy"
+        Config.validation_llm_engine = "openai"
+        Config.moderation_llm_engine = "openai"
+        Config.moderation_strategy = "drop"
+        Config.graph_lookup_mode = "popular"
+        Config.verbalize_triples_mode = "raw"
+        Config.summary_llm_engine = "openai"
+
+        Config.source_text_visible = True
+        Config.triples_visible = False
+
+        Config.temperature = 1
+        Config.reasoning_effort = "high"
+        Config.model_name = "gpt-5"
 
     # Moderation thresholds for Gutenberg (historical fiction)
     moderation_thresholds = {
