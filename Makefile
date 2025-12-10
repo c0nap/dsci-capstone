@@ -110,7 +110,8 @@ docker-metcore:
 
 
 docker-copy-logs:
-	docker cp container-python:/pipeline/logs/ ./
+	docker cp container-python:/pipeline/logs/elapsed_time.csv ./logs/results/
+	docker cp container-python:/pipeline/logs/metrics/chunk_summary.csv ./logs/results/
 docker-copy-checkpoint:
 	docker cp container-python:/pipeline/datasets/checkpoint.pkl ./datasets
 
