@@ -224,18 +224,18 @@ class Metrics:
 
 
 def compute_basic(summary: str, gold_summary: str, chunk: str) -> Dict[str, Any]:
-    """Compute ROUGE and BERTScore.
+    """Compute ROUGE and BERTScore to compare against a gold-quality reference summary.
     @param summary  A text string containing a book summary
     @param gold_summary  A summary to compare against
     @param chunk  The original text of the chunk.
     @return  Dict containing 'rouge' and 'bertscore' keys.
         Scores are nested with inconsistent schema."""
-    rouge_result = run_rouge(summary, gold_summary)
-    bertscore_result = run_bertscore(summary, gold_summary)
+    rouge_result = run_rouge_old(summary, gold_summary)
+    bertscore_result = run_bertscore_old(summary, gold_summary)
     return {"rouge": rouge_result, "bertscore": bertscore_result}
 
 
-def run_rouge(prediction: str, reference: str) -> Dict[str, float]:
+def run_rouge_old(prediction: str, reference: str) -> Dict[str, float]:
     """Run the ROUGE evaluation metric given one reference and one prediction to judge.
     @param prediction  Text string containing the generated summary.
     @param reference  Text string to compare against.
@@ -250,7 +250,7 @@ def run_rouge(prediction: str, reference: str) -> Dict[str, float]:
     return result
 
 
-def run_bertscore(prediction: str, reference: str) -> Dict[str, List[float]]:
+def run_bertscore_old(prediction: str, reference: str) -> Dict[str, List[float]]:
     """Run the BERTScore evaluation metric given one reference and one prediction to judge.
     @param prediction  Text string containing the generated summary.
     @param reference  Text string to compare against.
@@ -472,3 +472,543 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
             raise RuntimeError(f"BookScore chunking timed out after {Metrics.timeout_seconds}s") from e
 
         return chunked_pkl
+
+
+
+# ==============================================================================
+# METRICS CONFIGURATION MANIFEST
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# GROUP 1: BASIC COMPARISON OF SUMMARY / SOURCE TEXT
+# ------------------------------------------------------------------------------
+# run_rouge_l                  [BASELINE] Longest common subsequence recall (source as reference). Library: rouge_score
+# run_bertscore                [MEANING] Average F1 over all tokens. Library: evaluate
+# run_novel_ngrams             [ABSTRACTIVENESS] % of new 3-grams in summary. Library: nltk
+# run_jsd_stats                [DISTRIBUTION] Jensen-Shannon divergence of word frequency distributions. Library: scipy
+# run_entity_coverage          [FACTS] Recall of source entities present in summary. Library: spacy
+# ------------------------------------------------------------------------------
+# GROUP 2: HIGH-LEVEL COMPARISON
+# ------------------------------------------------------------------------------
+# run_ncd_overlap              [INFO-THEORY] Normalized Compression Distance. Library: zlib
+# run_salience_recall          [KEYWORDS] Recall of top-k TF-IDF source terms present in summary. Library: sklearn
+# run_nli_faithfulness         [LOGIC] % of summary sentences entailed by source. Library: transformers
+# run_readability_delta        [COMPLEXITY] Flesch-Kincaid delta (source minus summary). Library: textstats
+# ------------------------------------------------------------------------------
+# GROUP 3: REFERENCE-FREE QUALITY SCORES
+# ------------------------------------------------------------------------------
+# run_sentence_coherence       [FLOW] Average cosine similarity between adjacent sentence embeddings. Library: sentence-transformers
+# run_entity_grid_coherence    [DISCOURSE] Average entity transition coherence. Library: spacy
+# run_lexical_diversity        [STYLE] Type-Token Ratio (TTR). Library: nltk
+# run_stopword_ratio           [STYLE] Ratio of stopwords to total words. Library: nltk
+
+# ==============================================================================
+# CORE CRITERIA
+# ==============================================================================
+# - Fast: must conclude under 10s on CPU (no heavy models)
+# - Usable: evaluates ~300-token summary from ~500-token source, no external datasets required
+# - Reference free: only the summary and base text are used
+# - Easy to implement: prefer existing libraries (evaluate, spacy, textacy, textstats). LLM prompts must cite a paper if used.
+# - Unique / Insightful: metrics illustrate non-obvious aspects and do not duplicate each other
+# - Domain adjacent: designed for narrative fiction books, but factuality metrics remain meaningful for generic text
+
+
+from typing import Dict, Any
+from collections import Counter
+
+
+
+# ==============================================================================
+# GROUP 1: BASIC COMPARISON
+# ==============================================================================
+
+def run_rouge_l(summary: str, source: str) -> Dict[str, float]:
+    """ROUGE-L Recall (Coverage Score)
+    @param summary: The model-generated summary text
+    @param source: The original source text being summarized
+    @details
+    ROUGE-L measures longest-common-subsequence overlap. This metric captures
+    **structural and lexical coverage**, acting as the baseline sanity-check
+    that the summary is not missing the core backbone of the text.
+    @note
+    Only recall is reported, not precision or F1. Since we are reference-free
+    (source = implicit reference), recall directly measures how much of the
+    source content is preserved in the summary. Precision is less meaningful
+    because the summary may include new words or abstractions; focusing on
+    recall avoids penalizing creative paraphrasing.
+    @return: Dictionary containing ROUGE-L recall score
+    """
+    from rouge_score import rouge_scorer
+    scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
+    scores = scorer.score(source, summary)
+    return {"rougeL_recall": scores["rougeL"].recall}
+
+
+def run_bertscore(summary: str, source: str) -> Dict[str, float]:
+    """BERTScore embedding similarity
+    @param summary: Summary text
+    @param source: Original text
+    @details
+    BERTScore measures **semantic similarity**, not lexical overlap. It exists
+    because summaries can be phrased differently while still preserving
+    meaning—ROUGE cannot capture that. This protects against false negatives
+    on paraphrased but faithful summaries.
+    @note
+    Average F1 across tokens is returned. Uses lightweight distilroberta-base
+    for CPU efficiency. Averaging F1 provides a single scalar capturing overall
+    semantic alignment without needing separate precision/recall breakdowns.
+    It balances false negatives and false positives, giving a fast,
+    interpretable metric of meaning preservation.
+    @return: Dictionary containing average BERTScore F1
+    """
+    import evaluate
+    model = evaluate.load("bertscore")
+    result = model.compute(
+        predictions=[summary],
+        references=[source],
+        model_type="distilroberta-base",
+        rescale_with_baseline=True,  # Can be negative
+        lang="en"
+    )
+    return {"bertscore_f1": result["f1"][0]}
+
+
+def run_novel_ngrams(summary: str, source: str, n: int = 3) -> Dict[str, float]:
+    """Novel n-gram Percentage
+    @param summary: Summary text
+    @param source: Source text
+    @param n: N-gram length (default 3)
+    @details
+    Novel n-grams quantify how much of the summary is **newly written** rather
+    than lifted lexically from the source. High abstraction is good, but high
+    novelty can indicate unwanted hallucination or off-topic writing. It
+    complements ROUGE (overlap) by measuring *invention*.
+    @note
+    Measures % of n-grams (default n=3) in summary not in source. Signals
+    lexical novelty vs copying. Uses NLTK for tokenization and n-gram extraction.
+    @return: Dictionary containing ratio of novel n-grams
+    """
+    from nltk import ngrams, word_tokenize
+
+    src_tokens = word_tokenize(source.lower())
+    sum_tokens = word_tokenize(summary.lower())
+
+    src_set = set(ngrams(src_tokens, n))
+    sum_list = list(ngrams(sum_tokens, n))
+
+    novel = sum(1 for g in sum_list if g not in src_set)
+    pct = novel / (len(sum_list) or 1)
+    return {"novel_ngram_pct": pct}
+
+
+def run_jsd_stats(summary: str, source: str) -> Dict[str, float]:
+    """Jensen-Shannon Divergence (JSD)
+    @param summary: Summary text
+    @param source: Source text
+    @details
+    JSD measures **distributional drift**—whether the summary uses different
+    kinds of words (topics, style, frequency profile). This exists because
+    even if meaning is similar (BERTScore), the *lexical signal* can shift,
+    revealing stylistic mismatch or omissions.
+    @note
+    Normalized over union vocabulary to check topical drift. Uses scipy for
+    entropy calculation. Low JSD = similar word frequency profiles, high JSD =
+    distributional mismatch.
+    @return: Dictionary containing JSD value between token distributions
+    """
+    from scipy.stats import entropy
+    from numpy.typing import NDArray
+    import numpy as np
+
+    def jsd(p: NDArray[np.float64], q: NDArray[np.float64]) -> float:
+        p = p / p.sum()
+        q = q / q.sum()
+        m = 0.5 * (p + q)
+        return 0.5 * (entropy(p, m) + entropy(q, m))
+
+    src_counts = Counter(source.lower().split())
+    sum_counts = Counter(summary.lower().split())
+
+    vocab = list(set(src_counts) | set(sum_counts))
+    p = np.array([src_counts[w] for w in vocab], dtype=float)
+    q = np.array([sum_counts[w] for w in vocab], dtype=float)
+
+    return {"jsd": jsd(p, q)}
+
+
+def run_entity_coverage(summary: str, source: str) -> Dict[str, float]:
+    """Entity Coverage & Hallucination (spaCy)
+    @param summary: Summary text
+    @param source: Source text
+    @details
+    This metric checks **who/what appears in the text**:
+    - Coverage = Are key characters/places preserved?
+    - Hallucination = Did the summary invent new entities?
+    This exists because summaries can be semantically similar (BERTScore)
+    while still **dropping crucial actors** or **inventing new ones**.
+    @note
+    Recall of entities present in summary. In narrative fiction, the goal is
+    typically to capture important characters/locations from the source.
+    Recall ensures missing entities are penalized, while allowing for creative
+    additions without negatively impacting the score.
+    @return: Dictionary containing coverage and hallucination ratios
+    """
+    import spacy
+    nlp = spacy.load("en_core_web_sm")
+
+    src = nlp(source)
+    summ = nlp(summary)
+
+    # Normalize entity text for better matching (lower + strip)
+    src_ents = {e.text.lower().strip() for e in src.ents if e.text.strip()}
+    sum_ents = {e.text.lower().strip() for e in summ.ents if e.text.strip()}
+
+    # Handle edge cases where no entities are found
+    if not src_ents:
+        coverage = 1.0 if not sum_ents else 0.0
+        halluc = 0.0
+    elif not sum_ents:
+        coverage = 0.0
+        halluc = 0.0
+    else:
+        coverage = len(src_ents & sum_ents) / len(src_ents)
+        halluc = len(sum_ents - src_ents) / len(sum_ents)
+
+    return {"entity_coverage": coverage, "entity_hallucination": halluc}
+
+
+# ==============================================================================
+# GROUP 2: HIGH-LEVEL COMPARISON
+# ==============================================================================
+
+def run_ncd_overlap(summary: str, source: str) -> Dict[str, float]:
+    """Normalized Compression Distance (NCD)
+    @param summary: Summary text
+    @param source: Source text
+    @details
+    NCD uses compression to estimate **universal similarity**, independent of
+    tokens or embeddings. It exists because it can detect similarity even when
+    wording is heavily paraphrased, structure changes, or there is low lexical
+    overlap. This complements both ROUGE and BERTScore.
+    @note
+    Uses fast zlib compression to capture structural overlap. NCD formula:
+    NCD(x,y) = (C(xy) - min(C(x),C(y))) / max(C(x),C(y))
+    where C(x) is compressed size. Values range [0,1]: 0 = identical, 1 = unrelated.
+    Includes clamp to [0,1] to handle compression noise.
+    @return: Dictionary containing NCD score
+    """
+    import zlib
+    
+    # Special case: identical texts should return perfect score (0.0 distance)
+    if summary == source:
+        return {"ncd": 0.0}
+    
+    x_bytes = summary.encode('utf-8')
+    y_bytes = source.encode('utf-8')
+    xy_bytes = (summary + source).encode('utf-8')
+    
+    cx = len(zlib.compress(x_bytes))
+    cy = len(zlib.compress(y_bytes))
+    cxy = len(zlib.compress(xy_bytes))
+    
+    ncd_score = (cxy - min(cx, cy)) / max(cx, cy)
+    
+    # Clamp to [0, 1] range
+    ncd_score = max(0.0, min(1.0, ncd_score))
+    
+    return {"ncd": float(ncd_score)}
+
+
+def run_salience_recall(summary: str, source: str, top_k: int = 20) -> Dict[str, float]:
+    """TF-IDF Salience Recall
+    @param summary: Summary text
+    @param source: Source text
+    @param top_k: Number of top salient terms to check (default 20)
+    @details
+    Unlike BERTScore (semantic) or ROUGE (lexical), salience recall targets
+    **rare-but-important words** by ranking terms using TF-IDF. This exists
+    because summaries can preserve general meaning while still *dropping
+    precise, important anchors* (e.g., names, unique objects, specific
+    locations, magical items, plot-significant vocabulary in fiction).
+    @note
+    TF-IDF weighted recall of top-k rare terms from source. Ensures rare,
+    important words are preserved. Uses simple TF-IDF implementation with
+    source as single document.
+    @return: Dictionary containing fraction of top-salience words preserved
+    """
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    import numpy as np
+    
+    vectorizer = TfidfVectorizer(max_features=1000)
+    vectorizer.fit([source])
+    
+    tfidf_matrix = vectorizer.transform([source])
+    feature_names = vectorizer.get_feature_names_out()
+    scores = tfidf_matrix.toarray()[0]
+    
+    top_indices = np.argsort(scores)[-top_k:]
+    top_words = {feature_names[i] for i in top_indices if scores[i] > 0}
+    
+    summary_words = set(summary.lower().split())
+    preserved = len(top_words & summary_words)
+    
+    recall = preserved / (len(top_words) or 1)
+    return {"salience_recall": recall}
+
+
+def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
+    """NLI-based Faithfulness Score
+    @param summary: Summary text
+    @param source: Source text
+    @details
+    NLI detects:
+    - Entailment: The summary is supported by the text
+    - Neutral: The summary adds unverifiable info
+    - Contradiction: The summary states something *false*
+    This metric exists because entity metrics detect invented nouns, novel
+    n-grams detect invented phrasing, BUT NLI detects invented **claims**.
+    It is your "lie detector."
+    @note
+    Percent of summary sentences entailed by source is returned as a single
+    scalar. Uses CrossEncoder which is more accurate than standard pipeline
+    classification for sentence pairs.
+    Label order: [contradiction=0, entailment=1, neutral=2].
+    @return: Dictionary containing entailment percentage
+    """
+    from sentence_transformers import CrossEncoder
+    from nltk import sent_tokenize
+    import numpy as np
+    import math
+    import itertools
+    from scipy.special import softmax
+
+    # Configuration: sliding window size for premises and threshold for counting entailment
+    window_size = 1        # 1 = use individual source sentences; increase to 2 or 3 to include small context windows
+    entailment_threshold = 0.5  # threshold on entailment probability to count a sentence as 'entailed'
+
+    # Load model (same family as original; consider using v3 variant for better performance)
+    model = CrossEncoder('cross-encoder/nli-deberta-base')
+
+    # Tokenize into sentences
+    summary_sents = sent_tokenize(summary)
+    source_sents = sent_tokenize(source)
+
+    if not summary_sents:
+        return {"nli_faithfulness": 0.0}
+
+    # Build premises as sliding windows of source sentences (to provide small local context)
+    premises = []
+    if not source_sents:
+        # if source empty, all entailment probs are zero
+        premises = [""]
+    else:
+        for i in range(len(source_sents)):
+            window = source_sents[i:i + window_size]
+            premises.append(" ".join(window))
+
+    # Prepare all (premise, hypothesis) pairs
+    # We'll compute entailment probability for each pair and then take max over premises per hypothesis
+    pairs = []
+    hyp_to_indices = []  # map hypothesis index -> list of row indices in pairs
+    for hi, hyp in enumerate(summary_sents):
+        start_idx = len(pairs)
+        for p in premises:
+            pairs.append((p, hyp))
+        end_idx = len(pairs)
+        hyp_to_indices.append((start_idx, end_idx))
+
+    # Predict logits in batches (CrossEncoder.predict handles batching internally but passing full list is OK for small examples)
+    logits = model.predict(pairs, show_progress_bar=False)  # shape = (len(pairs), 3)
+
+    # Convert logits to probabilities and extract entailment probability (index 1)
+    # Note: label order is [contradiction=0, entailment=1, neutral=2] as documented for these cross-encoders
+    probs = softmax(logits, axis=1)  # shape (N, 3)
+    entail_probs = probs[:, 1]       # probability mass for 'entailment' class
+
+    # For each hypothesis take the max entailment prob across all its premises
+    hyp_entail_probs = []
+    for (start_idx, end_idx) in hyp_to_indices:
+        if end_idx <= start_idx:
+            hyp_entail_probs.append(0.0)
+        else:
+            hyp_entail_probs.append(float(np.max(entail_probs[start_idx:end_idx])))
+
+    # Two reasonable aggregates:
+    #  - continuous score: mean entailment probability across hypotheses
+    #  - fraction_entail: fraction of hypotheses whose max entailment prob >= threshold
+    mean_entail = float(np.mean(hyp_entail_probs))
+    fraction_entail = float(np.mean([1.0 if p >= entailment_threshold else 0.0 for p in hyp_entail_probs]))
+
+    # Return fraction_entail to match your previous 'percent of summary sentences entailed' behavior.
+    return {"nli_faithfulness": fraction_entail}
+
+
+
+def run_readability_delta(summary: str, source: str) -> Dict[str, float]:
+    """Readability Delta (textstats)
+    @param summary: Summary text
+    @param source: Source text
+    @details
+    This metric exists because summaries should generally be **simpler** than
+    their sources. A huge negative shift = oversimplification; no shift =
+    overly extractive.
+    @note
+    Source minus summary Flesch-Kincaid score gives a single delta; positive
+    means simpler summary. A single delta is intuitive and fast to compute.
+    Tracking delta rather than separate source/summary scores reduces
+    cognitive load when comparing multiple summaries. Optionally include SMOG
+    index for additional complexity measures.
+    @return: Dictionary containing difference in Flesch-Kincaid grade
+    """
+    import textstat
+    fk_source = textstat.flesch_kincaid_grade(source)
+    fk_summary = textstat.flesch_kincaid_grade(summary)
+    delta = fk_source - fk_summary
+    return {"readability_delta": delta}
+
+
+# ==============================================================================
+# GROUP 3: REFERENCE-FREE QUALITY SCORES
+# ==============================================================================
+
+def run_sentence_coherence(summary: str) -> Dict[str, float]:
+    """Sentence Coherence (Adjacent Embedding Similarity)
+    @param summary: Summary text
+    @details
+    Measures **flow** by computing cosine similarity between adjacent sentence
+    embeddings. High coherence = smooth transitions; low coherence = disjointed
+    narrative. This is critical for narrative fiction where logical progression
+    matters.
+    @note
+    Embedding similarity between adjacent sentences averaged over sentence
+    pairs to check smooth transitions. Cosine similarity averaged across all
+    adjacent pairs produces one smooth scalar reflecting overall flow without
+    needing to inspect each pair individually. This keeps computation light
+    while capturing whether sentences transition naturally.
+    @return: Dictionary containing average coherence score
+    """
+    from sentence_transformers import SentenceTransformer
+    from nltk import sent_tokenize
+    from sklearn.metrics.pairwise import cosine_similarity
+    import numpy as np
+    
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    sents = sent_tokenize(summary)
+    
+    if len(sents) < 2:
+        return {"sentence_coherence": 1.0}
+    
+    embeddings = model.encode(sents)
+    similarities = []
+    
+    for i in range(len(embeddings) - 1):
+        sim = cosine_similarity([embeddings[i]], [embeddings[i+1]])[0][0]
+        similarities.append(sim)
+    
+    avg_coherence = np.mean(similarities)
+    return {"sentence_coherence": float(avg_coherence)}
+
+
+def run_entity_grid_coherence(summary: str) -> Dict[str, float]:
+    """Entity Grid Coherence (Discourse Structure)
+    @param summary: Summary text
+    @details
+    Tracks how entities (characters, places) transition across sentences.
+    In narrative fiction, stable entity focus signals good discourse structure.
+    Measures whether the summary maintains narrative focus or jumps chaotically
+    between entities.
+    @note
+    Entity transition model via spaCy. Measures narrative focus stability by
+    analyzing grammatical roles (subject, object, other) of entities across
+    sentences. Consistent transitions indicate coherent narrative progression.
+    @return: Dictionary containing entity transition coherence score
+    """
+    import spacy
+    from nltk import sent_tokenize
+    
+    nlp = spacy.load("en_core_web_sm")
+    sents = sent_tokenize(summary)
+    
+    if len(sents) < 2:
+        return {"entity_grid_coherence": 1.0}
+    
+    entity_grids = []
+    for sent in sents:
+        doc = nlp(sent)
+        entities = {}
+        for ent in doc.ents:
+            if ent.text.strip():
+                entities[ent.text.lower().strip()] = ent.root.dep_
+        entity_grids.append(entities)
+    
+    # Filter out sentences with no entities found
+    entity_grids = [eg for eg in entity_grids if eg]
+    
+    if len(entity_grids) < 2:
+        return {"entity_grid_coherence": 0.0}
+    
+    transitions = 0
+    smooth = 0
+    
+    for i in range(len(entity_grids) - 1):
+        curr_ents = set(entity_grids[i].keys())
+        next_ents = set(entity_grids[i+1].keys())
+        
+        if curr_ents and next_ents:
+            overlap = curr_ents & next_ents
+            smooth += len(overlap)
+            transitions += max(len(curr_ents), len(next_ents))
+    
+    if transitions == 0:
+        return {"entity_grid_coherence": 0.0}
+        
+    coherence = smooth / transitions
+    return {"entity_grid_coherence": float(coherence)}
+
+
+def run_lexical_diversity(summary: str) -> Dict[str, float]:
+    """Lexical Diversity (Type-Token Ratio)
+    @param summary: Summary text
+    @details
+    Measures vocabulary richness. High TTR = diverse vocabulary; low TTR =
+    repetitive. For fiction summaries, moderate diversity is ideal—too low
+    suggests boring repetition, too high suggests incoherent jumping between
+    concepts.
+    @note
+    Type-Token Ratio (TTR) measures vocabulary richness. Simple ratio of
+    unique words to total words provides interpretable measure of lexical
+    variety without complex normalization.
+    @return: Dictionary containing TTR score
+    """
+    from nltk import word_tokenize
+    
+    tokens = word_tokenize(summary.lower())
+    types = set(tokens)
+    
+    ttr = len(types) / (len(tokens) or 1)
+    return {"lexical_diversity": ttr}
+
+
+def run_stopword_ratio(summary: str) -> Dict[str, float]:
+    """Stopword Ratio (Content Density)
+    @param summary: Summary text
+    @details
+    Measures information density. High stopword ratio may indicate low
+    information content (lots of "the", "a", "is"). Low ratio suggests dense,
+    content-heavy text. For summaries, moderate ratio is ideal.
+    @note
+    Ratio of stopwords to total words. High ratio may indicate low information
+    content. Uses NLTK's English stopword list for detection.
+    @return: Dictionary containing stopword ratio
+    """
+    from nltk.corpus import stopwords
+    from nltk import word_tokenize
+    
+    stops = set(stopwords.words('english'))
+    tokens = word_tokenize(summary.lower())
+    
+    stop_count = sum(1 for t in tokens if t in stops)
+    ratio = stop_count / (len(tokens) or 1)
+    
+    return {"stopword_ratio": ratio}
+

@@ -10,7 +10,7 @@ WORKDIR /pipeline
 # Make Python stdout/stderr unbuffered so logs show immediately
 ENV PYTHONUNBUFFERED=1
 
-# Copy dependency list first to leverage build cache
+# Install system dependencies in one layer
 # Java installation is optional - necessary for 'stanza' / OpenIE relation extraction
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -22,6 +22,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY deps/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m spacy download en_core_web_sm
+RUN python -m nltk.downloader punkt punkt_tab stopwords
 
 
 # Copy source code into the container (optional .dockerignore)
@@ -42,7 +44,7 @@ RUN mv .env.docker .env
 
 COPY pyproject.toml pytest.ini conftest.py .
 # Used to merge with time-elapsed data with existing
-COPY logs/elapsed_time.csv logs/
+# COPY logs/elapsed_time.csv logs/
 
 # default command
 CMD ["python", "-m", "src.main"]

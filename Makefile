@@ -101,12 +101,17 @@ docker-bookscore:
 	make docker-start NAME="container-bscore" IMG="dsci-cap-img-bscore-dev:latest" \
 		HOST="bscore_worker" NETWORK="capstone_default" PORT="5002:5002" \
 		DETACHED=$(DETACHED) CMD="$(CMD)"
+docker-metcore:
+	make docker-start NAME="container-metcore" IMG="dsci-cap-img-metcore-dev:latest" \
+		HOST="metcore_worker" NETWORK="capstone_default" PORT="5003:5003" \
+		DETACHED=$(DETACHED) CMD="$(CMD)"
 
 
 
 
 docker-copy-logs:
-	docker cp container-python:/pipeline/logs/ ./
+	docker cp container-python:/pipeline/logs/elapsed_time.csv ./logs/results/
+	docker cp container-python:/pipeline/logs/metrics/chunk_summary.csv ./logs/results/
 docker-copy-checkpoint:
 	docker cp container-python:/pipeline/datasets/checkpoint.pkl ./datasets
 
@@ -118,9 +123,12 @@ docker-blazor-silent:
 	make docker-blazor DETACHED=1 CMD="$(CMD)"
 docker-python-silent:
 	make docker-python DETACHED=1 CMD="$(CMD)"
+docker-metcore-silent:
+	make docker-metcore DETACHED=1 CMD="$(CMD)"
 docker-workers-silent:
 	make docker-questeval DETACHED=1
 	make docker-bookscore DETACHED=1
+	make docker-metcore-silent
 
 ###############################################################################
 # Recompile and launch containers so any source code changes will apply
@@ -135,6 +143,9 @@ docker-blazor-dev:
 docker-workers-dev:
 	make docker-build-dev-workers || exit 1  # Stop if build fails
 	make docker-workers-silent
+docker-metcore-dev:
+	make docker-build-dev-metcore || exit 1  # Stop if build fails
+	make docker-metcore DETACHED=1
 
 ###############################################################################
 # Bypass the original pipeline and run pytests instead.
@@ -186,15 +197,20 @@ docker-all-main:
 	make docker-python
 
 
-SMARGS ?= -m smoke
-
 # Run expensive smoke tests
+SMARGS ?= -m smoke
 docker-smoke:
-	make docker-python CMD="pytest $(SMARGS) smoke/"
-
+	make docker-python CMD="pytest $(SMARGS) smoke/pipeline/"
 docker-smoke-dev:
 	make docker-build-dev-python
 	make docker-smoke SMARGS="$(SMARGS)"
+
+METARGS ?= -m 'smoke and eval'
+docker-smetrics:
+	make docker-metcore CMD="pytest $(METARGS) smoke/metrics"
+docker-smetrics-dev:
+	make docker-build-dev-metcore
+	make docker-smetrics METARGS="$(METARGS)"
 
 
 ###############################################################################
@@ -204,6 +220,7 @@ docker-smoke-dev:
 docker-all-workers:
 	docker compose up -d bscore_worker
 	docker compose up -d qeval_worker
+	docker compose up -d metcore_worker
 
 ###############################################################################
 # Starts a relational DB, a document DB, and a graph DB in their own Docker containers
@@ -303,6 +320,7 @@ docker-build-dev-blazor:
 docker-build-dev-workers:
 	make docker-build-dev-bscore
 	make docker-build-dev-qeval
+	make docker-build-dev-metcore
 docker-build-dev-bscore:
 	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/bookscore.dockerfile \
 		--build-arg ENV_FILE=".env" \
@@ -313,6 +331,11 @@ docker-build-dev-qeval:
 		--build-arg ENV_FILE=".env" \
 		--build-arg TASK="questeval" \
 		-t dsci-cap-img-qeval-dev:latest .
+docker-build-dev-metcore:
+	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/metrics.dockerfile \
+		--build-arg ENV_FILE=".env" \
+		--build-arg TASK="metcore" \
+		-t dsci-cap-img-metcore-dev:latest .
 
 
 ###############################################################################

@@ -1,0 +1,17 @@
+metric,value
+rougeL_recall,0.12133891213389121
+bertscore,-0.0992489904165268
+novel_ngrams,0.9438202247191011
+jsd_stats,0.45109341713943557
+entity_coverage,0.14285714285714285
+entity_hallucination,0.0
+ncd_overlap,0.8934993084370678
+salience_recall,0.45
+nli_faithfulness,0.5
+readability_delta,-2.705995670995666
+sentence_coherence,0.4067867398262024
+entity_grid_coherence,1.0
+lexical_diversity,0.6153846153846154
+stopword_ratio,0.38461538461538464
+bookscore,0.5
+questeval,0.31056856599851446

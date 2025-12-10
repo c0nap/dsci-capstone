@@ -11,6 +11,7 @@ from src.core.boss import (
 )
 from src.util import Log
 import time
+from typing import Dict
 
 
 @Log.time
@@ -45,23 +46,24 @@ def pipeline_B(collection_name, chunks, book_title):
     stages.task_11_send_chunk(c, collection_name, book_title)
     print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
 
-    extracted = stages.task_12_relation_extraction_textacy(c.text)
+    extracted = stages.task_12_relation_extraction(c.text)
     print(f"\nNLP output:")
     for triple in extracted:
         print(triple)
     print()
-    triples_string = stages.task_13_concatenate_triples(extracted)
 
-    prompt, llm_output = stages.task_14_relation_extraction_llm_openai(triples_string, c.text)
+    prompt, llm_output, triples = stages.task_14_validate_llm(extracted, c.text)
     print("\n    LLM prompt:")
     print(prompt)
     print("\n    LLM output:")
     print(llm_output)
     print("\n" + "=" * 50 + "\n")
 
-    triples = stages.task_15_sanitize_triples_llm(llm_output)
-    triples = stages.task_16_moderate_triples_llm(triples)
-    print("\nValid JSON")
+    n_removed = len(triples)
+    triples = stages.task_16_moderate_triples_llm(triples, c.text)
+    n_removed -= len(triples)
+    print(f"\nModeration removed {n_removed} triples")
+    print("Valid JSON")
     return triples, c
 
 
@@ -76,20 +78,22 @@ def pipeline_C(json_triples):
     stages.task_20_send_triples(json_triples)
 
     # basic linear verbalization of triples (concatenate)
-    edge_count_df = stages.task_21_1_describe_graph()
-    print("\nMost relevant nodes:")
-    print(edge_count_df)
+    # TODO
+    # edge_count_df = stages.task_21_1_describe_graph()
+    # print("\nMost relevant nodes:")
+    # print(edge_count_df)
 
-    triples_string = stages.task_22_verbalize_triples()
+    triples_df = stages.task_22_fetch_subgraph()
+    triples_string = stages.task_23_verbalize_triples(triples_df)
     print("\nTriples which best represent the graph:")
     print(triples_string)
     return triples_string
 
 
 @Log.time
-def pipeline_D(collection_name, triples_string, chunk_id):
+def pipeline_D(collection_name, triples_string, chunk_id, text):
     """Generate chunk summary"""
-    _, summary = stages.task_30_summarize_llm_openai(triples_string)
+    _, summary = stages.task_30_summarize_llm(triples_string, text)
     print("\nGenerated summary:")
     print(summary)
 
@@ -102,13 +106,51 @@ def pipeline_D(collection_name, triples_string, chunk_id):
 @Log.time
 def pipeline_E(
     summary: str, book_title: str, book_id: str, chunk: str = "", gold_summary: str = "", bookscore: float = None, questeval: float = None
-) -> None:
+) -> Dict[str, float]:
     """Compute metrics and send available data to Blazor"""
+    from src.core.stages import (
+        task_45_eval_rouge,
+        task_45_eval_bertscore,
+        task_45_eval_ngrams,
+        task_45_eval_jsd,
+        task_45_eval_coverage,
+        task_45_eval_ncd,
+        task_45_eval_salience,
+        task_45_eval_faithfulness,
+        task_45_eval_readability,
+        task_45_eval_sentence_coherence,
+        task_45_eval_entity_grid,
+        task_45_eval_diversity,
+        task_45_eval_stopwords,
+    )
+    if chunk != "":
+        _entity_coverage = task_45_eval_coverage(summary, chunk)
+        CORE_METRICS: Dict[str, float] = {
+            "rougeL_recall" : task_45_eval_rouge(summary, chunk)["rougeL_recall"],
+            "bertscore" : task_45_eval_bertscore(summary, chunk)["bertscore_f1"],
+            "novel_ngrams" : task_45_eval_ngrams(summary, chunk)["novel_ngram_pct"],
+            "jsd_stats" : task_45_eval_jsd(summary, chunk)["jsd"],
+            "entity_coverage" : _entity_coverage["entity_coverage"],
+            "entity_hallucination" : _entity_coverage["entity_hallucination"],
+            "ncd_overlap" : task_45_eval_ncd(summary, chunk)["ncd"],
+            "salience_recall" : task_45_eval_salience(summary, chunk)["salience_recall"],
+            "nli_faithfulness" : task_45_eval_faithfulness(summary, chunk)["nli_faithfulness"],
+            "readability_delta" : task_45_eval_readability(summary, chunk)["readability_delta"],
+            "sentence_coherence" : task_45_eval_sentence_coherence(summary)["sentence_coherence"],
+            "entity_grid_coherence" : task_45_eval_entity_grid(summary)["entity_grid_coherence"],
+            "lexical_diversity" : task_45_eval_diversity(summary)["lexical_diversity"],
+            "stopword_ratio" : task_45_eval_stopwords(summary)["stopword_ratio"],
+            "bookscore" : bookscore,
+            "questeval" : questeval,
+        }
+
     if chunk == "":
         stages.task_40_post_summary(book_id, book_title, summary)
     else:
         stages.task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval)
     print("\nOutput sent to web app.")
+    if chunk != "":
+        return CORE_METRICS
 
 
 @Log.time
@@ -155,8 +197,12 @@ CHAPTER 12. THE END OF THE END\n
 
 if __name__ == "__main__":
     from src.core.context import session
+    from src.core.stages import Config
 
     session.setup()
+    Config.load_fast()
+    Config.check_values()
+
     # TODO: handle this better - half env parsing is here, half is in boss.py
     load_dotenv(".env")
     DB_NAME = os.environ["DB_NAME"]
@@ -224,7 +270,7 @@ CHAPTER 12. THE END OF THE END\n
 
     post_story_status(BOSS_PORT, story_id, 'summarization', 'in-progress')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'in-progress')
-    summary = pipeline_D(COLLECTION, triples_string, chunk.get_chunk_id())
+    summary = pipeline_D(COLLECTION, triples_string, chunk.get_chunk_id(), chunk.text)
     post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
     post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
 

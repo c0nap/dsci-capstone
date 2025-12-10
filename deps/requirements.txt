@@ -8,12 +8,19 @@ sqlparse
 pypandoc
 lxml
 rapidfuzz
+flask
+
+# Metrics - TODO REMOVE
+numpy
 evaluate
 rouge_score
 nltk
 absl-py
 bert-score
-flask
+scipy
+scikit-learn
+sentence_transformers
+textstat
 
 # Database drivers
 sqlalchemy

@@ -119,7 +119,7 @@ def get_task_info(task_name: str) -> Tuple[Callable[[Dict[str, Any]], Dict[str, 
         from src.components.metrics import run_bookscore
 
         return run_bookscore, {
-            "model": "gpt-4o-mini",
+            "model": "gpt-4o",
             "use_v2": False,  # single-pass mode
         }
     elif task_name == "questeval":

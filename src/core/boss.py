@@ -379,13 +379,15 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     gold_summary = chunk.get("gold_summary", text[: len(text) // 2])
                     bookscore = float(chunk["bookscore"]["result"]["value"])
                     questeval = float(chunk["questeval"]["result"]["value"])
-                    pipeline_E(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
+                    CORE_METRICS = pipeline_E(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
 
                     print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")
 
                     Log.print_timing_summary()
                     Log.dump_timing_csv()
                     Plot.time_elapsed_by_names()
+                    Plot.save_metrics_csv(CORE_METRICS)
+                    Plot.summary_results(CORE_METRICS)
 
         elif "failed" in status:
             # Update chunk status to failed

@@ -1,0 +1,26 @@
+# Core dependencies
+python-dotenv
+pytest
+pytest-order
+pytest-dependency
+
+# Base worker dependencies
+flask
+pymongo
+requests
+
+# Metrics
+numpy
+evaluate
+rouge_score
+nltk
+absl-py
+bert-score
+scipy
+scikit-learn
+sentence_transformers
+textstat
+spacy
+transformers
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch

@@ -52,6 +52,18 @@ services:
     ports:
       - "${BOOKSCORE_PORT}:${BOOKSCORE_PORT}"
 
+  metcore_worker:
+    container_name: container-metcore
+    networks:
+      - default
+    restart: unless-stopped
+    # Do NOT fall back to building from scratch if image does not exist
+    # ^ might revert, but compose will only use prod for now - avoid mixing with dev
+    image: dsci-cap-img-metcore-prod:latest
+    command: python -m src.flasks --task metcore
+    ports:
+      - "${METRICS_PORT}:${METRICS_PORT}"
+
 
 
 

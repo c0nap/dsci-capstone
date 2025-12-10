@@ -1,529 +1,457 @@
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-all-dbs
-[+] Running 1/1
- ✔ Container container-mongo  Started                                                                              0.4s
-[+] Running 1/1
- ✔ Container container-neo4j  Started                                                                              0.3s
-[+] Running 1/1
- ✔ Container container-postgres  Started                                                                           0.4s
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-workers-dev
-[+] Building 3.8s (19/19) FINISHED                                                                       docker:default
- => [internal] load build definition from bookscore.dockerfile                                                     0.1s
- => => transferring dockerfile: 2.30kB                                                                             0.1s
- => [internal] load metadata for docker.io/library/python:3.10-slim                                                0.8s
- => [internal] load .dockerignore                                                                                  0.2s
- => => transferring context: 79B                                                                                   0.1s
- => [internal] load build context                                                                                  0.6s
- => => transferring context: 3.01kB                                                                                0.6s
- => [ 1/14] FROM docker.io/library/python:3.10-slim@sha256:c299e10e0070171113f9a1f109dd05e7e634fa94589b056e0e87bb  0.0s
- => => resolve docker.io/library/python:3.10-slim@sha256:c299e10e0070171113f9a1f109dd05e7e634fa94589b056e0e87bb22  0.0s
- => CACHED [ 2/14] WORKDIR /flask                                                                                  0.0s
- => CACHED [ 3/14] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make git   0.0s
- => CACHED [ 4/14] COPY deps/bookscore.txt .                                                                       0.0s
- => CACHED [ 5/14] RUN pip install --no-cache-dir -r bookscore.txt                                                 0.0s
- => CACHED [ 6/14] RUN python -m nltk.downloader punkt punkt_tab                                                   0.0s
- => CACHED [ 7/14] RUN mkdir -p /usr/local/lib/python3.10/site-packages/booookscore/prompts &&     curl -sSL http  0.0s
- => CACHED [ 8/14] RUN pip install --upgrade "openai>=1.35.0"                                                      0.0s
- => CACHED [ 9/14] RUN python - <<'PY'                                                                             0.0s
- => [10/14] COPY src/ src/                                                                                         0.1s
- => [11/14] COPY Makefile ./                                                                                       0.1s
- => [12/14] COPY .env .env                                                                                         0.1s
- => [13/14] RUN make env-docker                                                                                    0.8s
- => [14/14] RUN mv .env.docker .env                                                                                0.6s
- => exporting to image                                                                                             0.2s
- => => exporting layers                                                                                            0.2s
- => => writing image sha256:809964b83d6a4f9a31163815f90d95df49162ed52787f732c3e6d9cb14219725                       0.0s
- => => naming to docker.io/library/dsci-cap-img-bscore-dev:latest                                                  0.0s
-[+] Building 2.4s (20/20) FINISHED                                                                       docker:default
- => [internal] load build definition from questeval.dockerfile                                                     0.1s
- => => transferring dockerfile: 5.07kB                                                                             0.1s
- => [internal] load metadata for docker.io/library/python:3.8-slim                                                 0.1s
- => [internal] load .dockerignore                                                                                  0.1s
- => => transferring context: 79B                                                                                   0.1s
- => [ 1/15] FROM docker.io/library/python:3.8-slim@sha256:1d52838af602b4b5a831beb13a0e4d073280665ea7be7f69ce2382f  0.0s
- => [internal] load build context                                                                                  0.5s
- => => transferring context: 3.30kB                                                                                0.4s
- => CACHED [ 2/15] WORKDIR /flask                                                                                  0.0s
- => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential make git   0.0s
- => CACHED [ 4/15] COPY deps/questeval.txt .                                                                       0.0s
- => CACHED [ 5/15] RUN pip install --no-cache-dir -r questeval.txt                                                 0.0s
- => CACHED [ 6/15] RUN mkdir -p /root/.cache/huggingface/transformers/ThomasNLG &&     cd /root/.cache/huggingfac  0.0s
- => CACHED [ 7/15] RUN cd /root/.cache/huggingface/transformers &&     git clone https://huggingface.co/bert-base  0.0s
- => CACHED [ 8/15] RUN apt-get remove -y git git-lfs && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*       0.0s
- => CACHED [ 9/15] RUN python3 << 'EOF'                                                                            0.0s
- => CACHED [10/15] RUN python3 << 'EOF'                                                                            0.0s
- => [11/15] COPY src/ src/                                                                                         0.1s
- => [12/15] COPY Makefile ./                                                                                       0.1s
- => [13/15] COPY .env .env                                                                                         0.1s
- => [14/15] RUN make env-docker                                                                                    0.6s
- => [15/15] RUN mv .env.docker .env                                                                                0.4s
- => exporting to image                                                                                             0.2s
- => => exporting layers                                                                                            0.2s
- => => writing image sha256:44e8d671c990648ad76f471063e149574c648a8d9453c709e7d681011c041245                       0.0s
- => => naming to docker.io/library/dsci-cap-img-qeval-dev:latest                                                   0.0s
-container-qeval
-WARNING: Your kernel does not support swap limit capabilities or the cgroup is not mounted. Memory limited without swap.
-9cd60e382f5b01d77ee3f1670b5581bad9522abc306c266ee592057033c94758
-Network 'capstone_default' already exists; continue...
-container-qeval
-container-bscore
-1af3504a059791bbee336e86eabe22cdd9b717306b48c454a64d22b05237548b
-Network 'capstone_default' already exists; continue...
-container-bscore
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ make docker-python-dev
-[+] Building 2.1s (20/20) FINISHED                                                                       docker:default
- => [internal] load build definition from python.dockerfile                                                        0.0s
- => => transferring dockerfile: 1.45kB                                                                             0.0s
- => [internal] load metadata for docker.io/library/python:3.12-slim                                                0.2s
- => [internal] load .dockerignore                                                                                  0.1s
- => => transferring context: 79B                                                                                   0.0s
- => [ 1/15] FROM docker.io/library/python:3.12-slim@sha256:b43ff04d5df04ad5cabb80890b7ef74e8410e3395b19af970dcd52  0.0s
- => => resolve docker.io/library/python:3.12-slim@sha256:b43ff04d5df04ad5cabb80890b7ef74e8410e3395b19af970dcd52d7  0.0s
- => [internal] load build context                                                                                  1.1s
- => => transferring context: 10.01MB                                                                               1.0s
- => CACHED [ 2/15] WORKDIR /pipeline                                                                               0.0s
- => CACHED [ 3/15] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     make   0.0s
- => CACHED [ 4/15] COPY deps/requirements.txt .                                                                    0.0s
- => CACHED [ 5/15] RUN pip install --no-cache-dir -r requirements.txt                                              0.0s
- => CACHED [ 6/15] COPY src/ src/                                                                                  0.0s
- => CACHED [ 7/15] COPY tests/ tests/                                                                              0.0s
- => CACHED [ 8/15] COPY smoke/ smoke/                                                                              0.0s
- => CACHED [ 9/15] COPY datasets/ datasets/                                                                        0.0s
- => CACHED [10/15] COPY .env .env                                                                                  0.0s
- => CACHED [11/15] COPY Makefile .                                                                                 0.0s
- => CACHED [12/15] RUN make env-docker                                                                             0.0s
- => CACHED [13/15] RUN mv .env.docker .env                                                                         0.0s
- => CACHED [14/15] COPY pyproject.toml pytest.ini conftest.py .                                                    0.0s
- => CACHED [15/15] COPY logs/elapsed_time.csv logs/                                                                0.0s
- => exporting to image                                                                                             0.0s
- => => exporting layers                                                                                            0.0s
- => => writing image sha256:b4c05b650e872c0132c543dd2d81603378df8a98f19a62e4369ad0803cb8fdc3                       0.0s
- => => naming to docker.io/library/dsci-cap-img-python-dev:latest                                                  0.0s
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from python.dockerfile
+#1 transferring dockerfile: 1.54kB 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.12-slim
+#2 DONE 0.1s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 79B 0.1s done
+#3 DONE 0.1s
+
+#4 [ 1/16] FROM docker.io/library/python:3.12-slim@sha256:590cad70271b6c1795c6a11fb5c110efca593adbd0d4883cd19c36df6a56467b
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 9.80kB 1.1s done
+#5 DONE 1.1s
+
+#6 [ 3/16] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     make     pandoc     default-jre-headless  && pip install --upgrade pip setuptools wheel build  && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [ 4/16] COPY deps/requirements.txt .
+#7 CACHED
+
+#8 [ 5/16] RUN pip install --no-cache-dir -r requirements.txt
+#8 CACHED
+
+#9 [ 6/16] RUN python -m spacy download en_core_web_sm
+#9 CACHED
+
+#10 [ 2/16] WORKDIR /pipeline
+#10 CACHED
+
+#11 [ 7/16] RUN python -m nltk.downloader punkt punkt_tab stopwords
+#11 CACHED
+
+#12 [ 8/16] COPY src/ src/
+#12 DONE 0.2s
+
+#13 [ 9/16] COPY tests/ tests/
+#13 DONE 0.2s
+
+#14 [10/16] COPY smoke/ smoke/
+#14 DONE 0.1s
+
+#15 [11/16] COPY datasets/ datasets/
+#15 DONE 0.1s
+
+#16 [12/16] COPY .env .env
+#16 DONE 0.1s
+
+#17 [13/16] COPY Makefile .
+#17 DONE 0.1s
+
+#18 [14/16] RUN make env-docker
+#18 0.422 ✓ Generated .env.docker
+#18 DONE 0.4s
+
+#19 [15/16] RUN mv .env.docker .env
+#19 DONE 0.6s
+
+#20 [16/16] COPY pyproject.toml pytest.ini conftest.py .
+#20 DONE 0.3s
+
+#21 exporting to image
+#21 exporting layers
+#21 exporting layers 0.2s done
+#21 writing image sha256:d531eb9d151e741a3fa142e50cffc76c6932cb2c9d8198a8b1fb230417a692f3 done
+#21 naming to docker.io/library/dsci-cap-img-python-dev:latest done
+#21 DONE 0.2s
 container-python
-cce4459cd660b5febb42727fcb204509f38ba6f013af080f8243433f46a3db4d
+0b82e7dfab8b53f1191b24982ccfae384b8771a7a98cb957663e62d1f7508588
 Network 'capstone_default' already exists; continue...
 Deleted old chunks...
  * Serving Flask app 'src.core.boss'
  * Debug mode: off
-WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
  * Running on all addresses (0.0.0.0)
  * Running on http://127.0.0.1:5054
- * Running on http://172.17.0.4:5054
-Press CTRL+C to quit
+ * Running on http://172.17.0.5:5054
+[33mPress CTRL+C to quit[0m
 [STATUS] Story 1: preprocessing -> in-progress
-127.0.0.1 - - [07/Dec/2025 19:14:33] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:26:08] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> in-progress
-127.0.0.1 - - [07/Dec/2025 19:14:33] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:26:08] "POST /status/story HTTP/1.1" 200 -
 
 ==================================================
 Processing: ./tests/examples-pipeline/epub/trilogy-wishes-2.epub
-[TIME] task_01_convert_epub took 2.354s
-[TIME] task_02_parse_chapters took 0.030s
-[TIME] task_03_chunk_story took 0.015s
+[96m[TIME] [93mtask_01_convert_epub took 2.054s[0m
+[96m[TIME] [93mtask_02_parse_chapters took 0.041s[0m
+[96m[TIME] [93mtask_03_chunk_story took 0.015s[0m
 
 === STORY SUMMARY ===
 Total chunks: 254
-[TIME] pipeline_A took 2.468s
+[96m[TIME] [93mpipeline_A took 2.192s[0m
 [STATUS] Story 1: preprocessing -> completed
-127.0.0.1 - - [07/Dec/2025 19:14:35] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:26:10] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> completed
-127.0.0.1 - - [07/Dec/2025 19:14:35] "POST /status/story HTTP/1.1" 200 -
-[TIME] task_10_sample_chunks took 0.000s
-[TIME] task_10_random_chunk took 0.022s
+127.0.0.1 - - [10/Dec/2025 07:26:10] "POST /status/story HTTP/1.1" 200 -
 
 Chunk details:
-  index: 140
+  index: 181
 
-The latch rattled, and clicked. Then the flap of the letter-box lifted itself—every one saw it by the flickering light of the gas-lamp that shone through the leafless lime-tree by the gate—a golden eye seemed to wink at them through the letter-slit, and a cautious beak whispered—
-‘Are you alone?’
-‘It’s the Phoenix,’ said every one, in a voice so joyous, and so full of relief, as to be a sort of whispered shout.
-‘Hush!’ said the voice from the letter-box slit. ‘Your slaves have gone a-merry-making. The latch of this portal is too stiff for my beak. But at the side—the little window above the shelf whereon your bread lies—it is not fastened.’
-‘Righto!’ said Cyril.
-And Anthea added, ‘I wish you’d meet us there, dear Phoenix.’
-The children crept round to the pantry window. It is at the side of the house, and there is a green gate labelled ‘Tradesmen’s Entrance’, which is always kept bolted. But if you get one foot on the fence between you and next door, and one on the handle of the gate, you are over before you know where you are. This, at least, was the experience of Cyril and Robert, and even, if the truth must be told, of Anthea and Jane. So in almost no time all four were in the narrow gravelled passage that runs between that house and the next.
-[TIME] task_11_send_chunk took 0.033s
-    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-12_p.20963]
-Spacy model 'en_core_web_sm' not found. Downloading...
-Collecting en-core-web-sm==3.8.0
-  Downloading https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl (12.8 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.8/12.8 MB 42.5 MB/s  0:00:00
-Installing collected packages: en-core-web-sm
-Successfully installed en-core-web-sm-3.8.0
-WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
-✔ Download and installation successful
-You can now load the package via spacy.load('en_core_web_sm')
-[TIME] task_12_relation_extraction_textacy took 3.816s
+‘Dear Phoenix,’ Anthea urged, ‘don’t talk in that horrid lecturing tone. You make me feel as if I’d done something wrong. And really it is a wishing carpet, and we haven’t done anything else to it—only wishes.’
+‘Only wishes,’ repeated the Phoenix, ruffling its neck feathers angrily, ‘and what sort of wishes? Wishing people to be in a good temper, for instance. What carpet did you ever hear of that had such a wish asked of it? But this noble fabric, on which you trample so recklessly’ (every one removed its boots from the carpet and stood on the linoleum), ‘this carpet never flinched. It did what you asked, but the wear and tear must have been awful. And then last night—I don’t blame you about the cats and the rats, for those were its own choice; but what carpet could stand a heavy cow hanging on to it at one corner?’
+‘I should think the cats and rats were worse,’ said Robert, ‘look at all their claws.’
+‘Yes,’ said the bird, ‘eleven thousand nine hundred and forty of them—I daresay you noticed? I should be surprised if these had not left their mark.’
+‘Good gracious,’ said Jane, sitting down suddenly on the floor, and patting the edge of the carpet softly; ‘do you mean it’s WEARING OUT?’
+‘Its life with you has not been a luxurious one,’ said the Phoenix.
+[96m[TIME] [93mtask_11_send_chunk took 0.030s[0m
+    [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-14_p.15915]
+[96m[TIME] [93mtask_12_relation_extraction[textacy] took 1.660s[0m
 
 NLP output:
-{'s': 'flap', 'r': 'lifted', 'o': 'itself'}
-{'s': 'one', 'r': 'saw', 'o': 'it'}
-{'s': 'eye', 'r': 'seemed', 'o': 'to wink at them through the letter - slit'}
-{'s': 'beak', 'r': 'whispered', 'o': 'Are you alone'}
-{'s': 'slaves', 'r': 'have gone', 'o': 'merry making'}
-{'s': 'it', 'r': 'is not fastened', 'o': '‘ Righto ! ’'}
-{'s': 'I', 'r': 'wish', 'o': 'you'}
-{'s': 'which', 'r': 'is kept', 'o': 'bolted'}
-{'s': 'you', 'r': 'get', 'o': 'foot'}
+{'s': 'Anthea', 'r': 'urged', 'o': 'do n’t talk in that horrid lecturing tone'}
+{'s': 'I', 'r': '’d done', 'o': 'something'}
+{'s': 'we', 'r': 'have n’t done', 'o': 'anything'}
+{'s': 'wishes', 'r': 'repeated', 'o': 'Phoenix'}
+{'s': 'you', 'r': 'did hear', 'o': 'carpet'}
+{'s': 'you', 'r': 'had', 'o': 'wish'}
+{'s': 'fabric one', 'r': 'removed', 'o': 'boots'}
+{'s': 'carpet', 'r': 'stood', 'o': 'boots'}
+{'s': 'carpet', 'r': 'never flinched', 'o': 'boots'}
+{'s': 'you', 'r': 'asked', 'o': 'what'}
+{'s': 'I', 'r': 'do n’t blame', 'o': 'you'}
+{'s': 'carpet', 'r': 'could stand', 'o': 'cow'}
+{'s': 'Robert', 'r': 'said', 'o': 'look at all their claws'}
+{'s': 'these', 'r': 'had not left', 'o': 'mark'}
+{'s': 'it', 'r': '’s WEARING', 'o': 'OUT'}
 
-[TIME] task_13_concatenate_triples took 0.000s
-[TIME] task_14_relation_extraction_llm_openai took 6.001s
+[96m[TIME] [93mtask_14_validate_llm[openai] took 131.935s[0m
 
     LLM prompt:
 Here are some semantic triples extracted from a story chunk:
-{'s': 'flap', 'r': 'lifted', 'o': 'itself'}
-{'s': 'one', 'r': 'saw', 'o': 'it'}
-{'s': 'eye', 'r': 'seemed', 'o': 'to wink at them through the letter - slit'}
-{'s': 'beak', 'r': 'whispered', 'o': 'Are you alone'}
-{'s': 'slaves', 'r': 'have gone', 'o': 'merry making'}
-{'s': 'it', 'r': 'is not fastened', 'o': '‘ Righto ! ’'}
-{'s': 'I', 'r': 'wish', 'o': 'you'}
-{'s': 'which', 'r': 'is kept', 'o': 'bolted'}
-{'s': 'you', 'r': 'get', 'o': 'foot'}
+{'s': 'Anthea', 'r': 'urged', 'o': 'do n’t talk in that horrid lecturing tone'}
+{'s': 'I', 'r': '’d done', 'o': 'something'}
+{'s': 'we', 'r': 'have n’t done', 'o': 'anything'}
+{'s': 'wishes', 'r': 'repeated', 'o': 'Phoenix'}
+{'s': 'you', 'r': 'did hear', 'o': 'carpet'}
+{'s': 'you', 'r': 'had', 'o': 'wish'}
+{'s': 'fabric one', 'r': 'removed', 'o': 'boots'}
+{'s': 'carpet', 'r': 'stood', 'o': 'boots'}
+{'s': 'carpet', 'r': 'never flinched', 'o': 'boots'}
+{'s': 'you', 'r': 'asked', 'o': 'what'}
+{'s': 'I', 'r': 'do n’t blame', 'o': 'you'}
+{'s': 'carpet', 'r': 'could stand', 'o': 'cow'}
+{'s': 'Robert', 'r': 'said', 'o': 'look at all their claws'}
+{'s': 'these', 'r': 'had not left', 'o': 'mark'}
+{'s': 'it', 'r': '’s WEARING', 'o': 'OUT'}
 
 And here is the original text:
-The latch rattled, and clicked. Then the flap of the letter-box lifted itself—every one saw it by the flickering light of the gas-lamp that shone through the leafless lime-tree by the gate—a golden eye seemed to wink at them through the letter-slit, and a cautious beak whispered—
-‘Are you alone?’
-‘It’s the Phoenix,’ said every one, in a voice so joyous, and so full of relief, as to be a sort of whispered shout.
-‘Hush!’ said the voice from the letter-box slit. ‘Your slaves have gone a-merry-making. The latch of this portal is too stiff for my beak. But at the side—the little window above the shelf whereon your bread lies—it is not fastened.’
-‘Righto!’ said Cyril.
-And Anthea added, ‘I wish you’d meet us there, dear Phoenix.’
-The children crept round to the pantry window. It is at the side of the house, and there is a green gate labelled ‘Tradesmen’s Entrance’, which is always kept bolted. But if you get one foot on the fence between you and next door, and one on the handle of the gate, you are over before you know where you are. This, at least, was the experience of Cyril and Robert, and even, if the truth must be told, of Anthea and Jane. So in almost no time all four were in the narrow gravelled passage that runs between that house and the next.
+‘Dear Phoenix,’ Anthea urged, ‘don’t talk in that horrid lecturing tone. You make me feel as if I’d done something wrong. And really it is a wishing carpet, and we haven’t done anything else to it—only wishes.’
+‘Only wishes,’ repeated the Phoenix, ruffling its neck feathers angrily, ‘and what sort of wishes? Wishing people to be in a good temper, for instance. What carpet did you ever hear of that had such a wish asked of it? But this noble fabric, on which you trample so recklessly’ (every one removed its boots from the carpet and stood on the linoleum), ‘this carpet never flinched. It did what you asked, but the wear and tear must have been awful. And then last night—I don’t blame you about the cats and the rats, for those were its own choice; but what carpet could stand a heavy cow hanging on to it at one corner?’
+‘I should think the cats and rats were worse,’ said Robert, ‘look at all their claws.’
+‘Yes,’ said the bird, ‘eleven thousand nine hundred and forty of them—I daresay you noticed? I should be surprised if these had not left their mark.’
+‘Good gracious,’ said Jane, sitting down suddenly on the floor, and patting the edge of the carpet softly; ‘do you mean it’s WEARING OUT?’
+‘Its life with you has not been a luxurious one,’ said the Phoenix.
 
 Output JSON with keys: s (subject), r (relation), o (object).
 Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable.
 
     LLM output:
 [
-  {"s": "latch", "r": "rattled", "o": "and clicked"},
-  {"s": "flap", "r": "lifted", "o": "itself"},
-  {"s": "one", "r": "saw", "o": "the flap lifted itself"},
-  {"s": "gas-lamp", "r": "shone through", "o": "the leafless lime-tree by the gate"},
-  {"s": "eye", "r": "seemed", "o": "to wink at them through the letter-slit"},
-  {"s": "letter-box", "r": "slit", "o": "letter-slit"},
-  {"s": "beak", "r": "whispered", "o": "Are you alone"},
-  {"s": "it", "r": "is", "o": "the Phoenix"},
-  {"s": "Phoenix", "r": "said", "o": "every one, in a voice so joyous and full of relief"},
-  {"s": "slaves", "r": "have gone", "o": "a-merry-making"},
-  {"s": "latch", "r": "is", "o": "too stiff for my beak"},
-  {"s": "beak", "r": "note", "o": "the latch of this portal is too stiff for my beak"},
-  {"s": "side window", "r": "is", "o": "above the shelf where bread lies"},
-  {"s": "window", "r": "is not fastened", "o": "at the side—the little window above the shelf whereon your bread lies"},
-  {"s": "Cyril", "r": "said", "o": "Righto!"},
-  {"s": "Anthea", "r": "added", "o": "I wish you’d meet us there, dear Phoenix"},
-  {"s": "children", "r": "crept", "o": "round to the pantry window"},
-  {"s": "pantry window", "r": "is", "o": "at the side of the house"},
-  {"s": "Tradesmen’s Entrance", "r": "is labelled", "o": "green gate"},
-  {"s": "gate", "r": "is kept", "o": "bolted"},
-  {"s": "gate", "r": "is", "o": "between the side of the house and the next door"},
-  {"s": "fence", "r": "is", "o": "between you and next door"},
-  {"s": "you", "r": "get", "o": "one foot on the fence and one on the handle of the gate"},
-  {"s": "they", "r": "are", "o": "over before you know where you are"},
-  {"s": "Cyril", "r": "experience", "o": "almost no time all four were in the narrow gravelled passage"}
+  {"s": "Anthea", "r": "urged", "o": "Phoenix not to talk in a horrid lecturing tone"},
+  {"s": "Anthea", "r": "felt", "o": "as if she had done something wrong"},
+  {"s": "Anthea", "r": "said", "o": "the carpet is a wishing carpet"},
+  {"s": "the children", "r": "had not done", "o": "anything to the carpet except make wishes"},
+  {"s": "Phoenix", "r": "repeated", "o": "Only wishes"},
+  {"s": "Phoenix", "r": "spoke", "o": "angrily"},
+  {"s": "Phoenix", "r": "ruffled", "o": "its neck feathers"},
+  {"s": "Phoenix", "r": "criticized", "o": "wishes like making people be in a good temper"},
+  {"s": "the children", "r": "wished", "o": "people to be in a good temper"},
+  {"s": "Phoenix", "r": "asked", "o": "what carpet had ever been asked for such a wish"},
+  {"s": "Phoenix", "r": "called", "o": "the carpet a noble fabric"},
+  {"s": "Phoenix", "r": "said", "o": "you trample the carpet recklessly"},
+  {"s": "everyone", "r": "removed", "o": "boots from the carpet"},
+  {"s": "everyone", "r": "stood on", "o": "the linoleum"},
+  {"s": "carpet", "r": "never flinched", "o": "despite trampling"},
+  {"s": "carpet", "r": "did", "o": "what the children asked"},
+  {"s": "Phoenix", "r": "said", "o": "the wear and tear must have been awful"},
+  {"s": "Phoenix", "r": "did not blame", "o": "the children for the cats and rats"},
+  {"s": "cats and rats", "r": "were", "o": "the carpet's own choice"},
+  {"s": "a heavy cow", "r": "hung on", "o": "one corner of the carpet"},
+  {"s": "Phoenix", "r": "questioned", "o": "what carpet could stand a heavy cow hanging on one corner"},
+  {"s": "Robert", "r": "said", "o": "look at all their claws"},
+  {"s": "Robert", "r": "thought", "o": "the cats and rats were worse than the cow"},
+  {"s": "Phoenix", "r": "said", "o": "there were 11940 claws"},
+  {"s": "claws", "r": "left", "o": "marks on the carpet"},
+  {"s": "Jane", "r": "sat down", "o": "on the floor"},
+  {"s": "Jane", "r": "patted", "o": "the edge of the carpet"},
+  {"s": "Jane", "r": "asked", "o": "is the carpet wearing out"},
+  {"s": "carpet", "r": "is", "o": "wearing out"},
+  {"s": "Phoenix", "r": "said", "o": "its life with you has not been a luxurious one"},
+  {"s": "carpet", "r": "is", "o": "a wishing carpet"}
 ]
 
 ==================================================
 
-[TIME] task_15_sanitize_triples_llm took 0.000s
-Moderation: filtered 0/25 triples
-[TIME] task_16_moderate_triples_llm took 1.615s
+[96m[TIME] [93mtask_16_moderate_triples_llm[drop] took 0.840s[0m
 
+Moderation removed 0 triples
 Valid JSON
-[TIME] pipeline_B took 11.955s
+[96m[TIME] [93mpipeline_B took 134.642s[0m
 Checkpoint saved to ./datasets/checkpoint.pkl
-[STATUS] Chunk story-1_book-2_chapter-12_p.20963: relation_extraction -> in-progress
-127.0.0.1 - - [07/Dec/2025 19:14:47] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.20963: llm_inference -> in-progress
-127.0.0.1 - - [07/Dec/2025 19:14:47] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.20963: relation_extraction -> completed
-127.0.0.1 - - [07/Dec/2025 19:14:47] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.20963: llm_inference -> completed
-127.0.0.1 - - [07/Dec/2025 19:14:47] "POST /status/chunk HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.20963: graph_verbalization -> in-progress
-127.0.0.1 - - [07/Dec/2025 19:14:47] "POST /status/chunk HTTP/1.1" 200 -
-latch rattled and clicked
-flap lifted itself
-one saw the flap lifted itself
-gas-lamp shone through the leafless lime-tree by the gate
-eye seemed to wink at them through the letter-slit
-letter-box slit letter-slit
-beak whispered Are you alone
-it is the Phoenix
-Phoenix said every one, in a voice so joyous and full of relief
-slaves have gone a-merry-making
-latch is too stiff for my beak
-beak note the latch of this portal is too stiff for my beak
-side window is above the shelf where bread lies
-window is not fastened at the side—the little window above the shelf whereon your bread lies
-Cyril said Righto!
-Anthea added I wish you’d meet us there, dear Phoenix
-children crept round to the pantry window
-pantry window is at the side of the house
-Tradesmen’s Entrance is labelled green gate
-gate is kept bolted
-gate is between the side of the house and the next door
-fence is between you and next door
-you get one foot on the fence and one on the handle of the gate
-they are over before you know where you are
-Cyril experience almost no time all four were in the narrow gravelled passage
-[TIME] task_20_send_triples took 5.434s
-[TIME] task_21_1_describe_graph took 0.225s
-
-Most relevant nodes:
-   edge_count node_name
-0           2     Cyril
-1           2   Phoenix
-2           2      beak
-[TIME] task_22_verbalize_triples took 0.199s
+[STATUS] Chunk story-1_book-2_chapter-14_p.15915: relation_extraction -> in-progress
+127.0.0.1 - - [10/Dec/2025 07:28:25] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.15915: llm_inference -> in-progress
+127.0.0.1 - - [10/Dec/2025 07:28:25] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.15915: relation_extraction -> completed
+127.0.0.1 - - [10/Dec/2025 07:28:25] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.15915: llm_inference -> completed
+127.0.0.1 - - [10/Dec/2025 07:28:25] "POST /status/chunk HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.15915: graph_verbalization -> in-progress
+127.0.0.1 - - [10/Dec/2025 07:28:25] "POST /status/chunk HTTP/1.1" 200 -
+Anthea urged Phoenix not to talk in a horrid lecturing tone
+Anthea felt as if she had done something wrong
+Anthea said the carpet is a wishing carpet
+the children had not done anything to the carpet except make wishes
+Phoenix repeated Only wishes
+Phoenix spoke angrily
+Phoenix ruffled its neck feathers
+Phoenix criticized wishes like making people be in a good temper
+the children wished people to be in a good temper
+Phoenix asked what carpet had ever been asked for such a wish
+Phoenix called the carpet a noble fabric
+Phoenix said you trample the carpet recklessly
+everyone removed boots from the carpet
+everyone stood on the linoleum
+carpet never flinched despite trampling
+carpet did what the children asked
+Phoenix said the wear and tear must have been awful
+Phoenix did not blame the children for the cats and rats
+cats and rats were the carpet's own choice
+a heavy cow hung on one corner of the carpet
+Phoenix questioned what carpet could stand a heavy cow hanging on one corner
+Robert said look at all their claws
+Robert thought the cats and rats were worse than the cow
+Phoenix said there were 11940 claws
+claws left marks on the carpet
+Jane sat down on the floor
+Jane patted the edge of the carpet
+Jane asked is the carpet wearing out
+carpet is wearing out
+Phoenix said its life with you has not been a luxurious one
+carpet is a wishing carpet
+[96m[TIME] [93mtask_20_send_triples took 5.131s[0m
+[96m[TIME] [93mtask_22_fetch_subgraph[popular] took 0.307s[0m
+[96m[TIME] [93mtask_23_verbalize_triples[raw] took 0.001s[0m
 
 Triples which best represent the graph:
-beak WHISPERED Are_alone
-Phoenix SAID one_in_voice_so_joyous_and_full_of_relief
-beak NOTE latch_of_portal_is_too_stiff_for_beak
-Cyril SAID Righto
-Cyril EXPERIENCE almost_time_four_were_in_narrow_gravelled_passage
-
-[TIME] pipeline_C took 5.954s
-[STATUS] Chunk story-1_book-2_chapter-12_p.20963: graph_verbalization -> completed
-127.0.0.1 - - [07/Dec/2025 19:14:53] "POST /status/chunk HTTP/1.1" 200 -
+Phoenix RUFFLED neck_feathers
+Phoenix CRITICIZED wishes_like_making_people_be_in_good_temper
+Phoenix ASKED carpet_had_ever_been_asked_for_wish
+Phoenix CALLED carpet_noble_fabric
+Phoenix SAID trample_carpet_recklessly
+everyone REMOVED boots_from_carpet
+everyone STOOD_ON linoleum
+Anthea URGED Phoenix_talk_in_horrid_lecturing_tone
+carpet NEVER_FLINCHED despite_trampling
+carpet DID children_asked
+Phoenix SAID wear_and_tear_must_have_been_awful
+Phoenix DID_NOT_BLAME children_for_cats_and_rats
+Phoenix QUESTIONED carpet_could_stand_heavy_cow_hanging_on_one_corner
+Anthea FELT as_if_had_done_wrong
+Anthea SAID carpet_is_wishing_carpet
+Phoenix SAID were_11940_claws
+Jane SAT_DOWN on_floor
+Jane PATTED edge_of_carpet
+Jane ASKED is_carpet_wearing_out
+carpet IS wearing_out
+Phoenix SAID life_with_has_been_luxurious_one
+carpet IS wishing_carpet
+Phoenix REPEATED Only_wishes
+Phoenix SPOKE angrily
+[96m[TIME] [93mpipeline_C took 5.521s[0m
+[STATUS] Chunk story-1_book-2_chapter-14_p.15915: graph_verbalization -> completed
+127.0.0.1 - - [10/Dec/2025 07:28:30] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Story 1: summarization -> in-progress
-127.0.0.1 - - [07/Dec/2025 19:14:53] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.20963: summarization -> in-progress
-127.0.0.1 - - [07/Dec/2025 19:14:53] "POST /status/chunk HTTP/1.1" 200 -
-[TIME] task_30_summarize_llm_openai took 2.003s
+127.0.0.1 - - [10/Dec/2025 07:28:30] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.15915: summarization -> in-progress
+127.0.0.1 - - [10/Dec/2025 07:28:30] "POST /status/chunk HTTP/1.1" 200 -
+[96m[TIME] [93mtask_30_summarize_llm[text] took 23.144s[0m
 
 Generated summary:
-In the scene, a beak whispered that it was alone. A phoenix spoke with joyful relief. The beak noted that the latch of a portal was too stiff for it. Cyril said “Righto,” and Cyril experienced that they were nearly at a time when four of them would be in a narrow, gravelled passage.
-[TIME] task_31_send_summary took 0.002s
-    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-12_p.20963]
-[TIME] pipeline_D took 2.068s
+Anthea protests the Phoenix’s scolding, but the Phoenix rebukes the children for overtaxing their wishing carpet—making it grant unusual wishes, endure thousands of cats’ and rats’ claws (even if those were the carpet’s own choice), and even support a cow hanging from one corner. Jane realizes the carpet may be wearing out, and the Phoenix confirms its life with them has been anything but gentle.
+[96m[TIME] [93mtask_31_send_summary took 0.001s[0m
+    [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-14_p.15915]
+[96m[TIME] [93mpipeline_D took 23.204s[0m
 [STATUS] Story 1: summarization -> completed
-127.0.0.1 - - [07/Dec/2025 19:14:55] "POST /status/story HTTP/1.1" 200 -
-[STATUS] Chunk story-1_book-2_chapter-12_p.20963: summarization -> completed
-127.0.0.1 - - [07/Dec/2025 19:14:55] "POST /status/chunk HTTP/1.1" 200 -
-[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.20963' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [07/Dec/2025 19:14:55] "POST /process_story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 07:28:54] "POST /status/story HTTP/1.1" 200 -
+[STATUS] Chunk story-1_book-2_chapter-14_p.15915: summarization -> completed
+127.0.0.1 - - [10/Dec/2025 07:28:54] "POST /status/chunk HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-14_p.15915' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [10/Dec/2025 07:28:54] "POST /process_story HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.15915, task=questeval, status=started
 Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=questeval, status=started
-172.18.0.5 - - [07/Dec/2025 19:14:55] "POST /callback HTTP/1.1" 200 -
-[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.20963' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [07/Dec/2025 19:14:55] "POST /process_story HTTP/1.1" 200 -
+172.18.0.2 - - [10/Dec/2025 07:28:54] "POST /callback HTTP/1.1" 200 -
+[ASSIGNED] chunk 'story-1_book-2_chapter-14_p.15915' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
+127.0.0.1 - - [10/Dec/2025 07:28:54] "POST /process_story HTTP/1.1" 200 -
 Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}
 
 === TIMING SUMMARY ===
-                                        calls      total        avg        min        max
-function
-pipeline_A                                  1   2.468319   2.468319   2.468319   2.468319
-pipeline_B                                  1  11.954744  11.954744  11.954744  11.954744
-pipeline_C                                  1   5.953820   5.953820   5.953820   5.953820
-pipeline_D                                  1   2.067681   2.067681   2.067681   2.067681
-task_01_convert_epub                        1   2.353805   2.353805   2.353805   2.353805
-task_02_parse_chapters                      1   0.029561   0.029561   0.029561   0.029561
-task_03_chunk_story                         1   0.015017   0.015017   0.015017   0.015017
-task_10_random_chunk                        1   0.021795   0.021795   0.021795   0.021795
-task_10_sample_chunks                       1   0.000030   0.000030   0.000030   0.000030
-task_11_send_chunk                          1   0.032784   0.032784   0.032784   0.032784
-task_12_relation_extraction_textacy         1   3.815531   3.815531   3.815531   3.815531
-task_13_concatenate_triples                 1   0.000066   0.000066   0.000066   0.000066
-task_14_relation_extraction_llm_openai      1   6.000680   6.000680   6.000680   6.000680
-task_15_sanitize_triples_llm                1   0.000335   0.000335   0.000335   0.000335
-task_16_moderate_triples_llm                1   1.615430   1.615430   1.615430   1.615430
-task_20_send_triples                        1   5.434274   5.434274   5.434274   5.434274
-task_21_1_describe_graph                    1   0.225327   0.225327   0.225327   0.225327
-task_22_verbalize_triples                   1   0.199480   0.199480   0.199480   0.199480
-task_30_summarize_llm_openai                1   2.003011   2.003011   2.003011   2.003011
-task_31_send_summary                        1   0.002053   0.002053   0.002053   0.002053
+                                      calls       total         avg         min         max
+function                                                                                   
+pipeline_A                                1    2.192297    2.192297    2.192297    2.192297
+pipeline_B                                1  134.641826  134.641826  134.641826  134.641826
+pipeline_C                                1    5.520977    5.520977    5.520977    5.520977
+pipeline_D                                1   23.203793   23.203793   23.203793   23.203793
+task_01_convert_epub                      1    2.054454    2.054454    2.054454    2.054454
+task_02_parse_chapters                    1    0.040647    0.040647    0.040647    0.040647
+task_03_chunk_story                       1    0.015330    0.015330    0.015330    0.015330
+task_11_send_chunk                        1    0.029713    0.029713    0.029713    0.029713
+task_12_relation_extraction[textacy]      1    1.660219    1.660219    1.660219    1.660219
+task_14_validate_llm[openai]              1  131.935019  131.935019  131.935019  131.935019
+task_16_moderate_triples_llm[drop]        1    0.840021    0.840021    0.840021    0.840021
+task_20_send_triples                      1    5.131433    5.131433    5.131433    5.131433
+task_22_fetch_subgraph[popular]           1    0.306553    0.306553    0.306553    0.306553
+task_23_verbalize_triples[raw]            1    0.001126    0.001126    0.001126    0.001126
+task_30_summarize_llm[text]               1   23.143599   23.143599   23.143599   23.143599
+task_31_send_summary                      1    0.001498    0.001498    0.001498    0.001498
 
-Total execution time: 44.194s
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=bookscore, status=started
-172.18.0.6 - - [07/Dec/2025 19:14:55] "POST /callback HTTP/1.1" 200 -
-[DUMP] Saved time records to './logs/elapsed_time.csv'
-[CHART] Saved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png
+Total execution time: 330.719s
+[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.15915, task=bookscore, status=started
+172.18.0.3 - - [10/Dec/2025 07:28:54] "POST /callback HTTP/1.1" 200 -
+[96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
+[90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
 Initial processing complete. Server listening for additional requests from Blazor...
 Press Ctrl+C to stop.
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=bookscore, status=completed
-[TIME] worker_metric_bookscore took 14.353s
+[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.15915, task=bookscore, status=completed
+[96m[TIME] [93mworker_metric_bookscore took 5.229s[0m
 [STORY COMPLETE] All chunks completed metric_bookscore for story 1
 
 === TIMING SUMMARY ===
-                                        calls      total        avg        min        max
-function
-pipeline_A                                  1   2.468319   2.468319   2.468319   2.468319
-pipeline_B                                  1  11.954744  11.954744  11.954744  11.954744
-pipeline_C                                  1   5.953820   5.953820   5.953820   5.953820
-pipeline_D                                  1   2.067681   2.067681   2.067681   2.067681
-task_01_convert_epub                        1   2.353805   2.353805   2.353805   2.353805
-task_02_parse_chapters                      1   0.029561   0.029561   0.029561   0.029561
-task_03_chunk_story                         1   0.015017   0.015017   0.015017   0.015017
-task_10_random_chunk                        1   0.021795   0.021795   0.021795   0.021795
-task_10_sample_chunks                       1   0.000030   0.000030   0.000030   0.000030
-task_11_send_chunk                          1   0.032784   0.032784   0.032784   0.032784
-task_12_relation_extraction_textacy         1   3.815531   3.815531   3.815531   3.815531
-task_13_concatenate_triples                 1   0.000066   0.000066   0.000066   0.000066
-task_14_relation_extraction_llm_openai      1   6.000680   6.000680   6.000680   6.000680
-task_15_sanitize_triples_llm                1   0.000335   0.000335   0.000335   0.000335
-task_16_moderate_triples_llm                1   1.615430   1.615430   1.615430   1.615430
-task_20_send_triples                        1   5.434274   5.434274   5.434274   5.434274
-task_21_1_describe_graph                    1   0.225327   0.225327   0.225327   0.225327
-task_22_verbalize_triples                   1   0.199480   0.199480   0.199480   0.199480
-task_30_summarize_llm_openai                1   2.003011   2.003011   2.003011   2.003011
-task_31_send_summary                        1   0.002053   0.002053   0.002053   0.002053
-worker_metric_bookscore                     1  14.352664  14.352664  14.352664  14.352664
+                                      calls       total         avg         min         max
+function                                                                                   
+pipeline_A                                1    2.192297    2.192297    2.192297    2.192297
+pipeline_B                                1  134.641826  134.641826  134.641826  134.641826
+pipeline_C                                1    5.520977    5.520977    5.520977    5.520977
+pipeline_D                                1   23.203793   23.203793   23.203793   23.203793
+task_01_convert_epub                      1    2.054454    2.054454    2.054454    2.054454
+task_02_parse_chapters                    1    0.040647    0.040647    0.040647    0.040647
+task_03_chunk_story                       1    0.015330    0.015330    0.015330    0.015330
+task_11_send_chunk                        1    0.029713    0.029713    0.029713    0.029713
+task_12_relation_extraction[textacy]      1    1.660219    1.660219    1.660219    1.660219
+task_14_validate_llm[openai]              1  131.935019  131.935019  131.935019  131.935019
+task_16_moderate_triples_llm[drop]        1    0.840021    0.840021    0.840021    0.840021
+task_20_send_triples                      1    5.131433    5.131433    5.131433    5.131433
+task_22_fetch_subgraph[popular]           1    0.306553    0.306553    0.306553    0.306553
+task_23_verbalize_triples[raw]            1    0.001126    0.001126    0.001126    0.001126
+task_30_summarize_llm[text]               1   23.143599   23.143599   23.143599   23.143599
+task_31_send_summary                      1    0.001498    0.001498    0.001498    0.001498
+worker_metric_bookscore                   1    5.228989    5.228989    5.228989    5.228989
 
-Total execution time: 58.546s
-[DUMP] Saved time records to './logs/elapsed_time.csv'
-[CHART] Saved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png
-172.18.0.6 - - [07/Dec/2025 19:15:11] "POST /callback HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=questeval, status=completed
-[TIME] worker_metric_questeval took 200.108s
+Total execution time: 335.947s
+[96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
+[90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
+172.18.0.3 - - [10/Dec/2025 07:28:59] "POST /callback HTTP/1.1" 200 -
+[CALLBACK] chunk_id=story-1_book-2_chapter-14_p.15915, task=questeval, status=completed
+[96m[TIME] [93mworker_metric_questeval took 202.764s[0m
 [STORY COMPLETE] All chunks completed metric_questeval for story 1
 
 === TIMING SUMMARY ===
-                                        calls       total         avg         min         max
-function
-pipeline_A                                  1    2.468319    2.468319    2.468319    2.468319
-pipeline_B                                  1   11.954744   11.954744   11.954744   11.954744
-pipeline_C                                  1    5.953820    5.953820    5.953820    5.953820
-pipeline_D                                  1    2.067681    2.067681    2.067681    2.067681
-task_01_convert_epub                        1    2.353805    2.353805    2.353805    2.353805
-task_02_parse_chapters                      1    0.029561    0.029561    0.029561    0.029561
-task_03_chunk_story                         1    0.015017    0.015017    0.015017    0.015017
-task_10_random_chunk                        1    0.021795    0.021795    0.021795    0.021795
-task_10_sample_chunks                       1    0.000030    0.000030    0.000030    0.000030
-task_11_send_chunk                          1    0.032784    0.032784    0.032784    0.032784
-task_12_relation_extraction_textacy         1    3.815531    3.815531    3.815531    3.815531
-task_13_concatenate_triples                 1    0.000066    0.000066    0.000066    0.000066
-task_14_relation_extraction_llm_openai      1    6.000680    6.000680    6.000680    6.000680
-task_15_sanitize_triples_llm                1    0.000335    0.000335    0.000335    0.000335
-task_16_moderate_triples_llm                1    1.615430    1.615430    1.615430    1.615430
-task_20_send_triples                        1    5.434274    5.434274    5.434274    5.434274
-task_21_1_describe_graph                    1    0.225327    0.225327    0.225327    0.225327
-task_22_verbalize_triples                   1    0.199480    0.199480    0.199480    0.199480
-task_30_summarize_llm_openai                1    2.003011    2.003011    2.003011    2.003011
-task_31_send_summary                        1    0.002053    0.002053    0.002053    0.002053
-worker_metric_bookscore                     1   14.352664   14.352664   14.352664   14.352664
-worker_metric_questeval                     1  200.107767  200.107767  200.107767  200.107767
+                                      calls       total         avg         min         max
+function                                                                                   
+pipeline_A                                1    2.192297    2.192297    2.192297    2.192297
+pipeline_B                                1  134.641826  134.641826  134.641826  134.641826
+pipeline_C                                1    5.520977    5.520977    5.520977    5.520977
+pipeline_D                                1   23.203793   23.203793   23.203793   23.203793
+task_01_convert_epub                      1    2.054454    2.054454    2.054454    2.054454
+task_02_parse_chapters                    1    0.040647    0.040647    0.040647    0.040647
+task_03_chunk_story                       1    0.015330    0.015330    0.015330    0.015330
+task_11_send_chunk                        1    0.029713    0.029713    0.029713    0.029713
+task_12_relation_extraction[textacy]      1    1.660219    1.660219    1.660219    1.660219
+task_14_validate_llm[openai]              1  131.935019  131.935019  131.935019  131.935019
+task_16_moderate_triples_llm[drop]        1    0.840021    0.840021    0.840021    0.840021
+task_20_send_triples                      1    5.131433    5.131433    5.131433    5.131433
+task_22_fetch_subgraph[popular]           1    0.306553    0.306553    0.306553    0.306553
+task_23_verbalize_triples[raw]            1    0.001126    0.001126    0.001126    0.001126
+task_30_summarize_llm[text]               1   23.143599   23.143599   23.143599   23.143599
+task_31_send_summary                      1    0.001498    0.001498    0.001498    0.001498
+worker_metric_bookscore                   1    5.228989    5.228989    5.228989    5.228989
+worker_metric_questeval                   1  202.764167  202.764167  202.764167  202.764167
 
-Total execution time: 258.654s
-[DUMP] Saved time records to './logs/elapsed_time.csv'
-[CHART] Saved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png
-Downloading builder script: 6.14kB [00:00, 15.0MB/s]
-Downloading builder script: 7.95kB [00:00, 17.7MB/s]
+Total execution time: 538.712s
+[96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
+[90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
+[96m[TIME] [93mtask_45_eval_coverage took 2.163s[0m
+[96m[TIME] [93mtask_45_eval_rouge took 0.600s[0m
+Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 7.95kB [00:00, 27.0MB/s]
+[96m[TIME] [93mtask_45_eval_bertscore took 17.100s[0m
+[96m[TIME] [93mtask_45_eval_ngrams took 0.025s[0m
+[96m[TIME] [93mtask_45_eval_jsd took 0.008s[0m
+[96m[TIME] [93mtask_45_eval_ncd took 0.001s[0m
+[96m[TIME] [93mtask_45_eval_salience took 0.013s[0m
+[96m[TIME] [93mtask_45_eval_faithfulness took 24.711s[0m
+[96m[TIME] [93mtask_45_eval_readability took 1.595s[0m
+[96m[TIME] [93mtask_45_eval_sentence_coherence took 5.095s[0m
+[96m[TIME] [93mtask_45_eval_entity_grid took 0.582s[0m
+[96m[TIME] [93mtask_45_eval_diversity took 0.000s[0m
+[96m[TIME] [93mtask_45_eval_stopwords took 0.002s[0m
+Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 6.14kB [00:00, 5.03MB/s]
 Some weights of RobertaModel were not initialized from the model checkpoint at roberta-large and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'In the scene, a beak whispered that it was alone. A phoenix spoke with joyful relief. The beak noted that the latch of a portal was too stiff for it. Cyril said “Righto,” and Cyril experienced that they were nearly at a time when four of them would be in a narrow, gravelled passage.', 'goldSummaryText': 'The latch rattled, and clicked. Then the flap of the letter-box lifted itself—every one saw it by the flickering light of the gas-lamp that shone through the leafless lime-tree by the gate—a golden eye seemed to wink at them through the letter-slit, and a cautious beak whispered—\n‘Are you alone?’\n‘It’s the Phoenix,’ said every one, in a voice so joyous, and so full of relief, as to be a sort of whispered shout.\n‘Hush!’ said the voice from the letter-box slit. ‘Your slaves have gone a-merry-making. The latch of this portal is too stiff for my beak. But at the side—the little window above the shelf whereon your bread lies—it i', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8531359434127808, 'recall': 0.8219007849693298, 'f1Score': 0.8372271656990051}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.31805071628053116}, {'name': 'ROUGE-1', 'value': 0.3370786516853933}, {'name': 'ROUGE-2', 'value': 0.06818181818181818}, {'name': 'ROUGE-L', 'value': 0.1797752808988764}, {'name': 'ROUGE-Lsum', 'value': 0.24719101123595505}]}, 'qaResults': []}
-[TIME] task_40_post_payload took 40.425s
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Anthea protests the Phoenix’s scolding, but the Phoenix rebukes the children for overtaxing their wishing carpet—making it grant unusual wishes, endure thousands of cats’ and rats’ claws (even if those were the carpet’s own choice), and even support a cow hanging from one corner. Jane realizes the carpet may be wearing out, and the Phoenix confirms its life with them has been anything but gentle.', 'goldSummaryText': '‘Dear Phoenix,’ Anthea urged, ‘don’t talk in that horrid lecturing tone. You make me feel as if I’d done something wrong. And really it is a wishing carpet, and we haven’t done anything else to it—only wishes.’\n‘Only wishes,’ repeated the Phoenix, ruffling its neck feathers angrily, ‘and what sort of wishes? Wishing people to be in a good temper, for instance. What carpet did you ever hear of that had such a wish asked of it? But this noble fabric, on which you trample so recklessly’ (every one removed its boots from the carpet and stood on the linoleum), ‘this carpet never flinched. It did what you asked, but the wear and tear ', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8372820615768433, 'recall': 0.8213052153587341, 'f1Score': 0.8292167782783508}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 1}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.24595983081927283}, {'name': 'ROUGE-1', 'value': 0.2903225806451613}, {'name': 'ROUGE-2', 'value': 0.04347826086956522}, {'name': 'ROUGE-L', 'value': 0.15053763440860216}, {'name': 'ROUGE-Lsum', 'value': 0.19354838709677422}]}, 'qaResults': []}
+[96m[TIME] [93mtask_40_post_payload took 28.530s[0m
 
 Output sent to web app.
-[TIME] pipeline_E took 40.428s
+[96m[TIME] [93mpipeline_E took 80.442s[0m
 [PIPELINE FINALIZED] Story 1 fully processed
 
 === TIMING SUMMARY ===
-                                        calls       total         avg         min         max
-function
-pipeline_A                                  1    2.468319    2.468319    2.468319    2.468319
-pipeline_B                                  1   11.954744   11.954744   11.954744   11.954744
-pipeline_C                                  1    5.953820    5.953820    5.953820    5.953820
-pipeline_D                                  1    2.067681    2.067681    2.067681    2.067681
-pipeline_E                                  1   40.428340   40.428340   40.428340   40.428340
-task_01_convert_epub                        1    2.353805    2.353805    2.353805    2.353805
-task_02_parse_chapters                      1    0.029561    0.029561    0.029561    0.029561
-task_03_chunk_story                         1    0.015017    0.015017    0.015017    0.015017
-task_10_random_chunk                        1    0.021795    0.021795    0.021795    0.021795
-task_10_sample_chunks                       1    0.000030    0.000030    0.000030    0.000030
-task_11_send_chunk                          1    0.032784    0.032784    0.032784    0.032784
-task_12_relation_extraction_textacy         1    3.815531    3.815531    3.815531    3.815531
-task_13_concatenate_triples                 1    0.000066    0.000066    0.000066    0.000066
-task_14_relation_extraction_llm_openai      1    6.000680    6.000680    6.000680    6.000680
-task_15_sanitize_triples_llm                1    0.000335    0.000335    0.000335    0.000335
-task_16_moderate_triples_llm                1    1.615430    1.615430    1.615430    1.615430
-task_20_send_triples                        1    5.434274    5.434274    5.434274    5.434274
-task_21_1_describe_graph                    1    0.225327    0.225327    0.225327    0.225327
-task_22_verbalize_triples                   1    0.199480    0.199480    0.199480    0.199480
-task_30_summarize_llm_openai                1    2.003011    2.003011    2.003011    2.003011
-task_31_send_summary                        1    0.002053    0.002053    0.002053    0.002053
-task_40_post_payload                        1   40.424673   40.424673   40.424673   40.424673
-worker_metric_bookscore                     1   14.352664   14.352664   14.352664   14.352664
-worker_metric_questeval                     1  200.107767  200.107767  200.107767  200.107767
+                                      calls       total         avg         min         max
+function                                                                                   
+pipeline_A                                1    2.192297    2.192297    2.192297    2.192297
+pipeline_B                                1  134.641826  134.641826  134.641826  134.641826
+pipeline_C                                1    5.520977    5.520977    5.520977    5.520977
+pipeline_D                                1   23.203793   23.203793   23.203793   23.203793
+pipeline_E                                1   80.442474   80.442474   80.442474   80.442474
+task_01_convert_epub                      1    2.054454    2.054454    2.054454    2.054454
+task_02_parse_chapters                    1    0.040647    0.040647    0.040647    0.040647
+task_03_chunk_story                       1    0.015330    0.015330    0.015330    0.015330
+task_11_send_chunk                        1    0.029713    0.029713    0.029713    0.029713
+task_12_relation_extraction[textacy]      1    1.660219    1.660219    1.660219    1.660219
+task_14_validate_llm[openai]              1  131.935019  131.935019  131.935019  131.935019
+task_16_moderate_triples_llm[drop]        1    0.840021    0.840021    0.840021    0.840021
+task_20_send_triples                      1    5.131433    5.131433    5.131433    5.131433
+task_22_fetch_subgraph[popular]           1    0.306553    0.306553    0.306553    0.306553
+task_23_verbalize_triples[raw]            1    0.001126    0.001126    0.001126    0.001126
+task_30_summarize_llm[text]               1   23.143599   23.143599   23.143599   23.143599
+task_31_send_summary                      1    0.001498    0.001498    0.001498    0.001498
+task_40_post_payload                      1   28.530226   28.530226   28.530226   28.530226
+task_45_eval_bertscore                    1   17.099982   17.099982   17.099982   17.099982
+task_45_eval_coverage                     1    2.162992    2.162992    2.162992    2.162992
+task_45_eval_diversity                    1    0.000363    0.000363    0.000363    0.000363
+task_45_eval_entity_grid                  1    0.582321    0.582321    0.582321    0.582321
+task_45_eval_faithfulness                 1   24.711029   24.711029   24.711029   24.711029
+task_45_eval_jsd                          1    0.008376    0.008376    0.008376    0.008376
+task_45_eval_ncd                          1    0.001277    0.001277    0.001277    0.001277
+task_45_eval_ngrams                       1    0.025163    0.025163    0.025163    0.025163
+task_45_eval_readability                  1    1.595126    1.595126    1.595126    1.595126
+task_45_eval_rouge                        1    0.600271    0.600271    0.600271    0.600271
+task_45_eval_salience                     1    0.012508    0.012508    0.012508    0.012508
+task_45_eval_sentence_coherence           1    5.094863    5.094863    5.094863    5.094863
+task_45_eval_stopwords                    1    0.002363    0.002363    0.002363    0.002363
+worker_metric_bookscore                   1    5.228989    5.228989    5.228989    5.228989
+worker_metric_questeval                   1  202.764167  202.764167  202.764167  202.764167
 
-Total execution time: 339.507s
-[DUMP] Saved time records to './logs/elapsed_time.csv'
-[CHART] Saved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png
-172.18.0.5 - - [07/Dec/2025 19:18:57] "POST /callback HTTP/1.1" 200 -
-INFO:werkzeug:172.18.0.5 - - [07/Dec/2025 19:18:57] "POST /callback HTTP/1.1" 200 -
-^Cmake[2]: *** [Makefile:77: docker-start] Interrupt
-make[1]: *** [Makefile:89: docker-python] Interrupt
-make: *** [Makefile:130: docker-python-dev] Interrupt
-
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-bscore
- * Serving Flask app 'worker'
- * Debug mode: off
-WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
- * Running on all addresses (0.0.0.0)
- * Running on http://127.0.0.1:5002
- * Running on http://172.17.0.3:5002
-Press CTRL+C to quit
-[QUEUED] chunk 'story-1_book-2_chapter-12_p.20963' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-172.18.0.7 - - [07/Dec/2025 19:14:55] "POST /tasks/queue HTTP/1.1" 202 -
-FINISHED: chunk ID: story-1_book-2_chapter-12_p.20963, result:
-{'value': 0.0, 'annotations': {'In the scene, a beak whispered that it was alone.': {'questions': 'What does the beak refer to? Is it a literal beak or a metaphor? Why is the beak alone?', 'types': ['entity omission', 'causal omission']}, 'A phoenix spoke with joyful relief.': {'questions': "Why is the phoenix relieved? What is the context of its relief? What does the phoenix's relief signify in the story?", 'types': ['causal omission', 'entity omission']}, 'The beak noted that the latch of a portal was too stiff for it.': {'questions': 'What is the significance of the beak? What portal is being referred to? Why is the latch stiff?', 'types': ['entity omission', 'event omission']}, 'Cyril said “Righto,” and Cyril experienced that they were nearly at a time when four of them would be in a narrow, gravelled passage.': {'questions': 'What does Cyril mean by "Righto"? What is the significance of the "narrow, gravelled passage"? Who are the four of them?', 'types': ['entity omission', 'event omission', 'causal omission']}}, 'model_used': 'openai-model_gpt-4o-mini'}
-(env-cap) conanp@RPI-conanp:/mnt/c/dsci-cap/capstone$ docker logs container-qeval
-Downloading: 6.81kB [00:00, 5.74MB/s]
-WARNING:root:Downloading language model for the spaCy model.
-DEPRECATION: https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl#egg=en_core_web_sm==3.0.0 contains an egg fragment with a non-PEP 508 name. pip 25.1 will enforce this behaviour change. A possible replacement is to use the req @ url syntax, and remove the egg fragment. Discussion can be found at https://github.com/pypa/pip/issues/13157
-Collecting en-core-web-sm==3.0.0
-  Downloading https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl (13.7 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 36.2 MB/s eta 0:00:00
-Requirement already satisfied: spacy<3.1.0,>=3.0.0 in /usr/local/lib/python3.8/site-packages (from en-core-web-sm==3.0.0) (3.0.6)
-Requirement already satisfied: spacy-legacy<3.1.0,>=3.0.4 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.0.12)
-Requirement already satisfied: murmurhash<1.1.0,>=0.28.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.0.13)
-Requirement already satisfied: cymem<2.1.0,>=2.0.2 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.0.11)
-Requirement already satisfied: preshed<3.1.0,>=3.0.2 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.0.10)
-Requirement already satisfied: thinc<8.1.0,>=8.0.3 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (8.0.17)
-Requirement already satisfied: blis<0.8.0,>=0.4.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.7.11)
-Requirement already satisfied: wasabi<1.1.0,>=0.8.1 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.10.1)
-Requirement already satisfied: srsly<3.0.0,>=2.4.1 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.4.8)
-Requirement already satisfied: catalogue<2.1.0,>=2.0.3 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.0.10)
-Requirement already satisfied: typer<0.4.0,>=0.3.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.3.2)
-Requirement already satisfied: pathy>=0.3.5 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.11.0)
-Requirement already satisfied: tqdm<5.0.0,>=4.38.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (4.49.0)
-Requirement already satisfied: numpy>=1.15.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.24.4)
-Requirement already satisfied: requests<3.0.0,>=2.13.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.32.4)
-Requirement already satisfied: pydantic<1.8.0,>=1.7.1 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.7.4)
-Requirement already satisfied: jinja2 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.11.3)
-Requirement already satisfied: setuptools in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (75.3.2)
-Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.8/site-packages (from spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (25.0)
-Requirement already satisfied: smart-open<7.0.0,>=5.2.1 in /usr/local/lib/python3.8/site-packages (from pathy>=0.3.5->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (6.4.0)
-Requirement already satisfied: pathlib-abc==0.1.1 in /usr/local/lib/python3.8/site-packages (from pathy>=0.3.5->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (0.1.1)
-Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.4.4)
-Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (3.11)
-Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2.2.3)
-Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.8/site-packages (from requests<3.0.0,>=2.13.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (2025.10.5)
-Requirement already satisfied: click<7.2.0,>=7.1.1 in /usr/local/lib/python3.8/site-packages (from typer<0.4.0,>=0.3.0->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (7.1.2)
-Requirement already satisfied: MarkupSafe>=0.23 in /usr/local/lib/python3.8/site-packages (from jinja2->spacy<3.1.0,>=3.0.0->en-core-web-sm==3.0.0) (1.1.1)
-Installing collected packages: en-core-web-sm
-Successfully installed en-core-web-sm-3.0.0
-WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
-✔ Download and installation successful
-You can now load the package via spacy.load('en_core_web_sm')
-
-
-
-
-
-
-
- * Serving Flask app "worker" (lazy loading)
- * Environment: production
-   WARNING: This is a development server. Do not use it in a production deployment.
-   Use a production WSGI server instead.
- * Debug mode: off
-INFO:werkzeug: * Running on http://0.0.0.0:5001/ (Press CTRL+C to quit)
-[QUEUED] chunk 'story-1_book-2_chapter-12_p.20963' from Boss: using database 'conan_capstone' and collection 'story_chunks'
-INFO:werkzeug:172.18.0.7 - - [07/Dec/2025 19:14:55] "POST /tasks/queue HTTP/1.1" 202 -
-Some weights of the model checkpoint at /root/.cache/huggingface/transformers/bert-base-multilingual-cased were not used when initializing BertModel: ['cls.predictions.transform.dense.bias', 'cls.seq_relationship.weight', 'cls.predictions.transform.dense.weight', 'cls.seq_relationship.bias', 'cls.predictions.bias', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.LayerNorm.bias']
-- This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
-- This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-FINISHED: chunk ID: story-1_book-2_chapter-12_p.20963, result:
-{'value': 0.31805071628053116, 'has_reference': False}
-Failed to notify boss: HTTPConnectionPool(host='python_service', port=5054): Read timed out. (read timeout=5)
+Total execution time: 699.581s
+[96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
+[90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
+[90m[CHART] [93mSaved chart 'Saved summary metrics CSV' to ./logs/metrics/chunk_summary.csv[0m
+172.18.0.2 - - [10/Dec/2025 07:33:38] "POST /callback HTTP/1.1" 200 -
+INFO:werkzeug:172.18.0.2 - - [10/Dec/2025 07:33:38] "POST /callback HTTP/1.1" 200 -
