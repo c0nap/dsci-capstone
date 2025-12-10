@@ -200,7 +200,7 @@ if __name__ == "__main__":
     from src.core.stages import Config
 
     session.setup()
-    Config.load_baseline()
+    Config.load_fast()
     Config.check_values()
 
     # TODO: handle this better - half env parsing is here, half is in boss.py
