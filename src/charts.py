@@ -88,6 +88,9 @@ class Plot:
 
         # Process both datasets
         def process_df(df: pd.DataFrame, filter_mode: Optional[bool]) -> pd.DataFrame:
+            # Clean function names to ensure matching works
+            df['function'] = df['function'].astype(str).str.replace(r'\[.*?\]$', '', regex=True).str.strip()
+
             # 1. Filter if requested
             if filter_mode is True:
                 df = df[df['function'].str.contains('pipeline', case=False, na=False)]
@@ -345,9 +348,9 @@ def plot_time_comparison():
 
     args = parser.parse_args()
 
-    Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False)
+    #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False)
     #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=True)
-    #Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False, cap_outliers=0.06)
+    Plot.time_elapsed_comparison(filename=args.output, csv1=args.csv1, csv2=args.csv2, only_pipeline=None, log_scale=False, cap_outliers=0.06)
 
 def plot_metrics_comparison():
     # python -m src.charts './logs/metrics/chunk_summary_best.csv' './logs/metrics/chunk_summary_worst.csv' './logs/metrics/chunk_summary_llm.csv' --output='./logs/charts/metrics_comparison.png'
