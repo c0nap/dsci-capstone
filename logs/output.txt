@@ -11,68 +11,67 @@
 #3 transferring context: 79B 0.1s done
 #3 DONE 0.1s
 
-#4 [ 1/17] FROM docker.io/library/python:3.12-slim@sha256:590cad70271b6c1795c6a11fb5c110efca593adbd0d4883cd19c36df6a56467b
+#4 [ 1/16] FROM docker.io/library/python:3.12-slim@sha256:590cad70271b6c1795c6a11fb5c110efca593adbd0d4883cd19c36df6a56467b
 #4 DONE 0.0s
 
 #5 [internal] load build context
-#5 transferring context: 9.87kB 1.0s done
+#5 transferring context: 9.80kB 1.0s done
 #5 DONE 1.0s
 
-#6 [ 9/17] COPY tests/ tests/
+#6 [ 4/16] COPY deps/requirements.txt .
 #6 CACHED
 
-#7 [ 3/17] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     make     pandoc     default-jre-headless  && pip install --upgrade pip setuptools wheel build  && rm -rf /var/lib/apt/lists/*
+#7 [ 5/16] RUN pip install --no-cache-dir -r requirements.txt
 #7 CACHED
 
-#8 [ 6/17] RUN python -m spacy download en_core_web_sm
+#8 [ 6/16] RUN python -m spacy download en_core_web_sm
 #8 CACHED
 
-#9 [11/17] COPY datasets/ datasets/
+#9 [ 2/16] WORKDIR /pipeline
 #9 CACHED
 
-#10 [10/17] COPY smoke/ smoke/
+#10 [ 3/16] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     make     pandoc     default-jre-headless  && pip install --upgrade pip setuptools wheel build  && rm -rf /var/lib/apt/lists/*
 #10 CACHED
 
-#11 [ 2/17] WORKDIR /pipeline
+#11 [ 7/16] RUN python -m nltk.downloader punkt punkt_tab stopwords
 #11 CACHED
 
-#12 [ 4/17] COPY deps/requirements.txt .
-#12 CACHED
+#12 [ 8/16] COPY src/ src/
+#12 DONE 0.1s
 
-#13 [ 7/17] RUN python -m nltk.downloader punkt punkt_tab stopwords
-#13 CACHED
+#13 [ 9/16] COPY tests/ tests/
+#13 DONE 0.1s
 
-#14 [ 5/17] RUN pip install --no-cache-dir -r requirements.txt
-#14 CACHED
+#14 [10/16] COPY smoke/ smoke/
+#14 DONE 0.1s
 
-#15 [ 8/17] COPY src/ src/
-#15 CACHED
+#15 [11/16] COPY datasets/ datasets/
+#15 DONE 0.1s
 
-#16 [12/17] COPY .env .env
-#16 CACHED
+#16 [12/16] COPY .env .env
+#16 DONE 0.1s
 
-#17 [13/17] COPY Makefile .
+#17 [13/16] COPY Makefile .
 #17 DONE 0.1s
 
-#18 [14/17] RUN make env-docker
-#18 0.456 ✓ Generated .env.docker
+#18 [14/16] RUN make env-docker
+#18 0.445 ✓ Generated .env.docker
 #18 DONE 0.5s
 
-#19 [15/17] RUN mv .env.docker .env
+#19 [15/16] RUN mv .env.docker .env
 #19 DONE 0.3s
 
-#20 [16/17] COPY pyproject.toml pytest.ini conftest.py .
+#20 [16/16] COPY pyproject.toml pytest.ini conftest.py .
 #20 DONE 0.1s
 
-#21 [17/17] COPY logs/elapsed_time.csv logs/
-#21 DONE 0.0s
-
-#22 exporting to image
-#22 exporting layers 0.1s done
-#22 writing image sha256:f67bb181024c0e3c0b1e969bc2b86032fb27105918c0bd7998ed774fa89a9648 done
-#22 naming to docker.io/library/dsci-cap-img-python-dev:latest done
-#22 DONE 0.1s
-44bdee9156b685a2461c0d8bf45cb15cdf264281b0151c9bbd2eeea302e6427a
+#21 exporting to image
+#21 exporting layers
+#21 exporting layers 0.2s done
+#21 writing image sha256:ff8aee9eefbe5e10b644282668977fdc74a6f1af1a907b88b57ed08c20d69e85 done
+#21 naming to docker.io/library/dsci-cap-img-python-dev:latest done
+#21 DONE 0.3s
+container-python
+104055bf5b6dfd32e89105016016305b04c8ad7d6ab421afdf3455680702da99
 Network 'capstone_default' already exists; continue...
 Deleted old chunks...
  * Serving Flask app 'src.core.boss'
@@ -83,23 +82,23 @@ Deleted old chunks...
  * Running on http://172.17.0.5:5054
 [33mPress CTRL+C to quit[0m
 [STATUS] Story 1: preprocessing -> in-progress
-127.0.0.1 - - [10/Dec/2025 05:20:45] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:53:59] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> in-progress
-127.0.0.1 - - [10/Dec/2025 05:20:45] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:53:59] "POST /status/story HTTP/1.1" 200 -
 
 ==================================================
 Processing: ./tests/examples-pipeline/epub/trilogy-wishes-2.epub
-[96m[TIME] [93mtask_01_convert_epub took 2.484s[0m
-[96m[TIME] [93mtask_02_parse_chapters took 0.047s[0m
-[96m[TIME] [93mtask_03_chunk_story took 0.019s[0m
+[96m[TIME] [93mtask_01_convert_epub took 1.960s[0m
+[96m[TIME] [93mtask_02_parse_chapters took 0.032s[0m
+[96m[TIME] [93mtask_03_chunk_story took 0.016s[0m
 
 === STORY SUMMARY ===
 Total chunks: 254
-[96m[TIME] [93mpipeline_A took 2.650s[0m
+[96m[TIME] [93mpipeline_A took 2.089s[0m
 [STATUS] Story 1: preprocessing -> completed
-127.0.0.1 - - [10/Dec/2025 05:20:47] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:54:01] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Story 1: chunking -> completed
-127.0.0.1 - - [10/Dec/2025 05:20:47] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:54:01] "POST /status/story HTTP/1.1" 200 -
 
 Chunk details:
   index: 140
@@ -111,34 +110,112 @@ The latch rattled, and clicked. Then the flap of the letter-box lifted itself—
 ‘Righto!’ said Cyril.
 And Anthea added, ‘I wish you’d meet us there, dear Phoenix.’
 The children crept round to the pantry window. It is at the side of the house, and there is a green gate labelled ‘Tradesmen’s Entrance’, which is always kept bolted. But if you get one foot on the fence between you and next door, and one on the handle of the gate, you are over before you know where you are. This, at least, was the experience of Cyril and Robert, and even, if the truth must be told, of Anthea and Jane. So in almost no time all four were in the narrow gravelled passage that runs between that house and the next.
-[96m[TIME] [93mtask_11_send_chunk took 0.037s[0m
+[96m[TIME] [93mtask_11_send_chunk took 0.032s[0m
     [Inserted chunk into Mongo with chunk_id: story-1_book-2_chapter-12_p.20963]
-[96m[TIME] [93mtask_12_relation_extraction[textacy] took 1.818s[0m
+Ensuring CoreNLP backend is installed...
+2025-12-10 05:54:02 INFO: Installing CoreNLP package into /root/stanza_corenlp
+Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   0%|          | 0.00/508M [00:00<?, ?B/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   0%|          | 262k/508M [00:00<04:28, 1.89MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   0%|          | 1.18M/508M [00:00<01:30, 5.58MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   1%|          | 4.46M/508M [00:00<00:30, 16.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   1%|▏         | 6.82M/508M [00:00<00:26, 19.1MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   2%|▏         | 10.6M/508M [00:00<00:19, 25.4MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   3%|▎         | 14.8M/508M [00:00<00:16, 30.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   4%|▎         | 18.5M/508M [00:00<00:15, 32.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   4%|▍         | 22.0M/508M [00:00<00:19, 25.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   5%|▌         | 27.1M/508M [00:01<00:17, 26.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   6%|▌         | 31.7M/508M [00:01<00:15, 31.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   7%|▋         | 36.2M/508M [00:01<00:13, 34.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   8%|▊         | 40.4M/508M [00:01<00:13, 35.7MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:   9%|▉         | 44.8M/508M [00:01<00:12, 36.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  10%|▉         | 48.8M/508M [00:01<00:12, 35.4MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  10%|█         | 53.1M/508M [00:01<00:12, 37.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  11%|█▏        | 57.5M/508M [00:01<00:11, 39.3MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  12%|█▏        | 61.6M/508M [00:01<00:11, 39.0MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  13%|█▎        | 66.3M/508M [00:02<00:11, 39.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  14%|█▍        | 70.4M/508M [00:02<00:11, 38.4MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  15%|█▍        | 74.3M/508M [00:02<00:11, 36.4MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  15%|█▌        | 78.2M/508M [00:02<00:11, 37.1MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  16%|█▌        | 82.1M/508M [00:02<00:12, 33.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  17%|█▋        | 86.2M/508M [00:02<00:11, 35.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  18%|█▊        | 90.0M/508M [00:02<00:11, 36.3MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  19%|█▊        | 94.5M/508M [00:02<00:10, 38.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  19%|█▉        | 98.7M/508M [00:02<00:10, 39.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  20%|██        | 103M/508M [00:03<00:11, 36.1MB/s] Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  21%|██        | 107M/508M [00:03<00:10, 38.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  22%|██▏       | 111M/508M [00:03<00:11, 36.0MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  23%|██▎       | 115M/508M [00:03<00:10, 36.3MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  23%|██▎       | 119M/508M [00:03<00:10, 36.7MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  24%|██▍       | 123M/508M [00:03<00:09, 38.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  25%|██▌       | 127M/508M [00:03<00:10, 35.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  26%|██▌       | 131M/508M [00:03<00:10, 35.0MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  27%|██▋       | 135M/508M [00:03<00:10, 35.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  27%|██▋       | 139M/508M [00:04<00:11, 32.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  28%|██▊       | 142M/508M [00:04<00:11, 30.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  29%|██▊       | 145M/508M [00:04<00:13, 27.1MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  29%|██▉       | 149M/508M [00:05<00:43, 8.18MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  30%|██▉       | 151M/508M [00:08<02:07, 2.81MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  30%|██▉       | 152M/508M [00:08<01:52, 3.16MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  30%|███       | 154M/508M [00:08<01:38, 3.62MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  31%|███       | 155M/508M [00:08<01:19, 4.45MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  31%|███       | 157M/508M [00:08<01:03, 5.49MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  31%|███▏      | 159M/508M [00:08<00:51, 6.82MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  32%|███▏      | 161M/508M [00:08<00:41, 8.45MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  32%|███▏      | 163M/508M [00:09<00:34, 10.1MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  33%|███▎      | 165M/508M [00:09<00:27, 12.4MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  33%|███▎      | 168M/508M [00:09<00:23, 14.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  33%|███▎      | 170M/508M [00:09<00:20, 16.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  34%|███▍      | 173M/508M [00:09<00:17, 18.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  34%|███▍      | 175M/508M [00:09<00:16, 20.4MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  35%|███▌      | 178M/508M [00:09<00:14, 22.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  36%|███▌      | 181M/508M [00:09<00:13, 25.0MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  36%|███▌      | 184M/508M [00:09<00:12, 26.7MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  37%|███▋      | 187M/508M [00:10<00:14, 22.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  38%|███▊      | 192M/508M [00:10<00:10, 29.7MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  38%|███▊      | 196M/508M [00:10<00:17, 18.0MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  39%|███▉      | 198M/508M [00:10<00:15, 19.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  40%|███▉      | 202M/508M [00:10<00:12, 23.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  40%|████      | 206M/508M [00:10<00:11, 26.4MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  41%|████▏     | 210M/508M [00:10<00:10, 29.1MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  42%|████▏     | 214M/508M [00:11<00:09, 31.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  43%|████▎     | 219M/508M [00:11<00:08, 35.3MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  44%|████▎     | 222M/508M [00:11<00:08, 35.7MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  45%|████▍     | 226M/508M [00:11<00:07, 35.4MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  45%|████▌     | 230M/508M [00:11<00:07, 35.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  46%|████▌     | 235M/508M [00:11<00:07, 38.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  47%|████▋     | 239M/508M [00:11<00:06, 38.7MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  48%|████▊     | 244M/508M [00:11<00:06, 41.4MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  49%|████▉     | 248M/508M [00:11<00:06, 39.0MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  50%|████▉     | 253M/508M [00:12<00:06, 40.1MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  51%|█████     | 257M/508M [00:12<00:06, 39.3MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  51%|█████▏    | 261M/508M [00:12<00:07, 35.0MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  52%|█████▏    | 265M/508M [00:12<00:06, 37.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  53%|█████▎    | 269M/508M [00:12<00:06, 35.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  54%|█████▍    | 273M/508M [00:12<00:06, 36.7MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  55%|█████▍    | 277M/508M [00:12<00:08, 28.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  56%|█████▌    | 283M/508M [00:12<00:06, 35.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  56%|█████▋    | 287M/508M [00:13<00:06, 35.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  57%|█████▋    | 291M/508M [00:13<00:05, 36.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  58%|█████▊    | 296M/508M [00:13<00:05, 39.1MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  59%|█████▉    | 300M/508M [00:13<00:05, 37.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  60%|█████▉    | 304M/508M [00:13<00:06, 31.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  61%|██████    | 310M/508M [00:13<00:05, 38.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  62%|██████▏   | 315M/508M [00:13<00:04, 40.1MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  63%|██████▎   | 319M/508M [00:13<00:04, 39.4MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  64%|██████▎   | 323M/508M [00:13<00:04, 39.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  64%|██████▍   | 327M/508M [00:14<00:04, 36.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  65%|██████▌   | 332M/508M [00:14<00:04, 39.3MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  66%|██████▌   | 336M/508M [00:14<00:04, 38.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  67%|██████▋   | 340M/508M [00:14<00:04, 39.0MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  68%|██████▊   | 344M/508M [00:14<00:04, 36.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  69%|██████▊   | 349M/508M [00:14<00:04, 38.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  69%|██████▉   | 353M/508M [00:14<00:04, 36.1MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  70%|███████   | 357M/508M [00:14<00:04, 37.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  71%|███████   | 361M/508M [00:14<00:03, 37.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  72%|███████▏  | 365M/508M [00:15<00:03, 38.0MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  73%|███████▎  | 369M/508M [00:15<00:03, 37.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  73%|███████▎  | 373M/508M [00:15<00:03, 39.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  74%|███████▍  | 378M/508M [00:15<00:03, 38.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  75%|███████▌  | 382M/508M [00:15<00:03, 39.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  76%|███████▌  | 386M/508M [00:15<00:03, 39.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  77%|███████▋  | 390M/508M [00:15<00:02, 39.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  78%|███████▊  | 395M/508M [00:15<00:02, 40.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  78%|███████▊  | 399M/508M [00:15<00:02, 38.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  79%|███████▉  | 403M/508M [00:16<00:02, 40.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  80%|████████  | 408M/508M [00:16<00:02, 40.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  81%|████████  | 412M/508M [00:16<00:02, 38.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  82%|████████▏ | 416M/508M [00:16<00:02, 38.0MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  83%|████████▎ | 420M/508M [00:16<00:02, 37.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  83%|████████▎ | 424M/508M [00:16<00:02, 37.9MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  84%|████████▍ | 428M/508M [00:16<00:02, 38.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  85%|████████▌ | 433M/508M [00:16<00:02, 36.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  86%|████████▌ | 437M/508M [00:16<00:01, 39.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  87%|████████▋ | 441M/508M [00:17<00:02, 26.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  88%|████████▊ | 445M/508M [00:17<00:02, 29.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  89%|████████▊ | 450M/508M [00:17<00:01, 33.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  89%|████████▉ | 454M/508M [00:17<00:01, 34.1MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  90%|█████████ | 458M/508M [00:17<00:01, 31.6MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  91%|█████████ | 461M/508M [00:17<00:01, 32.5MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  91%|█████████▏| 465M/508M [00:17<00:01, 28.3MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  92%|█████████▏| 469M/508M [00:18<00:01, 30.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  93%|█████████▎| 474M/508M [00:18<00:01, 33.7MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  94%|█████████▍| 478M/508M [00:18<00:00, 36.7MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  95%|█████████▍| 482M/508M [00:18<00:00, 26.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  96%|█████████▌| 488M/508M [00:18<00:00, 33.8MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  97%|█████████▋| 493M/508M [00:18<00:00, 36.2MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  98%|█████████▊| 497M/508M [00:18<00:00, 34.7MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip:  99%|█████████▊| 502M/508M [00:18<00:00, 37.3MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip: 100%|█████████▉| 506M/508M [00:19<00:00, 38.4MB/s]Downloading https://huggingface.co/stanfordnlp/CoreNLP/resolve/main/stanford-corenlp-latest.zip: 100%|██████████| 508M/508M [00:19<00:00, 26.6MB/s]
+2025-12-10 05:54:22 INFO: Downloaded file to /root/stanza_corenlp/corenlp.zip
+2025-12-10 05:54:24 INFO: Writing properties to tmp file: corenlp_server-5b63e5b731364e31.props
+2025-12-10 05:54:24 INFO: Starting server with command: java -Xmx4G -cp /root/stanza_corenlp/* edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 9000 -timeout 120000 -threads 5 -maxCharLength 100000 -quiet True -serverProperties corenlp_server-5b63e5b731364e31.props -annotators tokenize,ssplit,pos,lemma,ner,parse,coref,openie -preload -outputFormat serialized
+[96m[TIME] [93mtask_12_relation_extraction[openie] took 70.092s[0m
 
 NLP output:
-{'s': 'flap', 'r': 'lifted', 'o': 'itself'}
-{'s': 'one', 'r': 'saw', 'o': 'it'}
-{'s': 'eye', 'r': 'seemed', 'o': 'to wink at them through the letter - slit'}
-{'s': 'beak', 'r': 'whispered', 'o': 'Are you alone'}
-{'s': 'slaves', 'r': 'have gone', 'o': 'merry making'}
-{'s': 'it', 'r': 'is not fastened', 'o': '‘ Righto ! ’'}
-{'s': 'I', 'r': 'wish', 'o': 'you'}
-{'s': 'which', 'r': 'is kept', 'o': 'bolted'}
-{'s': 'you', 'r': 'get', 'o': 'foot'}
+{'s': 'eye', 'r': 'seemed to', 'o': 'wink'}
+{'s': 'eye', 'r': 'seemed to', 'o': 'wink through letter slit'}
+{'s': 'eye', 'r': 'wink through', 'o': 'letter slit'}
+{'s': 'The children', 'r': 'Are', 'o': 'alone'}
+{'s': 'golden eye', 'r': 'seemed to', 'o': 'wink through letter slit'}
+{'s': 'eye', 'r': 'seemed to', 'o': 'wink at them'}
+{'s': 'golden eye', 'r': 'wink at', 'o': 'them'}
+{'s': 'golden eye', 'r': 'wink through', 'o': 'letter slit'}
+{'s': 'eye', 'r': 'wink at', 'o': 'them'}
+{'s': 'golden eye', 'r': 'seemed to', 'o': 'wink'}
+{'s': 'golden eye', 'r': 'seemed to', 'o': 'wink at them'}
+{'s': 'children', 'r': 'Are', 'o': 'alone'}
+{'s': 'flap', 'r': 'lifted', 'o': 'flap of letter - box'}
+{'s': 'eye', 'r': 'seemed to', 'o': 'wink at them through letter slit'}
+{'s': 'golden eye', 'r': 'seemed to', 'o': 'wink at them through letter slit'}
+{'s': 'The children slaves', 'r': 'gone', 'o': 'a-merry-making'}
+{'s': 'children slaves', 'r': 'gone', 'o': 'a-merry-making'}
+{'s': 'latch portal', 'r': 'is', 'o': 'stiff'}
+{'s': 'latch portal', 'r': 'is', 'o': 'too stiff'}
+{'s': 'latch portal', 'r': 'is stiff for', 'o': 'my beak'}
+{'s': 'latch portal', 'r': 'is too stiff for', 'o': 'my beak'}
+{'s': 'children', 'r': 'meet there', 'o': 'us'}
+{'s': 'The children', 'r': 'meet there', 'o': 'us'}
+{'s': 'children', 'r': 'meet', 'o': 'us'}
+{'s': 'children', 'r': 'crept round to', 'o': 'pantry window'}
+{'s': 'children', 'r': 'crept to', 'o': 'pantry window'}
+{'s': 'It', 'r': 'is at', 'o': 'side'}
+{'s': 'It', 'r': 'is side of', 'o': 'house'}
+{'s': 'children', 'r': 'foot on', 'o': 'fence between children next'}
+{'s': 'children', 'r': 'get', 'o': 'one foot on fence between children'}
+{'s': 'children', 'r': 'get', 'o': 'one foot on fence between children next'}
+{'s': 'children', 'r': 'are', 'o': 'over know'}
+{'s': 'children', 'r': 'are', 'o': 'before know'}
+{'s': 'children', 'r': 'foot on', 'o': 'fence'}
+{'s': 'children', 'r': 'get', 'o': 'one foot'}
+{'s': 'children', 'r': 'get', 'o': 'one foot on fence'}
+{'s': 'children', 'r': 'get', 'o': 'one foot on fence next'}
+{'s': 'children', 'r': 'foot on', 'o': 'fence between children'}
+{'s': 'children', 'r': 'foot on', 'o': 'fence next'}
+{'s': 'children', 'r': 'are', 'o': 'over before know'}
+{'s': 'children', 'r': 'are', 'o': 'know'}
+{'s': 'truth', 'r': 'must', 'o': 'if must told'}
+{'s': 'truth', 'r': 'must', 'o': 'must told'}
+{'s': 'truth', 'r': 'must told of', 'o': 'Anthea'}
+{'s': 'narrow gravelled passage', 'r': 'is in', 'o': 'almost time'}
 
-[96m[TIME] [93mtask_14_validate_llm[openai] took 142.012s[0m
+[96m[TIME] [93mtask_14_validate_llm[langchain] took 129.874s[0m
 
     LLM prompt:
 Here are some semantic triples extracted from a story chunk:
-{'s': 'flap', 'r': 'lifted', 'o': 'itself'}
-{'s': 'one', 'r': 'saw', 'o': 'it'}
-{'s': 'eye', 'r': 'seemed', 'o': 'to wink at them through the letter - slit'}
-{'s': 'beak', 'r': 'whispered', 'o': 'Are you alone'}
-{'s': 'slaves', 'r': 'have gone', 'o': 'merry making'}
-{'s': 'it', 'r': 'is not fastened', 'o': '‘ Righto ! ’'}
-{'s': 'I', 'r': 'wish', 'o': 'you'}
-{'s': 'which', 'r': 'is kept', 'o': 'bolted'}
-{'s': 'you', 'r': 'get', 'o': 'foot'}
+{'s': 'eye', 'r': 'seemed to', 'o': 'wink'}
+{'s': 'eye', 'r': 'seemed to', 'o': 'wink through letter slit'}
+{'s': 'eye', 'r': 'wink through', 'o': 'letter slit'}
+{'s': 'The children', 'r': 'Are', 'o': 'alone'}
+{'s': 'golden eye', 'r': 'seemed to', 'o': 'wink through letter slit'}
+{'s': 'eye', 'r': 'seemed to', 'o': 'wink at them'}
+{'s': 'golden eye', 'r': 'wink at', 'o': 'them'}
+{'s': 'golden eye', 'r': 'wink through', 'o': 'letter slit'}
+{'s': 'eye', 'r': 'wink at', 'o': 'them'}
+{'s': 'golden eye', 'r': 'seemed to', 'o': 'wink'}
+{'s': 'golden eye', 'r': 'seemed to', 'o': 'wink at them'}
+{'s': 'children', 'r': 'Are', 'o': 'alone'}
+{'s': 'flap', 'r': 'lifted', 'o': 'flap of letter - box'}
+{'s': 'eye', 'r': 'seemed to', 'o': 'wink at them through letter slit'}
+{'s': 'golden eye', 'r': 'seemed to', 'o': 'wink at them through letter slit'}
+{'s': 'The children slaves', 'r': 'gone', 'o': 'a-merry-making'}
+{'s': 'children slaves', 'r': 'gone', 'o': 'a-merry-making'}
+{'s': 'latch portal', 'r': 'is', 'o': 'stiff'}
+{'s': 'latch portal', 'r': 'is', 'o': 'too stiff'}
+{'s': 'latch portal', 'r': 'is stiff for', 'o': 'my beak'}
+{'s': 'latch portal', 'r': 'is too stiff for', 'o': 'my beak'}
+{'s': 'children', 'r': 'meet there', 'o': 'us'}
+{'s': 'The children', 'r': 'meet there', 'o': 'us'}
+{'s': 'children', 'r': 'meet', 'o': 'us'}
+{'s': 'children', 'r': 'crept round to', 'o': 'pantry window'}
+{'s': 'children', 'r': 'crept to', 'o': 'pantry window'}
+{'s': 'It', 'r': 'is at', 'o': 'side'}
+{'s': 'It', 'r': 'is side of', 'o': 'house'}
+{'s': 'children', 'r': 'foot on', 'o': 'fence between children next'}
+{'s': 'children', 'r': 'get', 'o': 'one foot on fence between children'}
+{'s': 'children', 'r': 'get', 'o': 'one foot on fence between children next'}
+{'s': 'children', 'r': 'are', 'o': 'over know'}
+{'s': 'children', 'r': 'are', 'o': 'before know'}
+{'s': 'children', 'r': 'foot on', 'o': 'fence'}
+{'s': 'children', 'r': 'get', 'o': 'one foot'}
+{'s': 'children', 'r': 'get', 'o': 'one foot on fence'}
+{'s': 'children', 'r': 'get', 'o': 'one foot on fence next'}
+{'s': 'children', 'r': 'foot on', 'o': 'fence between children'}
+{'s': 'children', 'r': 'foot on', 'o': 'fence next'}
+{'s': 'children', 'r': 'are', 'o': 'over before know'}
+{'s': 'children', 'r': 'are', 'o': 'know'}
+{'s': 'truth', 'r': 'must', 'o': 'if must told'}
+{'s': 'truth', 'r': 'must', 'o': 'must told'}
+{'s': 'truth', 'r': 'must told of', 'o': 'Anthea'}
+{'s': 'narrow gravelled passage', 'r': 'is in', 'o': 'almost time'}
 
 And here is the original text:
 The latch rattled, and clicked. Then the flap of the letter-box lifted itself—every one saw it by the flickering light of the gas-lamp that shone through the leafless lime-tree by the gate—a golden eye seemed to wink at them through the letter-slit, and a cautious beak whispered—
@@ -154,274 +231,290 @@ Remove nonsensical triples but otherwise retain all relevant entries, and add ne
 
     LLM output:
 [
-  {"s": "letter-box latch", "r": "rattled and clicked", "o": "audibly"},
-  {"s": "letter-box flap", "r": "lifted", "o": "itself"},
+  {"s": "latch", "r": "rattled and clicked", "o": "just before the letter-box flap lifted"},
+  {"s": "letter-box flap", "r": "lifted itself", "o": "open"},
+  {"s": "gas-lamp", "r": "shone through", "o": "leafless lime-tree by the gate"},
   {"s": "everyone", "r": "saw", "o": "the letter-box flap lift"},
-  {"s": "gas-lamp", "r": "shone through", "o": "the leafless lime-tree"},
-  {"s": "gas-lamp light", "r": "flickered", "o": "by the gate"},
-  {"s": "a golden eye", "r": "seemed to wink at", "o": "the children through the letter-box slit"},
-  {"s": "a golden eye", "r": "appeared in", "o": "the letter-box slit"},
-  {"s": "Phoenix", "r": "was at", "o": "the letter-box slit"},
-  {"s": "Phoenix", "r": "spoke through", "o": "the letter-box slit"},
-  {"s": "Phoenix's beak", "r": "whispered", "o": "Are you alone?"},
-  {"s": "voice from the letter-box slit", "r": "said", "o": "Hush!"},
-  {"s": "everyone", "r": "said", "o": "It's the Phoenix"},
-  {"s": "everyone", "r": "felt", "o": "joyous relief"},
-  {"s": "Phoenix", "r": "said", "o": "Your servants have gone a-merry-making"},
-  {"s": "door latch", "r": "is too stiff for", "o": "the Phoenix's beak"},
-  {"s": "little window above the bread-shelf", "r": "is not", "o": "fastened"},
-  {"s": "Cyril", "r": "said", "o": "Righto!"},
-  {"s": "Anthea", "r": "wished", "o": "the Phoenix would meet them at the side window"},
-  {"s": "the children", "r": "crept to", "o": "the pantry window"},
-  {"s": "pantry window", "r": "is at", "o": "the side of the house"},
-  {"s": "green gate", "r": "is labelled", "o": "Tradesmen's Entrance"},
-  {"s": "Tradesmen's Entrance gate", "r": "is always kept", "o": "bolted"},
-  {"s": "the children", "r": "climbed over", "o": "the gate by stepping on the fence and the gate handle"},
-  {"s": "Cyril and Robert", "r": "used", "o": "this method to get over the gate"},
-  {"s": "Anthea and Jane", "r": "also used", "o": "this method to get over the gate"},
-  {"s": "the four children", "r": "were soon in", "o": "the narrow gravelled passage between the houses"},
-  {"s": "the children", "r": "recognized", "o": "the Phoenix"}
+  {"s": "golden eye", "r": "winked through", "o": "letter-slit"},
+  {"s": "golden eye", "r": "winked at", "o": "the children"},
+  {"s": "cautious beak", "r": "whispered", "o": "\"Are you alone?\""},
+  {"s": "voice", "r": "came from", "o": "the letter-box slit"},
+  {"s": "voice", "r": "said", "o": "\"Hush!\""},
+  {"s": "voice from letter-box slit", "r": "belonged to", "o": "the Phoenix"},
+  {"s": "children", "r": "said", "o": "\"It's the Phoenix.\""},
+  {"s": "children", "r": "recognized", "o": "the Phoenix"},
+  {"s": "children", "r": "spoke with", "o": "joyous relief"},
+  {"s": "Phoenix", "r": "asked", "o": "\"Are you alone?\""},
+  {"s": "Phoenix", "r": "said", "o": "\"Your slaves have gone a-merry-making.\""},
+  {"s": "servants", "r": "have gone", "o": "a-merry-making"},
+  {"s": "servants", "r": "are called", "o": "'slaves' by the Phoenix"},
+  {"s": "letter-box latch", "r": "is too stiff for", "o": "the Phoenix's beak"},
+  {"s": "Phoenix", "r": "said", "o": "the little window above the bread shelf is not fastened"},
+  {"s": "pantry window", "r": "is", "o": "at the side of the house"},
+  {"s": "pantry window", "r": "is", "o": "not fastened"},
+  {"s": "bread", "r": "lies on", "o": "the shelf beneath the pantry window"},
+  {"s": "Cyril", "r": "said", "o": "\"Righto!\""},
+  {"s": "Anthea", "r": "asked", "o": "the Phoenix to meet them at the pantry window"},
+  {"s": "children", "r": "crept round to", "o": "the pantry window"},
+  {"s": "green gate", "r": "labelled", "o": "\"Tradesmen's Entrance\""},
+  {"s": "Tradesmen's Entrance gate", "r": "is", "o": "always bolted"},
+  {"s": "children", "r": "put one foot on", "o": "the fence between the houses"},
+  {"s": "children", "r": "put one foot on", "o": "the handle of the gate"},
+  {"s": "children", "r": "climbed over", "o": "the bolted gate"},
+  {"s": "children", "r": "were over", "o": "before they knew it"},
+  {"s": "Cyril and Robert", "r": "had experience of", "o": "climbing over in this way"},
+  {"s": "Anthea and Jane", "r": "also", "o": "climbed over in this way"},
+  {"s": "all four children", "r": "were in", "o": "the narrow gravelled passage"},
+  {"s": "narrow gravelled passage", "r": "runs between", "o": "that house and the next"}
 ]
 
 ==================================================
 
-[96m[TIME] [93mtask_16_moderate_triples_llm[drop] took 5.204s[0m
+[96m[TIME] [93mtask_16_moderate_triples_llm[resolve] took 2.541s[0m
 
 Moderation removed 0 triples
 Valid JSON
-[96m[TIME] [93mpipeline_B took 149.263s[0m
+[96m[TIME] [93mpipeline_B took 203.334s[0m
 Checkpoint saved to ./datasets/checkpoint.pkl
 [STATUS] Chunk story-1_book-2_chapter-12_p.20963: relation_extraction -> in-progress
-127.0.0.1 - - [10/Dec/2025 05:23:17] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:57:25] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-12_p.20963: llm_inference -> in-progress
-127.0.0.1 - - [10/Dec/2025 05:23:17] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:57:25] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-12_p.20963: relation_extraction -> completed
-127.0.0.1 - - [10/Dec/2025 05:23:17] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:57:25] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-12_p.20963: llm_inference -> completed
-127.0.0.1 - - [10/Dec/2025 05:23:17] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:57:25] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-12_p.20963: graph_verbalization -> in-progress
-127.0.0.1 - - [10/Dec/2025 05:23:17] "POST /status/chunk HTTP/1.1" 200 -
-letter-box latch rattled and clicked audibly
-letter-box flap lifted itself
+127.0.0.1 - - [10/Dec/2025 05:57:25] "POST /status/chunk HTTP/1.1" 200 -
+latch rattled and clicked just before the letter-box flap lifted
+letter-box flap lifted itself open
+gas-lamp shone through leafless lime-tree by the gate
 everyone saw the letter-box flap lift
-gas-lamp shone through the leafless lime-tree
-gas-lamp light flickered by the gate
-a golden eye seemed to wink at the children through the letter-box slit
-a golden eye appeared in the letter-box slit
-Phoenix was at the letter-box slit
-Phoenix spoke through the letter-box slit
-Phoenix's beak whispered Are you alone?
-voice from the letter-box slit said Hush!
-everyone said It's the Phoenix
-everyone felt joyous relief
-Phoenix said Your servants have gone a-merry-making
-door latch is too stiff for the Phoenix's beak
-little window above the bread-shelf is not fastened
-Cyril said Righto!
-Anthea wished the Phoenix would meet them at the side window
-the children crept to the pantry window
+golden eye winked through letter-slit
+golden eye winked at the children
+cautious beak whispered "Are you alone?"
+voice came from the letter-box slit
+voice said "Hush!"
+voice from letter-box slit belonged to the Phoenix
+children said "It's the Phoenix."
+children recognized the Phoenix
+children spoke with joyous relief
+Phoenix asked "Are you alone?"
+Phoenix said "Your slaves have gone a-merry-making."
+servants have gone a-merry-making
+servants are called 'slaves' by the Phoenix
+letter-box latch is too stiff for the Phoenix's beak
+Phoenix said the little window above the bread shelf is not fastened
 pantry window is at the side of the house
-green gate is labelled Tradesmen's Entrance
-Tradesmen's Entrance gate is always kept bolted
-the children climbed over the gate by stepping on the fence and the gate handle
-Cyril and Robert used this method to get over the gate
-Anthea and Jane also used this method to get over the gate
-the four children were soon in the narrow gravelled passage between the houses
-the children recognized the Phoenix
-[96m[TIME] [93mtask_20_send_triples took 4.936s[0m
-[96m[TIME] [93mtask_22_fetch_subgraph[popular] took 0.301s[0m
-[96m[TIME] [93mtask_23_verbalize_triples[raw] took 0.001s[0m
+pantry window is not fastened
+bread lies on the shelf beneath the pantry window
+Cyril said "Righto!"
+Anthea asked the Phoenix to meet them at the pantry window
+children crept round to the pantry window
+green gate labelled "Tradesmen's Entrance"
+Tradesmen's Entrance gate is always bolted
+children put one foot on the fence between the houses
+children put one foot on the handle of the gate
+children climbed over the bolted gate
+children were over before they knew it
+Cyril and Robert had experience of climbing over in this way
+Anthea and Jane also climbed over in this way
+all four children were in the narrow gravelled passage
+narrow gravelled passage runs between that house and the next
+[96m[TIME] [93mtask_20_send_triples took 6.130s[0m
+[96m[TIME] [93mtask_22_fetch_subgraph[community] took 3.024s[0m
+[96m[TIME] [93mtask_23_verbalize_triples[context] took 0.019s[0m
 
 Triples which best represent the graph:
-everyone SAW letter_box_flap_lift
-golden_eye SEEMED_TO_WINK_AT children_through_letter_box_slit
-golden_eye APPEARED_IN letter_box_slit
-Phoenix SPOKE_THROUGH letter_box_slit
-Phoenix WAS_AT letter_box_slit
-children RECOGNIZED Phoenix
-everyone SAID s_Phoenix
-everyone FELT joyous_relief
-Phoenix SAID servants_have_gone_merry_making
-children CREPT_TO pantry_window
-children CLIMBED_OVER gate_by_stepping_on_fence_and_gate_handle
-[96m[TIME] [93mpipeline_C took 5.321s[0m
+Facts about children:
+  - said s_Phoenix
+  - spoke with joyous_relief
+  - put one foot on fence_between_houses
+  - put one foot on handle_of_gate
+  - climbed over bolted_gate
+  - were over before_knew
+
+Facts about golden_eye:
+  - winked through letter_slit
+  - winked at children
+[96m[TIME] [93mpipeline_C took 9.263s[0m
 [STATUS] Chunk story-1_book-2_chapter-12_p.20963: graph_verbalization -> completed
-127.0.0.1 - - [10/Dec/2025 05:23:22] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:57:34] "POST /status/chunk HTTP/1.1" 200 -
 [STATUS] Story 1: summarization -> in-progress
-127.0.0.1 - - [10/Dec/2025 05:23:22] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:57:34] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-12_p.20963: summarization -> in-progress
-127.0.0.1 - - [10/Dec/2025 05:23:22] "POST /status/chunk HTTP/1.1" 200 -
-[96m[TIME] [93mtask_30_summarize_llm[text] took 20.205s[0m
+127.0.0.1 - - [10/Dec/2025 05:57:34] "POST /status/chunk HTTP/1.1" 200 -
+[96m[TIME] [93mtask_30_summarize_llm[triples] took 15.588s[0m
 
 Generated summary:
-The Phoenix peers through the letterbox, asks if the children are alone, and tells them the servants are out, the door latch is too stiff, and the pantry window is unfastened. The children agree to meet it there, climb over the bolted tradesmen’s gate, and quickly reach the narrow side passage by the pantry window.
-[96m[TIME] [93mtask_31_send_summary took 0.002s[0m
+Through the letter slit, a golden eye winked at the children. With joyous relief, they exclaimed “Phoenix!” and quickly scaled the bolted gate, placing one foot on the fence between the houses and the other on the gate’s handle, and were over in an instant.
+[96m[TIME] [93mtask_31_send_summary took 0.004s[0m
     [Wrote summary to Mongo with chunk_id: story-1_book-2_chapter-12_p.20963]
-[96m[TIME] [93mpipeline_D took 20.261s[0m
+[96m[TIME] [93mpipeline_D took 15.657s[0m
 [STATUS] Story 1: summarization -> completed
-127.0.0.1 - - [10/Dec/2025 05:23:42] "POST /status/story HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:57:50] "POST /status/story HTTP/1.1" 200 -
 [STATUS] Chunk story-1_book-2_chapter-12_p.20963: summarization -> completed
-127.0.0.1 - - [10/Dec/2025 05:23:42] "POST /status/chunk HTTP/1.1" 200 -
+127.0.0.1 - - [10/Dec/2025 05:57:50] "POST /status/chunk HTTP/1.1" 200 -
 [ASSIGNED] chunk 'story-1_book-2_chapter-12_p.20963' to worker questeval: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [10/Dec/2025 05:23:42] "POST /process_story HTTP/1.1" 200 -
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=questeval, status=startedTriggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
+127.0.0.1 - - [10/Dec/2025 05:57:50] "POST /process_story HTTP/1.1" 200 -
+Triggered questeval: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'questeval', 'total_chunks': 1}
+[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.20963' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=questeval, status=started
 
-172.18.0.2 - - [10/Dec/2025 05:23:42] "POST /callback HTTP/1.1" 200 -
-[ASSIGNED] chunk 'story-1_book-2_chapter-12_p.20963' to worker bookscore: using database 'conan_capstone' and collection 'story_chunks'
-127.0.0.1 - - [10/Dec/2025 05:23:42] "POST /process_story HTTP/1.1" 200 -
-Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}
+127.0.0.1 - - [10/Dec/2025 05:57:51] "POST /process_story HTTP/1.1" 200 -
+Triggered bookscore: {'assigned': 1, 'status': 'tasks_assigned', 'story_id': 1, 'task_type': 'bookscore', 'total_chunks': 1}172.18.0.2 - - [10/Dec/2025 05:57:51] "POST /callback HTTP/1.1" 200 -
+
 
 === TIMING SUMMARY ===
-                                      calls       total         avg         min         max
-function                                                                                   
-pipeline_A                                1    2.649675    2.649675    2.649675    2.649675
-pipeline_B                                1  149.262965  149.262965  149.262965  149.262965
-pipeline_C                                1    5.321179    5.321179    5.321179    5.321179
-pipeline_D                                1   20.260667   20.260667   20.260667   20.260667
-task_01_convert_epub                      1    2.483987    2.483987    2.483987    2.483987
-task_02_parse_chapters                    1    0.047024    0.047024    0.047024    0.047024
-task_03_chunk_story                       1    0.019111    0.019111    0.019111    0.019111
-task_11_send_chunk                        1    0.037272    0.037272    0.037272    0.037272
-task_12_relation_extraction[textacy]      1    1.818263    1.818263    1.818263    1.818263
-task_14_validate_llm[openai]              1  142.011833  142.011833  142.011833  142.011833
-task_16_moderate_triples_llm[drop]        1    5.203606    5.203606    5.203606    5.203606
-task_20_send_triples                      1    4.936485    4.936485    4.936485    4.936485
-task_22_fetch_subgraph[popular]           1    0.300608    0.300608    0.300608    0.300608
-task_23_verbalize_triples[raw]            1    0.000751    0.000751    0.000751    0.000751
-task_30_summarize_llm[text]               1   20.205142   20.205142   20.205142   20.205142
-task_31_send_summary                      1    0.001681    0.001681    0.001681    0.001681
+                                       calls       total         avg         min         max
+function                                                                                    
+pipeline_A                                 1    2.089421    2.089421    2.089421    2.089421
+pipeline_B                                 1  203.334471  203.334471  203.334471  203.334471
+pipeline_C                                 1    9.262515    9.262515    9.262515    9.262515
+pipeline_D                                 1   15.657337   15.657337   15.657337   15.657337
+task_01_convert_epub                       1    1.960282    1.960282    1.960282    1.960282
+task_02_parse_chapters                     1    0.031510    0.031510    0.031510    0.031510
+task_03_chunk_story                        1    0.015891    0.015891    0.015891    0.015891
+task_11_send_chunk                         1    0.031667    0.031667    0.031667    0.031667
+task_12_relation_extraction[openie]        1   70.091924   70.091924   70.091924   70.091924
+task_14_validate_llm[langchain]            1  129.873523  129.873523  129.873523  129.873523
+task_16_moderate_triples_llm[resolve]      1    2.541459    2.541459    2.541459    2.541459
+task_20_send_triples                       1    6.130073    6.130073    6.130073    6.130073
+task_22_fetch_subgraph[community]          1    3.023543    3.023543    3.023543    3.023543
+task_23_verbalize_triples[context]         1    0.019027    0.019027    0.019027    0.019027
+task_30_summarize_llm[triples]             1   15.587688   15.587688   15.587688   15.587688
+task_31_send_summary                       1    0.004040    0.004040    0.004040    0.004040
 
-Total execution time: 354.560s
-[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=bookscore, status=started
-172.18.0.3 - - [10/Dec/2025 05:23:42] "POST /callback HTTP/1.1" 200 -
+Total execution time: 459.654s[CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=bookscore, status=started
+
+172.18.0.3 - - [10/Dec/2025 05:57:51] "POST /callback HTTP/1.1" 200 -
 [96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
 [90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
 Initial processing complete. Server listening for additional requests from Blazor...
 Press Ctrl+C to stop.
 [CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=bookscore, status=completed
-[96m[TIME] [93mworker_metric_bookscore took 5.161s[0m
+[96m[TIME] [93mworker_metric_bookscore took 6.339s[0m
 [STORY COMPLETE] All chunks completed metric_bookscore for story 1
 
 === TIMING SUMMARY ===
-                                      calls       total         avg         min         max
-function                                                                                   
-pipeline_A                                1    2.649675    2.649675    2.649675    2.649675
-pipeline_B                                1  149.262965  149.262965  149.262965  149.262965
-pipeline_C                                1    5.321179    5.321179    5.321179    5.321179
-pipeline_D                                1   20.260667   20.260667   20.260667   20.260667
-task_01_convert_epub                      1    2.483987    2.483987    2.483987    2.483987
-task_02_parse_chapters                    1    0.047024    0.047024    0.047024    0.047024
-task_03_chunk_story                       1    0.019111    0.019111    0.019111    0.019111
-task_11_send_chunk                        1    0.037272    0.037272    0.037272    0.037272
-task_12_relation_extraction[textacy]      1    1.818263    1.818263    1.818263    1.818263
-task_14_validate_llm[openai]              1  142.011833  142.011833  142.011833  142.011833
-task_16_moderate_triples_llm[drop]        1    5.203606    5.203606    5.203606    5.203606
-task_20_send_triples                      1    4.936485    4.936485    4.936485    4.936485
-task_22_fetch_subgraph[popular]           1    0.300608    0.300608    0.300608    0.300608
-task_23_verbalize_triples[raw]            1    0.000751    0.000751    0.000751    0.000751
-task_30_summarize_llm[text]               1   20.205142   20.205142   20.205142   20.205142
-task_31_send_summary                      1    0.001681    0.001681    0.001681    0.001681
-worker_metric_bookscore                   1    5.161327    5.161327    5.161327    5.161327
+                                       calls       total         avg         min         max
+function                                                                                    
+pipeline_A                                 1    2.089421    2.089421    2.089421    2.089421
+pipeline_B                                 1  203.334471  203.334471  203.334471  203.334471
+pipeline_C                                 1    9.262515    9.262515    9.262515    9.262515
+pipeline_D                                 1   15.657337   15.657337   15.657337   15.657337
+task_01_convert_epub                       1    1.960282    1.960282    1.960282    1.960282
+task_02_parse_chapters                     1    0.031510    0.031510    0.031510    0.031510
+task_03_chunk_story                        1    0.015891    0.015891    0.015891    0.015891
+task_11_send_chunk                         1    0.031667    0.031667    0.031667    0.031667
+task_12_relation_extraction[openie]        1   70.091924   70.091924   70.091924   70.091924
+task_14_validate_llm[langchain]            1  129.873523  129.873523  129.873523  129.873523
+task_16_moderate_triples_llm[resolve]      1    2.541459    2.541459    2.541459    2.541459
+task_20_send_triples                       1    6.130073    6.130073    6.130073    6.130073
+task_22_fetch_subgraph[community]          1    3.023543    3.023543    3.023543    3.023543
+task_23_verbalize_triples[context]         1    0.019027    0.019027    0.019027    0.019027
+task_30_summarize_llm[triples]             1   15.587688   15.587688   15.587688   15.587688
+task_31_send_summary                       1    0.004040    0.004040    0.004040    0.004040
+worker_metric_bookscore                    1    6.339087    6.339087    6.339087    6.339087
 
-Total execution time: 359.722s
+Total execution time: 465.993s
 [96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
 [90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
-172.18.0.3 - - [10/Dec/2025 05:23:48] "POST /callback HTTP/1.1" 200 -
+172.18.0.3 - - [10/Dec/2025 05:57:57] "POST /callback HTTP/1.1" 200 -
 [CALLBACK] chunk_id=story-1_book-2_chapter-12_p.20963, task=questeval, status=completed
-[96m[TIME] [93mworker_metric_questeval took 169.167s[0m
+[96m[TIME] [93mworker_metric_questeval took 178.078s[0m
 [STORY COMPLETE] All chunks completed metric_questeval for story 1
 
 === TIMING SUMMARY ===
-                                      calls       total         avg         min         max
-function                                                                                   
-pipeline_A                                1    2.649675    2.649675    2.649675    2.649675
-pipeline_B                                1  149.262965  149.262965  149.262965  149.262965
-pipeline_C                                1    5.321179    5.321179    5.321179    5.321179
-pipeline_D                                1   20.260667   20.260667   20.260667   20.260667
-task_01_convert_epub                      1    2.483987    2.483987    2.483987    2.483987
-task_02_parse_chapters                    1    0.047024    0.047024    0.047024    0.047024
-task_03_chunk_story                       1    0.019111    0.019111    0.019111    0.019111
-task_11_send_chunk                        1    0.037272    0.037272    0.037272    0.037272
-task_12_relation_extraction[textacy]      1    1.818263    1.818263    1.818263    1.818263
-task_14_validate_llm[openai]              1  142.011833  142.011833  142.011833  142.011833
-task_16_moderate_triples_llm[drop]        1    5.203606    5.203606    5.203606    5.203606
-task_20_send_triples                      1    4.936485    4.936485    4.936485    4.936485
-task_22_fetch_subgraph[popular]           1    0.300608    0.300608    0.300608    0.300608
-task_23_verbalize_triples[raw]            1    0.000751    0.000751    0.000751    0.000751
-task_30_summarize_llm[text]               1   20.205142   20.205142   20.205142   20.205142
-task_31_send_summary                      1    0.001681    0.001681    0.001681    0.001681
-worker_metric_bookscore                   1    5.161327    5.161327    5.161327    5.161327
-worker_metric_questeval                   1  169.167460  169.167460  169.167460  169.167460
+                                       calls       total         avg         min         max
+function                                                                                    
+pipeline_A                                 1    2.089421    2.089421    2.089421    2.089421
+pipeline_B                                 1  203.334471  203.334471  203.334471  203.334471
+pipeline_C                                 1    9.262515    9.262515    9.262515    9.262515
+pipeline_D                                 1   15.657337   15.657337   15.657337   15.657337
+task_01_convert_epub                       1    1.960282    1.960282    1.960282    1.960282
+task_02_parse_chapters                     1    0.031510    0.031510    0.031510    0.031510
+task_03_chunk_story                        1    0.015891    0.015891    0.015891    0.015891
+task_11_send_chunk                         1    0.031667    0.031667    0.031667    0.031667
+task_12_relation_extraction[openie]        1   70.091924   70.091924   70.091924   70.091924
+task_14_validate_llm[langchain]            1  129.873523  129.873523  129.873523  129.873523
+task_16_moderate_triples_llm[resolve]      1    2.541459    2.541459    2.541459    2.541459
+task_20_send_triples                       1    6.130073    6.130073    6.130073    6.130073
+task_22_fetch_subgraph[community]          1    3.023543    3.023543    3.023543    3.023543
+task_23_verbalize_triples[context]         1    0.019027    0.019027    0.019027    0.019027
+task_30_summarize_llm[triples]             1   15.587688   15.587688   15.587688   15.587688
+task_31_send_summary                       1    0.004040    0.004040    0.004040    0.004040
+worker_metric_bookscore                    1    6.339087    6.339087    6.339087    6.339087
+worker_metric_questeval                    1  178.077605  178.077605  178.077605  178.077605
 
-Total execution time: 528.889s
+Total execution time: 644.071s
 [96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
 [90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
-[96m[TIME] [93mtask_45_eval_coverage took 0.865s[0m
-[96m[TIME] [93mtask_45_eval_rouge took 1.813s[0m
-Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 7.95kB [00:00, 19.1MB/s]
-[96m[TIME] [93mtask_45_eval_bertscore took 20.075s[0m
-[96m[TIME] [93mtask_45_eval_ngrams took 0.022s[0m
-[96m[TIME] [93mtask_45_eval_jsd took 0.009s[0m
+[96m[TIME] [93mtask_45_eval_coverage took 0.599s[0m
+[96m[TIME] [93mtask_45_eval_rouge took 4.572s[0m
+Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 7.95kB [00:00, 9.44MB/s]
+[96m[TIME] [93mtask_45_eval_bertscore took 32.317s[0m
+[96m[TIME] [93mtask_45_eval_ngrams took 0.023s[0m
+[96m[TIME] [93mtask_45_eval_jsd took 0.006s[0m
 [96m[TIME] [93mtask_45_eval_ncd took 0.000s[0m
-[96m[TIME] [93mtask_45_eval_salience took 0.014s[0m
-[96m[TIME] [93mtask_45_eval_faithfulness took 28.833s[0m
-[96m[TIME] [93mtask_45_eval_readability took 1.494s[0m
-[96m[TIME] [93mtask_45_eval_sentence_coherence took 7.591s[0m
-[96m[TIME] [93mtask_45_eval_entity_grid took 0.543s[0m
+[96m[TIME] [93mtask_45_eval_salience took 0.011s[0m
+[96m[TIME] [93mtask_45_eval_faithfulness took 31.162s[0m
+[96m[TIME] [93mtask_45_eval_readability took 1.500s[0m
+[96m[TIME] [93mtask_45_eval_sentence_coherence took 10.517s[0m
+[96m[TIME] [93mtask_45_eval_entity_grid took 0.584s[0m
 [96m[TIME] [93mtask_45_eval_diversity took 0.000s[0m
 [96m[TIME] [93mtask_45_eval_stopwords took 0.002s[0m
-Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 6.14kB [00:00, 3.72MB/s]
+Downloading builder script: 0.00B [00:00, ?B/s]Downloading builder script: 6.14kB [00:00, 3.11MB/s]
 Some weights of RobertaModel were not initialized from the model checkpoint at roberta-large and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
 You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Sending payload to Blazor at http://blazor_service:5055/api/metrics
 POST succeeded
-{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'The Phoenix peers through the letterbox, asks if the children are alone, and tells them the servants are out, the door latch is too stiff, and the pantry window is unfastened. The children agree to meet it there, climb over the bolted tradesmen’s gate, and quickly reach the narrow side passage by the pantry window.', 'goldSummaryText': 'The latch rattled, and clicked. Then the flap of the letter-box lifted itself—every one saw it by the flickering light of the gas-lamp that shone through the leafless lime-tree by the gate—a golden eye seemed to wink at them through the letter-slit, and a cautious beak whispered—\n‘Are you alone?’\n‘It’s the Phoenix,’ said every one, in a voice so joyous, and so full of relief, as to be a sort of whispered shout.\n‘Hush!’ said the voice from the letter-box slit. ‘Your slaves have gone a-merry-making. The latch of this portal is too stiff for my beak. But at the side—the little window above the shelf whereon your bread lies—it i', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.861991286277771, 'recall': 0.8211845755577087, 'f1Score': 0.8410933613777161}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 1}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.28232510738720984}, {'name': 'ROUGE-1', 'value': 0.3222222222222222}, {'name': 'ROUGE-2', 'value': 0.056179775280898875}, {'name': 'ROUGE-L', 'value': 0.18888888888888888}, {'name': 'ROUGE-Lsum', 'value': 0.26666666666666666}]}, 'qaResults': []}
-[96m[TIME] [93mtask_40_post_payload took 31.057s[0m
+{'bookID': '2', 'bookTitle': 'The Phoenix and the Carpet', 'summaryText': 'Through the letter slit, a golden eye winked at the children. With joyous relief, they exclaimed “Phoenix!” and quickly scaled the bolted gate, placing one foot on the fence between the houses and the other on the gate’s handle, and were over in an instant.', 'goldSummaryText': 'The latch rattled, and clicked. Then the flap of the letter-box lifted itself—every one saw it by the flickering light of the gas-lamp that shone through the leafless lime-tree by the gate—a golden eye seemed to wink at them through the letter-slit, and a cautious beak whispered—\n‘Are you alone?’\n‘It’s the Phoenix,’ said every one, in a voice so joyous, and so full of relief, as to be a sort of whispered shout.\n‘Hush!’ said the voice from the letter-box slit. ‘Your slaves have gone a-merry-making. The latch of this portal is too stiff for my beak. But at the side—the little window above the shelf whereon your bread lies—it i', 'metrics': {'prF1Metrics': [{'name': 'BERTScore', 'precision': 0.8713365793228149, 'recall': 0.823509693145752, 'f1Score': 0.8467482924461365}], 'qa': {'qaItems': [{'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}, {'question': 'UNKNOWN', 'goldAnswer': 'UNKNOWN', 'generatedAnswer': 'UNKNOWN', 'isCorrect': False, 'accuracy': 0}], 'averageAccuracy': 0}, 'scalarMetrics': [{'name': 'BooookScore (Chang 2024)', 'value': 0}, {'name': 'QuestEval (Scialom 2021)', 'value': 0.2668626601387735}, {'name': 'ROUGE-1', 'value': 0.2823529411764706}, {'name': 'ROUGE-2', 'value': 0.08333333333333333}, {'name': 'ROUGE-L', 'value': 0.16470588235294115}, {'name': 'ROUGE-Lsum', 'value': 0.18823529411764706}]}, 'qaResults': []}
+[96m[TIME] [93mtask_40_post_payload took 36.636s[0m
 
 Output sent to web app.
-[96m[TIME] [93mpipeline_E took 92.334s[0m
+[96m[TIME] [93mpipeline_E took 117.946s[0m
 [PIPELINE FINALIZED] Story 1 fully processed
 
 === TIMING SUMMARY ===
-                                      calls       total         avg         min         max
-function                                                                                   
-pipeline_A                                1    2.649675    2.649675    2.649675    2.649675
-pipeline_B                                1  149.262965  149.262965  149.262965  149.262965
-pipeline_C                                1    5.321179    5.321179    5.321179    5.321179
-pipeline_D                                1   20.260667   20.260667   20.260667   20.260667
-pipeline_E                                1   92.333991   92.333991   92.333991   92.333991
-task_01_convert_epub                      1    2.483987    2.483987    2.483987    2.483987
-task_02_parse_chapters                    1    0.047024    0.047024    0.047024    0.047024
-task_03_chunk_story                       1    0.019111    0.019111    0.019111    0.019111
-task_11_send_chunk                        1    0.037272    0.037272    0.037272    0.037272
-task_12_relation_extraction[textacy]      1    1.818263    1.818263    1.818263    1.818263
-task_14_validate_llm[openai]              1  142.011833  142.011833  142.011833  142.011833
-task_16_moderate_triples_llm[drop]        1    5.203606    5.203606    5.203606    5.203606
-task_20_send_triples                      1    4.936485    4.936485    4.936485    4.936485
-task_22_fetch_subgraph[popular]           1    0.300608    0.300608    0.300608    0.300608
-task_23_verbalize_triples[raw]            1    0.000751    0.000751    0.000751    0.000751
-task_30_summarize_llm[text]               1   20.205142   20.205142   20.205142   20.205142
-task_31_send_summary                      1    0.001681    0.001681    0.001681    0.001681
-task_40_post_payload                      1   31.057395   31.057395   31.057395   31.057395
-task_45_eval_bertscore                    1   20.075177   20.075177   20.075177   20.075177
-task_45_eval_coverage                     1    0.865127    0.865127    0.865127    0.865127
-task_45_eval_diversity                    1    0.000282    0.000282    0.000282    0.000282
-task_45_eval_entity_grid                  1    0.542896    0.542896    0.542896    0.542896
-task_45_eval_faithfulness                 1   28.833140   28.833140   28.833140   28.833140
-task_45_eval_jsd                          1    0.008855    0.008855    0.008855    0.008855
-task_45_eval_ncd                          1    0.000130    0.000130    0.000130    0.000130
-task_45_eval_ngrams                       1    0.022033    0.022033    0.022033    0.022033
-task_45_eval_readability                  1    1.494425    1.494425    1.494425    1.494425
-task_45_eval_rouge                        1    1.812882    1.812882    1.812882    1.812882
-task_45_eval_salience                     1    0.013577    0.013577    0.013577    0.013577
-task_45_eval_sentence_coherence           1    7.591373    7.591373    7.591373    7.591373
-task_45_eval_stopwords                    1    0.001762    0.001762    0.001762    0.001762
-worker_metric_bookscore                   1    5.161327    5.161327    5.161327    5.161327
-worker_metric_questeval                   1  169.167460  169.167460  169.167460  169.167460
+                                       calls       total         avg         min         max
+function                                                                                    
+pipeline_A                                 1    2.089421    2.089421    2.089421    2.089421
+pipeline_B                                 1  203.334471  203.334471  203.334471  203.334471
+pipeline_C                                 1    9.262515    9.262515    9.262515    9.262515
+pipeline_D                                 1   15.657337   15.657337   15.657337   15.657337
+pipeline_E                                 1  117.946317  117.946317  117.946317  117.946317
+task_01_convert_epub                       1    1.960282    1.960282    1.960282    1.960282
+task_02_parse_chapters                     1    0.031510    0.031510    0.031510    0.031510
+task_03_chunk_story                        1    0.015891    0.015891    0.015891    0.015891
+task_11_send_chunk                         1    0.031667    0.031667    0.031667    0.031667
+task_12_relation_extraction[openie]        1   70.091924   70.091924   70.091924   70.091924
+task_14_validate_llm[langchain]            1  129.873523  129.873523  129.873523  129.873523
+task_16_moderate_triples_llm[resolve]      1    2.541459    2.541459    2.541459    2.541459
+task_20_send_triples                       1    6.130073    6.130073    6.130073    6.130073
+task_22_fetch_subgraph[community]          1    3.023543    3.023543    3.023543    3.023543
+task_23_verbalize_triples[context]         1    0.019027    0.019027    0.019027    0.019027
+task_30_summarize_llm[triples]             1   15.587688   15.587688   15.587688   15.587688
+task_31_send_summary                       1    0.004040    0.004040    0.004040    0.004040
+task_40_post_payload                       1   36.635677   36.635677   36.635677   36.635677
+task_45_eval_bertscore                     1   32.317353   32.317353   32.317353   32.317353
+task_45_eval_coverage                      1    0.598649    0.598649    0.598649    0.598649
+task_45_eval_diversity                     1    0.000315    0.000315    0.000315    0.000315
+task_45_eval_entity_grid                   1    0.584198    0.584198    0.584198    0.584198
+task_45_eval_faithfulness                  1   31.161781   31.161781   31.161781   31.161781
+task_45_eval_jsd                           1    0.006142    0.006142    0.006142    0.006142
+task_45_eval_ncd                           1    0.000133    0.000133    0.000133    0.000133
+task_45_eval_ngrams                        1    0.023408    0.023408    0.023408    0.023408
+task_45_eval_readability                   1    1.500298    1.500298    1.500298    1.500298
+task_45_eval_rouge                         1    4.571696    4.571696    4.571696    4.571696
+task_45_eval_salience                      1    0.010990    0.010990    0.010990    0.010990
+task_45_eval_sentence_coherence            1   10.516983   10.516983   10.516983   10.516983
+task_45_eval_stopwords                     1    0.001936    0.001936    0.001936    0.001936
+worker_metric_bookscore                    1    6.339087    6.339087    6.339087    6.339087
+worker_metric_questeval                    1  178.077605  178.077605  178.077605  178.077605
 
-Total execution time: 713.542s
+Total execution time: 879.947s
 [96m[DUMP] [93mSaved time records to './logs/elapsed_time.csv'[0m
 [90m[CHART] [93mSaved chart 'Average Function Runtime Across Runs' to ./logs/charts/avg_runtime.png[0m
 [90m[CHART] [93mSaved chart 'Saved summary metrics CSV' to ./logs/metrics/chunk_summary.csv[0m
-172.18.0.2 - - [10/Dec/2025 05:28:05] "POST /callback HTTP/1.1" 200 -
-INFO:werkzeug:172.18.0.2 - - [10/Dec/2025 05:28:05] "POST /callback HTTP/1.1" 200 -
+172.18.0.2 - - [10/Dec/2025 06:02:47] "POST /callback HTTP/1.1" 200 -
+INFO:werkzeug:172.18.0.2 - - [10/Dec/2025 06:02:47] "POST /callback HTTP/1.1" 200 -
