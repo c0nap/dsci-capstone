@@ -93,8 +93,7 @@ def pipeline_C(json_triples):
 @Log.time
 def pipeline_D(collection_name, triples_string, chunk_id, text):
     """Generate chunk summary"""
-    #_, summary = stages.task_30_summarize_llm(triples_string)
-    _, summary = stages.task_30_summarize_llm_only(text)
+    _, summary = stages.task_30_summarize_llm(triples_string, text)
     print("\nGenerated summary:")
     print(summary)
 

@@ -309,6 +309,22 @@ class Config:
             community_id = session.main_graph.get_community_largest()
             return session.main_graph.get_community_subgraph(community_id)
 
+    @staticmethod
+    def get_final_prompt(use_triples: bool, use_text: bool, triples_string: Optional[str], text: Optional[str]) -> Tuple[str, str]:
+        if use_triples and use_text:
+            prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+            prompt += f"And here is the original text:\n{text}\n\n"
+            prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
+            prompt += "Output your generated summary and nothing else."
+        elif use_triples:
+            prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
+            prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
+            prompt += "Output your generated summary and nothing else."
+        elif use_text:
+            prompt = f"Here is a story chunk:\n{text}\n"
+            prompt += "Transform this into a coherent, factual, and concise summary. Some details may be irrelevant, so don't force yourself to include every single one.\n"
+            prompt += "Output your generated summary and nothing else."
+        return prompt
 
 ##########################################################################
 
@@ -501,32 +517,17 @@ def task_23_verbalize_triples(triples_df):
 
 
 # PIPELINE STAGE D - CONSOLIDATE / GRAPH -> SUMMARY
-def task_30_summarize_llm(triples_string: str) -> Tuple[str, str]:
+def task_30_summarize_llm(triples_string: str = None, text: str = None) -> Tuple[str, str]:
     """Prompt LLM to generate summary"""
-    llm_connector_type = Config.summary_llm_engine
+    use_triples = Config.triples_visible
+    use_text = Config.source_text_visible
     with Log.timer(config = f"[{llm_connector_type}]"):
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that summarizes text."
         llm = Config.get_llm(llm_connector_type, system_prompt)
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-        prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
-        prompt += "Output your generated summary and nothing else."
+        prompt = Config.get_final_prompt(use_triples, use_text, triples_string, text)
         summary = llm.execute_query(prompt)
         return (prompt, summary)
-
-def task_30_summarize_llm_only(text: str) -> Tuple[str, str]:
-    """Prompt LLM to generate summary"""
-    llm_connector_type = Config.summary_llm_engine
-    with Log.timer(config = f"[{llm_connector_type}]"):
-        # TOOD: reasoning_effort, model_name, prompt_basic
-        system_prompt = "You are a helpful assistant that summarizes text."
-        llm = Config.get_llm(llm_connector_type, system_prompt)
-        prompt = f"Here is a story chunk:\n{text}\n"
-        prompt += "Transform this into a coherent, factual, and concise summary. Some details may be irrelevant, so don't force yourself to include every single one.\n"
-        prompt += "Output your generated summary and nothing else."
-        summary = llm.execute_query(prompt)
-        return (prompt, summary)
-
 
 
 
