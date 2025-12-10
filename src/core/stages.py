@@ -521,6 +521,7 @@ def task_30_summarize_llm(triples_string: str = None, text: str = None) -> Tuple
     """Prompt LLM to generate summary"""
     use_triples = Config.triples_visible
     use_text = Config.source_text_visible
+    llm_connector_type = Config.summary_llm_engine
     # TODO: maybe make this a string config instead of 2 bools
     if use_triples and use_text:
         config = "all"
