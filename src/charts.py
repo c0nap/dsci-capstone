@@ -79,33 +79,43 @@ class Plot:
         @param log_scale  Whether to use a logarithmic scale for the plot
         @param cap_outliers  Percentile to truncate large outliers. Disabled at 0 by default.
         """
-        # Read data from CSV files or fall back to Log.get_merged_timing()
+        # Read data from CSV files
         if csv1 and csv2:
             df1 = pd.read_csv(csv1)
             df2 = pd.read_csv(csv2)
         else:
-            raise
+            raise ValueError("Both csv1 and csv2 must be provided")
 
         # Process both datasets
-        def process_df(df: pd.DataFrame, only_pipeline: bool) -> pd.DataFrame:
-            # Choose or exclude functions containing "pipeline"
-            if only_pipeline:
+        def process_df(df: pd.DataFrame, filter_mode: Optional[bool]) -> pd.DataFrame:
+            # 1. Filter if requested
+            if filter_mode is True:
                 df = df[df['function'].str.contains('pipeline', case=False, na=False)]
-            else:
+            elif filter_mode is False:
                 df = df[~df['function'].str.contains('pipeline', case=False, na=False)]
-            per_run_avg = df.groupby(['run_id', 'function'])['elapsed'].mean().reset_index()
-            return per_run_avg.groupby('function')['elapsed'].mean().reset_index()
+            # If filter_mode is None, we skip filtering but proceed to aggregation
+            
+            # 2. Aggregate (Group by function)
+            # Check if run_id exists to allow multi-level aggregation, otherwise direct group
+            if 'run_id' in df.columns:
+                per_run_avg = df.groupby(['run_id', 'function'])['elapsed'].mean().reset_index()
+                return per_run_avg.groupby('function')['elapsed'].mean().reset_index()
+            else:
+                return df.groupby('function')['elapsed'].mean().reset_index()
 
-        if only_pipeline is not None:
-            df1 = process_df(df1, only_pipeline)
-            df2 = process_df(df2, only_pipeline)
+        df1 = process_df(df1, only_pipeline)
+        df2 = process_df(df2, only_pipeline)
 
         # Merge on function names to align bars
         merged = pd.merge(df1, df2, on='function', suffixes=('_left', '_right'))
         merged = merged.sort_values(by=['function'], ascending=False).reset_index(drop=True)
 
+        if merged.empty:
+            print("Warning: No matching functions found between datasets.")
+            return
+
         # Create figure
-        height = max(1, len(merged) * 0.4)
+        height = max(4, len(merged) * 0.4) # Ensure minimum height
         fig, ax = plt.subplots(figsize=(10, height))
 
         # Plot bars going inward from center
@@ -116,12 +126,15 @@ class Plot:
         # Configure axes with log scale to handle outliers
         if log_scale:
             ax.set_xscale('symlog', linthresh=1.0)
+        
         if cap_outliers > 0:
+            # Calculate limits based on aggregated data
             max_val = merged[['elapsed_left', 'elapsed_right']].quantile(1 - cap_outliers).max()
             ax.set_xlim(-max_val, max_val)  # cuts off top 5%
         ax.set_yticks(y_pos)
         ax.set_yticklabels(merged['function'])
         ax.axvline(0, color='black', linewidth=0.8)
+        
         if log_scale:
             ax.set_xlabel("Average elapsed seconds (log scale)")
         else:
