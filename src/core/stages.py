@@ -114,18 +114,44 @@ from src.components.metrics import (
 
 
 class Config:
-    relation_extractor_type="textacy"
-    validation_llm_engine="openai"
-    moderation_llm_engine="openai"
-    moderation_strategy="drop"
-    graph_lookup_mode="popular"
-    verbalize_triples_mode="raw"
-    summary_llm_engine="openai"
+    relation_extractor_type: str
+    validation_llm_engine: str
+    moderation_llm_engine: str
+    moderation_strategy: str
+    graph_lookup_mode: str
+    verbalize_triples_mode: str
+    summary_llm_engine: str
 
     # gpt-5 only supports temperature 1
-    temperature=1
-    reasoning_effort="high"
-    model_name="gpt-5"
+    temperature: float
+    reasoning_effort: str
+    model_name: str
+
+    def load_fast():
+        relation_extractor_type = "textacy"
+        validation_llm_engine = "openai"
+        moderation_llm_engine = "openai"
+        moderation_strategy = "drop"
+        graph_lookup_mode = "popular"
+        verbalize_triples_mode = "raw"
+        summary_llm_engine = "openai"
+    
+        temperature = 1
+        reasoning_effort = "minimal"
+        model_name = "gpt-5-nano"
+
+    def load_best():
+        relation_extractor_type = "openie"
+        validation_llm_engine = "langchain"
+        moderation_llm_engine = "langchain"
+        moderation_strategy = "resolve"
+        graph_lookup_mode = "community"
+        verbalize_triples_mode = "context"
+        summary_llm_engine = "langchain"
+    
+        temperature = 1
+        reasoning_effort = "high"
+        model_name = "gpt-5"
 
     # Moderation thresholds for Gutenberg (historical fiction)
     moderation_thresholds = {
