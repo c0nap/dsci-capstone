@@ -141,7 +141,7 @@ def pipeline_E(
             "lexical_diversity" : task_45_eval_diversity(summary)["lexical_diversity"],
             "stopword_ratio" : task_45_eval_stopwords(summary)["stopword_ratio"],
             "bookscore" : bookscore,
-            "questeval" : questeval,
+            #"questeval" : questeval,
         }
 
     if chunk == "":

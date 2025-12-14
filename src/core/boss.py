@@ -363,7 +363,8 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
                 # Check if all metric tasks are complete for the story
                 all_metrics_complete = all(
-                    [check_story_completion(story_id, 'metric_questeval'), check_story_completion(story_id, 'metric_bookscore')]
+                    #[check_story_completion(story_id, 'metric_questeval'), check_story_completion(story_id, 'metric_bookscore')]
+                    [check_story_completion(story_id, 'metric_bookscore')]
                 )
 
                 if all_metrics_complete:
@@ -378,15 +379,15 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     summary = chunk["summary"]
                     gold_summary = chunk.get("gold_summary", text[: len(text) // 2])
                     bookscore = float(chunk["bookscore"]["result"]["value"])
-                    questeval = float(chunk["questeval"]["result"]["value"])
-                    CORE_METRICS = pipeline_E(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
+                    #questeval = float(chunk["questeval"]["result"]["value"])
+                    CORE_METRICS = pipeline_E(summary, book_title, book_id, text, gold_summary, bookscore)  #, questeval)
 
                     print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")
 
                     Log.print_timing_summary()
                     Log.dump_timing_csv()
                     Plot.time_elapsed_by_names()
-                    Plot.save_metrics_csv(CORE_METRICS)
+                    Plot.save_metrics_csv(CORE_METRICS, chunk)
                     Plot.summary_results(CORE_METRICS)
 
         elif "failed" in status:
@@ -542,7 +543,7 @@ def create_boss_thread(DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
     print("Deleted old chunks...")
 
     # Load configuration
-    task_types = ["questeval", "bookscore"]
+    task_types = ["bookscore"]  #["questeval", "bookscore"]
     worker_urls = load_worker_config(task_types)
     if not worker_urls:
         print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")

@@ -211,7 +211,7 @@ class Plot:
 
     # TODO: refactor
     @staticmethod
-    def save_metrics_csv(metrics: Dict[str, float], filename: str = "./logs/metrics/chunk_summary.csv") -> None:
+    def save_metrics_csv(metrics: Dict[str, float], run_id: Optional[str] = None, filename: str = "./logs/metrics/chunk_summary.csv") -> None:
         """Save a metrics dict to CSV using pandas."""
         # Convert to a simple 2-column DataFrame
         df = pd.DataFrame([
