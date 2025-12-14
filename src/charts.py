@@ -209,26 +209,30 @@ class Plot:
         plt.show()
 
 
-    # TODO: refactor
     @staticmethod
-    def save_metrics_csv(metrics: Dict[str, float], run_id: Optional[str] = None, filename: str = "./logs/metrics/chunk_summary.csv") -> None:
-        """Save a metrics dict to CSV using pandas."""
-        # Convert to a simple 2-column DataFrame
-        df = pd.DataFrame([
-            {"metric": key, "value": value}
-            for key, value in metrics.items()
-        ])
-
-        # Ensure directory exists
+    def save_metrics_csv(
+        metrics: Dict[str, float],
+        run_id: Optional[str] = None,
+        filename: str = "./logs/chunk_scores.csv"
+    ) -> None:
+        """Save metrics as a single row, appending to existing CSV.
+        @details
+        Row-major format: each metric is a column, each run is a row.
+        Uses timestamp as run_id if not provided.
+        """
+        if run_id is None:
+            run_id = datetime.now().isoformat()
+        
+        # Single-row DataFrame with run_id as first column
+        row_data = {"run_id": run_id, **metrics}
+        current_df = pd.DataFrame([row_data])
+        
         os.makedirs(os.path.dirname(filename), exist_ok=True)
-
-        # Save CSV
-        df.to_csv(filename, index=False)
-
-        # Optional: log the output path
+        
+        merged_df = _get_merged_df(current_df, filename, "run_id", run_id)
+        merged_df.to_csv(filename, index=False)
+        
         Log.chart("Saved summary metrics CSV", filename)
-
-
 
     METRIC_GROUPS = {
         "SOURCE SIMILARITY": ["bertscore", "rougeL_recall", "jsd_stats", "ncd_overlap", "novel_ngrams"],
