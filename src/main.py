@@ -208,7 +208,6 @@ if __name__ == "__main__":
     from src.core.stages import Config
 
     session.setup()
-    Config.setup()
 
     # TODO: handle this better - half env parsing is here, half is in boss.py
     load_dotenv(".env")

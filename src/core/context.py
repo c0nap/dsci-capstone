@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from src.connectors.document import DocumentConnector
     from src.connectors.graph import GraphConnector
     from src.connectors.relational import RelationalConnector
+    from src.config import Config
 
 
 class Session:
@@ -54,6 +55,7 @@ class Session:
         self.graph_db: "GraphConnector"
         self.main_graph: "KnowledgeGraph"
         self.metrics: "Metrics"
+        self.config: "Config"
 
     def setup(self) -> None:
         """Loads heavy dependencies and initializes connections.
@@ -69,6 +71,7 @@ class Session:
         from src.connectors.document import DocumentConnector
         from src.connectors.graph import GraphConnector
         from src.connectors.relational import RelationalConnector
+        from src.config import Config
 
         # 4. Initialize connectors and components
         ## Stores RDF-compliant semantic triples.
@@ -81,6 +84,9 @@ class Session:
         self.main_graph = KnowledgeGraph("main", self.graph_db, self.verbose)
         ## The metrics class needs an instance to read the .env file.
         self.metrics = Metrics()
+        ## Static class containing global configuration settings.
+        self.config = Config
+        self.config.setup()
         # TODO: Split into scene graph, event graph, and social graph.
 
 
