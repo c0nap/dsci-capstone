@@ -258,7 +258,6 @@ def run_bertscore_old(prediction: str, reference: str) -> Dict[str, List[float]]
     Example schema: { "precision": [0.87], ... }
     Valid keys: precision, recall, f1."""
     import evaluate
-
     model = evaluate.load("bertscore")
     result = model.compute(predictions=[prediction], references=[reference], model_type="roberta-large")
     return result
@@ -787,7 +786,8 @@ def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
     entailment_threshold = 0.5  # threshold on entailment probability to count a sentence as 'entailed'
 
     # Load model (same family as original; consider using v3 variant for better performance)
-    model = CrossEncoder('cross-encoder/nli-deberta-base')
+    # We explicitly set low_cpu_mem_usage to False to prevent loading to the 'meta' device
+    model = CrossEncoder('cross-encoder/nli-deberta-base', automodel_args={"low_cpu_mem_usage": False})
 
     # Tokenize into sentences
     summary_sents = sent_tokenize(summary)
