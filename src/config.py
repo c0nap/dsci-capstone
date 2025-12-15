@@ -2,6 +2,7 @@ from src.connectors.llm import LLMConnector
 from src.components.relation_extraction import RelationExtractor
 from typing import List, Any, Optional, Tuple
 from src.core.context import session
+import random
 
 class Config:
     relation_extractor_type: str
@@ -20,7 +21,8 @@ class Config:
     reasoning_effort: str
     model_name: str
 
-    chunk_selection_method: str = "first-2"
+    seed: int = 123
+    chunk_selection_method: str = "random-2"
     configuration: str = "fast"
 
     @staticmethod
@@ -257,9 +259,8 @@ class Config:
             return [book_chunks[index]]
 
     def _sample_chunks(chunks, n_sample):
-        unique_numbers = random.sample(range(len(chunks)), n_sample)
-        sample = []
-        for i in unique_numbers:
-            c = chunks[i]
-            sample.append(c)
-        return (unique_numbers, sample)
+        rng = random.Random(Config.seed)
+        unique_numbers = rng.sample(range(len(chunks)), n_sample)
+        sample = [chunks[i] for i in unique_numbers]
+        #print(unique_numbers)
+        return sample

@@ -1,4 +1,3 @@
-import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
 from src.connectors.llm import parse_llm_triples
 from src.components.relation_extraction import RelationExtractor, Triple
