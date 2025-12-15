@@ -15,7 +15,7 @@ from typing import Dict
 
 
 @Log.time
-def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
+def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id, collection_name):
     """Connects all components to convert an EPUB file to a book summary.
     @details  Data conversions:
         - EPUB file
@@ -40,12 +40,12 @@ def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
 
 
 @Log.time
-def pipeline_B(collection_name, c, index, book_title):
+def pipeline_B(collection_name, c, book_title):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
     print("\nChunk details:")
-    print(f"  index: {index}\n")
+    print(f"  index: {c.index}\n")
     print(c.text)
 
     extracted = stages.task_12_relation_extraction(c.text)
@@ -66,7 +66,7 @@ def pipeline_B(collection_name, c, index, book_title):
     n_removed -= len(triples)
     print(f"\nModeration removed {n_removed} triples")
     print("Valid JSON")
-    return triples, c
+    return triples
 
 
 @Log.time
@@ -157,9 +157,9 @@ def pipeline_E(
 
 @Log.time
 def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
-    chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id)
+    chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id, collection_name)
     for chunk in chunks:
-        triples, chunk = pipeline_B(collection_name, chunk, book_title)
+        triples = pipeline_B(collection_name, chunk, book_title)
         triples_string = pipeline_C(triples)
         summary = pipeline_D(collection_name, triples_string, chunk.get_chunk_id())
         pipeline_E(summary, book_title, book_id)
@@ -248,13 +248,14 @@ CHAPTER 12. THE END OF THE END\n
             end_str="end of the Phoenix and the Carpet.",
             book_id=book_id,
             story_id=story_id,
+            collection_name=COLLECTION,
         )
         post_story_status(BOSS_PORT, story_id, 'preprocessing', 'completed')
         post_story_status(BOSS_PORT, story_id, 'chunking', 'completed')
 
     for chunk in chunks:
         if not load_from_checkpoint:
-            triples, chunk = pipeline_B(COLLECTION, chunks[0], book_title)
+            triples = pipeline_B(COLLECTION, chunk, book_title)
             with open(checkpoint_path, "wb") as f_write:
                 pickle.dump({"triples": triples, "chunk": chunk}, f_write)
             print(f"Checkpoint saved to {checkpoint_path}")
