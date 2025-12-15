@@ -242,94 +242,103 @@ class Plot:
 
 
     @staticmethod
-    def summary_comparison(filename: str, paths: list[str], fixed_colors: List[str], labels: List[str]) -> None:
-        """Compare metrics across an arbitrary number of metric CSV files, with grouped metric labels."""
+    def summary_comparison(
+        filename: str,
+        paths: list[str],
+        fixed_colors: list[str],
+        labels: list[str]
+    ) -> None:
+        """Compare metrics across CSV files, aggregating chunk rows per file.
+        
+        Expects row-major CSVs: run_id, metric1, metric2, ...
+        Each file becomes one bar group (mean across all rows).
+        """
         import matplotlib.pyplot as plt
         import numpy as np
-    
-        merged = None
-    
-        # Load each CSV and align metrics
-        for i, path in enumerate(paths):
-            if i < len(labels):
-                label = labels[i]
-            else:
-                label = os.path.splitext(os.path.basename(path))[0]
-                labels.append(label)
-    
-            df = pd.read_csv(path)   # expects columns: metric, value
-            df = df.rename(columns={"value": label})
-    
-            if merged is None:
-                merged = df
-            else:
-                merged = pd.merge(merged, df, on="metric", how="outer")
-    
-        # Normalize metrics for each label column
-        for col in merged.columns:
-            if col != "metric":
-                # Create a dict keyed by original metric names
-                metric_to_val = dict(zip(merged["metric"], merged[col]))
-                normalized = Plot.normalize_metrics(metric_to_val)
-                # Re-align the normalized values back to the DataFrame column
-                merged[col] = merged["metric"].map(normalized)
 
-        # Then rename metrics for display
-        merged["metric"] = merged["metric"].apply(lambda k: Plot.METRIC_NAMES.get(k, k))
+        metric_cols = None
+        aggregated = []  # one {metric: mean_value} dict per file
 
-        # Compute x positions and spacing for groups
+        for path in paths:
+            df = pd.read_csv(path)
+            cols = [c for c in df.columns if c != "run_id"]
+            
+            if metric_cols is None:
+                metric_cols = cols
+            
+            agg_dict = {m: df[m].mean() for m in cols}
+            aggregated.append(agg_dict)
+
+        # Normalize each file's metrics
+        normalized = [Plot.normalize_metrics(d) for d in aggregated]
+
+        # Build x positions with group spacing
         x_positions = []
         x_labels = []
-        group_ticks = []
-        spacing = 0.5  # extra space between groups
+        group_ends = []
+        spacing = 0.5
         x = 0
-        for group_name, metrics in Plot.METRIC_GROUPS.items():
-            group_indices = []
+
+        group_names = list(Plot.METRIC_GROUPS.keys())
+        for group_name in group_names:
+            metrics = Plot.METRIC_GROUPS[group_name]
+            group_start_x = x
             for m in metrics:
-                idx = merged.index[merged["metric"] == Plot.METRIC_NAMES.get(m, m)].tolist()
-                if idx:
+                if m in metric_cols:
                     x_positions.append(x)
-                    x_labels.append(merged.loc[idx[0], "metric"])
-                    group_indices.append(x)
+                    x_labels.append(Plot.METRIC_NAMES.get(m, m))
                     x += 1
-            if group_indices:
-                group_center = np.mean(group_indices)
-                group_ticks.append((group_center, group_name))
-                x += spacing  # add extra space after group
+            if x > group_start_x:
+                group_ends.append(x - 1)
+                x += spacing
 
-        bar_width = 0.9 / len(labels)
+        # Separator positions: midpoint between groups
+        separator_xs = []
+        for i in range(len(group_ends) - 1):
+            separator_xs.append(group_ends[i] + spacing / 2)
 
-        plt.figure(figsize=(max(12, len(x_labels)*0.5), 6))
+        bar_width = 0.9 / len(paths)
+        plt.figure(figsize=(max(12, len(x_labels) * 0.5), 6))
 
-        # Draw vertical bars
-        for i, label in enumerate(labels):
+        # Draw bars
+        for i, norm_dict in enumerate(normalized):
+            label = labels[i] if i < len(labels) else os.path.splitext(os.path.basename(paths[i]))[0]
             color = fixed_colors[i] if i < len(fixed_colors) else None
-            offset = (i - (len(labels)-1)/2) * bar_width
-            values = [merged.loc[merged["metric"] == lbl, label].values[0] for lbl in x_labels]
-            plt.bar([pos + offset for pos in x_positions], values, width=bar_width, label=label, color=color)
+            offset = (i - (len(paths) - 1) / 2) * bar_width
 
-        plt.xticks(x_positions, x_labels, rotation=20, ha="right")  # slightly tilted
+            values = []
+            for group_name in group_names:
+                for m in Plot.METRIC_GROUPS[group_name]:
+                    if m in metric_cols:
+                        values.append(norm_dict.get(m, 0))
+
+            positions = [pos + offset for pos in x_positions]
+            plt.bar(positions, values, width=bar_width, label=label, color=color)
+
+        plt.xticks(x_positions, x_labels, rotation=20, ha="right")
         plt.ylabel("Score")
         title = "Quality Comparison (Chunk-Level Summary)"
         plt.title(title)
         plt.legend()
 
-        # Manually define the x positions for the group separators
-        group_lines_x = [4.75, 10.25]  # example positions between groups
-        group_label_y = max(merged[labels].max().max(), 1) - 0.02  # vertical position for headers
+        # Separators and group labels
+        group_label_y = 1.0 - 0.02
+        group_label_offset = 0.5
 
-        # Draw dotted lines
-        for x in group_lines_x:
-            plt.axvline(x=x, color="gray", linestyle="dotted", linewidth=1)
+        for i, sep_x in enumerate(separator_xs):
+            plt.axvline(x=sep_x, color="gray", linestyle="dotted", linewidth=1)
+            plt.text(sep_x - group_label_offset, group_label_y, group_names[i],
+                     fontsize=10, fontweight="bold", ha="right", va="bottom")
 
-        # Draw header labels
-        for x, label in zip([2.25, 5.75, 12], Plot.METRIC_GROUPS.keys()):  # adjust x for label centers
-            plt.text(x, group_label_y, label, fontsize=10, fontweight="bold",
-                     ha="center", va="bottom")
+        # Rightmost group label
+        if group_ends:
+            last_label_x = group_ends[-1] + bar_width / 2
+            plt.text(last_label_x, group_label_y, group_names[-1],
+                     fontsize=10, fontweight="bold", ha="right", va="bottom")
 
         plt.tight_layout()
         os.makedirs(os.path.dirname(filename), exist_ok=True)
-        plt.savefig(filename, bbox_inches='tight')
+        plt.savefig(filename, bbox_inches="tight")
         plt.close()
 
         Log.chart(title, filename)

@@ -20,7 +20,7 @@ class Config:
     reasoning_effort: str
     model_name: str
 
-    chunk_selection_method: str = "first-3"
+    chunk_selection_method: str = "first-2"
     configuration: str = "fast"
 
     @staticmethod
