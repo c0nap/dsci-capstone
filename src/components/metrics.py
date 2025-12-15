@@ -787,7 +787,7 @@ def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
 
     # Load model (same family as original; consider using v3 variant for better performance)
     # We explicitly set low_cpu_mem_usage to False to prevent loading to the 'meta' device
-    model = CrossEncoder('cross-encoder/nli-deberta-base', automodel_args={"low_cpu_mem_usage": False})
+    model = CrossEncoder('cross-encoder/nli-deberta-base', model_kwargs={"low_cpu_mem_usage": False})
 
     # Tokenize into sentences
     summary_sents = sent_tokenize(summary)
@@ -892,7 +892,7 @@ def run_sentence_coherence(summary: str) -> Dict[str, float]:
     from sklearn.metrics.pairwise import cosine_similarity
     import numpy as np
     
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    model = SentenceTransformer('all-MiniLM-L6-v2', model_kwargs={"low_cpu_mem_usage": False})
     sents = sent_tokenize(summary)
     
     if len(sents) < 2:
