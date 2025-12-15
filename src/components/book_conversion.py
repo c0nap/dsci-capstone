@@ -34,6 +34,7 @@ class Chunk:
         story_percent: float,
         chapter_percent: float,
         max_chunk_length: int = -1,
+        index: int = -1,
     ) -> None:
         """Construct a Chunk.
         @param text  The text content for this span.
@@ -45,6 +46,7 @@ class Chunk:
         @param story_percent  Approximate progress through the whole story [0.0, 100.0].
         @param chapter_percent  Approximate progress through the current segment [0.0, 100.0].
         @param max_chunk_length  Max allowed characters (<= 0 means "no limit").
+        @param index  Integer index of the chunk as extracted from the book.
         @throws ValueError  if text exceeds max_chunk_length when max_chunk_length > 0.
         """
         self.text: str = text
@@ -56,6 +58,7 @@ class Chunk:
         self.story_percent: float = story_percent
         self.chapter_percent: float = chapter_percent
         self.max_chunk_length: int = max_chunk_length
+        self.index: int = index
         self.length: int = self.char_count(False)
 
         if max_chunk_length > 0 and self.length > max_chunk_length:
@@ -158,10 +161,10 @@ class Story:
                     if max_chunk_length > 0 and len(candidate) > max_chunk_length:
                         # failed - revert to previous iteration
                         if len(sentence) > max_chunk_length:
-                            print(f"Uh oh! {len(sentence)} > {max_chunk_length}")
+                            print(f"Sentence exceeded max chunk length {len(sentence)} > {max_chunk_length}")
                             print(sentence)
                         if previous_sentences:
-                            self.chunks.append(self._make_single(seg, previous_sentences.strip(), max_chunk_length))
+                            self.chunks.append(self._make_single(seg, previous_sentences.strip(), max_chunk_length, len(self.chunks)))
                         # start new chunk with this sentence
                         previous_sentences = sentence
                     else:  # otherwise valid, and accept the candidate
@@ -169,7 +172,7 @@ class Story:
 
                 # flush whatever is left
                 if previous_sentences:
-                    self.chunks.append(self._make_single(seg, previous_sentences.strip(), max_chunk_length))
+                    self.chunks.append(self._make_single(seg, previous_sentences.strip(), max_chunk_length, len(self.chunks)))
                 continue
 
             # Case 2: try combining paragraphs
@@ -187,9 +190,9 @@ class Story:
     def _merge_chunks(self, segs: List[Chunk], max_len: int) -> None:
         start, end = segs[0], segs[-1]
         text = "\n".join(s.text for s in segs)
-        self.chunks.append(self._make_single(end, text, max_len, start))
+        self.chunks.append(self._make_single(end, text, max_len, len(self.chunks), start))
 
-    def _make_single(self, seg: Chunk, text: str, max_len: int, start: Optional[Chunk] = None) -> Chunk:
+    def _make_single(self, seg: Chunk, text: str, max_len: int, index: int, start: Optional[Chunk] = None) -> Chunk:
         return Chunk(
             text=text,
             book_id=seg.book_id,
@@ -200,6 +203,7 @@ class Story:
             story_percent=seg.story_percent,
             chapter_percent=start.chapter_percent if start else seg.chapter_percent,
             max_chunk_length=max_len,
+            index=index,
         )
 
 
