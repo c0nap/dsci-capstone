@@ -158,10 +158,11 @@ def pipeline_E(
 @Log.time
 def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
     chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id)
-    triples, chunk = pipeline_B(collection_name, chunks, book_title)
-    triples_string = pipeline_C(triples)
-    summary = pipeline_D(collection_name, triples_string, chunk.get_chunk_id())
-    pipeline_E(summary, book_title, book_id)
+    for chunk in chunks:
+        triples, chunk = pipeline_B(collection_name, chunk, book_title)
+        triples_string = pipeline_C(triples)
+        summary = pipeline_D(collection_name, triples_string, chunk.get_chunk_id())
+        pipeline_E(summary, book_title, book_id)
 
 
 def old_main(collection_name):
@@ -250,41 +251,43 @@ CHAPTER 12. THE END OF THE END\n
         )
         post_story_status(BOSS_PORT, story_id, 'preprocessing', 'completed')
         post_story_status(BOSS_PORT, story_id, 'chunking', 'completed')
-        triples, chunk = pipeline_B(COLLECTION, chunks, book_title)
 
-        with open(checkpoint_path, "wb") as f_write:
-            pickle.dump({"triples": triples, "chunk": chunk}, f_write)
-        print(f"Checkpoint saved to {checkpoint_path}")
+    for chunk in chunks:
+        if not load_from_checkpoint:
+            triples, chunk = pipeline_B(COLLECTION, chunks[0], book_title)
+            with open(checkpoint_path, "wb") as f_write:
+                pickle.dump({"triples": triples, "chunk": chunk}, f_write)
+            print(f"Checkpoint saved to {checkpoint_path}")
 
-    chunk_id = chunk.get_chunk_id()
-    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'relation_extraction', 'in-progress')
-    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'llm_inference', 'in-progress')
-    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'relation_extraction', 'completed')
-    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'llm_inference', 'completed')
-
-    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'graph_verbalization', 'in-progress')
-    triples_string = pipeline_C(triples)
-    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'graph_verbalization', 'completed')
-
-    post_story_status(BOSS_PORT, story_id, 'summarization', 'in-progress')
-    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'in-progress')
-    summary = pipeline_D(COLLECTION, triples_string, chunk.get_chunk_id(), chunk.text)
-    post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
-    post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
-
-    # Post chunk - this will enqueue worker processing
-    if compute_worker_metrics:
-        for task_type in ["questeval", "bookscore"]:
-            response = post_process_full_story(BOSS_PORT, story_id, task_type)
-            print(f"Triggered {task_type}: {response.json()}")
-            # pipeline_E is moved to callback() to finalize asynchronously
-    else:
-        pipeline_E(summary, book_title, book_id)
-
-    # Write core function timing - Keyboard interrupt doesnt work
-    Log.print_timing_summary()
-    Log.dump_timing_csv()  # TODO: Eventually updated by callback()
-    Plot.time_elapsed_by_names()
+        chunk_id = chunk.get_chunk_id()
+        post_chunk_status(BOSS_PORT, chunk_id, story_id, 'relation_extraction', 'in-progress')
+        post_chunk_status(BOSS_PORT, chunk_id, story_id, 'llm_inference', 'in-progress')
+        post_chunk_status(BOSS_PORT, chunk_id, story_id, 'relation_extraction', 'completed')
+        post_chunk_status(BOSS_PORT, chunk_id, story_id, 'llm_inference', 'completed')
+    
+        post_chunk_status(BOSS_PORT, chunk_id, story_id, 'graph_verbalization', 'in-progress')
+        triples_string = pipeline_C(triples)
+        post_chunk_status(BOSS_PORT, chunk_id, story_id, 'graph_verbalization', 'completed')
+    
+        post_story_status(BOSS_PORT, story_id, 'summarization', 'in-progress')
+        post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'in-progress')
+        summary = pipeline_D(COLLECTION, triples_string, chunk.get_chunk_id(), chunk.text)
+        post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
+        post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
+    
+        # Post chunk - this will enqueue worker processing
+        if compute_worker_metrics:
+            for task_type in ["questeval", "bookscore"]:
+                response = post_process_full_story(BOSS_PORT, story_id, task_type)
+                print(f"Triggered {task_type}: {response.json()}")
+                # pipeline_E is moved to callback() to finalize asynchronously
+        else:
+            pipeline_E(summary, book_title, book_id)
+    
+        # Write core function timing - Keyboard interrupt doesnt work
+        Log.print_timing_summary()
+        Log.dump_timing_csv()  # TODO: Eventually updated by callback()
+        Plot.time_elapsed_by_names()
 
     # Hand off to Flask - keep main thread alive so boss thread continues
     print("Initial processing complete. Server listening for additional requests from Blazor...")

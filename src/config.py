@@ -252,8 +252,8 @@ class Config:
             n_chunks = chunking_mode.split('-')[1]
             return book_chunks[:n_chunks]
         if "index" in chunking_mode:
-            index = chunking_mode.split('-')[1]
-            return book_chunks[index]
+            index = int(chunking_mode.split('-')[1])
+            return [book_chunks[index]]
 
     def _sample_chunks(chunks, n_sample):
         unique_numbers = random.sample(range(len(chunks)), n_sample)

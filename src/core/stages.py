@@ -157,7 +157,7 @@ def task_03_chunk_story(story, max_chunk_length=1500):
 # PIPELINE STAGE B - RELATION EXTRACTION / CHUNKS -> TRIPLES
 def task_10_sample_chunks(chunks):
     # TODO: trivial time elapsed, consider combining with another task
-    return session.config.get_chunks(Config.chunk_selection_method)
+    return session.config.get_chunks(session.config.chunk_selection_method, chunks)
 
 def task_11_send_chunks(chunks, collection_name, book_title):
     with Log.timer(config=f"[{len(chunks)}]"):
