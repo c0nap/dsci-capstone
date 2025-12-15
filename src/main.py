@@ -273,7 +273,7 @@ CHAPTER 12. THE END OF THE END\n
     
         post_story_status(BOSS_PORT, story_id, 'summarization', 'in-progress')
         post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'in-progress')
-        summary = pipeline_D(COLLECTION, triples_string, chunk.get_chunk_id(), chunk.text)
+        summary = pipeline_D(COLLECTION, triples_string, chunk_id, chunk.text)
         post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
         post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
     
