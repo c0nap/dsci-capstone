@@ -20,7 +20,7 @@ class Config:
     reasoning_effort: str
     model_name: str
 
-    chunk_selection_method: str = "index-1"
+    chunk_selection_method: str = "first-3"
     configuration: str = "fast"
 
     @staticmethod
@@ -247,10 +247,10 @@ class Config:
         if chunking_mode == "all":
             return book_chunks
         if "random" in chunking_mode:
-            n_chunks = chunking_mode.split('-')[1]
+            n_chunks = int(chunking_mode.split('-')[1])
             return Config._sample_chunks(book_chunks, n_chunks)
         if "first" in chunking_mode:
-            n_chunks = chunking_mode.split('-')[1]
+            n_chunks = int(chunking_mode.split('-')[1])
             return book_chunks[:n_chunks]
         if "index" in chunking_mode:
             index = int(chunking_mode.split('-')[1])
