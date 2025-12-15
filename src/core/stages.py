@@ -134,6 +134,16 @@ class Config:
     configuration: str = "fast"
 
     @staticmethod
+    def load_values():
+        Config._check_val(Config.configuration, "configuration", ["fast", "best", "baseline"])
+        if Config.configuration == "fast":
+            Config.load_fast()
+        if Config.configuration == "best":
+            Config.load_best()
+        if Config.configuration == "baseline":
+            Config.load_baseline()
+
+    @staticmethod
     def load_fast():
         Config.relation_extractor_type = "textacy"
         Config.validation_llm_engine = "openai"
@@ -200,6 +210,11 @@ class Config:
         "illicit": 0.05,
         "illicit_violent": 0.05,
     }
+
+    @staticmethod
+    def setup():
+        Config.load_values()
+        Config.check_values()
 
     @staticmethod
     def check_values():
