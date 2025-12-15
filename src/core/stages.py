@@ -130,6 +130,9 @@ class Config:
     reasoning_effort: str
     model_name: str
 
+    chunk_selection_method: str = "index-1"
+    configuration: str = "fast"
+
     @staticmethod
     def load_fast():
         Config.relation_extractor_type = "textacy"
@@ -200,6 +203,7 @@ class Config:
 
     @staticmethod
     def check_values():
+        Config._check_sample(Config.chunk_selection_method)
         Config._check_extractor(Config.relation_extractor_type)
         Config._check_llm_engine(Config.validation_llm_engine)
         Config._check_llm_engine(Config.moderation_llm_engine)
@@ -209,8 +213,12 @@ class Config:
         Config._check_llm_engine(Config.summary_llm_engine)
 
     @staticmethod
+    def _check_sample(value: Any):
+        Config._check_val(value, "extractor_type", ['all', 'random', 'first', 'index'])
+
+    @staticmethod
     def _check_extractor(value: Any):
-        Config._check_val(value, "extractor_type", [ 'textacy', 'openie', 'rebel'])
+        Config._check_val(value, "extractor_type", ['textacy', 'openie', 'rebel'])
 
     @staticmethod
     def _check_llm_engine(value: Any):
@@ -218,7 +226,7 @@ class Config:
 
     @staticmethod
     def _check_moderation_strategy(value: Any):
-        Config._check_val(value, "moderation_strategy", [ 'drop', 'resolve'])
+        Config._check_val(value, "moderation_strategy", ['drop', 'resolve'])
 
     @staticmethod
     def _check_subgraph_mode(value: Any):
@@ -229,9 +237,11 @@ class Config:
         Config._check_val(value, "verbalization_mode", ['raw', 'natural', 'json', 'context'])
 
     @staticmethod
-    def _check_val(value: Any, name: str, allowed: List[Any]) -> None:
-        if value not in allowed:
-            raise ValueError(f"Invalid {name}: {value}. Expected: {str(allowed)}")
+    def _check_val(value: Any, name: str, allowed_values: List[Any]) -> None:
+        if value not in allowed_values:
+            if not any(allowed_val in str(value) for allowed_val in allowed_values):
+                raise ValueError(f"Invalid {name}: {value}. Expected: {str(allowed_values)}")
+
 
 
     @staticmethod
@@ -283,7 +293,7 @@ class Config:
 
     @staticmethod
     def get_subgraph(lookup_mode):
-        """Select subgraph retrieval strategy based on use case."""
+        """Perform selected subgraph retrieval strategy."""
         if lookup_mode == "popular":
             # FAST: Degree-based filtering for hub entities
             return session.main_graph.get_by_ranked_degree(
@@ -326,6 +336,29 @@ class Config:
             prompt += "Output your generated summary and nothing else."
         return prompt
 
+    @staticmethod
+    def get_chunks(chunking_mode, book_chunks):
+        """Select chunks strategy based on use case."""
+        if chunking_mode == "all":
+            return book_chunks
+        if "random" in chunking_mode:
+            n_chunks = chunking_mode.split('-')[1]
+            return Config._sample_chunks(book_chunks, n_chunks)
+        if "first" in chunking_mode:
+            n_chunks = chunking_mode.split('-')[1]
+            return book_chunks[:n_chunks]
+        if "index" in chunking_mode:
+            index = chunking_mode.split('-')[1]
+            return book_chunks[index]
+
+    def _sample_chunks(chunks, n_sample):
+        unique_numbers = random.sample(range(len(chunks)), n_sample)
+        sample = []
+        for i in unique_numbers:
+            c = chunks[i]
+            sample.append(c)
+        return (unique_numbers, sample)
+
 ##########################################################################
 
 
@@ -366,21 +399,6 @@ def task_03_chunk_story(story, max_chunk_length=1500):
 
 
 # PIPELINE STAGE B - RELATION EXTRACTION / CHUNKS -> TRIPLES
-def task_10_random_chunk(chunks):
-    #return (181, chunks[181])
-    unique_numbers, sample = task_10_sample_chunks(chunks, n_sample=1)
-    return (unique_numbers[0], sample[0])
-
-
-def task_10_sample_chunks(chunks, n_sample):
-    unique_numbers = random.sample(range(len(chunks)), n_sample)
-    sample = []
-    for i in unique_numbers:
-        c = chunks[i]
-        sample.append(c)
-    return (unique_numbers, sample)
-
-
 def task_11_send_chunk(c, collection_name, book_title):
     with Log.timer():
         # TODO: remove book_title from chunk schema?

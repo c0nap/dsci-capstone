@@ -27,24 +27,32 @@ def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     tei_path = stages.task_01_convert_epub(epub_path)
     story = stages.task_02_parse_chapters(tei_path, book_chapters, book_id, story_id, start_str, end_str)
     chunks = stages.task_03_chunk_story(story)
+    sample = stages.task_10_sample_chunks(chunks)
 
     print("\n=== STORY SUMMARY ===")
     print(f"Total chunks: {len(chunks)}")
-    return chunks
+    print(f"Sampled chunks: {len(sample)}")
+
+    
+    stages.task_11_send_chunk(c, collection_name, book_title)
+    print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
+
+    
+
+
+
+
+    return sample
 
 
 @Log.time
-def pipeline_B(collection_name, chunks, book_title):
+def pipeline_B(collection_name, c, index, book_title):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
-    ci, c = stages.task_10_random_chunk(chunks)
     print("\nChunk details:")
-    print(f"  index: {ci}\n")
+    print(f"  index: {index}\n")
     print(c.text)
-
-    stages.task_11_send_chunk(c, collection_name, book_title)
-    print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
 
     extracted = stages.task_12_relation_extraction(c.text)
     print(f"\nNLP output:")
