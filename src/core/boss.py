@@ -304,6 +304,49 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             200,
         )
 
+    @app.route("/process_chunk", methods=["POST"])
+    def process_chunk() -> Tuple[Response, int]:
+        """Initiate processing for a chunk by distributing tasks to workers.
+        @return JSON response indicating success or failure."""
+        data = request.json
+        chunk_id = data.get("chunk_id")
+        story_id = data.get("story_id")
+        task_type = data.get("task_type")
+
+        if not story_id:
+            return jsonify({"error": "Missing story_id"}), 400
+        if not task_type or task_type not in worker_urls:
+            return jsonify({"error": f"Unknown task type: {task_type}"}), 400
+
+        # Map task_type to chunk-level task name
+        task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
+        chunk_task = task_mapping.get(task_type, task_type)
+
+        # Distribute tasks to workers (async)
+        worker_url = worker_urls[task_type]
+        assigned = 0
+
+        # Initialize chunk tracker entry
+        update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
+
+        # Clear any existing task data
+        clear_task_data(mongo_db, collection_name, chunk_id, task_type)
+
+        # Assign task to worker - verify 202 accepted
+        if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
+            update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
+            assigned += 1
+            print(f"[ASSIGNED] chunk '{chunk_id}' to worker {task_type}: using database '{database_name}' and collection '{collection_name}'")
+        else:
+            # If assignment failed, set status to failed
+            print(f"WARNING: Failed to assign chunk {chunk_id} to worker")
+            update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
+
+        return (
+            jsonify({"status": "tasks_assigned", "chunk_id": chunk_id, "story_id": story_id, "task_type": task_type, "assigned": assigned}),
+            200,
+        )
+
     @app.route("/callback", methods=["POST"])
     def callback() -> Tuple[Response, int]:
         """Receive status notifications from worker services.
@@ -593,3 +636,13 @@ def post_process_full_story(boss_port: int, story_id: int, task_type: str) -> re
     @param task_type Worker name (questeval, bookscore).
     @return JSON response indicating success or failure."""
     return requests.post(f'http://localhost:{boss_port}/process_story', json={'story_id': story_id, 'task_type': task_type})
+
+def post_process_chunk(boss_port: int, chunk_id: int, story_id: int, task_type: str) -> requests.models.Response:
+    """Process a single chunk in MongoDB matching the provided chunk ID.
+    @param boss_port Port the boss microservice is running on.
+    @param chunk_id Unique identifier for the chunk.
+    @param story_id Unique identifier for the story.
+    @param task_type Worker name (questeval, bookscore).
+    @return JSON response indicating success or failure."""
+    return requests.post(f'http://localhost:{boss_port}/process_chunk', json={'chunk_id': chunk_id, 'story_id': story_id, 'task_type': task_type})
+

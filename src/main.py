@@ -7,6 +7,7 @@ from src.core.boss import (
     create_boss_thread,
     post_chunk_status,
     post_process_full_story,
+    post_process_chunk,
     post_story_status
 )
 from src.util import Log
@@ -279,7 +280,7 @@ CHAPTER 12. THE END OF THE END\n
         # Post chunk - this will enqueue worker processing
         if compute_worker_metrics:
             for task_type in ["bookscore"]:  #["questeval", "bookscore"]:
-                response = post_process_full_story(BOSS_PORT, story_id, task_type)
+                response = post_process_chunk(BOSS_PORT, chunk_id, story_id, task_type)
                 print(f"Triggered {task_type}: {response.json()}")
                 # pipeline_E is moved to callback() to finalize asynchronously
         else:
