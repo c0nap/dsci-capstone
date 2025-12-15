@@ -1,5 +1,6 @@
 from src.connectors.llm import LLMConnector
 from src.components.relation_extraction import RelationExtractor
+from typing import List, Any, Optional, Tuple
 
 class Config:
     relation_extractor_type: str

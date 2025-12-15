@@ -33,15 +33,9 @@ def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id):
     print(f"Total chunks: {len(chunks)}")
     print(f"Sampled chunks: {len(sample)}")
 
-    
-    stages.task_11_send_chunk(c, collection_name, book_title)
-    print(f"    [Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}]")
-
-    
-
-
-
-
+    for c in sample:
+        stages.task_11_send_chunks([c], collection_name, book_title)
+        print(f"    Inserted chunk into Mongo with chunk_id: {c.get_chunk_id()}")
     return sample
 
 
@@ -205,8 +199,6 @@ CHAPTER 12. THE END OF THE END\n
 
 if __name__ == "__main__":
     from src.core.context import session
-    from src.core.stages import Config
-
     session.setup()
 
     # TODO: handle this better - half env parsing is here, half is in boss.py

@@ -155,13 +155,18 @@ def task_03_chunk_story(story, max_chunk_length=1500):
 
 
 # PIPELINE STAGE B - RELATION EXTRACTION / CHUNKS -> TRIPLES
-def task_11_send_chunk(c, collection_name, book_title):
-    with Log.timer():
-        # TODO: remove book_title from chunk schema?
-        mongo_db = session.docs_db.get_unmanaged_handle()
-        collection = getattr(mongo_db, collection_name)
-        collection.insert_one(c.to_mongo_dict())
-        collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
+def task_10_sample_chunks(chunks):
+    # TODO: trivial time elapsed, consider combining with another task
+    return session.config.get_chunks(Config.chunk_selection_method)
+
+def task_11_send_chunks(chunks, collection_name, book_title):
+    with Log.timer(config=f"[{len(chunks)}]"):
+        for c in chunks:
+            # TODO: remove book_title from chunk schema?
+            mongo_db = session.docs_db.get_unmanaged_handle()
+            collection = getattr(mongo_db, collection_name)
+            collection.insert_one(c.to_mongo_dict())
+            collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
 
 
 # TODO: 11, 12, 13 fit better as preprocessing tasks
