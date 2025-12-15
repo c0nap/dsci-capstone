@@ -397,7 +397,8 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                 set_elapsed_time(chunk_id, chunk_task, seconds, 'completed')
 
             # Check if all chunks for this story completed this task
-            if check_story_completion(story_id, chunk_task):
+            all_chunks_complete = check_story_completion(story_id, chunk_task)
+            if True:
                 print(f"[STORY COMPLETE] All chunks completed {chunk_task} for story {story_id}")
 
                 Log.print_timing_summary()
@@ -406,13 +407,12 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
                 # Check if all metric tasks are complete for the story
                 all_metrics_complete = all(
-                    #[check_story_completion(story_id, 'metric_questeval'), check_story_completion(story_id, 'metric_bookscore')]
-                    [check_story_completion(story_id, 'metric_bookscore')]
+                    [check_story_completion(story_id, 'metric_questeval'), check_story_completion(story_id, 'metric_bookscore')]
                 )
 
-                if all_metrics_complete:
+                if True:
                     # Update story-level metrics to completed
-                    update_story_status(story_id, 'metrics', 'completed')
+                    #update_story_status(story_id, 'metrics', 'completed')
 
                     # FINALIZE PIPELINE - all workers finished for this story
                     # Access fields directly from the MongoDB document

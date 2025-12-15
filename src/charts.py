@@ -232,7 +232,7 @@ class Plot:
         merged_df = get_merged_df(current_df, filename, run_id)
         merged_df.to_csv(filename, index=False)
         
-        Log.chart("Saved summary metrics CSV", filename)
+        Log.chart_message(msg=Log.msg_chart_saved("Saved summary metrics CSV", filename))
 
     METRIC_GROUPS = {
         "SOURCE SIMILARITY": ["bertscore", "rougeL_recall", "jsd_stats", "ncd_overlap", "novel_ngrams"],
