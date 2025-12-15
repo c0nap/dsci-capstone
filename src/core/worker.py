@@ -244,7 +244,7 @@ if __name__ == "__main__":
     task_queue: "Queue[Tuple[Any, Any]]" = Queue()
 
     # Start one background worker thread (can increase to 2–4 for limited concurrency)
-    for _ in range(1):
+    for _ in range(2):
         threading.Thread(target=task_worker, daemon=True).start()
 
     # Flask prep: Boss URL never changes, but MongoDB connection might
