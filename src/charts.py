@@ -229,7 +229,7 @@ class Plot:
         
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         
-        merged_df = _get_merged_df(current_df, filename, "run_id", run_id)
+        merged_df = get_merged_df(current_df, filename, "run_id", run_id)
         merged_df.to_csv(filename, index=False)
         
         Log.chart("Saved summary metrics CSV", filename)

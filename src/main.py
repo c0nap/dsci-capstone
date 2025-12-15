@@ -278,7 +278,7 @@ CHAPTER 12. THE END OF THE END\n
     
         # Post chunk - this will enqueue worker processing
         if compute_worker_metrics:
-            for task_type in ["questeval", "bookscore"]:
+            for task_type in ["bookscore"]:  #["questeval", "bookscore"]:
                 response = post_process_full_story(BOSS_PORT, story_id, task_type)
                 print(f"Triggered {task_type}: {response.json()}")
                 # pipeline_E is moved to callback() to finalize asynchronously

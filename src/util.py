@@ -308,7 +308,7 @@ class Log:
         @return  DataFrame with columns: function, elapsed, call_chain, run_id
         """
         current_df = Log.get_timing_summary()
-        return _get_merged_df(current_df, file_path, "run_id", Log.run_id)
+        return get_merged_df(current_df, file_path, Log.run_id)
 
     @staticmethod
     def dump_timing_csv(file_path: str = "./logs/elapsed_time.csv") -> None:
