@@ -26,7 +26,9 @@ class Config:
     configuration: str = "fast"
 
     @staticmethod
-    def load_values():
+    def load_values() -> None:
+        """Load configuration values based on selected configuration mode.
+        Validates configuration setting and dispatches to appropriate loader."""
         Config._check_val(Config.configuration, "configuration", ["fast", "best", "baseline"])
         if Config.configuration == "fast":
             Config.load_fast()
@@ -36,7 +38,9 @@ class Config:
             Config.load_baseline()
 
     @staticmethod
-    def load_fast():
+    def load_fast() -> None:
+        """Load fast configuration preset.
+        Uses lightweight models and minimal processing for quick evaluation."""
         Config.relation_extractor_type = "textacy"
         Config.validation_llm_engine = "openai"
         Config.moderation_llm_engine = "openai"
@@ -53,7 +57,9 @@ class Config:
         Config.model_name = "gpt-5-nano"
 
     @staticmethod
-    def load_best():
+    def load_best() -> None:
+        """Load best configuration preset.
+        Uses advanced models and comprehensive processing for highest quality."""
         Config.relation_extractor_type = "openie"
         Config.validation_llm_engine = "langchain"
         Config.moderation_llm_engine = "langchain"
@@ -70,7 +76,9 @@ class Config:
         Config.model_name = "gpt-5"
 
     @staticmethod
-    def load_baseline():
+    def load_baseline() -> None:
+        """Load baseline configuration preset.
+        Uses source text only without graph-based enhancements for comparison."""
         Config.relation_extractor_type = "textacy"
         Config.validation_llm_engine = "openai"
         Config.moderation_llm_engine = "openai"
@@ -104,12 +112,16 @@ class Config:
     }
 
     @staticmethod
-    def setup():
+    def setup() -> None:
+        """Initialize configuration system.
+        Loads values and validates all configuration parameters."""
         Config.load_values()
         Config.check_values()
 
     @staticmethod
-    def check_values():
+    def check_values() -> None:
+        """Validate all configuration values.
+        Ensures all settings conform to expected values."""
         Config._check_sample(Config.chunk_selection_method)
         Config._check_extractor(Config.relation_extractor_type)
         Config._check_llm_engine(Config.validation_llm_engine)
@@ -120,31 +132,47 @@ class Config:
         Config._check_llm_engine(Config.summary_llm_engine)
 
     @staticmethod
-    def _check_sample(value: Any):
+    def _check_sample(value: Any) -> None:
+        """Validate chunk selection method.
+        @param value  Chunk selection strategy to validate."""
         Config._check_val(value, "extractor_type", ['all', 'random', 'first', 'index'])
 
     @staticmethod
-    def _check_extractor(value: Any):
+    def _check_extractor(value: Any) -> None:
+        """Validate relation extractor type.
+        @param value  Extractor type to validate."""
         Config._check_val(value, "extractor_type", ['textacy', 'openie', 'rebel'])
 
     @staticmethod
-    def _check_llm_engine(value: Any):
+    def _check_llm_engine(value: Any) -> None:
+        """Validate LLM connector type.
+        @param value  LLM engine type to validate."""
         Config._check_val(value, "llm_connector_type", ['langchain', 'openai'])
 
     @staticmethod
-    def _check_moderation_strategy(value: Any):
+    def _check_moderation_strategy(value: Any) -> None:
+        """Validate content moderation strategy.
+        @param value  Moderation strategy to validate."""
         Config._check_val(value, "moderation_strategy", ['drop', 'resolve'])
 
     @staticmethod
-    def _check_subgraph_mode(value: Any):
+    def _check_subgraph_mode(value: Any) -> None:
+        """Validate graph lookup mode.
+        @param value  Subgraph retrieval mode to validate."""
         Config._check_val(value, "subgraph_mode", ['popular', 'local', 'explore', 'community'])
 
     @staticmethod
-    def _check_verbal_mode(value: Any):
+    def _check_verbal_mode(value: Any) -> None:
+        """Validate triple verbalization mode.
+        @param value  Verbalization mode to validate."""
         Config._check_val(value, "verbalization_mode", ['raw', 'natural', 'json', 'context'])
 
     @staticmethod
     def _check_val(value: Any, name: str, allowed_values: List[Any]) -> None:
+        """Validate a configuration value against allowed options.
+        @param value  Value to validate.
+        @param name  Name of configuration parameter for error messages.
+        @param allowed_values  List of acceptable values."""
         if value not in allowed_values:
             if not any(allowed_val in str(value) for allowed_val in allowed_values):
                 raise ValueError(f"Invalid {name}: {value}. Expected: {str(allowed_values)}")
@@ -153,6 +181,9 @@ class Config:
 
     @staticmethod
     def get_extractor(extractor_type: str) -> RelationExtractor:
+        """Get relation extractor instance by type.
+        @param extractor_type  Type of extractor ('rebel', 'openie', or 'textacy').
+        @return  Initialized RelationExtractor instance."""
         # TODO: move to session.extractor?
         if extractor_type == "rebel":
             from src.components.relation_extraction import RelationExtractorREBEL
@@ -170,10 +201,15 @@ class Config:
 
             # Initialize Textacy wrapper (pure Python backup)
             return RelationExtractorTextacy()
+        raise ValueError(f"Unknown relation extractor type: {extractor_type}")
 
 
     @staticmethod
     def get_llm(llm_connector_type: str, system_prompt: str) -> LLMConnector:
+        """Get LLM connector instance by type.
+        @param llm_connector_type  Type of connector ('langchain' or 'openai').
+        @param system_prompt  System prompt to initialize the LLM with.
+        @return  Initialized LLMConnector instance."""
         # TODO: move to session.llm?
         if llm_connector_type == "langchain":
             from src.connectors.llm import LangChainConnector
@@ -191,11 +227,14 @@ class Config:
                 reasoning_effort=Config.reasoning_effort,
                 system_prompt=system_prompt,
             )
+        raise ValueError(f"Unknown LLM connector type: {llm_connector_type}")
 
 
     @staticmethod
-    def get_subgraph(lookup_mode):
-        """Perform selected subgraph retrieval strategy."""
+    def get_subgraph(lookup_mode: str) -> Any:
+        """Perform selected subgraph retrieval strategy.
+        @param lookup_mode  Strategy for subgraph retrieval ('popular', 'local', 'explore', or 'community').
+        @return  Retrieved subgraph data structure."""
         if lookup_mode == "popular":
             # FAST: Degree-based filtering for hub entities
             return session.main_graph.get_by_ranked_degree(
@@ -220,9 +259,16 @@ class Config:
             session.main_graph.detect_community_clusters(method="leiden")
             community_id = session.main_graph.get_community_largest()
             return session.main_graph.get_community_subgraph(community_id)
+        raise ValueError(f"Unknown lookup mode: {lookup_mode}")
 
     @staticmethod
-    def get_final_prompt(use_triples: bool, use_text: bool, triples_string: Optional[str], text: Optional[str]) -> Tuple[str, str]:
+    def get_final_prompt(use_triples: bool, use_text: bool, triples_string: Optional[str], text: Optional[str]) -> str:
+        """Construct final prompt for summary generation based on available inputs.
+        @param use_triples  Whether to include semantic triples in prompt.
+        @param use_text  Whether to include original text in prompt.
+        @param triples_string  Formatted string of semantic triples.
+        @param text  Original story chunk text.
+        @return  Constructed prompt string."""
         if use_triples and use_text:
             prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
             prompt += f"And here is the original text:\n{text}\n\n"
@@ -236,11 +282,16 @@ class Config:
             prompt = f"Here is a story chunk:\n{text}\n"
             prompt += "Transform this into a coherent, factual, and concise summary. Some details may be irrelevant, so don't force yourself to include every single one.\n"
             prompt += "Output your generated summary and nothing else."
+        else:
+            raise ValueError(f"Invalid prompting strategy: Must specify triples or source text.")
         return prompt
 
     @staticmethod
-    def get_chunks(chunking_mode, book_chunks):
-        """Select chunks strategy based on use case."""
+    def get_chunks(chunking_mode: str, book_chunks: List[Any]) -> List[Any]:
+        """Select chunks strategy based on use case.
+        @param chunking_mode  Strategy for chunk selection ('all', 'random-N', 'first-N', or 'index-N').
+        @param book_chunks  List of all available chunks.
+        @return  Selected subset of chunks."""
         if chunking_mode == "all":
             return book_chunks
         if "random" in chunking_mode:
@@ -252,8 +303,14 @@ class Config:
         if "index" in chunking_mode:
             index = int(chunking_mode.split('-')[1])
             return [book_chunks[index]]
+        raise ValueError(f"Unknown chunking mode: {chunking_mode}")
 
-    def _sample_chunks(chunks, n_sample):
+    @staticmethod
+    def _sample_chunks(chunks: List[Any], n_sample: int) -> List[Any]:
+        """Sample random chunks using configured seed for reproducibility.
+        @param chunks  List of all available chunks.
+        @param n_sample  Number of chunks to sample.
+        @return  Randomly sampled list of chunks."""
         rng = random.Random(Config.seed)
         unique_numbers = rng.sample(range(len(chunks)), n_sample)
         sample = [chunks[i] for i in unique_numbers]
