@@ -155,10 +155,11 @@ def pipeline_E(
         }
 
     if chunk == "":
-        stages.task_40_post_summary(book_id, book_title, summary)
+        success = stages.task_40_post_summary(book_id, book_title, summary)
     else:
-        stages.task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval)
-    print("\nOutput sent to web app.")
+        success = stages.task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval)
+    if success:
+        print("\nOutput sent to web app.")
     if chunk != "":
         return CORE_METRICS
 

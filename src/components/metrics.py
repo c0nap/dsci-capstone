@@ -207,13 +207,13 @@ class Metrics:
         payload = Metrics.get_book_template(book_id, book_title, summary, gold_summary, metrics)
         self.post_payload(payload)
 
-    def post_example(self, book_id: str, book_title: str, summary: str) -> None:
+    def post_example(self, book_id: str, book_title: str, summary: str) -> bool:
         """POST dummy date to Blazor.
         @param book_id  Unique identifier for one book.
         @param book_title  String containing the title of a book.
         @param summary  String containing a book summary."""
         payload = Metrics.generate_example()
-        self.post_payload(payload)
+        return self.post_payload(payload)
 
     
 

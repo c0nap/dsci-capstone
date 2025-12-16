@@ -328,7 +328,7 @@ def task_40_post_summary(book_id, book_title, summary):
     - Post to Blazor metrics page"""
     # TODO: pytest
     with Log.timer():
-        session.metrics.post_example(book_id, book_title, summary)
+        return session.metrics.post_example(book_id, book_title, summary)
 
 
 def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval):
