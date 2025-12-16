@@ -1,4 +1,4 @@
-from typing import Any, Optional, Self, TYPE_CHECKING
+from typing import Any, Optional, Self, Dict, TYPE_CHECKING
 
 
 # 1. Avoid circular imports: compile-time imports only when type checking
@@ -111,7 +111,7 @@ class Session:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.model_rebel = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
 
-    def load_optional_openie(self) -> None:
+    def load_optional_openie(self, persistent: bool = False) -> None:
         """Ensures CoreNLP backend is installed. Can call early to pre-warm, but not required.
         @details
             Uses a context manager to spin up the Java server via CoreNLPClient.
@@ -125,17 +125,22 @@ class Session:
             print("Installing CoreNLP backend...")
             stanza.install_corenlp()
         self._client_openie = None
+        self.openie_persistent = persistent
 
     def stop_openie(self) -> None:
-        """Stops CoreNLP server. Safe to call anytime."""
+        """Stops Java CoreNLP server.
+        @note  Only needed in persistent mode at pipeline end, otherwise auto-stops."""
         if self._client_openie is not None:
             self._client_openie.stop()
             self._client_openie = None
 
     @contextmanager
-    def java_client_openie(self, config: dict, persistent: bool = False):
+    def java_client_openie(self, config: Dict[str, Any]):
         """Context manager for CoreNLP client.
-        @details  Usage - `with session.java_client_openie(config, persistent=False) as client:`"""
+        @details  Usage - `with session.java_client_openie(config) as client:`
+        @param config  CoreNLPClient configuration dict (annotators, memory, timeout, etc.)
+        @yield  An active CoreNLPClient instance.
+        """
         from stanza.server import CoreNLPClient
         
         # No error if load() wasnt called yet
@@ -147,7 +152,7 @@ class Session:
         try:
             yield self._client_openie
         finally:
-            if not persistent:
+            if not self.openie_persistent:
                 self.stop_openie()
 
     def load_metrics(self) -> None:

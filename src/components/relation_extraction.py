@@ -151,9 +151,6 @@ class RelationExtractorOpenIE(RelationExtractor):
             'memory': memory,
             'be_quiet': True,
         }
-
-    def extract(self, text: str) -> List[Triple]:
-        
         
     def extract(self, text: str) -> List[Triple]:
         """Extract triples using the Stanford OpenIE pipeline.
@@ -161,12 +158,10 @@ class RelationExtractorOpenIE(RelationExtractor):
         @param text  The raw narrative text.
         @return  A list of extracted relations.
         """
-        session.load_optional_openie()
-    
         text = text.replace("\n", " ").strip()
         out: List[Triple] = []
         # We use a context manager to ensure the Java server is cleanly started / stopped.
-        with session.java_client_openie(self.client_config, persistent=True) as client:
+        with session.java_client_openie(self.client_config) as client:
             doc = client.annotate(text)
 
             # Iterate through sentences and their extracted triples
