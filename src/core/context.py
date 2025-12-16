@@ -103,7 +103,8 @@ class Session:
             spacy.cli.download(name_spacy_model)  # type: ignore[attr-defined]
             self.model_spacy = spacy.load(name_spacy_model)
 
-        self.model_sentencizer = spacy.blank("en").add_pipe("sentencizer")
+        ## Lightweight spaCy model to split text into sentences. Faster than full parsing model.
+        self.sentencizer_spacy = spacy.blank("en").add_pipe("sentencizer")
 
     def load_optional_rebel(self) -> None:
         from transformers import AutoModelForSeq2SeqLM, AutoTokenizer

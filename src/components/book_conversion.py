@@ -6,12 +6,7 @@ import os
 import pandas as pd
 import pypandoc
 import re
-import spacy
 from typing import Any, Dict, Iterator, List, Optional, Tuple
-
-
-nlp = spacy.blank("en")  # blank English model, no pipeline
-sentencizer = nlp.add_pipe("sentencizer")
 
 
 class Chunk:
@@ -149,7 +144,7 @@ class Story:
                     buffer = []
 
                 # if we can't split by paragraphs, sentences are the next best option
-                doc = nlp(seg.text)
+                doc = session.sentencizer_spacy(seg.text)
                 sentences = [sent.text for sent in doc.sents]
 
                 # combine sentences until adding another would surpass limit
