@@ -7,8 +7,6 @@ from src.core.context import session
 
 # Forward references for lazy-loaded modules
 if TYPE_CHECKING:
-    import spacy
-    import spacy.language
     import transformers
 
 
@@ -64,7 +62,6 @@ class RelationExtractorREBEL(RelationExtractor):
         self._model_delim = " "
 
         # Placeholders for lazy loading
-        self.nlp: Optional[spacy.language.Language] = None
         self.tokenizer: Optional[transformers.PreTrainedTokenizer] = None
         self.model: Any = None  # AutoModelForSeq2SeqLM.from_pretrained() return type - internal factory messes up typing
 
@@ -77,10 +74,9 @@ class RelationExtractorREBEL(RelationExtractor):
         @return  A list of extracted relations.
         """
         # 1. Lazy Imports & Setup (Run once)
-        if self.model is None or self.nlp is None:
+        if self.model is None:
             # Setup Spacy for basic sentence segmentation
             session.load_optional_rebel()
-            self.nlp = session.sentencizer_spacy
 
             # Load Model
             load_dotenv(".env")
@@ -91,7 +87,7 @@ class RelationExtractorREBEL(RelationExtractor):
         # Split into sentences: RE models generally output 1 relation set per input sequence.
         # Cleaning newlines prevents tokenization artifacts.
         text = text.replace("\n", " ").strip()
-        doc = self.nlp(text)
+        doc = session.sentencizer_spacy(text)
         sentences = [sent.text for sent in doc.sents]
 
         out: List[Triple] = []
@@ -180,12 +176,6 @@ class RelationExtractorTextacy(RelationExtractor):
         Extracts Subject-Verb-Object patterns based on dependency parsing.
     """
 
-    def __init__(self) -> None:
-        """Initialize config only.
-        @note  Spacy model loading is deferred to extract().
-        """
-        self.nlp: Optional[spacy.language.Language] = None
-
     def extract(self, text: str) -> List[Triple]:
         """Extract SVO triples.
         @param text  The raw input text.
@@ -194,9 +184,7 @@ class RelationExtractorTextacy(RelationExtractor):
         # Lazy Imports
         import textacy
 
-        self.nlp = session.model_spacy
-
-        doc = self.nlp(text)
+        doc = session.model_spacy(text)
         out: List[Triple] = []
 
         # Extract SVO (Subject-Verb-Object)
