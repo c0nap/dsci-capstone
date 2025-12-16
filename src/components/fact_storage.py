@@ -1,7 +1,6 @@
 from pandas import concat, DataFrame, option_context
 import random
 import re
-import spacy
 from src.components.relation_extraction import Triple
 from src.connectors.graph import GraphConnector
 from src.util import Log
@@ -729,9 +728,7 @@ def sanitize_node(label: str) -> str:
     @throws ValueError  If result is empty after sanitization
     """
     # NLP-based cleaning: remove determiners, pronouns, particles
-    nlp = session.model_spacy
-
-    doc = nlp(label)
+    doc = session.model_spacy(label)
     tokens = [token.text for token in doc if token.pos_ not in {"DET", "PRON", "PART"}]  # determiners, pronouns, particles
     cleaned = " ".join(tokens)
     if not cleaned:  # Revert back to input: a messy label is better than nothing.

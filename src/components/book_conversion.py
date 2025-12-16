@@ -7,6 +7,7 @@ import pandas as pd
 import pypandoc
 import re
 from typing import Any, Dict, Iterator, List, Optional, Tuple
+from src.core.context import session
 
 
 class Chunk:
