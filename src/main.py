@@ -289,6 +289,8 @@ CHAPTER 12. THE END OF THE END\n
         post_story_status(BOSS_PORT, story_id, 'summarization', 'completed')
         post_chunk_status(BOSS_PORT, chunk_id, story_id, 'summarization', 'completed')
     
+        session.load_metrics()
+
         # Post chunk - this will enqueue worker processing
         if compute_worker_metrics:
             for task_type in ["bookscore"]:  #["questeval", "bookscore"]:

@@ -119,7 +119,7 @@ class Session:
         # TODO: Split into scene graph, event graph, and social graph.
 
         self.load_models()
-        self.load_metrics()
+        # self.load_metrics()  # assume main() calls this - for rapid single-chunk test runs
         if Config.relation_extractor_type == "openie":
             self.load_optional_openie()
         elif Config.relation_extractor_type == "rebel":
