@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     # External types for MyPy compliance
     import spacy.language
     from stanza.server import CoreNLPClient
-    from transformers import PreTrainedTokenizer, PreTrainedModel
     from sentence_transformers import SentenceTransformer, CrossEncoder
     from sklearn.feature_extraction.text import TfidfVectorizer
     from rouge_score.rouge_scorer import RougeScorer
@@ -72,8 +71,9 @@ class Session:
         self.model_spacy: "spacy.language.Language"
         self.sentencizer_spacy: "spacy.language.Language"
 
-        self.tokenizer_rebel: "PreTrainedTokenizer"
-        self.model_rebel: "PreTrainedModel"  # AutoModelForSeq2SeqLM.from_pretrained() return type - internal factory hides type, unrecoverable
+        # Transformers use factory patterns and do not expose useful types
+        self.tokenizer_rebel: Any
+        self.model_rebel: Any
         
         self._client_openie: "CoreNLPClient"
         self.openie_persistent: bool

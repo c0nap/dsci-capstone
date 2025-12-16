@@ -157,8 +157,7 @@ def clean_json_block(s: str) -> str:
     return s
 
 
-
-def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[str]) -> List[Dict[str, str]]:
+def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[str]) -> List[Triple]:
     """Normalize nested/compacted LLM output into flat dicts.
     @details
         Handles token-saving patterns:
@@ -179,6 +178,16 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
         """
         return list(x) if isinstance(x, (list, tuple)) else [x]
 
+    def _to_triple(item: Dict[str, Any]) -> Triple:
+        """Convert a dict to a Triple, normalizing key aliases.
+        @param item  Dict with s/subject, r/relation, o/object keys
+        @return  Triple with s, r, o string keys
+        """
+        s = item.get("s") or item.get("subject") or ""
+        r = item.get("r") or item.get("relation") or ""
+        o = item.get("o") or item.get("object") or item.get("object_") or ""
+        return {"s": str(s), "r": str(r), "o": str(o)}
+
     def _expand_nested_ro(item: Dict[str, Any]) -> List[Triple]:
         """Expand nested relation-object pairs pattern.
         @details
@@ -195,7 +204,7 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
         nested_pairs = [v for v in item.values() if isinstance(v, list) and v and isinstance(v[0], dict)]
 
         if not nested_pairs:
-            return [item]  # No nesting, return as-is
+            return [_to_triple(item)]  # No nesting, return as-is
 
         # Cartesian product: each subject × each r-o pair
         results: List[Triple] = []
@@ -254,7 +263,7 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
     for item in items:
         # Try nested r-o expansion first
         nested = _expand_nested_ro(item)
-        if len(nested) > 1 or nested[0] != item:
+        if len(nested) > 1 or nested[0] != _to_triple(item):
             expanded.extend(nested)
         else:
             # Try cartesian expansion
