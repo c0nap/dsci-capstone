@@ -2,9 +2,11 @@ import os
 os.environ['DATASETS_VERBOSITY'] = 'error'
 os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
 
-# Suppress transformers warnings about untrained weights
 import logging
+# Silence transformers warnings about untrained weights
 logging.getLogger('transformers.modeling_utils').setLevel(logging.ERROR)
+# Silence Flask HTTP request logs
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 from dotenv import load_dotenv
 import pickle
