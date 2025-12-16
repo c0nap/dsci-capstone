@@ -431,7 +431,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     Log.dump_timing_csv()
                     Plot.time_elapsed_by_names()
                     Plot.save_metrics_csv(CORE_METRICS, chunk_id)
-                    Plot.summary_results(CORE_METRICS)
+                    Plot.summary_results(Plot.normalize_metrics(CORE_METRICS))
 
         elif "failed" in status:
             # Update chunk status to failed

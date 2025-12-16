@@ -21,7 +21,7 @@ from src.core.boss import (
 )
 from src.util import Log
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 
 @Log.time
@@ -118,7 +118,7 @@ def pipeline_D(collection_name, triples_string, chunk_id, text):
 @Log.time
 def pipeline_E(
     summary: str, book_title: str, book_id: str, chunk: str = "", gold_summary: str = "", bookscore: float = None, questeval: float = None
-) -> Optional[Dict[str, float]]:
+) -> Optional[Dict[str, Any]]:
     """Compute metrics and send available data to Blazor"""
     from src.core.stages import (
         task_45_eval_rouge,
@@ -137,7 +137,8 @@ def pipeline_E(
     )
     if chunk != "":
         _entity_coverage = task_45_eval_coverage(summary, chunk)
-        CORE_METRICS: Dict[str, float] = {
+        CORE_METRICS: Dict[str, Any] = {
+            "summary": summary,
             "rougeL_recall" : task_45_eval_rouge(summary, chunk)["rougeL_recall"],
             "bertscore" : task_45_eval_bertscore(summary, chunk)["bertscore_f1"],
             "novel_ngrams" : task_45_eval_ngrams(summary, chunk)["novel_ngram_pct"],

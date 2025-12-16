@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import seaborn as sns
-from datetime.datetime import now
+from datetime import datetime
 from src.util import Log, get_merged_df
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 
 
 class Plot:
@@ -177,25 +177,28 @@ class Plot:
     }
 
     @staticmethod
-    def normalize_metrics(metrics: Dict[str, float]) ->  Dict[str, float]:
+    def normalize_metrics(metrics: Dict[str, Any]) ->  Dict[str, float]:
+        result: Dict[str, float] = {}
         for key, value in metrics.items():
+            if not isinstance(value, (int, float)):
+                continue
             if key == "readability_delta":
                 # Clamp to [0, 1] range
                 bound = 10
                 normalized = max(-bound, min(bound, value))
                 # map [-10, +10] -> [0, 1]
                 normalized = (normalized + bound) / (2 * bound)
-                metrics[key] = normalized
+                value = normalized
             elif key == "bertscore":
                 # Clamp to [0, 1] range
                 normalized = max(0.0, min(1.0, value))
-                metrics[key] = normalized
+                value = normalized
             elif key in ["jsd_stats", "novel_ngrams", "ncd_overlap", "entity_hallucination"]:
-                metrics[key] = 1 - value
-            value = metrics[key]
+                value = 1 - value
             if value <= 0:
-                metrics[key] = 0.01
-        return metrics
+                value = 0.01
+            result[key] = float(value)
+        return result
 
     @staticmethod
     def summary_results(metrics: Dict[str, float]) -> None:
@@ -214,7 +217,7 @@ class Plot:
 
     @staticmethod
     def save_metrics_csv(
-        metrics: Dict[str, float],
+        metrics: Dict[str, Any],
         run_id: Optional[str] = None,
         filename: str = "./logs/chunk_scores.csv"
     ) -> None:
@@ -224,7 +227,7 @@ class Plot:
         Uses timestamp as run_id if not provided.
         """
         if run_id is None:
-            run_id = now().isoformat()
+            run_id = datetime.now().isoformat()
         
         # Single-row DataFrame with run_id as first column
         row_data = {"run_id": run_id, **metrics}
@@ -271,9 +274,6 @@ class Plot:
             
             agg_dict = {m: df[m].mean() for m in cols}
             aggregated.append(agg_dict)
-
-        # Normalize each file's metrics
-        normalized = [Plot.normalize_metrics(d) for d in aggregated]
 
         # Build x positions with group spacing
         x_positions = []
