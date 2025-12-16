@@ -217,7 +217,7 @@ class Plot:
 
     @staticmethod
     def save_metrics_csv(
-        metrics: Dict[str, Any],
+        results: Dict[str, Any],
         run_id: Optional[str] = None,
         filename: str = "./logs/chunk_scores.csv"
     ) -> None:
@@ -226,11 +226,11 @@ class Plot:
         Row-major format: each metric is a column, each run is a row.
         Uses timestamp as run_id if not provided.
         """
-        if run_id is None:
-            run_id = datetime.now().isoformat()
+        run_label = run_id | results["chunk_id"]
+        run_id = run_id | datetime.now().isoformat()
         
         # Single-row DataFrame with run_id as first column
-        row_data = {"run_id": run_id, **metrics}
+        row_data = {**results, "run_id": run_id}
         current_df = pd.DataFrame([row_data])
         
         os.makedirs(os.path.dirname(filename), exist_ok=True)
@@ -238,7 +238,7 @@ class Plot:
         merged_df = get_merged_df(current_df, filename, run_id)
         merged_df.to_csv(filename, index=False)
         
-        Log.chart_message(prefix=Log.ch_dump, msg=Log.msg_scores_saved(run_id, filename))
+        Log.chart_message(prefix=Log.ch_dump, msg=Log.msg_scores_saved(run_label, filename))
 
     METRIC_GROUPS = {
         "SOURCE SIMILARITY": ["bertscore", "rougeL_recall", "jsd_stats", "ncd_overlap", "novel_ngrams"],

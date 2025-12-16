@@ -135,16 +135,20 @@ def pipeline_E(
         task_45_eval_diversity,
         task_45_eval_stopwords,
     )
+    RESULTS = {
+        "chunk_id": chunk_id,
+        "summary": summary,
+        "book_id": book_id,
+        "book_title": book_title,
+        **session.config.to_dict(),
+    }
     if chunk != "":
-        _entity_coverage = task_45_eval_coverage(summary, chunk)
-        CORE_METRICS: Dict[str, Any] = {
-            "summary": summary,
+        NLP_METRICS: Dict[str, Any] = {
             "rougeL_recall" : task_45_eval_rouge(summary, chunk)["rougeL_recall"],
             "bertscore" : task_45_eval_bertscore(summary, chunk)["bertscore_f1"],
             "novel_ngrams" : task_45_eval_ngrams(summary, chunk)["novel_ngram_pct"],
             "jsd_stats" : task_45_eval_jsd(summary, chunk)["jsd"],
-            "entity_coverage" : _entity_coverage["entity_coverage"],
-            "entity_hallucination" : _entity_coverage["entity_hallucination"],
+            **task_45_eval_coverage(summary, chunk),
             "ncd_overlap" : task_45_eval_ncd(summary, chunk)["ncd"],
             "salience_recall" : task_45_eval_salience(summary, chunk)["salience_recall"],
             "nli_faithfulness" : task_45_eval_faithfulness(summary, chunk)["nli_faithfulness"],
@@ -153,9 +157,12 @@ def pipeline_E(
             "entity_grid_coherence" : task_45_eval_entity_grid(summary)["entity_grid_coherence"],
             "lexical_diversity" : task_45_eval_diversity(summary)["lexical_diversity"],
             "stopword_ratio" : task_45_eval_stopwords(summary)["stopword_ratio"],
+        }
+        NLP_METRICS |= {
             "bookscore" : bookscore,
             #"questeval" : questeval,
         }
+        RESULTS |= NLP_METRICS
 
     if chunk == "":
         success = stages.task_40_post_summary(book_id, book_title, summary)
@@ -163,9 +170,7 @@ def pipeline_E(
         success = stages.task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval)
     if success:
         print("\nOutput sent to web app.")
-    if chunk != "":
-        return CORE_METRICS
-    return None
+    return RESULTS
 
 
 @Log.time
