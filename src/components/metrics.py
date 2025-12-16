@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 from src.core.context import session
 
 
@@ -799,7 +799,7 @@ def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
 
     # Prepare all (premise, hypothesis) pairs
     # We'll compute entailment probability for each pair and then take max over premises per hypothesis
-    pairs = []
+    pairs: List[Tuple[str, str]] = []
     hyp_to_indices = []  # map hypothesis index -> list of row indices in pairs
     for hi, hyp in enumerate(summary_sents):
         start_idx = len(pairs)

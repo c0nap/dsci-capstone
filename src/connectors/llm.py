@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from openai import OpenAI
+from openai.types.chat import ChatCompletionMessageParam
 import os
 import re
 from src.connectors.base import Connector
@@ -92,16 +93,18 @@ class OpenAIConnector(LLMConnector):
         @param system_prompt  Instructions for the LLM.
         @param human_prompt  The user input or query.
         @return Raw LLM response as a string."""
-        extra_args = {}
+        extra_args: Dict[str, str] = {}
+        # This pattern reduces code duplication by allowing injection of kwarg reasoning_effort.
         if self.reasoning_effort is not None:
             extra_args["reasoning_effort"] = self.reasoning_effort
-
+        
+        messages: list[ChatCompletionMessageParam] = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": human_prompt},
+        ]
         response = self.client.chat.completions.create(
             model=self.model_name,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": human_prompt},
-            ],
+            messages=messages,
             temperature=self.temperature,
             **extra_args
         )
@@ -141,7 +144,7 @@ class LangChainConnector(LLMConnector):
         response = self.client.invoke(messages)
 
         if isinstance(response.content, list):
-            return "".join(block["text"] for block in response.content if "text" in block)
+            return "".join(block["text"] for block in response.content if isinstance(block, dict) and "text" in block)
         return str(response.content)
 
 
@@ -153,7 +156,8 @@ def clean_json_block(s: str) -> str:
     return s
 
 
-def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[str]) -> List[Dict[str, str]]:
+
+def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[str]) -> List[Triple]:
     """Normalize nested/compacted LLM output into flat dicts.
     @details
         Handles token-saving patterns:
@@ -174,7 +178,7 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
         """
         return list(x) if isinstance(x, (list, tuple)) else [x]
 
-    def _expand_nested_ro(item: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _expand_nested_ro(item: Dict[str, Any]) -> List[Triple]:
         """Expand nested relation-object pairs pattern.
         @details
             Detects patterns like:
@@ -193,16 +197,16 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
             return [item]  # No nesting, return as-is
 
         # Cartesian product: each subject × each r-o pair
-        results: List[Dict[str, Any]] = []
+        results: List[Triple] = []
         for s in subjects:
             for pair in nested_pairs[0]:  # First nested list
                 r = pair.get("r") or pair.get("relation")
                 o = pair.get("o") or pair.get("object") or pair.get("object_")
                 if r and o:
-                    results.append({"s": s, "r": r, "o": o})
+                    results.append({"s": str(s), "r": str(r), "o": str(o)})
         return results
 
-    def _expand_cartesian(item: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _expand_cartesian(item: Dict[str, Any]) -> List[Triple]:
         """Expand list values into flat combinations.
         @details
             Handles three cases:
@@ -218,7 +222,7 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
 
         # If lists have same length, zip them (not cartesian)
         if len(s_vals) == len(r_vals) == len(o_vals) and len(s_vals) > 1:
-            return [{"s": s, "r": r, "o": o} for s, r, o in zip(s_vals, r_vals, o_vals)]
+            return [{"s": str(s), "r": str(r), "o": str(o)} for s, r, o in zip(s_vals, r_vals, o_vals)]
 
         # Otherwise, broadcast single values or create cartesian product
         max_len = max(len(s_vals), len(r_vals), len(o_vals))
@@ -231,21 +235,21 @@ def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[st
 
         # If all same length now, zip
         if len(s_vals) == len(r_vals) == len(o_vals):
-            return [{"s": s, "r": r, "o": o} for s, r, o in zip(s_vals, r_vals, o_vals)]
+            return [{"s": str(s), "r": str(r), "o": str(o)} for s, r, o in zip(s_vals, r_vals, o_vals)]
 
         # Full cartesian product for mismatched lengths
-        results: List[Dict[str, Any]] = []
+        results: List[Triple] = []
         for s in s_vals:
             for r in r_vals:
                 for o in o_vals:
-                    results.append({"s": s, "r": r, "o": o})
+                    results.append({"s": str(s), "r": str(r), "o": str(o)})
         return results
 
     # Normalize input to list of dicts
     items: List[Dict[str, Any]] = data if isinstance(data, list) else [data]
 
     # Expand each item
-    expanded: List[Dict[str, Any]] = []
+    expanded: List[Triple] = []
     for item in items:
         # Try nested r-o expansion first
         nested = _expand_nested_ro(item)
@@ -328,8 +332,8 @@ def flag_triples(
     # 2. Get scores (delegates to your existing moderate_texts)
     results = moderate_texts(texts, thresholds)
 
-    safe_triples = []
-    bad_triples = []
+    safe_triples: List[Triple] = []
+    bad_triples: List[Tuple[Triple, Dict[str, float]]] = []
 
     # 3. Split based on results
     for triple, violations in zip(triples, results):

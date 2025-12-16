@@ -1,4 +1,4 @@
-from typing import Any, Optional, Self, Dict, Generator, TYPE_CHECKING
+from typing import Any, Optional, Self, Dict, Generator, Type, TYPE_CHECKING
 from contextlib import contextmanager
 import os
 from dotenv import load_dotenv
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer, CrossEncoder
     from sklearn.feature_extraction.text import TfidfVectorizer
     from rouge_score.rouge_scorer import RougeScorer
+    from bert_score import BERTScorer
 
 
 class Session:
@@ -70,17 +71,18 @@ class Session:
         # 3. Declare Lazy-Loaded Models
         self.model_spacy: "spacy.language.Language"
         self.sentencizer_spacy: "spacy.language.Language"
-        
-        self.tokenizer: "PreTrainedTokenizer"
-        self.model_rebel: "PreTrainedModel"
+
+        self.tokenizer_rebel: "PreTrainedTokenizer"
+        self.model_rebel: "PreTrainedModel"  # AutoModelForSeq2SeqLM.from_pretrained() return type - internal factory hides type, unrecoverable
         
         self._client_openie: "CoreNLPClient"
         self.openie_persistent: bool
 
         self.model_nli: "CrossEncoder"
         self.vectorizer_salience: "TfidfVectorizer"
-        self.model_bertscore: "EvaluationModule"
-        self.model_rouge: "EvaluationModule"
+        self.model_bertscore_large: "BERTScorer"
+        self.model_rouge_full: "RougeScorer"
+        self.model_bertscore_distil: "BERTScorer"
         self.model_rouge_recall: "RougeScorer"
         self.model_sentence_coherence: "SentenceTransformer"
 
@@ -196,16 +198,16 @@ class Session:
     def load_metrics(self) -> None:
         from sentence_transformers import CrossEncoder
         from sklearn.feature_extraction.text import TfidfVectorizer
-        from rouge_score import rouge_scorer
+        from rouge_score import RougeScorer
         from bert_score import BERTScorer
         from sentence_transformers import SentenceTransformer
 
         self.model_nli = CrossEncoder('cross-encoder/nli-deberta-base', model_kwargs={"low_cpu_mem_usage": False})
         self.vectorizer_salience = TfidfVectorizer(max_features=1000)
         self.model_bertscore_large = BERTScorer(model_type="roberta-large", device="cpu")
-        self.model_rouge_full = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL', 'rougeLsum'], use_stemmer=True)
+        self.model_rouge_full = RougeScorer(['rouge1', 'rouge2', 'rougeL', 'rougeLsum'], use_stemmer=True)
         self.model_bertscore_distil = BERTScorer(model_type="distilroberta-base", lang="en", rescale_with_baseline=True, device="cpu")
-        self.model_rouge_recall = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
+        self.model_rouge_recall = RougeScorer(["rougeL"], use_stemmer=True)
         self.model_sentence_coherence = SentenceTransformer('all-MiniLM-L6-v2', model_kwargs={"low_cpu_mem_usage": False})
 
 
