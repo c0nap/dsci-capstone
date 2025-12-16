@@ -18,6 +18,8 @@ class Log:
     RECORD_TIME = True
     ## Option to globally disable the 'Log.timer' config argument, i.e. 'calculate[multiply]' instead of just 'calculate'
     USE_TIME_LABELS = True
+    ## Enable status-logging for Flask callbacks and boss task-tracking.
+    SHOW_STATUS = False
     ## Print the entire DataFrame to console
     FULL_DF = False
 
@@ -173,11 +175,12 @@ class Log:
         @param prefix  The context of the message.
         @param msg  The message to print.
         @param verbose  Whether to actually print. Saves space and reduces nested if statements."""
-        if not verbose:
+        if not verbose or not Log.SHOW_STATUS:
             return
         text = f"{Log.STATUS_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
         print(text)
 
+    task_failed = "[STORY FAILED] "
     task_complete = "[STORY COMPLETE] "
     msg_completed_task = lambda task, story: f"All chunks completed {task} for story {story}"
 
