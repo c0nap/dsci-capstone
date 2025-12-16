@@ -180,7 +180,7 @@ class Plot:
     def normalize_metrics(metrics: Dict[str, Any]) ->  Dict[str, float]:
         result: Dict[str, float] = {}
         for key, value in metrics.items():
-            if not isinstance(value, (int, float)):
+            if key not in Plot.METRIC_NAMES or not isinstance(value, (int, float)):
                 continue
             if key == "readability_delta":
                 # Clamp to [0, 1] range
@@ -201,9 +201,10 @@ class Plot:
         return result
 
     @staticmethod
-    def summary_results(metrics: Dict[str, float]) -> None:
+    def summary_results(results: Dict[str, float]) -> None:
         """Generate a bar chart showing metrics for a single summary."""
         # Convert keys to display names
+        metrics = Plot.normalize_metrics(results)
         names = [Plot.METRIC_NAMES[k] for k in metrics.keys()]
         values = [metrics[k] for k in metrics.keys()]
 
@@ -267,7 +268,8 @@ class Plot:
 
         for path in paths:
             df = pd.read_csv(path)
-            cols = [c for c in df.columns if c != "run_id"]
+            df = df.apply(Plot.normalize_metrics, axis=1)
+            cols = [c for c in df.columns]
             
             if metric_cols is None:
                 metric_cols = cols
