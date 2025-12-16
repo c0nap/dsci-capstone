@@ -40,11 +40,14 @@ class KnowledgeGraph:
 
         # Normalize already-cleaned inputs for extra Cypher safety
         if not subject or not relation or not object_:
-            Log.warn(Log.kg, f"Invalid triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+            Log.warn(Log.kg, f"Empty triple: ({subject})-[:{relation}]->({object_})", self.verbose)
             return
         relation = sanitize_relation(relation)
         subject = sanitize_node(subject)
         object_ = sanitize_node(object_)
+        if not subject or not relation or not object_:
+            Log.warn(Log.kg, f"Invalid triple: ({subject})-[:{relation}]->({object_})", self.verbose)
+            return
 
         # Merge subject/object and connect via relation
         query = f"""
@@ -736,7 +739,7 @@ def sanitize_node(label: str) -> str:
     # Regex: collapse consecutive non-alphanumeric to single underscore, strip edges
     sanitized = re.sub(r"[^A-Za-z0-9]+", "_", cleaned).strip("_")
     if not sanitized:
-        raise ValueError(f"Node name cannot be empty after sanitization: '{label}' -> '{cleaned}'")
+        Log.warn(msg=f"Node name cannot be empty after sanitization: '{label}' -> '{cleaned}'")
     return sanitized
 
 

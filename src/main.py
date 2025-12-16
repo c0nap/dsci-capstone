@@ -55,6 +55,9 @@ def pipeline_B(collection_name, c, book_title):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
+    if session.config.configuration == "baseline":
+        return []
+
     print("\nChunk details:")
     print(f"  index: {c.index}\n")
     print(c.text)
@@ -86,6 +89,9 @@ def pipeline_C(json_triples):
     @details
         - Neo4j graph database
         - Blazor graph page"""
+    if session.config.configuration == "baseline":
+        return ""
+
     for triple in json_triples:
         print(triple["s"], triple["r"], triple["o"])
     stages.task_20_send_triples(json_triples)
