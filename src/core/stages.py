@@ -203,7 +203,7 @@ def task_16_moderate_triples_llm(triples: List[Triple], text: str) -> List[Tripl
     moderation_strategy = session.config.moderation_strategy
     with Log.timer(config = f"[{moderation_strategy}]"):
         from src.connectors.llm import flag_triples
-        safe, bad = flag_triples(triples, session.config.moderation_thresholds)
+        safe, bad = flag_triples(triples, session.config.get_moderation_thresholds())
         if moderation_strategy == "resolve":
             if not bad:  # Optimization: If nothing is bad, skip the expensive LLM call
                 return safe

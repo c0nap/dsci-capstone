@@ -1,6 +1,6 @@
 from src.connectors.llm import LLMConnector
 from src.components.relation_extraction import RelationExtractor
-from typing import List, Any, Optional, Tuple
+from typing import List, Any, Optional, Tuple, Dict
 from src.core.context import session
 import random
 
@@ -24,6 +24,14 @@ class Config:
     seed: int = 123
     chunk_selection_method: str = "random-2"
     configuration: str = "fast"
+
+    @staticmethod
+    def to_dict() -> Dict[str, Any]:
+        return {
+            name: getattr(Config, name)
+            for name in Config.__annotations__
+            if hasattr(Config, name)
+        }
 
     @staticmethod
     def load_values() -> None:
@@ -94,22 +102,26 @@ class Config:
         Config.reasoning_effort = "high"
         Config.model_name = "gpt-5"
 
-    # Moderation thresholds for Gutenberg (historical fiction)
-    moderation_thresholds = {
-        "hate": 0.4,                      # Period racism in dialogue
-        "harassment": 0.4,                # Victorian class conflict
-        "violence": 0.5,                  # Gothic/adventure violence
-        "sexual": 0.3,                    # Euphemistic Victorian content
-        "self_harm": 0.3,                 # Tragic death scenes
-        "hate_threatening": 0.2,          # Filter overt calls to violence
-        "harassment_threatening": 0.2,
-        "violence_graphic": 0.3,
-        "sexual_minors": 0.01,            # Zero tolerance
-        "self_harm_intent": 0.1,
-        "self_harm_instructions": 0.1,
-        "illicit": 0.05,
-        "illicit_violent": 0.05,
-    }
+    @staticmethod
+    def get_moderation_thresholds() -> Dict[str, float]:
+        """Get const moderation specs using a method to hide attributes from @ref src.config.Config.to_dict.
+        @note  Setting any threshold to 0.0 will flag everything, since even safe text will have 1e-5 of each category.
+        @return  Moderation thresholds for Gutenberg (historical fiction)."""
+        return {
+            "hate": 0.4,                      # Period racism in dialogue
+            "harassment": 0.4,                # Victorian class conflict
+            "violence": 0.5,                  # Gothic/adventure violence
+            "sexual": 0.3,                    # Euphemistic Victorian content
+            "self_harm": 0.3,                 # Tragic death scenes
+            "hate_threatening": 0.2,          # Filter overt calls to violence
+            "harassment_threatening": 0.2,
+            "violence_graphic": 0.3,
+            "sexual_minors": 0.01,            # Zero tolerance
+            "self_harm_intent": 0.1,
+            "self_harm_instructions": 0.1,
+            "illicit": 0.05,
+            "illicit_violent": 0.05,
+        }
 
     @staticmethod
     def setup() -> None:
