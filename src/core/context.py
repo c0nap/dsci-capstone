@@ -1,5 +1,5 @@
 from typing import Any, Optional, Self, Dict, TYPE_CHECKING
-
+from contextlib import contextmanager
 
 # 1. Avoid circular imports: compile-time imports only when type checking
 if TYPE_CHECKING:
@@ -9,6 +9,15 @@ if TYPE_CHECKING:
     from src.connectors.graph import GraphConnector
     from src.connectors.relational import RelationalConnector
     from src.config import Config
+
+    # External types for MyPy compliance
+    import spacy.language
+    from stanza.server import CoreNLPClient
+    from transformers import PreTrainedTokenizer, PreTrainedModel
+    from sentence_transformers import SentenceTransformer, CrossEncoder
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from evaluate import EvaluationModule
+    from rouge_score.rouge_scorer import RougeScorer
 
 
 class Session:
@@ -57,6 +66,23 @@ class Session:
         self.metrics: "Metrics"
         self.config: "Config"
 
+        # 3. Declare Lazy-Loaded Models
+        self.model_spacy: "spacy.language.Language"
+        self.sentencizer_spacy: "spacy.language.Language"
+        
+        self.tokenizer: "PreTrainedTokenizer"
+        self.model_rebel: "PreTrainedModel"
+        
+        self._client_openie: "CoreNLPClient"
+        self.openie_persistent: bool
+
+        self.model_nli: "CrossEncoder"
+        self.vectorizer_salience: "TfidfVectorizer"
+        self.model_bertscore: "EvaluationModule"
+        self.model_rouge: "EvaluationModule"
+        self.model_rouge_recall: "RougeScorer"
+        self.model_sentence_coherence: "SentenceTransformer"
+
     def setup(self) -> None:
         """Loads heavy dependencies and initializes connections.
         @note  Must be called at application startup (main.py) or test setup (conftest.py).
@@ -65,7 +91,7 @@ class Session:
             return  # Prevent reinitialization
         self._initialized = True
 
-        # 3. Import connectors and components at runtime to avoid circular imports
+        # 4. Import connectors and components at runtime to avoid circular imports
         from src.components.fact_storage import KnowledgeGraph
         from src.components.metrics import Metrics
         from src.connectors.document import DocumentConnector
@@ -73,7 +99,7 @@ class Session:
         from src.connectors.relational import RelationalConnector
         from src.config import Config
 
-        # 4. Initialize connectors and components
+        # 5. Initialize connectors and components
         ## Stores RDF-compliant semantic triples.
         self.relational_db = RelationalConnector.from_env(verbose=self.verbose)
         ## Stores input text, pre-processed chunks, JSON intermediates, and final output.
