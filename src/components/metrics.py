@@ -240,25 +240,32 @@ def run_rouge_old(prediction: str, reference: str) -> Dict[str, float]:
     """Run the ROUGE evaluation metric given one reference and one prediction to judge.
     @param prediction  Text string containing the generated summary.
     @param reference  Text string to compare against.
-    @return  ROUGE results directly from 'evaluate' library.
+    @return  ROUGE results matching the schema from 'evaluate' library.
     Values correspond to F1 score since this is the standard ROUGE metric.
     Example schema: { "rouge1": 0.87, ... }
     Valid keys: rouge1, rouge2, rougeL, rougeLsum."""
-    model = session.model_rouge
-    result = model.compute(predictions=[prediction], references=[reference])
-    return result
+    scores = session.model_rouge_full.score(reference, prediction)
+    return {
+        "rouge1": scores["rouge1"].fmeasure,
+        "rouge2": scores["rouge2"].fmeasure,
+        "rougeL": scores["rougeL"].fmeasure,
+        "rougeLsum": scores["rougeLsum"].fmeasure,
+    }
 
 
 def run_bertscore_old(prediction: str, reference: str) -> Dict[str, List[float]]:
     """Run the BERTScore evaluation metric given one reference and one prediction to judge.
     @param prediction  Text string containing the generated summary.
     @param reference  Text string to compare against.
-    @return  BERTScore results directly from 'evaluate' library.
+    @return  BERTScore results matching the schema from 'evaluate' library.
     Example schema: { "precision": [0.87], ... }
     Valid keys: precision, recall, f1."""
-    model = session.model_bertscore
-    result = model.compute(predictions=[prediction], references=[reference], model_type="roberta-large")
-    return result
+    P, R, F1 = session.model_bertscore_large.score(predictions=[prediction], references=[reference])
+    return {
+        "precision": P.tolist(),
+        "recall": R.tolist(),
+        "f1": F1.tolist()
+    }
 
 
 def run_questeval(
@@ -480,7 +487,7 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
 # GROUP 1: BASIC COMPARISON OF SUMMARY / SOURCE TEXT
 # ------------------------------------------------------------------------------
 # run_rouge_l                  [BASELINE] Longest common subsequence recall (source as reference). Library: rouge_score
-# run_bertscore                [MEANING] Average F1 over all tokens. Library: evaluate
+# run_bertscore                [MEANING] Average F1 over all tokens. Library: bert_score
 # run_novel_ngrams             [ABSTRACTIVENESS] % of new 3-grams in summary. Library: nltk
 # run_jsd_stats                [DISTRIBUTION] Jensen-Shannon divergence of word frequency distributions. Library: scipy
 # run_entity_coverage          [FACTS] Recall of source entities present in summary. Library: spacy
@@ -505,7 +512,7 @@ def chunk_bookscore(book_text: str, book_title: str = 'book', chunk_size: int = 
 # - Fast: must conclude under 10s on CPU (no heavy models)
 # - Usable: evaluates ~300-token summary from ~500-token source, no external datasets required
 # - Reference free: only the summary and base text are used
-# - Easy to implement: prefer existing libraries (evaluate, spacy, textacy, textstats). LLM prompts must cite a paper if used.
+# - Easy to implement: prefer existing libraries (spacy, textacy, textstats). LLM prompts must cite a paper if used.
 # - Unique / Insightful: metrics illustrate non-obvious aspects and do not duplicate each other
 # - Domain adjacent: designed for narrative fiction books, but factuality metrics remain meaningful for generic text
 
@@ -557,15 +564,8 @@ def run_bertscore(summary: str, source: str) -> Dict[str, float]:
     interpretable metric of meaning preservation.
     @return: Dictionary containing average BERTScore F1
     """
-    model = session.model_bertscore
-    result = model.compute(
-        predictions=[summary],
-        references=[source],
-        model_type="distilroberta-base",
-        rescale_with_baseline=True,  # Can be negative
-        lang="en"
-    )
-    return {"bertscore_f1": result["f1"][0]}
+    P, R, F1 = session.model_bertscore_distil.score([summary], [source])
+    return {"bertscore_f1": F1.item()}
 
 
 def run_novel_ngrams(summary: str, source: str, n: int = 3) -> Dict[str, float]:

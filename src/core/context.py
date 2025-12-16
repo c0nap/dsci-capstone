@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from transformers import PreTrainedTokenizer, PreTrainedModel
     from sentence_transformers import SentenceTransformer, CrossEncoder
     from sklearn.feature_extraction.text import TfidfVectorizer
-    from evaluate import EvaluationModule
     from rouge_score.rouge_scorer import RougeScorer
 
 
@@ -197,17 +196,15 @@ class Session:
     def load_metrics(self) -> None:
         from sentence_transformers import CrossEncoder
         from sklearn.feature_extraction.text import TfidfVectorizer
-        import evaluate
         from rouge_score import rouge_scorer
+        from bert_score import BERTScorer
         from sentence_transformers import SentenceTransformer
-
-        # Set verbosity to ERROR to suppress "Downloading builder script" info logs
-        evaluate.logging.set_verbosity_error()
 
         self.model_nli = CrossEncoder('cross-encoder/nli-deberta-base', model_kwargs={"low_cpu_mem_usage": False})
         self.vectorizer_salience = TfidfVectorizer(max_features=1000)
-        self.model_bertscore = evaluate.load("bertscore")
-        self.model_rouge = evaluate.load("rouge")
+        self.model_bertscore_large = BERTScorer(model_type="roberta-large", device="cpu")
+        self.model_rouge_full = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL', 'rougeLsum'], use_stemmer=True)
+        self.model_bertscore_distil = BERTScorer(model_type="distilroberta-base", lang="en", rescale_with_baseline=True, device="cpu")
         self.model_rouge_recall = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
         self.model_sentence_coherence = SentenceTransformer('all-MiniLM-L6-v2', model_kwargs={"low_cpu_mem_usage": False})
 

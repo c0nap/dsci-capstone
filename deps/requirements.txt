@@ -12,7 +12,6 @@ flask
 
 # Metrics - TODO REMOVE
 numpy
-evaluate
 rouge_score
 nltk
 absl-py
