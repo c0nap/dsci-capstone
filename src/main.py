@@ -21,7 +21,7 @@ from src.core.boss import (
 )
 from src.util import Log
 import time
-from typing import Dict
+from typing import Dict, Optional
 
 
 @Log.time
@@ -118,7 +118,7 @@ def pipeline_D(collection_name, triples_string, chunk_id, text):
 @Log.time
 def pipeline_E(
     summary: str, book_title: str, book_id: str, chunk: str = "", gold_summary: str = "", bookscore: float = None, questeval: float = None
-) -> Dict[str, float]:
+) -> Optional[Dict[str, float]]:
     """Compute metrics and send available data to Blazor"""
     from src.core.stages import (
         task_45_eval_rouge,
@@ -164,6 +164,7 @@ def pipeline_E(
         print("\nOutput sent to web app.")
     if chunk != "":
         return CORE_METRICS
+    return None
 
 
 @Log.time

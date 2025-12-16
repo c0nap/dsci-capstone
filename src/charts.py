@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import seaborn as sns
+from datetime.datetime import now
 from src.util import Log, get_merged_df
 from typing import Optional, Dict, List
 
@@ -174,6 +175,8 @@ class Plot:
         "bookscore" : "BooookScore Coherence",
         "questeval" : "QuestEval Factuality",
     }
+
+    @staticmethod
     def normalize_metrics(metrics: Dict[str, float]) ->  Dict[str, float]:
         for key, value in metrics.items():
             if key == "readability_delta":
@@ -221,7 +224,7 @@ class Plot:
         Uses timestamp as run_id if not provided.
         """
         if run_id is None:
-            run_id = datetime.now().isoformat()
+            run_id = now().isoformat()
         
         # Single-row DataFrame with run_id as first column
         row_data = {"run_id": run_id, **metrics}
@@ -277,7 +280,7 @@ class Plot:
         x_labels = []
         group_ends = []
         spacing = 0.5
-        x = 0
+        x = 0.0
 
         group_names = list(Plot.METRIC_GROUPS.keys())
         for group_name in group_names:

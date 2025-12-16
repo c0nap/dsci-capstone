@@ -204,13 +204,13 @@ def task_16_moderate_triples_llm(triples: List[Triple], text: str) -> List[Tripl
     with Log.timer(config = f"[{moderation_strategy}]"):
         from src.connectors.llm import flag_triples
         safe, bad = flag_triples(triples, session.config.moderation_thresholds)
-        if moderation_strategy == "drop":
-            return safe
         if moderation_strategy == "resolve":
             if not bad:  # Optimization: If nothing is bad, skip the expensive LLM call
                 return safe
             fixed = _task_16_resolve_strategy(bad, text)
             return safe + fixed
+        else:  # == "drop":
+            return safe
 
 
 def _task_16_resolve_strategy(
@@ -249,7 +249,7 @@ def _task_16_resolve_strategy(
 
 
 # PIPELINE STAGE C - ENRICHMENT / TRIPLES -> GRAPH
-def task_20_send_triples(triples: List[Triple]):
+def task_20_send_triples(triples: List[Triple]) -> None:
     with Log.timer():
         session.main_graph.add_triples_json(triples)
 
