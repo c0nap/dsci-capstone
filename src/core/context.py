@@ -89,6 +89,28 @@ class Session:
         self.config.setup()
         # TODO: Split into scene graph, event graph, and social graph.
 
+        self.load_models()
+        self.load_metrics()
+
+    def load_models(self) -> None:
+        self.sentencizer = CrossEncoder('cross-encoder/nli-deberta-base', model_kwargs={"low_cpu_mem_usage": False})
+
+    def load_metrics(self) -> None:
+        from sentence_transformers import CrossEncoder
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        import spacy
+        import evaluate
+        from rouge_score import rouge_scorer
+        from sentence_transformers import SentenceTransformer
+
+        self.model_nli = CrossEncoder('cross-encoder/nli-deberta-base', model_kwargs={"low_cpu_mem_usage": False})
+        self.vectorizer_salience = TfidfVectorizer(max_features=1000)
+        self.model_spacy = spacy.load("en_core_web_sm")
+        self.model_bertscore = evaluate.load("bertscore")
+        self.model_rouge = evaluate.load("rouge")
+        self.model_rouge_recall = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
+        self.model_sentence_coherence = SentenceTransformer('all-MiniLM-L6-v2', model_kwargs={"low_cpu_mem_usage": False})
+
 
 ## The global instance of the singleton Session class.
 # Do NOT assign = None since this should always exist after setup.

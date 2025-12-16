@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import os
 from typing import Any, Dict, List
+from src.core.context import session
 
 
 """Contains functions to score a summary or knowledge graph.
@@ -243,9 +244,7 @@ def run_rouge_old(prediction: str, reference: str) -> Dict[str, float]:
     Values correspond to F1 score since this is the standard ROUGE metric.
     Example schema: { "rouge1": 0.87, ... }
     Valid keys: rouge1, rouge2, rougeL, rougeLsum."""
-    import evaluate
-
-    model = evaluate.load("rouge")
+    model = session.model_rouge
     result = model.compute(predictions=[prediction], references=[reference])
     return result
 
@@ -257,8 +256,7 @@ def run_bertscore_old(prediction: str, reference: str) -> Dict[str, List[float]]
     @return  BERTScore results directly from 'evaluate' library.
     Example schema: { "precision": [0.87], ... }
     Valid keys: precision, recall, f1."""
-    import evaluate
-    model = evaluate.load("bertscore")
+    model = session.model_bertscore
     result = model.compute(predictions=[prediction], references=[reference], model_type="roberta-large")
     return result
 
@@ -537,8 +535,7 @@ def run_rouge_l(summary: str, source: str) -> Dict[str, float]:
     recall avoids penalizing creative paraphrasing.
     @return: Dictionary containing ROUGE-L recall score
     """
-    from rouge_score import rouge_scorer
-    scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
+    scorer = session.model_rouge_recall
     scores = scorer.score(source, summary)
     return {"rougeL_recall": scores["rougeL"].recall}
 
@@ -560,8 +557,7 @@ def run_bertscore(summary: str, source: str) -> Dict[str, float]:
     interpretable metric of meaning preservation.
     @return: Dictionary containing average BERTScore F1
     """
-    import evaluate
-    model = evaluate.load("bertscore")
+    model = session.model_bertscore
     result = model.compute(
         predictions=[summary],
         references=[source],
@@ -652,8 +648,7 @@ def run_entity_coverage(summary: str, source: str) -> Dict[str, float]:
     additions without negatively impacting the score.
     @return: Dictionary containing coverage and hallucination ratios
     """
-    import spacy
-    nlp = spacy.load("en_core_web_sm")
+    nlp = session.model_spacy
 
     src = nlp(source)
     summ = nlp(summary)
@@ -735,10 +730,9 @@ def run_salience_recall(summary: str, source: str, top_k: int = 20) -> Dict[str,
     source as single document.
     @return: Dictionary containing fraction of top-salience words preserved
     """
-    from sklearn.feature_extraction.text import TfidfVectorizer
     import numpy as np
     
-    vectorizer = TfidfVectorizer(max_features=1000)
+    vectorizer = session.vectorizer_salience
     vectorizer.fit([source])
     
     tfidf_matrix = vectorizer.transform([source])
@@ -774,7 +768,6 @@ def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
     Label order: [contradiction=0, entailment=1, neutral=2].
     @return: Dictionary containing entailment percentage
     """
-    from sentence_transformers import CrossEncoder
     from nltk import sent_tokenize
     import numpy as np
     import math
@@ -786,8 +779,7 @@ def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
     entailment_threshold = 0.5  # threshold on entailment probability to count a sentence as 'entailed'
 
     # Load model (same family as original; consider using v3 variant for better performance)
-    # We explicitly set low_cpu_mem_usage to False to prevent loading to the 'meta' device
-    model = CrossEncoder('cross-encoder/nli-deberta-base', model_kwargs={"low_cpu_mem_usage": False})
+    model = session.model_nli
 
     # Tokenize into sentences
     summary_sents = sent_tokenize(summary)
@@ -887,12 +879,11 @@ def run_sentence_coherence(summary: str) -> Dict[str, float]:
     while capturing whether sentences transition naturally.
     @return: Dictionary containing average coherence score
     """
-    from sentence_transformers import SentenceTransformer
     from nltk import sent_tokenize
     from sklearn.metrics.pairwise import cosine_similarity
     import numpy as np
     
-    model = SentenceTransformer('all-MiniLM-L6-v2', model_kwargs={"low_cpu_mem_usage": False})
+    model = session.model_sentence_coherence
     sents = sent_tokenize(summary)
     
     if len(sents) < 2:
@@ -923,10 +914,9 @@ def run_entity_grid_coherence(summary: str) -> Dict[str, float]:
     sentences. Consistent transitions indicate coherent narrative progression.
     @return: Dictionary containing entity transition coherence score
     """
-    import spacy
     from nltk import sent_tokenize
     
-    nlp = spacy.load("en_core_web_sm")
+    nlp = session.model_spacy
     sents = sent_tokenize(summary)
     
     if len(sents) < 2:
