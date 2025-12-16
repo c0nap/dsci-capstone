@@ -9,7 +9,7 @@ import re
 from src.connectors.base import Connector
 from src.components.relation_extraction import Triple
 from src.util import Log
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional, cast
 import json
 
 
@@ -106,7 +106,8 @@ class OpenAIConnector(LLMConnector):
             model=self.model_name,
             messages=messages,
             temperature=self.temperature,
-            **extra_args
+            # Cast here to satisfy Mypy's unpacking safety check
+            **cast(Dict[str, Any], extra_args)
         )
         return str(response.choices[0].message.content)
 
@@ -157,7 +158,7 @@ def clean_json_block(s: str) -> str:
 
 
 
-def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[str]) -> List[Triple]:
+def normalize_to_dict(data: Dict[str, str] | List[Dict[str, str]], keys: List[str]) -> List[Dict[str, str]]:
     """Normalize nested/compacted LLM output into flat dicts.
     @details
         Handles token-saving patterns:

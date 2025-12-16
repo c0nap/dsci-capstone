@@ -559,10 +559,6 @@ class KnowledgeGraph:
         @return  String representation of triples in the specified format.
         @throws ValueError  If format is not recognized.
         """
-        accepted_modes = ["natural", "raw", "json", "context"]
-        if mode not in accepted_modes:
-            raise ValueError(f"Invalid mode '{mode}'; expected one of {accepted_modes}")
-
         if triple_names_df is None:
             triples_df = self.get_all_triples()
             triple_names_df = self.triples_to_names(triples_df, drop_ids=True)
@@ -609,6 +605,9 @@ class KnowledgeGraph:
                 lines.append("")  # Empty line between subjects
             
             return "\n".join(lines).rstrip()  # Remove trailing newline
+
+        accepted_modes = ["natural", "raw", "json", "context"]
+        raise ValueError(f"Invalid mode '{mode}'; expected one of {accepted_modes}")
 
     def to_narrative(self, start_node: Optional[str] = None, max_triples: int = 50) -> str:
         """Convert graph to narrative text using specified strategy.
