@@ -1,4 +1,4 @@
-from typing import Any, Optional, Self, Dict, TYPE_CHECKING
+from typing import Any, Optional, Self, Dict, Generator, TYPE_CHECKING
 from contextlib import contextmanager
 import os
 from dotenv import load_dotenv
@@ -65,7 +65,7 @@ class Session:
         self.graph_db: "GraphConnector"
         self.main_graph: "KnowledgeGraph"
         self.metrics: "Metrics"
-        self.config: "Config"
+        self.config: "Type[Config]"
 
         # 3. Declare Lazy-Loaded Models
         self.model_spacy: "spacy.language.Language"
@@ -173,7 +173,7 @@ class Session:
             self._client_openie = None
 
     @contextmanager
-    def java_client_openie(self, config: Dict[str, Any]):
+    def java_client_openie(self, config: Dict[str, Any]) -> Generator["CoreNLPClient", None, None]:
         """Context manager for CoreNLP client.
         @details  Usage - `with session.java_client_openie(config) as client:`
         @param config  CoreNLPClient configuration dict (annotators, memory, timeout, etc.)
