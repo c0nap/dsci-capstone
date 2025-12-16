@@ -175,6 +175,7 @@ class Log:
         msg = Log.msg_chart_saved(title, filename)
         Log.chart_message(msg=msg, verbose=verbose)
 
+    ch_dump = "[DUMP] "
     msg_chart_saved = lambda title, filename: f"Saved chart '{title}' to {filename}"
 
     @staticmethod
