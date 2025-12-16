@@ -157,12 +157,7 @@ class Config:
         if extractor_type == "rebel":
             from src.components.relation_extraction import RelationExtractorREBEL
 
-            # TODO: move to session.rel_extract
-            re_rebel = "Babelscape/rebel-large"
-            # TODO: different models
-            # re_rst = "GAIR/rst-information-extraction-11b"
-            # ner_renard = "compnet-renard/bert-base-cased-literary-NER"
-            return RelationExtractorREBEL(model_name=re_rebel, max_tokens=1024)
+            return RelationExtractorREBEL(max_tokens=1024)
 
         if extractor_type == "openie":
             from src.components.relation_extraction import RelationExtractorOpenIE

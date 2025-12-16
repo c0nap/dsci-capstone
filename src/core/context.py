@@ -117,6 +117,10 @@ class Session:
 
         self.load_models()
         self.load_metrics()
+        if Config.relation_extractor_type == "openie":
+            self.load_optional_openie()
+        elif Config.relation_extractor_type == "rebel":
+            self.load_optional_rebel()
 
     def load_models(self) -> None:
         import spacy
@@ -130,13 +134,19 @@ class Session:
             self.model_spacy = spacy.load(name_spacy_model)
 
         ## Lightweight spaCy model to split text into sentences. Faster than full parsing model.
-        self.sentencizer_spacy = spacy.blank("en").add_pipe("sentencizer")
+        self.sentencizer_spacy = spacy.blank("en")
+        self.sentencizer_spacy.add_pipe("sentencizer")
 
     def load_optional_rebel(self) -> None:
         from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+
+        load_dotenv(".env")  # Needs HF_HUB_TOKEN
         name_rebel_model = "Babelscape/rebel-large"
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        self.model_rebel = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
+        # TODO: different models
+        # re_rst = "GAIR/rst-information-extraction-11b"
+        # ner_renard = "compnet-renard/bert-base-cased-literary-NER"
+        self.tokenizer_rebel = AutoTokenizer.from_pretrained(name_rebel_model)
+        self.model_rebel = AutoModelForSeq2SeqLM.from_pretrained(name_rebel_model)
 
     def load_optional_openie(self, persistent: bool = False) -> None:
         """Ensures CoreNLP backend is installed. Can call early to pre-warm, but not required.
@@ -188,6 +198,9 @@ class Session:
         import evaluate
         from rouge_score import rouge_scorer
         from sentence_transformers import SentenceTransformer
+
+        # Set verbosity to ERROR to suppress "Downloading builder script" info logs
+        evaluate.logging.set_verbosity_error()
 
         self.model_nli = CrossEncoder('cross-encoder/nli-deberta-base', model_kwargs={"low_cpu_mem_usage": False})
         self.vectorizer_salience = TfidfVectorizer(max_features=1000)

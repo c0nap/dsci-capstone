@@ -73,16 +73,6 @@ class RelationExtractorREBEL(RelationExtractor):
         @param text  The input narrative text.
         @return  A list of extracted relations.
         """
-        # 1. Lazy Imports & Setup (Run once)
-        if self.model is None:
-            # Setup Spacy for basic sentence segmentation
-            session.load_optional_rebel()
-
-            # Load Model
-            load_dotenv(".env")
-            print(f"Loading REBEL model: {self.model_name}...")
-            self.tokenizer = session.tokenizer
-            self.model = session.model_rebel
 
         # Split into sentences: RE models generally output 1 relation set per input sequence.
         # Cleaning newlines prevents tokenization artifacts.
@@ -94,7 +84,7 @@ class RelationExtractorREBEL(RelationExtractor):
 
         # Perform RE on each sentence individually
         for sentence in sentences:
-            inputs = self.tokenizer(
+            inputs = session.tokenizer_rebel(
                 sentence,
                 return_tensors="pt",
                 truncation=True,
@@ -102,8 +92,8 @@ class RelationExtractorREBEL(RelationExtractor):
             )
 
             # Generate the linearized triples
-            outputs = self.model.generate(**inputs)
-            decoded = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            outputs = session.model_rebel.generate(**inputs)
+            decoded = session.tokenizer_rebel.decode(outputs[0], skip_special_tokens=True)
 
             # REBEL output format is specific; we split by the internal model delimiter
             parts = [str(element).strip() for element in decoded.split(self._model_delim)]
