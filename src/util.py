@@ -49,6 +49,8 @@ class Log:
     TIME_COLOR = CYAN
     ## ANSI color applied to the prefix of chart generation messages
     CHART_COLOR = GRAY
+    ## ANSI color applied to the prefix of task status messages
+    STATUS_COLOR = GREEN
     ## ANSI color applied to the body of every Log message
     MSG_COLOR = BRIGHT
 
@@ -164,6 +166,29 @@ class Log:
             return
         text = f"{Log.CHART_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
         print(text)
+
+    @staticmethod
+    def status_message(prefix: str = "[STATUS] ", msg: str = "", verbose: bool = True) -> None:
+        """A status message begins with a green prefix.
+        @param prefix  The context of the message.
+        @param msg  The message to print.
+        @param verbose  Whether to actually print. Saves space and reduces nested if statements."""
+        if not verbose:
+            return
+        text = f"{Log.STATUS_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
+        print(text)
+
+    task_complete = "[STORY COMPLETE] "
+    msg_completed_task = lambda task, story: f"All chunks completed {task} for story {story}"
+
+    story_complete = "[PIPELINE FINALIZED] "
+    msg_completed_story = lambda story: f"Story {story} fully processed"
+
+    msg_task_update = lambda unit_type, unit_id, task, status: f"{unit_type} {unit_id}: {task} -> {status}"
+
+    callback = "[CALLBACK] "
+    assigned = "[ASSIGNED] "
+    msg_task_assigned = lambda chunk, task, database, collection:  f"chunk '{chunk}' to worker {task}: using database '{database}' and collection '{collection}'"
 
     @staticmethod
     def chart(title: str, filename: str, verbose: bool = True) -> None:

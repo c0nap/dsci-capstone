@@ -293,10 +293,10 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
                 update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
                 assigned += 1
-                print(f"[ASSIGNED] chunk '{chunk_id}' to worker {task_type}: using database '{database_name}' and collection '{collection_name}'")
+                Log.status_message(prefix=Log.assigned, msg=Log.msg_task_assigned(chunk_id, task_type, database_name, collection_name))
             else:
                 # If assignment failed, set status to failed
-                print(f"WARNING: Failed to assign chunk {chunk_id} to worker")
+                Log.warn(msg=f"Failed to assign chunk {chunk_id} to worker")
                 update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
 
         return (
@@ -336,10 +336,10 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
             update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
             assigned += 1
-            print(f"[ASSIGNED] chunk '{chunk_id}' to worker {task_type}: using database '{database_name}' and collection '{collection_name}'")
+            Log.status_message(prefix=Log.assigned, msg=Log.msg_task_assigned(chunk_id, task_type, database_name, collection_name))
         else:
             # If assignment failed, set status to failed
-            print(f"WARNING: Failed to assign chunk {chunk_id} to worker")
+            Log.warn(msg=f"Failed to assign chunk {chunk_id} to worker")
             update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
 
         return (
@@ -363,7 +363,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         if not chunk_id or not task or not status:
             return jsonify({"error": "Missing required fields: chunk_id, task, status"}), 400
 
-        print(f"[CALLBACK] chunk_id={chunk_id}, task={task}, status={status}")
+        Log.status_message(prefix=Log.callback, msg=f"chunk_id={chunk_id}, task={task}, status={status}")
 
         # Get specific chunk by chunk_id
         collection = getattr(mongo_db, collection_name)
@@ -372,7 +372,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         if not chunk:
             # Cannot update tracker without story_id from chunk document
             # This indicates a more serious issue (chunk never existed or was deleted)
-            print(f"[ERROR] Could not find chunk {chunk_id} in MongoDB - cannot update tracker")
+            Log.warn(msg=f"Could not find chunk {chunk_id} in MongoDB - cannot update tracker")
             return jsonify({"error": f"Could not find chunk {chunk_id} in MongoDB."}), 404
 
         story_id = chunk["story_id"]
@@ -399,7 +399,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             # Check if all chunks for this story completed this task
             all_chunks_complete = check_story_completion(story_id, chunk_task)
             if True:
-                print(f"[STORY COMPLETE] All chunks completed {chunk_task} for story {story_id}")
+                Log.status_message(Log.task_complete, Log.msg_completed_task(chunk_task, story_id))
 
                 Log.print_timing_summary()
                 Log.dump_timing_csv()
@@ -425,7 +425,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     #questeval = float(chunk["questeval"]["result"]["value"])
                     CORE_METRICS = pipeline_E(summary, book_title, book_id, text, gold_summary, bookscore)  #, questeval)
 
-                    print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")
+                    Log.status_message(Log.story_complete, Log.msg_completed_story(story_id))
 
                     Log.print_timing_summary()
                     Log.dump_timing_csv()
@@ -435,7 +435,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
         elif "failed" in status:
             # Update chunk status to failed
-            print(f"[WARNING] Task {task} failed for chunk {chunk_id}")
+            Log.warn(msg=f"Task {task} failed for chunk {chunk_id}")
             seconds = record_elapsed_time(chunk_id, chunk_task)
             update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
             if seconds:
@@ -444,7 +444,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             # Check if we should mark the story-level task as failed
             if check_story_failure(story_id, chunk_task):
                 update_story_status(story_id, 'metrics', 'failed')
-                print(f"[STORY FAILED] Story {story_id} has failed chunks for {chunk_task}")
+                Log.warn(prefix=Log.task_failed, msg=f"Story {story_id} has failed chunks for {chunk_task}")
 
         else:
             return jsonify({"error": f"Unknown status: {status}"}), 400
@@ -550,11 +550,11 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                 return jsonify({"error": "Invalid story_id, must be integer"}), 400
 
             update_story_status(story_id, task, status)
-            print(f"[STATUS] Story {story_id}: {task} -> {status}")
+            Log.status_message(msg=Log.msg_task_update("Story", story_id, task, status))
 
         elif status_type == "chunk":
             update_chunk_status(chunk_id, story_id, task, status)
-            print(f"[STATUS] Chunk {chunk_id}: {task} -> {status}")
+            Log.status_message(msg=Log.msg_task_update("Chunk", chunk_id, task, status))
 
         else:
             return jsonify({"error": f"Invalid status_type: {status_type}. Use 'story' or 'chunk'"}), 400
@@ -589,7 +589,7 @@ def create_boss_thread(DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
     task_types = ["bookscore"]  #["questeval", "bookscore"]
     worker_urls = load_worker_config(task_types)
     if not worker_urls:
-        print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
+        Log.warn(msg="No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
 
     # Create and run app
     app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
