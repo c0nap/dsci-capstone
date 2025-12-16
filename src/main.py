@@ -22,6 +22,7 @@ from src.core.boss import (
 from src.util import Log
 import time
 from typing import Dict, Optional, Any
+from src.core.context import session
 
 
 @Log.time
@@ -117,7 +118,8 @@ def pipeline_D(collection_name, triples_string, chunk_id, text):
 
 @Log.time
 def pipeline_E(
-    summary: str, book_title: str, book_id: str, chunk: str = "", gold_summary: str = "", bookscore: float = None, questeval: float = None
+    summary: str, book_title: str, book_id: str, chunk_id: int, chunk: str = "", gold_summary: str = "",
+    bookscore: float = None, questeval: float = None
 ) -> Optional[Dict[str, Any]]:
     """Compute metrics and send available data to Blazor"""
     from src.core.stages import (
@@ -174,13 +176,13 @@ def pipeline_E(
 
 
 @Log.time
-def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title):
+def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title, chunk_id):
     chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id, collection_name)
     for chunk in chunks:
         triples = pipeline_B(collection_name, chunk, book_title)
         triples_string = pipeline_C(triples)
         summary = pipeline_D(collection_name, triples_string, chunk.get_chunk_id())
-        pipeline_E(summary, book_title, book_id)
+        pipeline_E(summary, book_title, book_id, chunk_id)
 
 
 def old_main(collection_name):
@@ -217,7 +219,6 @@ CHAPTER 12. THE END OF THE END\n
 
 
 if __name__ == "__main__":
-    from src.core.context import session
     session.setup()
 
     # TODO: handle this better - half env parsing is here, half is in boss.py
@@ -302,7 +303,7 @@ CHAPTER 12. THE END OF THE END\n
                 response = post_process_chunk(BOSS_PORT, chunk_id, story_id, task_type)
                 # pipeline_E is moved to callback() to finalize asynchronously
         else:
-            pipeline_E(summary, book_title, book_id)
+            pipeline_E(summary, book_title, book_id, chunk_id)
     
         # Write core function timing - Keyboard interrupt doesnt work
         Log.print_timing_summary()

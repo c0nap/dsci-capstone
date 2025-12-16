@@ -423,7 +423,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     gold_summary = chunk.get("gold_summary", text[: len(text) // 2])
                     bookscore = float(chunk["bookscore"]["result"]["value"])
                     #questeval = float(chunk["questeval"]["result"]["value"])
-                    RESULTS = pipeline_E(summary, book_title, book_id, text, gold_summary, bookscore)  #, questeval)
+                    RESULTS = pipeline_E(summary, book_title, book_id, chunk_id, text, gold_summary, bookscore)  #, questeval)
 
                     Log.status_message(Log.story_complete, Log.msg_completed_story(story_id))
 

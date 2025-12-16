@@ -226,8 +226,8 @@ class Plot:
         Row-major format: each metric is a column, each run is a row.
         Uses timestamp as run_id if not provided.
         """
-        run_label = run_id | results["chunk_id"]
-        run_id = run_id | datetime.now().isoformat()
+        run_label = run_id or results["chunk_id"]
+        run_id = run_id or datetime.now().isoformat()
         
         # Single-row DataFrame with run_id as first column
         row_data = {**results, "run_id": run_id}
