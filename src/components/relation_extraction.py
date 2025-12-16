@@ -29,16 +29,6 @@ class RelationExtractor(ABC):
         """
         pass
 
-    @staticmethod
-    def to_triples_string(extracted: List[Triple]) -> str:
-        """Concatenate triples into a form usable in a LLM prompt.
-        @param extracted  A list of extracted relations.
-        @return  String with one triple per line."""
-        triples_string = ""
-        for triple in extracted:
-            triples_string += str(triple) + "\n"
-        return triples_string
-
 
 class RelationExtractorREBEL(RelationExtractor):
     """Relation Extractor using the REBEL generative model (Seq2Seq).

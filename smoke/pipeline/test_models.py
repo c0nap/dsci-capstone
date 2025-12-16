@@ -7,6 +7,7 @@ from src.main import pipeline_B, pipeline_D, pipeline_E
 from typing import Any, List
 from src.core.stages import Config
 from src.components.relation_extraction import RelationExtractor
+from src.connectors.llm import to_triples_string
 
 
 @pytest.fixture
@@ -217,7 +218,7 @@ def test_pipeline_D_minimal(docs_db, book_data):
     collection_name = "test_pipeline_d_smoke"
     chunk = book_data["chunk"]
     triples = book_data["json_triples"]
-    triples_string = RelationExtractor.to_triples_string(triples)
+    triples_string = to_triples_string(triples)
 
     # Insert chunk first - verified by pipeline_B_minimal
     task_11_send_chunk(chunk, collection_name, book_data["book_title"])

@@ -6,7 +6,7 @@ from src.components.book_conversion import Chunk, EPUBToTEI, ParagraphStreamTEI,
 from src.core.stages import *
 from src.main import pipeline_A, pipeline_C
 from src.util import Log
-from src.connectors.llm import parse_llm_triples
+from src.connectors.llm import parse_llm_triples, to_triples_string
 
 
 ##########################################################################
@@ -376,7 +376,7 @@ def test_job_13_concatenate_triples(book_data):
     from src.components.relation_extraction import RelationExtractor
     extracted = book_data["rebel_triples"]
 
-    triples_string = RelationExtractor.to_triples_string(extracted)
+    triples_string = to_triples_string(extracted)
 
     assert isinstance(triples_string, str)
     assert triples_string.count("\n") == len(extracted)

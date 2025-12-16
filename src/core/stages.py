@@ -1,5 +1,5 @@
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
-from src.connectors.llm import parse_llm_triples
+from src.connectors.llm import parse_llm_triples, to_triples_string
 from src.components.relation_extraction import RelationExtractor, Triple
 from src.core.context import session
 from src.util import Log
@@ -183,7 +183,7 @@ def task_12_relation_extraction(text: str) -> List[Triple]:
 def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, str, List[Triple]]:
     llm_connector_type = session.config.validation_llm_engine
     with Log.timer(label=f"[{llm_connector_type}]"):
-        triples_string = RelationExtractor.to_triples_string(triples)
+        triples_string = to_triples_string(triples)
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON."
         llm = session.config.get_llm(llm_connector_type, system_prompt)
@@ -232,7 +232,7 @@ def _task_16_resolve_strategy(
         f"- {t['s']} {t['r']} {t['o']} (Flagged: {list(reasons.keys())})" 
         for t, reasons in bad_triples
     ])
-    # triples_string = RelationExtractor.to_triples_string(bad)
+    # triples_string = to_triples_string(bad)
 
     system_prompt = "You are a helpful assistant that corrects harmful content in old fiction."
     llm = session.config.get_llm(llm_connector_type, system_prompt)

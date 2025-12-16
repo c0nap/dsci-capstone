@@ -362,3 +362,13 @@ def parse_llm_triples(llm_output: str) -> List[Triple]:
     json_triples = json.loads(cleaned)
     # TODO: should LLM connector run sanitization internally?
     return normalize_to_dict(json_triples, keys=["s", "r", "o"])
+
+
+def to_triples_string(extracted: List[Triple]) -> str:
+    """Concatenate triples into a form usable in a LLM prompt.
+    @param extracted  A list of extracted relations.
+    @return  String with one triple per line."""
+    triples_string = ""
+    for triple in extracted:
+        triples_string += str(triple) + "\n"
+    return triples_string
