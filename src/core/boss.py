@@ -64,8 +64,8 @@ def assign_task_to_worker(worker_url: str, database_name: str, collection_name: 
     try:
         response = requests.post(worker_url, json=payload, timeout=5)
         return response.status_code == 202
-    except requests.RequestException as e:
-        print(f"Failed to assign task to {worker_url}: {e}")
+    except requests.RequestException:
+        Log.warn(msg=f"Failed to assign task to {worker_url}")
         return False
 
 
