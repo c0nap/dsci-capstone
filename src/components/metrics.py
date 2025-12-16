@@ -260,7 +260,7 @@ def run_bertscore_old(prediction: str, reference: str) -> Dict[str, List[float]]
     @return  BERTScore results matching the schema from 'evaluate' library.
     Example schema: { "precision": [0.87], ... }
     Valid keys: precision, recall, f1."""
-    P, R, F1 = session.model_bertscore_large.score(predictions=[prediction], references=[reference])
+    P, R, F1 = session.model_bertscore_large.score([prediction], [reference])
     return {
         "precision": P.tolist(),
         "recall": R.tolist(),
@@ -542,8 +542,7 @@ def run_rouge_l(summary: str, source: str) -> Dict[str, float]:
     recall avoids penalizing creative paraphrasing.
     @return: Dictionary containing ROUGE-L recall score
     """
-    scorer = session.model_rouge_recall
-    scores = scorer.score(source, summary)
+    scores = session.model_rouge_recall.score(source, summary)
     return {"rougeL_recall": scores["rougeL"].recall}
 
 

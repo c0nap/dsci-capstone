@@ -1,5 +1,12 @@
-from dotenv import load_dotenv
 import os
+os.environ['DATASETS_VERBOSITY'] = 'error'
+os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
+
+# Suppress transformers warnings about untrained weights
+import logging
+logging.getLogger('transformers.modeling_utils').setLevel(logging.ERROR)
+
+from dotenv import load_dotenv
 import pickle
 from src.charts import Plot
 from src.core import stages
