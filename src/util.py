@@ -205,6 +205,7 @@ class Log:
 
     ch_dump = "[DUMP] "
     msg_chart_saved = lambda title, filename: f"Saved chart '{title}' to {filename}"
+    msg_scores_saved = lambda run_id, filename: f"Saved summary scores for run '{run_id}' to {filename}"
 
     @staticmethod
     def elapsed_time(name: str, seconds: float, call_chain: str, verbose: bool = True) -> None:

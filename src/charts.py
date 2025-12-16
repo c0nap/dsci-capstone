@@ -238,7 +238,7 @@ class Plot:
         merged_df = get_merged_df(current_df, filename, run_id)
         merged_df.to_csv(filename, index=False)
         
-        Log.chart_message(prefix=Log.ch_dump, msg=Log.msg_chart_saved("Saved summary metrics CSV", filename))
+        Log.chart_message(prefix=Log.ch_dump, msg=Log.msg_scores_saved(run_id, filename))
 
     METRIC_GROUPS = {
         "SOURCE SIMILARITY": ["bertscore", "rougeL_recall", "jsd_stats", "ncd_overlap", "novel_ngrams"],
@@ -304,7 +304,7 @@ class Plot:
         plt.figure(figsize=(max(12, len(x_labels) * 0.5), 6))
 
         # Draw bars
-        for i, norm_dict in enumerate(normalized):
+        for i, norm_dict in enumerate(aggregated):
             label = labels[i] if i < len(labels) else os.path.splitext(os.path.basename(paths[i]))[0]
             color = fixed_colors[i] if i < len(fixed_colors) else None
             offset = (i - (len(paths) - 1) / 2) * bar_width
