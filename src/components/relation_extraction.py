@@ -51,7 +51,6 @@ class RelationExtractorREBEL(RelationExtractor):
     def __init__(self, max_tokens: int = 1024) -> None:
         """Initialize the REBEL config.
         @note  Imports and model loading are deferred to the first extract() call.
-        @param model_name  The HuggingFace hub path for the model.
         @param max_tokens  The maximum sequence length for the tokenizer.
         """
         self.max_tokens = max_tokens

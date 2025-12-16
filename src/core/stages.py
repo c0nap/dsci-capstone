@@ -159,7 +159,7 @@ def task_10_sample_chunks(chunks):
     return session.config.get_chunks(session.config.chunk_selection_method, chunks)
 
 def task_11_send_chunks(chunks, collection_name, book_title):
-    with Log.timer(config=f"[{len(chunks)}]"):
+    with Log.timer(label=f"[{len(chunks)}]"):
         for c in chunks:
             # TODO: remove book_title from chunk schema?
             mongo_db = session.docs_db.get_unmanaged_handle()
@@ -174,7 +174,7 @@ def task_11_send_chunks(chunks, collection_name, book_title):
 
 def task_12_relation_extraction(text: str) -> List[Triple]:
     extractor_type = session.config.relation_extractor_type
-    with Log.timer(config = f"[{extractor_type}]"):
+    with Log.timer(label=f"[{extractor_type}]"):
         re = session.config.get_extractor(extractor_type)
         extracted = re.extract(text)
         return extracted
@@ -182,7 +182,7 @@ def task_12_relation_extraction(text: str) -> List[Triple]:
 
 def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, str, List[Triple]]:
     llm_connector_type = session.config.validation_llm_engine
-    with Log.timer(config = f"[{llm_connector_type}]"):
+    with Log.timer(label=f"[{llm_connector_type}]"):
         triples_string = RelationExtractor.to_triples_string(triples)
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON."
@@ -199,9 +199,10 @@ def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, str, Li
 def task_16_moderate_triples_llm(triples: List[Triple], text: str) -> List[Triple]:
     """Filter offensive content from literary triples.
     @param triples  Normalized triples in JSON format.
+    @param text  The original source text for context.
     @return Safe triples for knowledge graph insertion."""
     moderation_strategy = session.config.moderation_strategy
-    with Log.timer(config = f"[{moderation_strategy}]"):
+    with Log.timer(label=f"[{moderation_strategy}]"):
         from src.connectors.llm import flag_triples
         safe, bad = flag_triples(triples, session.config.get_moderation_thresholds())
         if moderation_strategy == "resolve":
@@ -280,7 +281,7 @@ def task_21_3_post_statistics():
 def task_22_fetch_subgraph():
     """Retrieve and convert subgraph to named triples."""
     lookup_mode = session.config.graph_lookup_mode
-    with Log.timer(config=f"[{lookup_mode}]"):
+    with Log.timer(label=f"[{lookup_mode}]"):
         triples_df = session.config.get_subgraph(lookup_mode)
         triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
         return triples_df
@@ -289,7 +290,7 @@ def task_22_fetch_subgraph():
 def task_23_verbalize_triples(triples_df):
     """Convert triples to string format for LLM consumption."""
     verbal_mode = session.config.verbalize_triples_mode
-    with Log.timer(config=f"[{verbal_mode}]"):
+    with Log.timer(label=f"[{verbal_mode}]"):
         triples_string = session.main_graph.to_triples_string(triples_df, verbal_mode)
         return triples_string
 
@@ -302,10 +303,10 @@ def task_30_summarize_llm(triples_string: str = None, text: str = None) -> Tuple
     llm_connector_type = session.config.summary_llm_engine
     # TODO: maybe make this a string config instead of 2 bools
     if use_triples and use_text:
-        config = "all"
+        label = "all"
     else:
-        config = "triples" if use_triples else "text"
-    with Log.timer(config = f"[{config}]"):
+        label = "triples" if use_triples else "text"
+    with Log.timer(label=f"[{label}]"):
         # TOOD: reasoning_effort, model_name, prompt_basic
         system_prompt = "You are a helpful assistant that summarizes text."
         llm = session.config.get_llm(llm_connector_type, system_prompt)
