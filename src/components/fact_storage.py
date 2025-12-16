@@ -6,9 +6,7 @@ from src.components.relation_extraction import Triple
 from src.connectors.graph import GraphConnector
 from src.util import Log
 from typing import Any, Dict, List, Optional, Tuple
-
-
-nlp = None  # module-level cache for lazy-loaded NLP model (used by sanitize_node)
+from src.core.context import session
 
 
 class KnowledgeGraph:
@@ -731,15 +729,7 @@ def sanitize_node(label: str) -> str:
     @throws ValueError  If result is empty after sanitization
     """
     # NLP-based cleaning: remove determiners, pronouns, particles
-    global nlp
-    if nlp is None:
-        # Auto-download if missing (Self-healing)
-        try:
-            nlp = spacy.load("en_core_web_sm")
-        except OSError:
-            print("Spacy model 'en_core_web_sm' not found. Downloading...")
-            spacy.cli.download("en_core_web_sm")  # type: ignore[attr-defined]
-            nlp = spacy.load("en_core_web_sm")
+    nlp = session.model_spacy
 
     doc = nlp(label)
     tokens = [token.text for token in doc if token.pos_ not in {"DET", "PRON", "PART"}]  # determiners, pronouns, particles

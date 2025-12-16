@@ -93,19 +93,33 @@ class Session:
         self.load_metrics()
 
     def load_models(self) -> None:
-        self.sentencizer = CrossEncoder('cross-encoder/nli-deberta-base', model_kwargs={"low_cpu_mem_usage": False})
+        import spacy
+        name_spacy_model = "en_core_web_sm"
+        
+        try:  # Auto-download if missing (Self-healing)
+            self.model_spacy = spacy.load(name_spacy_model)
+        except OSError:
+            print(f"Spacy model '{name_spacy_model}' not found. Downloading...")
+            spacy.cli.download(name_spacy_model)  # type: ignore[attr-defined]
+            self.model_spacy = spacy.load(name_spacy_model)
+
+        self.model_sentencizer = spacy.blank("en").add_pipe("sentencizer")
+
+    def load_optional_rebel(self) -> None:
+        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+        name_rebel_model = "Babelscape/rebel-large"
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        self.model_rebel = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
 
     def load_metrics(self) -> None:
         from sentence_transformers import CrossEncoder
         from sklearn.feature_extraction.text import TfidfVectorizer
-        import spacy
         import evaluate
         from rouge_score import rouge_scorer
         from sentence_transformers import SentenceTransformer
 
         self.model_nli = CrossEncoder('cross-encoder/nli-deberta-base', model_kwargs={"low_cpu_mem_usage": False})
         self.vectorizer_salience = TfidfVectorizer(max_features=1000)
-        self.model_spacy = spacy.load("en_core_web_sm")
         self.model_bertscore = evaluate.load("bertscore")
         self.model_rouge = evaluate.load("rouge")
         self.model_rouge_recall = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)

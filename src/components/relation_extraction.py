@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from dotenv import load_dotenv
 import os
 from typing import Any, List, Optional, TYPE_CHECKING, TypedDict
+from src.core.context import session
 
 
 # Forward references for lazy-loaded modules
@@ -51,13 +52,12 @@ class RelationExtractorREBEL(RelationExtractor):
         It is powerful but can hallucinate or normalize entities (non-literal).
     """
 
-    def __init__(self, model_name: str = "Babelscape/rebel-large", max_tokens: int = 1024) -> None:
+    def __init__(self, max_tokens: int = 1024) -> None:
         """Initialize the REBEL config.
         @note  Imports and model loading are deferred to the first extract() call.
         @param model_name  The HuggingFace hub path for the model.
         @param max_tokens  The maximum sequence length for the tokenizer.
         """
-        self.model_name = model_name
         self.max_tokens = max_tokens
 
         # Internal delimiter used by the model for splitting generated text
@@ -78,18 +78,15 @@ class RelationExtractorREBEL(RelationExtractor):
         """
         # 1. Lazy Imports & Setup (Run once)
         if self.model is None or self.nlp is None:
-            import spacy
-            from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-
             # Setup Spacy for basic sentence segmentation
-            self.nlp = spacy.blank("en")
-            self.nlp.add_pipe("sentencizer")
+            session.load_optional_rebel()
+            self.nlp = session.sentencizer_spacy
 
             # Load Model
             load_dotenv(".env")
             print(f"Loading REBEL model: {self.model_name}...")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
+            self.tokenizer = session.tokenizer
+            self.model = session.model_rebel
 
         # Split into sentences: RE models generally output 1 relation set per input sequence.
         # Cleaning newlines prevents tokenization artifacts.
@@ -204,7 +201,6 @@ class RelationExtractorTextacy(RelationExtractor):
         @note  Spacy model loading is deferred to extract().
         """
         self.nlp: Optional[spacy.language.Language] = None
-        self.model_name: str = "en_core_web_sm"
 
     def extract(self, text: str) -> List[Triple]:
         """Extract SVO triples.
@@ -212,18 +208,9 @@ class RelationExtractorTextacy(RelationExtractor):
         @return  A list of extracted relations.
         """
         # Lazy Imports
-        import spacy
         import textacy
 
-        # Load Model on first run
-        if self.nlp is None:
-            # Auto-download if missing (Self-healing)
-            try:
-                self.nlp = spacy.load(self.model_name)
-            except OSError:
-                print(f"Spacy model '{self.model_name}' not found. Downloading...")
-                spacy.cli.download(self.model_name)  # type: ignore[attr-defined]
-                self.nlp = spacy.load(self.model_name)
+        self.nlp = session.model_spacy
 
         doc = self.nlp(text)
         out: List[Triple] = []
