@@ -1,6 +1,4 @@
 from abc import ABC, abstractmethod
-from dotenv import load_dotenv
-import os
 from typing import Any, List, Optional, TYPE_CHECKING, TypedDict
 from src.core.context import session
 

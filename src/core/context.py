@@ -1,5 +1,7 @@
 from typing import Any, Optional, Self, Dict, TYPE_CHECKING
 from contextlib import contextmanager
+import os
+from dotenv import load_dotenv
 
 # 1. Avoid circular imports: compile-time imports only when type checking
 if TYPE_CHECKING:
