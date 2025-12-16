@@ -153,30 +153,20 @@ class RelationExtractorOpenIE(RelationExtractor):
         }
 
     def extract(self, text: str) -> List[Triple]:
+        
+        
+    def extract(self, text: str) -> List[Triple]:
         """Extract triples using the Stanford OpenIE pipeline.
-        @details
-            Uses a context manager to spin up the Java server via CoreNLPClient.
-            This ensures the heavy Java process (which requires ~4GB RAM) is
-            terminated immediately after processing, freeing resources.
+        @details  Implements lazy loading of the Java client on first call
         @param text  The raw narrative text.
         @return  A list of extracted relations.
         """
-        # Lazy Import
-        import stanza
-        from stanza.server import CoreNLPClient
-
-        # Ensure CoreNLP backend is installed (Run once check)
-        # This saves the jar files to ~/stanza_corenlp by default
-        install_dir = os.path.expanduser("~/stanza_corenlp")
-        if not os.path.exists(install_dir):
-            print("Ensuring CoreNLP backend is installed...")
-            stanza.install_corenlp()
-
+        session.load_optional_openie()
+    
         text = text.replace("\n", " ").strip()
         out: List[Triple] = []
-
         # We use a context manager to ensure the Java server is cleanly started / stopped.
-        with CoreNLPClient(**self.client_config) as client:
+        with session.java_client_openie(self.client_config, persistent=True) as client:
             doc = client.annotate(text)
 
             # Iterate through sentences and their extracted triples
@@ -184,7 +174,6 @@ class RelationExtractorOpenIE(RelationExtractor):
                 for triple in sentence.openieTriple:
                     # We create a TypedDict for easy consumption
                     out.append({'s': triple.subject, 'r': triple.relation, 'o': triple.object})
-
         return out
 
 

@@ -111,6 +111,45 @@ class Session:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.model_rebel = AutoModelForSeq2SeqLM.from_pretrained(self.model_name)
 
+    def load_optional_openie(self) -> None:
+        """Ensures CoreNLP backend is installed. Can call early to pre-warm, but not required.
+        @details
+            Uses a context manager to spin up the Java server via CoreNLPClient.
+            This ensures the heavy Java process (which requires ~4GB RAM) is
+            terminated immediately after processing, freeing resources.
+            """
+        import stanza
+
+        install_dir = os.path.expanduser("~/stanza_corenlp")  # Where to save the JAR files
+        if not os.path.exists(install_dir):
+            print("Installing CoreNLP backend...")
+            stanza.install_corenlp()
+        self._client_openie = None
+
+    def stop_openie(self) -> None:
+        """Stops CoreNLP server. Safe to call anytime."""
+        if self._client_openie is not None:
+            self._client_openie.stop()
+            self._client_openie = None
+
+    @contextmanager
+    def java_client_openie(self, config: dict, persistent: bool = False):
+        """Context manager for CoreNLP client.
+        @details  Usage - `with session.java_client_openie(config, persistent=False) as client:`"""
+        from stanza.server import CoreNLPClient
+        
+        # No error if load() wasnt called yet
+        if not hasattr(self, '_client_openie') or self._client_openie is None:
+            self.load_optional_openie()
+            self._client_openie = CoreNLPClient(**config)
+            self._client_openie.start()
+        
+        try:
+            yield self._client_openie
+        finally:
+            if not persistent:
+                self.stop_openie()
+
     def load_metrics(self) -> None:
         from sentence_transformers import CrossEncoder
         from sklearn.feature_extraction.text import TfidfVectorizer
