@@ -198,7 +198,7 @@ class Session:
     def load_metrics(self) -> None:
         from sentence_transformers import CrossEncoder
         from sklearn.feature_extraction.text import TfidfVectorizer
-        from rouge_score import RougeScorer
+        from rouge_score.rouge_scorer import RougeScorer
         from bert_score import BERTScorer
         from sentence_transformers import SentenceTransformer
 
