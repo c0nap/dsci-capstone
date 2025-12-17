@@ -22,7 +22,7 @@ class Config:
     model_name: str
 
     seed: int = 123
-    chunk_selection_method: str = "random-12"
+    chunk_selection_method: str = "random-1"
     configuration: str = "fast"
 
     @staticmethod

@@ -57,6 +57,7 @@ def pipeline_B(collection_name, c, book_title):
         - JSON triples (NLP & LLM)"""
     if session.config.configuration == "baseline":
         return []
+    from src.connectors.llm import to_triples_string
 
     print("\nChunk details:")
     print(f"  index: {c.index}\n")
@@ -69,10 +70,10 @@ def pipeline_B(collection_name, c, book_title):
     print()
 
     prompt, triples = stages.task_14_validate_llm(extracted, c.text)
-    print("\n    LLM prompt:")
-    print(prompt)
+    # print("\n    LLM prompt:")
+    # print(prompt)
     print("\n    LLM output:")
-    print(llm_output)
+    print(to_triples_string(triples))
     print("\n" + "=" * 50 + "\n")
 
     n_removed = len(triples)

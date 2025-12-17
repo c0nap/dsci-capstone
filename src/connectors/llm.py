@@ -464,7 +464,7 @@ def to_triples_string(extracted: List[Triple]) -> str:
     """Concatenate triples into a form usable in a LLM prompt.
     @param extracted  A list of extracted triples.
     @return  String with one triple per line."""
-    triples_string = "\n".join(extracted)
+    triples_string = "\n".join([str(triple) for triple in extracted])
     return triples_string
 
 def to_flagged_reasons(bad_triples: List[Triple]) -> str:
