@@ -37,26 +37,51 @@ class Config:
 
     # 'chunk': Run pipeline_E immediately when a chunk completes.
     # 'story': Wait for ALL chunks to complete, then run pipeline_E on all of them.
-    EVAL_SCOPE = 'chunk' 
+    EVAL_SCOPE = 'chunk'
 
-    STORY_TRACKER_COLS = ['story_id', 'preprocessing', 'chunking', 'summarization', 'metrics']
-    CHUNK_TRACKER_COLS = [
-        'chunk_id',
-        'story_id',
-        'retry_count',
-        'load_to_mongo',
-        'relation_extraction',
-        'llm_inference',
-        'load_triples_to_neo4j',
-        'graph_verbalization',
-        'summarization',
-        'metric_questeval',
-        'metric_bookscore',
-        'metrics_basic',
-    ]
+    @staticmethod
+    def get_story_tracker_cols(only_tasks: bool = False) -> List[str]:
+        """Get const column names using a method to hide attributes from @ref src.config.Config.to_dict.
+        @param only_tasks  Set True to exclude chunk_id, story_id, etc.
+        @return  List of column names in the Boss progress tracker."""
+        tasks = ['preprocessing', 'chunking', 'summarization', 'metrics']
+        if only_tasks:
+            return tasks
+        return ['story_id'] + tasks
 
-    # Map worker_type to chunk-level task name
-    WORKER_MAP = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
+    @staticmethod
+    def get_chunk_tracker_cols(only_tasks: bool = False) -> List[str]:
+        """Get const column names using a method to hide attributes from @ref src.config.Config.to_dict.
+        @param only_tasks  Set True to exclude chunk_id, story_id, etc.
+        @return  List of column names in the Boss progress tracker."""
+        tasks = ['load_to_mongo',
+            'relation_extraction',
+            'llm_inference',
+            'load_triples_to_neo4j',
+            'graph_verbalization',
+            'summarization',
+            'metric_questeval',
+            'metric_bookscore',
+            'metrics_basic']
+        if only_tasks:
+            return tasks
+        return ['chunk_id', 'story_id', 'retry_count'] + tasks
+
+    @staticmethod
+    def get_active_workers() -> List[str]:
+        """Get const worker names using a method to hide attributes from @ref src.config.Config.to_dict.
+        @return  List of worker names for the Boss to assign for this run."""
+        return ["bookscore"]  #["questeval", "bookscore"]
+
+    @staticmethod
+    def get_worker_map(worker_type: str | None) -> Dict[str, str] | str:
+        """Get const worker names using a method to hide attributes from @ref src.config.Config.to_dict.
+        @param worker_type  Optionally get the task name using specified worker type.
+        @return  Mapping of worker names to tracker-level task names."""
+        worker_map = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
+        if worker_type:
+            return worker_map[worker_type]
+        return worker_map
     # =================================================
 
     @staticmethod

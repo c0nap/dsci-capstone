@@ -88,8 +88,8 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
     mongo_db = docs_db.get_unmanaged_handle()
 
     # Track completion stages for chunks and stories
-    story_tracker = pd.DataFrame(columns=session.config.STORY_TRACKER_COLS)
-    chunk_tracker = pd.DataFrame(columns=session.config.CHUNK_TRACKER_COLS)
+    story_tracker = pd.DataFrame(columns=session.config.get_story_tracker_cols())
+    chunk_tracker = pd.DataFrame(columns=session.config.get_chunk_tracker_cols())
 
     # Lock for thread-safe DataFrame operations
     tracker_lock = threading.Lock()
@@ -108,13 +108,12 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                 }
                 new_row = pd.DataFrame([{
                     column_name: row_values.get(column_name, 'pending')
-                    for column_name in CHUNK_TRACKER_COLS
+                    for column_name in session.config.get_story_tracker_cols(only_tasks=True)
                 }])
                 story_tracker = pd.concat([story_tracker, new_row], ignore_index=True)
 
             # Update specific task status
             story_tracker.loc[story_tracker['story_id'] == story_id, task] = status
-        # print(f"{" " * 16}Stories Status:\n{story_tracker}\n")
 
     def update_chunk_status(chunk_id: str, story_id: int, task: str, status: str) -> None:
         """Update chunk-level task status. Auto-initializes with pending if not exists.
@@ -133,7 +132,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                 }
                 new_row = pd.DataFrame([{
                     column_name: row_values.get(column_name, 'pending')
-                    for column_name in CHUNK_TRACKER_COLS
+                    for column_name in session.config.get_chunk_tracker_cols(only_tasks=True)
                 }])
                 chunk_tracker = pd.concat([chunk_tracker, new_row], ignore_index=True)
 
@@ -233,12 +232,10 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             # Write status
             chunk_tracker.loc[mask, task] = f"{status}, {seconds}"
 
-    # ... inside create_app, after set_elapsed_time ...
-
     def dispatch_task(chunk_id: str, story_id: int, task_type: str) -> bool:
         """Helper to prepare, clear, and assign a single task to a worker.
         @return True if assigned (HTTP 202), False otherwise."""
-        chunk_task = session.config.WORKER_MAP[task_type]
+        chunk_task = session.config.get_worker_map(task_type)
         worker_url = worker_urls[task_type]
 
         # Initialize status and clear old DB data
@@ -349,7 +346,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
         # Read properties of received chunk
         story_id = chunk["story_id"]
-        chunk_task = session.config.WORKER_MAP[task]
+        chunk_task = session.config.get_worker_map(task)
         _advance_tracker(chunk_id, story_id, chunk_task, status)
 
         # [EVALUATION SCOPE: CHUNK]
@@ -552,8 +549,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
 def create_boss_thread(DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
     # Load configuration
-    task_types = ["bookscore"]  #["questeval", "bookscore"]
-    worker_urls = load_worker_config(task_types)
+    worker_urls = load_worker_config(session.config.get_active_workers())
     if not worker_urls:
         Log.warn(msg="No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
 
