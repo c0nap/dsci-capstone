@@ -233,6 +233,28 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             # Write status
             chunk_tracker.loc[mask, task] = f"{status}, {seconds}"
 
+    # ... inside create_app, after set_elapsed_time ...
+
+    def dispatch_task(chunk_id: str, story_id: int, task_type: str) -> bool:
+        """Helper to prepare, clear, and assign a single task to a worker.
+        @return True if assigned (HTTP 202), False otherwise."""
+        chunk_task = session.config.WORKER_MAP[task_type]
+        worker_url = worker_urls[task_type]
+
+        # Initialize status and clear old DB data
+        update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
+        clear_task_data(mongo_db, collection_name, chunk_id, task_type)
+
+        # Assign task to worker, and verify task was accepted
+        if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
+            update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
+            Log.status_message(prefix=Log.assigned, msg=Log.msg_task_assigned(chunk_id, task_type, database_name, collection_name))
+            return True
+        else:
+            Log.warn(msg=f"Failed to assign chunk {chunk_id} to worker at {worker_url}")
+            update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
+            return False
+
     @app.route("/process_story", methods=["POST"])
     def process_story() -> Tuple[Response, int]:
         """Initiate processing for a story by distributing tasks to workers.
@@ -252,36 +274,16 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         if not chunks:
             return jsonify({"error": f"Cannot distribute tasks: No chunks found for story {story_id}"}), 404
 
-        chunk_task = session.config.WORKER_MAP[task_type]
-
-        # Update story-level status to assigned
         update_story_status(story_id, 'metrics', 'assigned')
 
-        # Distribute tasks to workers (async)
-        worker_url = worker_urls[task_type]
-        assigned = 0
-
+        # Distribute tasks
+        assigned_count = 0
         for chunk in chunks:
-            chunk_id = chunk["_id"]
-
-            # Initialize chunk tracker entry
-            update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
-
-            # Clear any existing task data
-            clear_task_data(mongo_db, collection_name, chunk_id, task_type)
-
-            # Assign task to worker - verify 202 accepted
-            if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
-                update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
-                assigned += 1
-                Log.status_message(prefix=Log.assigned, msg=Log.msg_task_assigned(chunk_id, task_type, database_name, collection_name))
-            else:
-                # If assignment failed, set status to failed
-                Log.warn(msg=f"Failed to assign chunk {chunk_id} to worker")
-                update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
+            if dispatch_task(chunk["_id"], story_id, task_type):
+                assigned_count += 1
 
         return (
-            jsonify({"status": "tasks_assigned", "story_id": story_id, "task_type": task_type, "total_chunks": len(chunks), "assigned": assigned}),
+            jsonify({"status": "tasks_assigned", "story_id": story_id, "task_type": task_type, "total_chunks": len(chunks), "assigned": assigned_count}),
             200,
         )
 
@@ -299,30 +301,10 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         if not task_type or task_type not in worker_urls:
             return jsonify({"error": f"Unknown task type: {task_type}"}), 400
 
-        chunk_task = session.config.WORKER_MAP[task_type]
-
-        # Distribute tasks to workers (async)
-        worker_url = worker_urls[task_type]
-        assigned = 0
-
-        # Initialize chunk tracker entry
-        update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
-
-        # Clear any existing task data
-        clear_task_data(mongo_db, collection_name, chunk_id, task_type)
-
-        # Assign task to worker - verify 202 accepted
-        if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
-            update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
-            assigned += 1
-            Log.status_message(prefix=Log.assigned, msg=Log.msg_task_assigned(chunk_id, task_type, database_name, collection_name))
-        else:
-            # If assignment failed, set status to failed
-            Log.warn(msg=f"Failed to assign chunk {chunk_id} to worker")
-            update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
+        success = dispatch_task(chunk_id, story_id, task_type)
 
         return (
-            jsonify({"status": "tasks_assigned", "chunk_id": chunk_id, "story_id": story_id, "task_type": task_type, "assigned": assigned}),
+            jsonify({"status": "tasks_assigned", "chunk_id": chunk_id, "story_id": story_id, "task_type": task_type, "assigned": 1 if success else 0}),
             200,
         )
 
