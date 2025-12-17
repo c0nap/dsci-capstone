@@ -126,9 +126,9 @@ docker-python-silent:
 docker-metcore-silent:
 	make docker-metcore DETACHED=1 CMD="$(CMD)"
 docker-workers-silent:
-	make docker-questeval DETACHED=1
+	#make docker-questeval DETACHED=1
 	make docker-bookscore DETACHED=1
-	make docker-metcore-silent
+	#make docker-metcore-silent
 
 ###############################################################################
 # Recompile and launch containers so any source code changes will apply
@@ -319,8 +319,8 @@ docker-build-dev-blazor:
 
 docker-build-dev-workers:
 	make docker-build-dev-bscore
-	make docker-build-dev-qeval
-	make docker-build-dev-metcore
+	#make docker-build-dev-qeval
+	#make docker-build-dev-metcore
 docker-build-dev-bscore:
 	$(DOCKER_BUILD) $(CACHE_ARGS) -f docker/bookscore.dockerfile \
 		--build-arg ENV_FILE=".env" \

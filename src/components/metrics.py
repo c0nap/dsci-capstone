@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 from typing import Any, Dict, List, Tuple
-from src.core.context import session
 
 
 """Contains functions to score a summary or knowledge graph.
@@ -244,6 +243,7 @@ def run_rouge_old(prediction: str, reference: str) -> Dict[str, float]:
     Values correspond to F1 score since this is the standard ROUGE metric.
     Example schema: { "rouge1": 0.87, ... }
     Valid keys: rouge1, rouge2, rougeL, rougeLsum."""
+    from src.core.context import session
     scores = session.model_rouge_full.score(reference, prediction)
     return {
         "rouge1": scores["rouge1"].fmeasure,
@@ -260,6 +260,7 @@ def run_bertscore_old(prediction: str, reference: str) -> Dict[str, List[float]]
     @return  BERTScore results matching the schema from 'evaluate' library.
     Example schema: { "precision": [0.87], ... }
     Valid keys: precision, recall, f1."""
+    from src.core.context import session
     P, R, F1 = session.model_bertscore_large.score([prediction], [reference])
     return {
         "precision": P.tolist(),
@@ -542,6 +543,7 @@ def run_rouge_l(summary: str, source: str) -> Dict[str, float]:
     recall avoids penalizing creative paraphrasing.
     @return: Dictionary containing ROUGE-L recall score
     """
+    from src.core.context import session
     scores = session.model_rouge_recall.score(source, summary)
     return {"rougeL_recall": scores["rougeL"].recall}
 
@@ -563,6 +565,7 @@ def run_bertscore(summary: str, source: str) -> Dict[str, float]:
     interpretable metric of meaning preservation.
     @return: Dictionary containing average BERTScore F1
     """
+    from src.core.context import session
     P, R, F1 = session.model_bertscore_distil.score([summary], [source])
     return {"bertscore_f1": F1.item()}
 
@@ -647,6 +650,7 @@ def run_entity_coverage(summary: str, source: str) -> Dict[str, float]:
     additions without negatively impacting the score.
     @return: Dictionary containing coverage and hallucination ratios
     """
+    from src.core.context import session
     nlp = session.model_spacy
 
     src = nlp(source)
@@ -730,6 +734,7 @@ def run_salience_recall(summary: str, source: str, top_k: int = 20) -> Dict[str,
     @return: Dictionary containing fraction of top-salience words preserved
     """
     import numpy as np
+    from src.core.context import session
     
     vectorizer = session.vectorizer_salience
     vectorizer.fit([source])
@@ -772,6 +777,7 @@ def run_nli_faithfulness(summary: str, source: str) -> Dict[str, float]:
     import math
     import itertools
     from scipy.special import softmax
+    from src.core.context import session
 
     # Configuration: sliding window size for premises and threshold for counting entailment
     window_size = 1        # 1 = use individual source sentences; increase to 2 or 3 to include small context windows
@@ -881,6 +887,7 @@ def run_sentence_coherence(summary: str) -> Dict[str, float]:
     from nltk import sent_tokenize
     from sklearn.metrics.pairwise import cosine_similarity
     import numpy as np
+    from src.core.context import session
     
     model = session.model_sentence_coherence
     sents = sent_tokenize(summary)
@@ -914,6 +921,7 @@ def run_entity_grid_coherence(summary: str) -> Dict[str, float]:
     @return: Dictionary containing entity transition coherence score
     """
     from nltk import sent_tokenize
+    from src.core.context import session
     
     nlp = session.model_spacy
     sents = sent_tokenize(summary)
