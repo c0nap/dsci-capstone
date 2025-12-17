@@ -364,8 +364,22 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         @return Simple acknowledgment response."""
         from src.main import pipeline_E
 
-        data = request.json
+        # ================= CONFIGURATION =================
+        # How many times to retry a failed chunk
+        # Worker assignment POST failures are NOT counted here
+        # Failures accumulate across tasks, e.g. 1 bookscore fail and 1 questeval fail = 2 total fails.
+        MAX_RETRIES = 2
 
+        # 'instant': Retry a chunk immediately when it reports failure.
+        # 'deferred': Wait for all other chunks to finish, then bulk-retry failures.
+        RETRY_STRATEGY = 'deferred'
+
+        # 'chunk': Run pipeline_E immediately when a chunk completes.
+        # 'story': Wait for ALL chunks to complete, then run pipeline_E on all of them.
+        EVAL_SCOPE = 'chunk' 
+        # =================================================
+
+        data = request.json
         chunk_id = data.get("chunk_id")
         task = data.get("task")
         status = data.get("status")  # Expected: "started", "completed", or "failed"
@@ -378,24 +392,17 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         # Get specific chunk by chunk_id
         collection = getattr(mongo_db, collection_name)
         chunk = collection.find_one({"_id": chunk_id})
-
         if not chunk:
-            # Cannot update tracker without story_id from chunk document
-            # This indicates a more serious issue (chunk never existed or was deleted)
             Log.warn(msg=f"Could not find chunk {chunk_id} in MongoDB - cannot update tracker")
             return jsonify({"error": f"Could not find chunk {chunk_id} in MongoDB."}), 404
 
+        # Read properties of received chunk
         story_id = chunk["story_id"]
-
-        # Map task to chunk-level task name
         task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
         chunk_task = task_mapping[task]
 
-        # ... [Previous code: status message, getting chunk/story_id, task mapping] ...
-        
-        MAX_RETRIES = 2  # How many times to retry a failed chunk
-
-        # 1. Update the status in the tracker
+        # 1. Update Tracker Status
+        # TODO: delegate time-tracking and status-updates to helper
         if "started" in status:
             update_chunk_status(chunk_id, story_id, chunk_task, 'started')
             update_story_status(story_id, 'metrics', 'started')
@@ -405,93 +412,84 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             update_chunk_status(chunk_id, story_id, chunk_task, 'completed')
             if seconds: set_elapsed_time(chunk_id, chunk_task, seconds, 'completed')
 
+            # [PIPELINE SCOPE: CHUNK]
+            # If we are in per-chunk mode, run the pipeline immediately.
+            if EVAL_SCOPE == 'chunk':
+                _run_pipeline_for_chunk(chunk, chunk_id, story_id, pipeline_E)
+
         elif "failed" in status:
             Log.warn(msg=f"Task {task} failed for chunk {chunk_id}")
             seconds = record_elapsed_time(chunk_id, chunk_task)
             update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
             if seconds: set_elapsed_time(chunk_id, chunk_task, seconds, 'failed')
 
+            # [RETRY STRATEGY: INSTANT]
+            # If set to instant, we check and retry right here, alone.
+            if RETRY_STRATEGY == 'instant':
+                with tracker_lock:
+                    row = chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id].iloc[0]
+                    if row['retry_count'] < MAX_RETRIES:
+                        _retry_chunk(chunk_id, story_id, task, row['retry_count'])
+                        return jsonify({"status": "retrying_instant"}), 200
+
         else:
             return jsonify({"error": f"Unknown status: {status}"}), 400
 
-        # 2. Check for full-task or full-story completion
-        with tracker_lock:
+        # ---------------------------------------------------------
+        # 2. Barrier for Story Completion
+        # ---------------------------------------------------------
+        with tracker_lock:  # ??? is the tracker lock necessary for ALL of this logic? we prefer locked helpers for safely updating the trackers
+            # Get in-progress chunks for this story
             story_chunks = chunk_tracker[chunk_tracker['story_id'] == story_id]
-            
-            # A story is accounted for if every chunk is either completed OR failed
-            # We don't want to act if some are still 'pending' or 'started'
-            unfinished = story_chunks[
+            incomplete_chunks = story_chunks[
                 ~story_chunks[chunk_task].str.contains('completed') & 
                 ~story_chunks[chunk_task].str.contains('failed')
             ]
+            if not incomplete_chunks.empty:  # Do nothing if there are still pending tasks.
+                return jsonify({"status": "received_pending_others"}), 200
+            # --- BARRIER REACHED: All chunks are accounted for (completed or failed) ---
 
-            if unfinished.empty:
-                # All chunks have reported back. Now, do we have failures?
-                failed_chunks = story_chunks[story_chunks[chunk_task].str.contains('failed')]
-                
-                if not failed_chunks.empty:
-                    # RETRY LOOP
-                    reassigned_count = 0
-                    for _, row in failed_chunks.iterrows():
-                        c_id = row['chunk_id']
-                        current_retries = row['retry_count']
-                        
-                        if current_retries < MAX_RETRIES:
-                            # Increment retry count
-                            chunk_tracker.loc[chunk_tracker['chunk_id'] == c_id, 'retry_count'] += 1
-                            
-                            # Re-queue the task
-                            Log.status_message(Log.assigned, f"Self-Healing: Retrying chunk {c_id} (Attempt {current_retries + 1})")
-                            
-                            # Call the internal process_chunk logic (or the route handler)
-                            # Ideally, extract the assignment logic to a helper, but calling the URL works too:
-                            worker_session.post(f"http://localhost:{request.host.split(':')[-1]}/process_chunk", 
-                                          json={'chunk_id': c_id, 'story_id': story_id, 'task_type': task})
-                            reassigned_count += 1
+            # If we have failures, we need to decide if we retry or give up.
+            failed_chunks = story_chunks[story_chunks[chunk_task].str.contains('failed')]
+            if not failed_chunks.empty:
+                # [RETRY STRATEGY: DEFERRED]
+                # ??? where are we checking == deferred, doesnt this repeat for == instant?
+                reassigned_count = 0
+                for _, row in failed_chunks.iterrows():
+                    c_id = row['chunk_id']
+                    current_retries = row['retry_count']
                     
-                    if reassigned_count > 0:
-                        # We triggered retries, so we are NOT done with the story yet.
-                        return jsonify({"status": "retrying_failures"}), 200
+                    if current_retries < MAX_RETRIES:
+                        # Only actually trigger the retry request if we are in Deferred mode
+                        # (Instant mode would have handled this earlier, but we double-check 
+                        # just in case a race condition missed one).
+                        _retry_chunk(c_id, story_id, task, current_retries)
+                        reassigned_count += 1
+                
+                if reassigned_count > 0:
+                    return jsonify({"status": "retrying_failures_deferred"}), 200
+                
+                # --- Exhausted Retries ---
+                # Failures exist but NO retries are left; mark the story as failed and STOP.
+                update_story_status(story_id, 'metrics', 'failed')
+                Log.warn(prefix=Log.task_failed, msg=f"Story {story_id} failed: Max retries exhausted.")
+                return jsonify({"error": "Story failed after max retries"}), 200
 
-                # 3. If we get here, either no failures existed, OR we exhausted retries.
-                # BUG: on exhaust retries we should not proceed
-
-
-                # Check if all chunks for this story completed this task
-                all_chunks_complete = check_story_completion(story_id, chunk_task)
-                if True:  # TODO: currently we run metrics on a per-chunk basis instead of per-story
-                    Log.status_message(Log.task_complete, Log.msg_completed_task(chunk_task, story_id))
-    
-                    Log.print_timing_summary()
-                    Log.dump_timing_csv()
-                    Plot.time_elapsed_by_names()
-    
-                    # Check if all metric tasks are complete for the story
-                    all_metrics_complete = all(
-                        [check_story_completion(story_id, 'metric_questeval'), check_story_completion(story_id, 'metric_bookscore')]
-                    )
-                    if True:  # TODO: currently we run metrics on a per-chunk basis instead of per-story
-                        # Update story-level metrics to completed
-                        #update_story_status(story_id, 'metrics', 'completed')
-    
-                        # FINALIZE PIPELINE - all workers finished for this story
-                        # Access fields directly from the MongoDB document
-                        book_id = chunk["book_id"]
-                        book_title = chunk["book_title"]
-                        text = chunk["text"]
-                        summary = chunk["summary"]
-                        gold_summary = chunk.get("gold_summary", text[: len(text) // 2])
-                        bookscore = float(chunk["bookscore"]["result"]["value"])
-                        #questeval = float(chunk["questeval"]["result"]["value"])
-                        RESULTS = pipeline_E(summary, book_title, book_id, chunk_id, text, gold_summary, bookscore)  #, questeval)
-    
-                        Log.status_message(Log.story_complete, Log.msg_completed_story(story_id))
-    
-                        Log.print_timing_summary()
-                        Log.dump_timing_csv()
-                        Plot.time_elapsed_by_names()
-                        Plot.save_metrics_csv(RESULTS)
-                        Plot.summary_results(RESULTS)
+            # --- SUCCESS: All chunks passed ---
+            # ??? does this print really happen as intended, e.g. when all chunks are finished with bookscore but still have questeval pending?
+            Log.status_message(Log.task_complete, Log.msg_completed_task(chunk_task, story_id))
+            
+            # If we are in per-story mode, NOW we finalize / evaluate all chunks.
+            if EVAL_SCOPE == 'story':
+                all_chunks_data = collection.find({"story_id": story_id})
+                for c_doc in all_chunks_data:
+                    _run_pipeline_for_chunk(c_doc, c_doc["_id"], story_id, pipeline_E)
+            
+            # Final Reporting
+            Log.print_timing_summary()
+            Log.dump_timing_csv()
+            Plot.time_elapsed_by_names()
+            Log.status_message(Log.story_complete, Log.msg_completed_story(story_id))
 
         return jsonify({"status": "received"}), 200
 
@@ -656,6 +654,46 @@ def create_boss_thread(DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
 
     # Wait for boss to be ready
     time.sleep(1)
+
+
+
+
+
+# ---------------------------------------------------------
+# Helper Functions for Boss Callback
+# ---------------------------------------------------------
+def _retry_chunk(chunk_id, story_id, task, current_retries):
+    """Helper to increment retry count and re-queue task."""
+    # Increment tracker
+    chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, 'retry_count'] += 1
+    
+    Log.status_message(Log.assigned, f"Self-Healing: Retrying chunk {chunk_id} (Attempt {current_retries + 1})")
+    
+    # Re-queue
+    worker_session.post(f"http://localhost:{request.host.split(':')[-1]}/process_chunk", 
+                        json={'chunk_id': chunk_id, 'story_id': story_id, 'task_type': task})
+
+def _run_pipeline_for_chunk(chunk_doc, chunk_id, story_id, pipeline_func):
+    """Helper to extract data and run the pipeline function."""
+    try:
+        book_id = chunk_doc["book_id"]
+        book_title = chunk_doc["book_title"]
+        text = chunk_doc["text"]
+        summary = chunk_doc["summary"]
+        gold_summary = chunk_doc.get("gold_summary", text[: len(text) // 2])
+        
+        # Safe access to result
+        if "bookscore" in chunk_doc and "result" in chunk_doc["bookscore"]:
+            bookscore = float(chunk_doc["bookscore"]["result"]["value"])
+        else:
+            bookscore = 0.0 # Default or handle error
+            
+        RESULTS = pipeline_func(summary, book_title, book_id, chunk_id, text, gold_summary, bookscore)
+        
+        Plot.save_metrics_csv(RESULTS)
+        Plot.summary_results(RESULTS)
+    except Exception as e:
+        Log.warn(msg=f"Pipeline execution failed for chunk {chunk_id}: {e}")
 
 
 ##############################################################################################
