@@ -110,6 +110,9 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         ]
     )
 
+    # Map task_type to chunk-level task name
+    task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
+
     # Lock for thread-safe DataFrame operations
     import threading
 
@@ -279,9 +282,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         if not chunks:
             return jsonify({"error": f"Cannot distribute tasks: No chunks found for story {story_id}"}), 404
 
-        # Map task_type to chunk-level task name
-        task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
-        chunk_task = task_mapping.get(task_type, task_type)
+        chunk_task = task_mapping[task_type]
 
         # Update story-level status to assigned
         update_story_status(story_id, 'metrics', 'assigned')
@@ -328,9 +329,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         if not task_type or task_type not in worker_urls:
             return jsonify({"error": f"Unknown task type: {task_type}"}), 400
 
-        # Map task_type to chunk-level task name
-        task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
-        chunk_task = task_mapping.get(task_type, task_type)
+        chunk_task = task_mapping[task_type]
 
         # Distribute tasks to workers (async)
         worker_url = worker_urls[task_type]
@@ -357,7 +356,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             200,
         )
 
-    def _update_tracker_entry(chunk_id, story_id, task_col, status):
+    def _advance_tracker(chunk_id, story_id, task_col, status):
         """Updates status and timing for a chunk task."""
         if "started" in status:
             update_chunk_status(chunk_id, story_id, task_col, 'started')
@@ -377,7 +376,6 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         """Receive status notifications from worker services.
         Handles started, completed, and failed statuses.
         @return Simple acknowledgment response."""
-        from src.main import pipeline_E
 
         # ================= CONFIGURATION =================
         # How many times to retry a failed chunk
@@ -414,16 +412,12 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
         # Read properties of received chunk
         story_id = chunk["story_id"]
-        task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
         chunk_task = task_mapping[task]
-
-        # 1. Update Tracker Status
-        # TODO: delegate time-tracking and status-updates to helper
-        _update_tracker_entry(chunk_id, story_id, chunk_task, status)
+        _advance_tracker(chunk_id, story_id, chunk_task, status)
 
         # [EVALUATION SCOPE: CHUNK]
         if status == "completed" and EVAL_SCOPE == 'chunk':
-            _run_pipeline_for_chunk(chunk, chunk_id, story_id, pipeline_E)
+            _finalize_chunk(chunk, chunk_id, story_id)
 
         # [RETRY STRATEGY: INSTANT]
         if status == "failed" and RETRY_STRATEGY == 'instant':
@@ -433,9 +427,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                     _retry_chunk(chunk_id, story_id, task, row['retry_count'])
                     return jsonify({"status": "retrying_instant"}), 200
 
-        # ---------------------------------------------------------
-        # 2. Barrier for Story Completion
-        # ---------------------------------------------------------
+        # Barrier for Story Completion
         # Get in-progress chunks for this story
         with tracker_lock:  # Lock to take a snapshot, and keep processing logic outside.
             story_chunks = chunk_tracker[chunk_tracker['story_id'] == story_id].copy()
@@ -484,7 +476,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             if EVAL_SCOPE == 'story':
                 all_chunks_data = collection.find({"story_id": story_id})
                 for c_doc in all_chunks_data:
-                    _run_pipeline_for_chunk(c_doc, c_doc["_id"], story_id, pipeline_E)
+                    _finalize_chunk(c_doc, c_doc["_id"], story_id)
         
             # Final Reporting when everything is done
             Log.print_timing_summary()
@@ -674,9 +666,9 @@ def _retry_chunk(chunk_id, story_id, task, current_retries):
     worker_session.post(f"http://localhost:{request.host.split(':')[-1]}/process_chunk", 
                         json={'chunk_id': chunk_id, 'story_id': story_id, 'task_type': task})
 
-def _run_pipeline_for_chunk(chunk_doc, chunk_id, story_id, pipeline_func):
-    # ??? pipeline_E here hardcode
+def _finalize_chunk(chunk_doc, chunk_id, story_id, pipeline_func):
     """Helper to extract data and run the pipeline function."""
+    from src.main import pipeline_E
     try:
         book_id = chunk_doc["book_id"]
         book_title = chunk_doc["book_title"]
