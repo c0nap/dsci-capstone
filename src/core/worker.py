@@ -24,6 +24,13 @@ boss_session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(pool_connections=10, pool_maxsize=10)
 boss_session.mount('http://', adapter)
 
+# Prevents creating a new DB connection for every single task assignment.
+mongo_client_cache = {}
+
+def get_cached_client(uri: str) -> MongoClient:
+    if uri not in mongo_client_cache:
+        mongo_client_cache[uri] = MongoClient(uri)
+    return mongo_client_cache[uri]
 
 ######################################################################################
 # Background threading system for non-blocking task handling.
@@ -227,10 +234,10 @@ def create_app(task_name: str, boss_url: str) -> Flask:
                 return jsonify({"error": "Missing database_name or collection_name"}), 400
             if not chunk_id:
                 return jsonify({"error": "Missing chunk_id"}), 400
-    
+
             # Reconnect to the database since DB_NAME or COLLECTION may have changed
             mongo_uri = load_mongo_config(database_name)
-            mongo_client: MongoClient[Any] = MongoClient(mongo_uri)
+            mongo_client: MongoClient[Any] = get_cached_client(mongo_uri)  # Use cached client to optimize
             mongo_db = mongo_client[database_name]
     
             # Retrieve chunk data from MongoDB
