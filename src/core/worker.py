@@ -37,18 +37,18 @@ def get_cached_client(uri: str) -> MongoClient:
 # Allows Flask to immediately respond to the boss service (202: accepted)
 # while processing continues asynchronously in a separate thread.
 ######################################################################################
-def task_worker():
+def task_worker() -> None:
     """Continuously process tasks from the global queue in the background.
     @details  Each task runs sequentially (or with limited concurrency if multiple workers are started).
-    @throws Exception  Logs any runtime errors that occur during task execution."""
+    @note Uses queue.get() which blocks; exception handling ensures thread survival."""
     while True:
-        time.sleep(0.5)
+        # queue.get() blocks by default, so explicit sleep is not required
         func, args = task_queue.get()
         try:
             func(*args)
         except Exception as e:
-            raise e
-            # print(f"Worker thread error: {e}")
+            # Do not raise here; it kills the thread.
+            print(f"Worker thread caught fatal error: {e}")
         finally:
             task_queue.task_done()
 
@@ -61,7 +61,7 @@ def process_task(
     chunk_doc: Dict[str, Any],
     boss_url: str,
     task_handler: Callable[[Dict[str, Any]], Dict[str, Any]],
-    task_kwargs: Any = None,
+    task_kwargs: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Perform the assigned task in a background thread.
     This includes updating task status, running the handler, saving results,
@@ -84,9 +84,8 @@ def process_task(
         notify_boss(boss_url, chunk_id, task_name, "completed")
     except Exception as e:
         notify_boss(boss_url, chunk_id, task_name, "failed")
-        print(f"Error while running {task_handler.__name__} with args {task_kwargs}")
+        print(f"Error while running {task_handler.__name__} with args {task_kwargs}: {e}")
         raise e
-        # print(f"Ignored error from background task: {e}")
 
 
 ######################################################################################

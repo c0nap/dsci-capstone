@@ -40,7 +40,6 @@ def load_worker_config(task_types: List[str]) -> Dict[str, str]:
     for task in task_types:
         host_key = f"{task.upper()}_HOST"
         port_key = f"{task.upper()}_PORT"
-        load_dotenv(".env")
         HOST = os.environ[host_key]
         PORT = os.environ[port_key]
         if HOST and PORT:
@@ -88,7 +87,6 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
     docs_db.change_database(database_name)
     mongo_db = docs_db.get_unmanaged_handle()
 
-    # Track task completion with two DataFrames
     # Story-level tracking
     story_tracker = pd.DataFrame(columns=['story_id', 'preprocessing', 'chunking', 'summarization', 'metrics'])
 
@@ -114,8 +112,6 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
     task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
 
     # Lock for thread-safe DataFrame operations
-    import threading
-
     tracker_lock = threading.Lock()
 
     def update_story_status(story_id: int, task: str, status: str) -> None:
@@ -655,8 +651,12 @@ def create_boss_thread(DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
 # ---------------------------------------------------------
 # Helper Functions for Boss Callback
 # ---------------------------------------------------------
-def _retry_chunk(chunk_id, story_id, task, current_retries):
-    """Helper to increment retry count and re-queue task."""
+def _retry_chunk(chunk_id: str, story_id: int, task: str, current_retries: int) -> None:
+    """Helper to increment retry count and re-queue task.
+    @param chunk_id Unique identifier for the chunk.
+    @param story_id Unique identifier for the story.
+    @param task Task name to retry.
+    @param current_retries Current retry count before incrementing."""
     # Increment tracker
     chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, 'retry_count'] += 1
     
@@ -666,9 +666,14 @@ def _retry_chunk(chunk_id, story_id, task, current_retries):
     worker_session.post(f"http://localhost:{request.host.split(':')[-1]}/process_chunk", 
                         json={'chunk_id': chunk_id, 'story_id': story_id, 'task_type': task})
 
-def _finalize_chunk(chunk_doc, chunk_id, story_id, pipeline_func):
-    """Helper to extract data and run the pipeline function."""
-    from src.main import pipeline_E
+
+def _finalize_chunk(chunk_doc: Dict[str, Any], chunk_id: str, story_id: int) -> None:
+    """Helper to extract data and run the pipeline function.
+    @param chunk_doc The MongoDB document for the chunk.
+    @param chunk_id Unique identifier for the chunk.
+    @param story_id Unique identifier for the story."""
+    from src.main import pipeline_E  # Import here to avoid circular dependency
+    
     try:
         book_id = chunk_doc["book_id"]
         book_title = chunk_doc["book_title"]
@@ -680,9 +685,9 @@ def _finalize_chunk(chunk_doc, chunk_id, story_id, pipeline_func):
         if "bookscore" in chunk_doc and "result" in chunk_doc["bookscore"]:
             bookscore = float(chunk_doc["bookscore"]["result"]["value"])
         else:
-            bookscore = 0.0 # Default or handle error
+            bookscore = 0.0 
             
-        RESULTS = pipeline_func(summary, book_title, book_id, chunk_id, text, gold_summary, bookscore)
+        RESULTS = pipeline_E(summary, book_title, book_id, chunk_id, text, gold_summary, bookscore)
         
         Plot.save_metrics_csv(RESULTS)
         Plot.summary_results(RESULTS)
