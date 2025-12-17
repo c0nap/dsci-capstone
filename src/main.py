@@ -176,7 +176,7 @@ def pipeline_E(
     if chunk == "":
         success = stages.task_40_post_summary(book_id, book_title, summary)
     else:
-        success = stages.task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval)
+        success = stages.task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval or 0.0)
     if success:
         print("\nOutput sent to web app.")
     return RESULTS
@@ -218,7 +218,7 @@ CHAPTER 11. THE BEGINNING OF THE END\n
 CHAPTER 12. THE END OF THE END\n
 """,
         start_str="",
-        end_str="end of the Phoenix and the Carpet.",
+        end_str="of the Phoenix and the Carpet.",
         book_id=2,
         story_id=1,
         book_title="The Phoenix and the Carpet",
