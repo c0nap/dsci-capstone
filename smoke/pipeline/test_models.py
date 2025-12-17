@@ -182,18 +182,17 @@ def test_job_14_llm_minimal(book_data, llm_connector_type):
 @pytest.mark.stage_B
 @pytest.mark.smoke
 @pytest.mark.order(120)
-@pytest.mark.dependency(name="stage_B_minimal", scope="session", depends=["job_14_llm_minimal", "job_12_extraction_chunk"])
+@pytest.mark.dependency(name="stage_B_minimal", scope="session")
 def test_pipeline_B_minimal(book_data):
     """Test running the aggregate pipeline_B on smoke test data."""
     collection_name = "example_chunks"
-    chunks = [book_data["chunk"]]
+    chunk = book_data["chunk"]
 
-    triples, chunk = pipeline_B(collection_name, chunks)
+    triples = pipeline_B(collection_name, chunk)
 
     # Verify output structure
     assert isinstance(triples, list)
     assert len(triples) > 0
-    assert isinstance(chunk, Chunk)
 
     # Verify each triple has required structure
     for triple in triples:
@@ -215,9 +214,9 @@ def test_pipeline_D_minimal(docs_db, book_data):
     triples_string = to_triples_string(triples)
 
     # Insert chunk first - verified by pipeline_B_minimal
-    task_11_send_chunk(chunk, collection_name, book_data["book_title"])
+    task_11_send_chunks([chunk], collection_name, book_data["book_title"])
 
-    summary = pipeline_D(collection_name, triples_string, chunk.get_chunk_id())
+    summary = pipeline_D(collection_name, triples_string, chunk.get_chunk_id(), chunk.text)
 
     assert isinstance(summary, str)
     assert len(summary) > 0
@@ -256,9 +255,11 @@ def test_pipeline_E_minimal_summary_only(book_data):
 @pytest.mark.smoke
 @pytest.mark.order(151)
 @pytest.mark.dependency(name="stage_E_payload", scope="session", depends=["stage_E_minimal"])
-def test_pipeline_E_minimal_full_payload(book_data):
+def test_pipeline_E_minimal_full_payload(session, book_data):
     """Test running pipeline_E with full payload including metrics.
     @note  Requires Blazor to accept POST."""
+    session.load_metrics()  # Keep out of main session fixture to ensure normal PyTests run fast
+
     summary = book_data["summary"]
     book_title = book_data["book_title"]
     book_id = str(book_data["book_id"])
