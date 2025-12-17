@@ -103,6 +103,13 @@ class Config:
         Config.model_name = "gpt-5"
 
     @staticmethod
+    def load_pytest() -> None:
+        """Load PyTest configuration preset."""
+        Config.load_fast()
+        Config.chunk_selection_method = "random-2"
+
+
+    @staticmethod
     def get_moderation_thresholds() -> Dict[str, float]:
         """Get const moderation specs using a method to hide attributes from @ref src.config.Config.to_dict.
         @note  Setting any threshold to 0.0 will flag everything, since even safe text will have 1e-5 of each category.

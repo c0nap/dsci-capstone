@@ -181,7 +181,7 @@ def test_job_14_llm_minimal(book_data, llm_connector_type):
 @pytest.mark.smoke
 @pytest.mark.order(120)
 @pytest.mark.dependency(name="stage_B_minimal", scope="session", depends=["job_14_llm_minimal", "job_12_extraction_chunk"])
-def test_pipeline_B_minimal(docs_db, book_data):
+def test_pipeline_B_minimal(book_data):
     """Test running the aggregate pipeline_B on smoke test data."""
     collection_name = "example_chunks"
     chunks = [book_data["chunk"]]
@@ -199,13 +199,6 @@ def test_pipeline_B_minimal(docs_db, book_data):
         assert "s" in triple
         assert "r" in triple
         assert "o" in triple
-
-    # Verify chunk was inserted into MongoDB
-    mongo_db = docs_db.get_unmanaged_handle()
-    collection = getattr(mongo_db, collection_name)
-    doc = collection.find_one({"_id": chunk.get_chunk_id()})
-    assert doc is not None
-    assert doc["book_title"] == book_title
 
 
 @pytest.mark.pipeline

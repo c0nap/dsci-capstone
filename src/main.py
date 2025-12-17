@@ -26,7 +26,7 @@ from src.core.context import session
 
 
 @Log.time
-def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id, collection_name):
+def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title, collection_name):
     """Connects all components to convert an EPUB file to a book summary.
     @details  Data conversions:
         - EPUB file
@@ -51,7 +51,7 @@ def pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id, 
 
 
 @Log.time
-def pipeline_B(collection_name, c, book_title):
+def pipeline_B(collection_name, c):
     """Extracts triples from a random chunk.
     @details
         - JSON triples (NLP & LLM)"""
@@ -184,9 +184,9 @@ def pipeline_E(
 
 @Log.time
 def full_pipeline(collection_name, epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title, chunk_id):
-    chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id, collection_name)
+    chunks = pipeline_A(epub_path, book_chapters, start_str, end_str, book_id, story_id, book_title, collection_name)
     for chunk in chunks:
-        triples = pipeline_B(collection_name, chunk, book_title)
+        triples = pipeline_B(collection_name, chunk)
         triples_string = pipeline_C(triples)
         summary = pipeline_D(collection_name, triples_string, chunk.get_chunk_id())
         pipeline_E(summary, book_title, book_id, chunk_id)
@@ -274,6 +274,7 @@ CHAPTER 12. THE END OF THE END\n
             end_str="end of the Phoenix and the Carpet.",
             book_id=book_id,
             story_id=story_id,
+            book_title=book_title,
             collection_name=COLLECTION,
         )
         post_story_status(BOSS_PORT, story_id, 'preprocessing', 'completed')
@@ -281,7 +282,7 @@ CHAPTER 12. THE END OF THE END\n
 
     for chunk in chunks:
         if not load_from_checkpoint:
-            triples = pipeline_B(COLLECTION, chunk, book_title)
+            triples = pipeline_B(COLLECTION, chunk)
             with open(checkpoint_path, "wb") as f_write:
                 pickle.dump({"triples": triples, "chunk": chunk}, f_write)
             print(f"Checkpoint saved to {checkpoint_path}")
