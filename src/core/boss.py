@@ -61,13 +61,14 @@ def clear_task_data(mongo_db: MongoHandle, collection_name: str, chunk_id: str, 
 
 def assign_task_to_worker(worker_url: str, database_name: str, collection_name: str, chunk_id: str) -> bool:
     """Assign a task to a worker microservice.
+    @note  We do not use the threaded approach in @ref src.core.worker.notify_boss.
+    This is because we MUST get an 'accepted' response from the worker before proceeding.
     @param worker_url Full URL of the worker's /start endpoint.
     @param database_name Name of the MongoDB database to use.
     @param collection_name The name of our primary chunk storage collection in Mongo.
     @param chunk_id Unique identifier for the chunk within the story.
     @return True if task was successfully assigned, False otherwise."""
     payload = {"database_name": database_name, "collection_name": collection_name, "chunk_id": chunk_id}
-
     try:
         response = worker_session.post(worker_url, json=payload, timeout=5)
         return response.status_code == 202

@@ -191,16 +191,22 @@ def save_task_result(mongo_db: MongoHandle, collection_name: str, chunk_id: str,
 
 def notify_boss(boss_url: str, chunk_id: str, task_name: str, status: str) -> None:
     """Send completion notification to boss service.
+    @details Spawns a thread so the worker doesn't block waiting for the Boss.
+    Uses the global worker_session for connection reuse.
     @param boss_url Callback URL for the boss service.
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the completed task.
     @param status Task completion status ('completed' or 'failed')."""
     payload = {"chunk_id": chunk_id, "task": task_name, "status": status}
-
-    try:
-        worker_session.post(boss_url, json=payload, timeout=5)
-    except requests.RequestException as e:
-        print(f"Failed to notify boss: {e}")
+    def _send_async():
+        try:
+            # Use global session + short timeout
+            worker_session.post(boss_url, json=payload, timeout=2) 
+        except Exception as e:
+            # We print but don't raise, because we don't want to kill the worker process
+            print(f"Failed to notify boss ({status}): {e}")
+    # Daemon thread ensures this doesn't block program exit
+    threading.Thread(target=_send_async, daemon=True).start()
 
 
 def create_app(task_name: str, boss_url: str) -> Flask:
