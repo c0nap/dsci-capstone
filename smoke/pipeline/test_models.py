@@ -187,9 +187,8 @@ def test_pipeline_B_minimal(book_data):
     """Test running the aggregate pipeline_B on smoke test data."""
     collection_name = "example_chunks"
     chunks = [book_data["chunk"]]
-    book_title = "The Phoenix and the Carpet"
 
-    triples, chunk = pipeline_B(collection_name, chunks, book_title)
+    triples, chunk = pipeline_B(collection_name, chunks)
 
     # Verify output structure
     assert isinstance(triples, list)
@@ -242,11 +241,12 @@ def test_pipeline_E_minimal_summary_only(book_data):
     summary = book_data["summary"]
     book_title = book_data["book_title"]
     book_id = str(book_data["book_id"])
+    chunk_id = book_data["chunk_id"]
 
     # TODO: Cannot verify output - need task_40_post_payload implementation
 
     # Test summary-only path (no chunk parameter)
-    pipeline_E(summary, book_title, book_id)
+    pipeline_E(summary, book_title, book_id, chunk_id)
 
     assert True  # Placeholder - verifies no exceptions raised
 
