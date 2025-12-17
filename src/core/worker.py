@@ -202,35 +202,47 @@ def create_app(task_name: str, boss_url: str) -> Flask:
     if task_name == "questeval":
         print("\n" * 6)
 
-    @app.route("/tasks/queue", methods=["POST"])
-    def enqueue_task() -> Tuple[Response, int]:
+    
+    @app.route("/tasks/queue", methods=["POST", "DELETE"])
+    def manage_queue() -> Tuple[Response, int]:
         """Handle incoming task assignments from boss service.
+        @details
+        POST: Enqueue a new task from the Boss.
+        DELETE: Clear all pending tasks (used when resetting a story).
         @return JSON response with status code."""
-        data = request.json
-        chunk_id = data.get("chunk_id")
-        database_name = data.get("database_name")
-        collection_name = data.get("collection_name")
-        if not database_name or not collection_name:
-            return jsonify({"error": "Missing database_name or collection_name"}), 400
-        if not chunk_id:
-            return jsonify({"error": "Missing chunk_id"}), 400
-
-        print(f"[QUEUED] chunk '{chunk_id}' from Boss: using database '{database_name}' and collection '{collection_name}'")
-
-        # Reconnect to the database since DB_NAME or COLLECTION may have changed
-        mongo_uri = load_mongo_config(database_name)
-        mongo_client: MongoClient[Any] = MongoClient(mongo_uri)
-        mongo_db = mongo_client[database_name]
-
-        # Retrieve chunk data from MongoDB
-        collection = getattr(mongo_db, collection_name)
-        chunk_doc = collection.find_one({"_id": chunk_id})
-        if not chunk_doc:
-            return jsonify({"error": "Chunk not found"}), 404
-
-        # Enqueue the background task
-        task_queue.put((process_task, (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler, task_args)))
-        return jsonify({"status": "accepted"}), 202
+        if request.method == "POST":
+            data = request.json
+            chunk_id = data.get("chunk_id")
+            database_name = data.get("database_name")
+            collection_name = data.get("collection_name")
+            
+            if not database_name or not collection_name:
+                return jsonify({"error": "Missing database_name or collection_name"}), 400
+            if not chunk_id:
+                return jsonify({"error": "Missing chunk_id"}), 400
+    
+            # Reconnect to the database since DB_NAME or COLLECTION may have changed
+            mongo_uri = load_mongo_config(database_name)
+            mongo_client: MongoClient[Any] = MongoClient(mongo_uri)
+            mongo_db = mongo_client[database_name]
+    
+            # Retrieve chunk data from MongoDB
+            collection = getattr(mongo_db, collection_name)
+            chunk_doc = collection.find_one({"_id": chunk_id})
+            if not chunk_doc:
+                return jsonify({"error": "Chunk not found"}), 404
+    
+            # Enqueue the background task
+            task_queue.put((process_task, (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler, task_args)))
+            return jsonify({"status": "accepted"}), 202
+    
+        # Delete logic is necessary to remove ghost tasks when the boss restarts but workers do not
+        elif request.method == "DELETE":
+            with task_queue.mutex:
+                q_size = len(task_queue.queue)
+                task_queue.queue.clear()
+            print(f"Purged {q_size} pending tasks from queue via Boss request.")
+            return jsonify({"status": "cleared", "purged_count": q_size}), 200
 
     return app
 

@@ -579,17 +579,29 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
 
 def create_boss_thread(DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
+    # Load configuration
+    task_types = ["bookscore"]  #["questeval", "bookscore"]
+    worker_urls = load_worker_config(task_types)
+    if not worker_urls:
+        Log.warn(msg="No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
+
     # Drop old chunks
     mongo_db = session.docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, COLLECTION)
     collection.drop()
     print("Deleted old chunks...")
 
-    # Load configuration
-    task_types = ["bookscore"]  #["questeval", "bookscore"]
-    worker_urls = load_worker_config(task_types)
-    if not worker_urls:
-        Log.warn(msg="No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
+    # Clear tasks from previous runs
+    for task in task_types:
+        try:
+            worker_url = worker_urls[task]
+            # Sending DELETE to the worker's endpoint triggers the task purge.
+            response = requests.delete(worker_url, timeout=5)
+            if response.status_code == 200:
+                print(f"Purged old tasks from '{task}'...")
+        except requests.RequestException:
+             # Can still proceed but there is a chance of collision between MongoDB document IDs.
+            Log.warn(msg=f"Failed to clear queue at {worker_url} - worker may be offline")
 
     # Create and run app
     app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
