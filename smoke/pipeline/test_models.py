@@ -5,7 +5,6 @@ from src.components.book_conversion import Chunk
 from src.core.stages import *
 from src.main import pipeline_B, pipeline_D, pipeline_E
 from typing import Any, List
-from src.core.stages import Config
 from src.components.relation_extraction import RelationExtractor
 from src.connectors.llm import to_triples_string
 
@@ -41,6 +40,7 @@ def book_data():
         "book_title": "Five Children and It",
         "summary": "The children discover a magical carpet with a Phoenix.",
         "gold_summary": "Children find magical carpet.",
+        "chunk_id": "story-1_chunk-1",
         "chunk": chunk,
         "json_triples" : [
             {"s": "children", "r": "had", "o": "carpet"},
@@ -61,21 +61,23 @@ def book_data():
 
 
 @pytest.fixture
-def rebel(monkeypatch):
+def rebel(monkeypatch, session):
     """Fixture returning the REBEL extraction function."""
-    monkeypatch.setattr(Config, "relation_extractor_type", "rebel")
+    monkeypatch.setattr(session.config, "relation_extractor_type", "rebel")
+    session.load_optional_rebel()
 
 
 @pytest.fixture
-def openie(monkeypatch):
+def openie(monkeypatch, session):
     """Fixture returning the OpenIE extraction function."""
-    monkeypatch.setattr(Config, "relation_extractor_type", "openie")
+    monkeypatch.setattr(session.config, "relation_extractor_type", "openie")
+    session.load_optional_openie()
 
 
 @pytest.fixture
-def textacy(monkeypatch):
+def textacy(monkeypatch, session):
     """Fixture returning the Textacy extraction function."""
-    monkeypatch.setattr(Config, "relation_extractor_type", "textacy")
+    monkeypatch.setattr(session.config, "relation_extractor_type", "textacy")
 
 
 @pytest.fixture
@@ -92,15 +94,15 @@ PARAMS_RELATION_EXTRACTORS: List[Any] = [  # ParameterSet is internal to PyTest
 
 
 @pytest.fixture
-def langchain(monkeypatch):
+def langchain(monkeypatch, session):
     """Fixture returning the LangChain LLM API."""
-    monkeypatch.setattr(Config, "validation_llm_engine", "langchain")
+    monkeypatch.setattr(session.config, "validation_llm_engine", "langchain")
 
 
 @pytest.fixture
-def openai(monkeypatch):
+def openai(monkeypatch, session):
     """Fixture returning the OpenAI LLM API."""
-    monkeypatch.setattr(Config, "validation_llm_engine", "openai")
+    monkeypatch.setattr(session.config, "validation_llm_engine", "openai")
 
 
 @pytest.fixture
@@ -166,14 +168,14 @@ def test_job_12_extraction(book_data, extractor_type):
 @pytest.mark.parametrize("llm_connector_type", ["langchain", "openai"], indirect=True)
 def test_job_14_llm_minimal(book_data, llm_connector_type):
     """Test LLM-based triple sanitization with realistic data."""
-    triples = book_data["json_triples"]
-    prompt, llm_output, _ = task_14_validate_llm(triples, book_data["chunk"].text)
+    raw_triples = book_data["json_triples"]
+    prompt, triples = task_14_validate_llm(raw_triples, book_data["chunk"].text)
 
     assert isinstance(prompt, str)
-    assert str(triples[0]) in prompt
+    assert str(raw_triples[0]) in prompt
     assert book_data["chunk"].text in prompt
-    assert isinstance(llm_output, str)
-    assert len(llm_output) > 0
+    assert isinstance(triples, list)
+    assert len(triples) > 0
 
 
 @pytest.mark.pipeline
@@ -260,6 +262,7 @@ def test_pipeline_E_minimal_full_payload(book_data):
     summary = book_data["summary"]
     book_title = book_data["book_title"]
     book_id = str(book_data["book_id"])
+    chunk_id = book_data["chunk_id"]
     chunk_text = book_data["chunk"].text
     gold_summary = book_data["gold_summary"]
     bookscore = book_data["bookscore"]
@@ -268,6 +271,6 @@ def test_pipeline_E_minimal_full_payload(book_data):
     # TODO: Cannot verify output - need task_40_post_payload implementation
 
     # Test full payload path
-    pipeline_E(summary, book_title, book_id, chunk_text, gold_summary, bookscore, questeval)
+    pipeline_E(summary, book_title, book_id, chunk_id, chunk_text, gold_summary, bookscore, questeval)
 
     assert True  # Placeholder - verifies no exceptions raised
