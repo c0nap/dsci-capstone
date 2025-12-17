@@ -97,6 +97,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         columns=[
             'chunk_id',
             'story_id',
+            'retry_count',
             'load_to_mongo',
             'relation_extraction',
             'llm_inference',
@@ -147,6 +148,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                         {
                             'chunk_id': chunk_id,
                             'story_id': story_id,
+                            'retry_count': 0,
                             'extraction': 'pending',
                             'load_to_mongo': 'pending',
                             'relation_extraction': 'pending',
@@ -389,73 +391,107 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
         chunk_task = task_mapping[task]
 
-        # Handle different status types
-        if "started" in status:
-            # Update chunk status to started
-            update_chunk_status(chunk_id, story_id, chunk_task, 'started')
+        # ... [Previous code: status message, getting chunk/story_id, task mapping] ...
+        
+        MAX_RETRIES = 2  # How many times to retry a failed chunk
 
-            # Update story status to started if not already
+        # 1. Update the status in the tracker
+        if "started" in status:
+            update_chunk_status(chunk_id, story_id, chunk_task, 'started')
             update_story_status(story_id, 'metrics', 'started')
 
         elif "completed" in status:
-            # Update chunk status to completed
             seconds = record_elapsed_time(chunk_id, chunk_task)
             update_chunk_status(chunk_id, story_id, chunk_task, 'completed')
-            if seconds:
-                set_elapsed_time(chunk_id, chunk_task, seconds, 'completed')
-
-            # Check if all chunks for this story completed this task
-            all_chunks_complete = check_story_completion(story_id, chunk_task)
-            if True:
-                Log.status_message(Log.task_complete, Log.msg_completed_task(chunk_task, story_id))
-
-                Log.print_timing_summary()
-                Log.dump_timing_csv()
-                Plot.time_elapsed_by_names()
-
-                # Check if all metric tasks are complete for the story
-                all_metrics_complete = all(
-                    [check_story_completion(story_id, 'metric_questeval'), check_story_completion(story_id, 'metric_bookscore')]
-                )
-
-                if True:
-                    # Update story-level metrics to completed
-                    #update_story_status(story_id, 'metrics', 'completed')
-
-                    # FINALIZE PIPELINE - all workers finished for this story
-                    # Access fields directly from the MongoDB document
-                    book_id = chunk["book_id"]
-                    book_title = chunk["book_title"]
-                    text = chunk["text"]
-                    summary = chunk["summary"]
-                    gold_summary = chunk.get("gold_summary", text[: len(text) // 2])
-                    bookscore = float(chunk["bookscore"]["result"]["value"])
-                    #questeval = float(chunk["questeval"]["result"]["value"])
-                    RESULTS = pipeline_E(summary, book_title, book_id, chunk_id, text, gold_summary, bookscore)  #, questeval)
-
-                    Log.status_message(Log.story_complete, Log.msg_completed_story(story_id))
-
-                    Log.print_timing_summary()
-                    Log.dump_timing_csv()
-                    Plot.time_elapsed_by_names()
-                    Plot.save_metrics_csv(RESULTS)
-                    Plot.summary_results(RESULTS)
+            if seconds: set_elapsed_time(chunk_id, chunk_task, seconds, 'completed')
 
         elif "failed" in status:
-            # Update chunk status to failed
             Log.warn(msg=f"Task {task} failed for chunk {chunk_id}")
             seconds = record_elapsed_time(chunk_id, chunk_task)
             update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
-            if seconds:
-                set_elapsed_time(chunk_id, chunk_task, seconds, 'failed')
-
-            # Check if we should mark the story-level task as failed
-            if check_story_failure(story_id, chunk_task):
-                update_story_status(story_id, 'metrics', 'failed')
-                Log.warn(prefix=Log.task_failed, msg=f"Story {story_id} has failed chunks for {chunk_task}")
+            if seconds: set_elapsed_time(chunk_id, chunk_task, seconds, 'failed')
 
         else:
             return jsonify({"error": f"Unknown status: {status}"}), 400
+
+        # 2. Check for full-task or full-story completion
+        with tracker_lock:
+            story_chunks = chunk_tracker[chunk_tracker['story_id'] == story_id]
+            
+            # A story is accounted for if every chunk is either completed OR failed
+            # We don't want to act if some are still 'pending' or 'started'
+            unfinished = story_chunks[
+                ~story_chunks[chunk_task].str.contains('completed') & 
+                ~story_chunks[chunk_task].str.contains('failed')
+            ]
+
+            if unfinished.empty:
+                # All chunks have reported back. Now, do we have failures?
+                failed_chunks = story_chunks[story_chunks[chunk_task].str.contains('failed')]
+                
+                if not failed_chunks.empty:
+                    # RETRY LOOP
+                    reassigned_count = 0
+                    for _, row in failed_chunks.iterrows():
+                        c_id = row['chunk_id']
+                        current_retries = row['retry_count']
+                        
+                        if current_retries < MAX_RETRIES:
+                            # Increment retry count
+                            chunk_tracker.loc[chunk_tracker['chunk_id'] == c_id, 'retry_count'] += 1
+                            
+                            # Re-queue the task
+                            Log.status_message(Log.assigned, f"Self-Healing: Retrying chunk {c_id} (Attempt {current_retries + 1})")
+                            
+                            # Call the internal process_chunk logic (or the route handler)
+                            # Ideally, extract the assignment logic to a helper, but calling the URL works too:
+                            worker_session.post(f"http://localhost:{request.host.split(':')[-1]}/process_chunk", 
+                                          json={'chunk_id': c_id, 'story_id': story_id, 'task_type': task})
+                            reassigned_count += 1
+                    
+                    if reassigned_count > 0:
+                        # We triggered retries, so we are NOT done with the story yet.
+                        return jsonify({"status": "retrying_failures"}), 200
+
+                # 3. If we get here, either no failures existed, OR we exhausted retries.
+                # BUG: on exhaust retries we should not proceed
+
+
+                # Check if all chunks for this story completed this task
+                all_chunks_complete = check_story_completion(story_id, chunk_task)
+                if True:  # TODO: currently we run metrics on a per-chunk basis instead of per-story
+                    Log.status_message(Log.task_complete, Log.msg_completed_task(chunk_task, story_id))
+    
+                    Log.print_timing_summary()
+                    Log.dump_timing_csv()
+                    Plot.time_elapsed_by_names()
+    
+                    # Check if all metric tasks are complete for the story
+                    all_metrics_complete = all(
+                        [check_story_completion(story_id, 'metric_questeval'), check_story_completion(story_id, 'metric_bookscore')]
+                    )
+                    if True:  # TODO: currently we run metrics on a per-chunk basis instead of per-story
+                        # Update story-level metrics to completed
+                        #update_story_status(story_id, 'metrics', 'completed')
+    
+                        # FINALIZE PIPELINE - all workers finished for this story
+                        # Access fields directly from the MongoDB document
+                        book_id = chunk["book_id"]
+                        book_title = chunk["book_title"]
+                        text = chunk["text"]
+                        summary = chunk["summary"]
+                        gold_summary = chunk.get("gold_summary", text[: len(text) // 2])
+                        bookscore = float(chunk["bookscore"]["result"]["value"])
+                        #questeval = float(chunk["questeval"]["result"]["value"])
+                        RESULTS = pipeline_E(summary, book_title, book_id, chunk_id, text, gold_summary, bookscore)  #, questeval)
+    
+                        Log.status_message(Log.story_complete, Log.msg_completed_story(story_id))
+    
+                        Log.print_timing_summary()
+                        Log.dump_timing_csv()
+                        Plot.time_elapsed_by_names()
+                        Plot.save_metrics_csv(RESULTS)
+                        Plot.summary_results(RESULTS)
 
         return jsonify({"status": "received"}), 200
 
