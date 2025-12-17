@@ -160,12 +160,19 @@ def task_10_sample_chunks(chunks):
 
 def task_11_send_chunks(chunks, collection_name, book_title):
     with Log.timer(label=f"[{len(chunks)}]"):
+        # TODO: remove book_title from chunk schema?
+        mongo_db = session.docs_db.get_unmanaged_handle()
+        collection = getattr(mongo_db, collection_name)
+
+        batch_data = []
         for c in chunks:
-            # TODO: remove book_title from chunk schema?
-            mongo_db = session.docs_db.get_unmanaged_handle()
-            collection = getattr(mongo_db, collection_name)
-            collection.insert_one(c.to_mongo_dict())
-            collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
+            data = c.to_mongo_dict()
+            data['book_title'] = book_title
+            batch_data.append(data)
+
+        # Use bulk insert for speed
+        if batch_data:
+            collection.insert_many(batch_data)
 
 
 # TODO: 11, 12, 13 fit better as preprocessing tasks
