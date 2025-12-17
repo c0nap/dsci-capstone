@@ -27,6 +27,13 @@ boss_session.mount('http://', adapter)
 # Prevents creating a new DB connection for every single task assignment.
 mongo_client_cache = {}
 
+# ================= GENERATION CONTROL =================
+# Tracks the "generation" of tasks. When the Boss resets (DELETE), 
+# we increment this. Any running task with an old generation ID is discarded.
+WORKER_GENERATION = 0
+generation_lock = threading.Lock()
+# ======================================================
+
 def get_cached_client(uri: str) -> MongoClient:
     if uri not in mongo_client_cache:
         mongo_client_cache[uri] = MongoClient(uri)
@@ -62,6 +69,7 @@ def process_task(
     boss_url: str,
     task_handler: Callable[[Dict[str, Any]], Dict[str, Any]],
     task_kwargs: Optional[Dict[str, Any]] = None,
+    task_gen: int = 0
 ) -> None:
     """Perform the assigned task in a background thread.
     This includes updating task status, running the handler, saving results,
@@ -79,15 +87,28 @@ def process_task(
     try:
         notify_boss(boss_url, chunk_id, task_name, "started")
         mark_task_in_progress(mongo_db, collection_name, chunk_id, task_name)
+        
+        # 1. Run the heavy computation
         result = task_handler(chunk_doc, **task_kwargs)
+        
+        # 2. CHECK GENERATION: If the queue was purged while we were working, discard this.
+        with generation_lock:
+            if task_gen != WORKER_GENERATION:
+                print(f"Discarding result for chunk {chunk_id} (Task Gen {task_gen} < Current {WORKER_GENERATION})")
+                return 
+
+        # 3. Save and Notify
         save_task_result(mongo_db, collection_name, chunk_id, task_name, result)
         notify_boss(boss_url, chunk_id, task_name, "completed")
+
     except Exception as e:
-        notify_boss(boss_url, chunk_id, task_name, "failed")
+        # We also check generation here to avoid sending "failed" for a ghost task
+        with generation_lock:
+            if task_gen == WORKER_GENERATION:
+                notify_boss(boss_url, chunk_id, task_name, "failed")
+        
         print(f"Error while running {task_handler.__name__} with args {task_kwargs}: {e}")
-        raise e
-
-
+        # Do not raise since this is handled by task_worker try/catch
 ######################################################################################
 
 
@@ -229,16 +250,16 @@ def create_app(task_name: str, boss_url: str) -> Flask:
         POST: Enqueue a new task from the Boss.
         DELETE: Clear all pending tasks (used when resetting a story).
         @return JSON response with status code."""
+        global WORKER_GENERATION
+        
         if request.method == "POST":
             data = request.json
             chunk_id = data.get("chunk_id")
             database_name = data.get("database_name")
             collection_name = data.get("collection_name")
             
-            if not database_name or not collection_name:
-                return jsonify({"error": "Missing database_name or collection_name"}), 400
-            if not chunk_id:
-                return jsonify({"error": "Missing chunk_id"}), 400
+            if not database_name or not collection_name or not chunk_id:
+                return jsonify({"error": "Missing required fields"}), 400
 
             # Reconnect to the database since DB_NAME or COLLECTION may have changed
             mongo_uri = load_mongo_config(database_name)
@@ -250,17 +271,27 @@ def create_app(task_name: str, boss_url: str) -> Flask:
             chunk_doc = collection.find_one({"_id": chunk_id})
             if not chunk_doc:
                 return jsonify({"error": "Chunk not found"}), 404
-    
-            # Enqueue the background task
-            task_queue.put((process_task, (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler, task_args)))
+            
+            # Pass current generation to task
+            current_gen = WORKER_GENERATION
+            task_queue.put((
+                process_task, 
+                (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler, task_args, current_gen)
+            ))
             return jsonify({"status": "accepted"}), 202
     
         # Delete logic is necessary to remove ghost tasks when the boss restarts but workers do not
         elif request.method == "DELETE":
+            # 1. Clear the Queue (removes pending)
             with task_queue.mutex:
                 q_size = len(task_queue.queue)
                 task_queue.queue.clear()
-            print(f"Purged {q_size} pending tasks from queue via Boss request.")
+            
+            # 2. Increment Generation (invalidates running)
+            with generation_lock:
+                WORKER_GENERATION += 1
+                
+            print(f"Purged {q_size} pending tasks. Bumped Gen ID to {WORKER_GENERATION} (invalidating active threads).")
             return jsonify({"status": "cleared", "purged_count": q_size}), 200
 
     return app
