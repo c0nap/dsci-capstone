@@ -17,6 +17,7 @@ def session(request: pytest.FixtureRequest) -> Generator[Session, None, None]:
     # Parse control args
     verbose = request.config.getoption("--log-success")
     Log.USE_COLORS = request.config.getoption("--no-log-colors")
+    Log.RECORD_TIME = False
     _session = get_session(verbose=verbose)
     _session.setup()
     _session.config.load_pytest()

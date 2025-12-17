@@ -553,7 +553,8 @@ def get_merged_df(current_df: DataFrame, file_path: str, current_run_id: Optiona
     try:
         existing_df = read_csv(file_path)
         if current_run_id is not None:
-            existing_df = existing_df[existing_df["run_id"] != current_run_id]
+            # Force the dataframe column to string so it matches current_run_id
+            existing_df = existing_df[existing_df["run_id"].astype(str) != current_run_id]
     except Exception:
         return current_df
     
