@@ -113,7 +113,7 @@ class LLMConnector(Connector, ABC):
         
         raise Log.Failure(f"LLM Connection failed after {self.number_retries + 1} attempts: {last_error}")
 
-    def execute_triples(self, query: str) -> List[Triple]:
+    def execute_to_triples(self, query: str) -> List[Triple]:
         """Execute a query and GUARANTEE a list of valid Triples.
         @details 
             This is the "Atomic" method. It handles:
@@ -462,9 +462,17 @@ def flag_triples(triples: List[Triple], thresholds: Dict[str, float]) -> Tuple[L
 
 def to_triples_string(extracted: List[Triple]) -> str:
     """Concatenate triples into a form usable in a LLM prompt.
-    @param extracted  A list of extracted relations.
+    @param extracted  A list of extracted triples.
     @return  String with one triple per line."""
-    triples_string = ""
-    for triple in extracted:
-        triples_string += str(triple) + "\n"
+    triples_string = "\n".join(extracted)
+    return triples_string
+
+def to_flagged_reasons(bad_triples: List[Triple]) -> str:
+    """Concatenate harmful triples with their justification for a LLM prompt.
+    @param triples  A list of extracted triples.
+    @return  String with one triple per line."""
+    triples_string = "\n".join([
+        f"- {t['s']} {t['r']} {t['o']} (Flagged: {list(reasons.keys())})" 
+        for t, reasons in bad_triples
+    ])
     return triples_string

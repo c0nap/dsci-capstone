@@ -68,7 +68,7 @@ def pipeline_B(collection_name, c, book_title):
         print(triple)
     print()
 
-    prompt, llm_output, triples = stages.task_14_validate_llm(extracted, c.text)
+    prompt, triples = stages.task_14_validate_llm(extracted, c.text)
     print("\n    LLM prompt:")
     print(prompt)
     print("\n    LLM output:")

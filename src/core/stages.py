@@ -1,5 +1,5 @@
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
-from src.connectors.llm import parse_llm_triples, to_triples_string
+from src.connectors.llm import to_triples_string
 from src.components.relation_extraction import RelationExtractor, Triple
 from src.core.context import session
 from src.util import Log
@@ -180,7 +180,7 @@ def task_12_relation_extraction(text: str) -> List[Triple]:
         return extracted
 
 
-def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, str, List[Triple]]:
+def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, List[Triple]]:
     llm_connector_type = session.config.validation_llm_engine
     with Log.timer(label=f"[{llm_connector_type}]"):
         triples_string = to_triples_string(triples)
@@ -191,9 +191,8 @@ def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, str, Li
         prompt += f"And here is the original text:\n{text}\n\n"
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
         prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
-        response = llm.execute_query(prompt)
-        triples = parse_llm_triples(response)
-        return (prompt, response, triples)
+        triples = llm.execute_to_triples(prompt)
+        return (prompt, triples)
 
 
 def task_16_moderate_triples_llm(triples: List[Triple], text: str) -> List[Triple]:
@@ -226,13 +225,9 @@ def _task_16_resolve_strategy(
     @param text  The source text chunk
     @return List of corrected/sanitized triples
     """
+    from src.connectors.llm import to_flagged_reasons
     llm_connector_type = session.config.moderation_llm_engine
-    # Format the bad triples for the prompt
-    triples_string = "\n".join([
-        f"- {t['s']} {t['r']} {t['o']} (Flagged: {list(reasons.keys())})" 
-        for t, reasons in bad_triples
-    ])
-    # triples_string = to_triples_string(bad)
+    triples_string = to_flagged_reasons(bad_triples)
 
     system_prompt = "You are a helpful assistant that corrects harmful content in old fiction."
     llm = session.config.get_llm(llm_connector_type, system_prompt)
@@ -242,8 +237,7 @@ def _task_16_resolve_strategy(
     prompt += "For each triple you must fix the harmful content by inspecting the intent of the original text."
     prompt += "If the original text has genuinely harmful content represented by this triple, then drop this triple."
 
-    response = llm.execute_query(prompt)
-    triples = parse_llm_triples(response)
+    triples = llm.execute_to_triples(prompt)
     return triples
 
 
