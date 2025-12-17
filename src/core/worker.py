@@ -18,6 +18,13 @@ from typing import Any, Callable, Dict, Generator, Optional, Tuple
 MongoHandle = Generator["Database[Any]", None, None]
 
 
+# Create a global session for communication with boss
+# This keeps the TCP connection open, preventing "Read timed out" on high loads.
+boss_session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(pool_connections=10, pool_maxsize=10)
+boss_session.mount('http://', adapter)
+
+
 ######################################################################################
 # Background threading system for non-blocking task handling.
 # Allows Flask to immediately respond to the boss service (202: accepted)
@@ -184,7 +191,7 @@ def notify_boss(boss_url: str, chunk_id: str, task_name: str, status: str) -> No
     payload = {"chunk_id": chunk_id, "task": task_name, "status": status}
 
     try:
-        requests.post(boss_url, json=payload, timeout=5)
+        worker_session.post(boss_url, json=payload, timeout=5)
     except requests.RequestException as e:
         print(f"Failed to notify boss: {e}")
 

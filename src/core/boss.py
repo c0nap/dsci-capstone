@@ -21,6 +21,13 @@ from typing import Any, Dict, Generator, List, Optional, Tuple
 MongoHandle = Generator["Database[Any]", None, None]
 
 
+# Create a global session for communication with workers
+# This keeps the TCP connection open, speeding up task assignment significantly.
+worker_session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(pool_connections=10, pool_maxsize=10)
+worker_session.mount('http://', adapter)
+
+
 def load_worker_config(task_types: List[str]) -> Dict[str, str]:
     """Load worker service URLs from environment variables.
     @param task_types  List of valid task keys to use when searching the .env
@@ -62,7 +69,7 @@ def assign_task_to_worker(worker_url: str, database_name: str, collection_name: 
     payload = {"database_name": database_name, "collection_name": collection_name, "chunk_id": chunk_id}
 
     try:
-        response = requests.post(worker_url, json=payload, timeout=5)
+        response = worker_session.post(worker_url, json=payload, timeout=5)
         return response.status_code == 202
     except requests.RequestException:
         Log.warn(msg=f"Failed to assign task to {worker_url}")
