@@ -87,29 +87,9 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
     docs_db.change_database(database_name)
     mongo_db = docs_db.get_unmanaged_handle()
 
-    # Story-level tracking
-    story_tracker = pd.DataFrame(columns=['story_id', 'preprocessing', 'chunking', 'summarization', 'metrics'])
-
-    # Chunk-level tracking
-    chunk_tracker = pd.DataFrame(
-        columns=[
-            'chunk_id',
-            'story_id',
-            'retry_count',
-            'load_to_mongo',
-            'relation_extraction',
-            'llm_inference',
-            'load_triples_to_neo4j',
-            'graph_verbalization',
-            'summarization',
-            'metric_questeval',
-            'metric_bookscore',
-            'metrics_basic',
-        ]
-    )
-
-    # Map task_type to chunk-level task name
-    task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
+    # Track completion stages for chunks and stories
+    story_tracker = pd.DataFrame(columns=session.config.STORY_TRACKER_COLS)
+    chunk_tracker = pd.DataFrame(columns=session.config.CHUNK_TRACKER_COLS)
 
     # Lock for thread-safe DataFrame operations
     tracker_lock = threading.Lock()
@@ -123,9 +103,13 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         with tracker_lock:
             if story_id not in story_tracker['story_id'].values:
                 # Initialize new story row with all tasks as pending
-                new_row = pd.DataFrame(
-                    [{'story_id': story_id, 'preprocessing': 'pending', 'chunking': 'pending', 'summarization': 'pending', 'metrics': 'pending'}]
-                )
+                row_values = {
+                    'story_id': story_id,
+                }
+                new_row = pd.DataFrame([{
+                    column_name: row_values.get(column_name, 'pending')
+                    for column_name in CHUNK_TRACKER_COLS
+                }])
                 story_tracker = pd.concat([story_tracker, new_row], ignore_index=True)
 
             # Update specific task status
@@ -142,25 +126,15 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         with tracker_lock:
             if chunk_id not in chunk_tracker['chunk_id'].values:
                 # Initialize new chunk row with all tasks as pending
-                new_row = pd.DataFrame(
-                    [
-                        {
-                            'chunk_id': chunk_id,
-                            'story_id': story_id,
-                            'retry_count': 0,
-                            'extraction': 'pending',
-                            'load_to_mongo': 'pending',
-                            'relation_extraction': 'pending',
-                            'llm_inference': 'pending',
-                            'load_triples_to_neo4j': 'pending',
-                            'graph_verbalization': 'pending',
-                            'summarization': 'pending',
-                            'metric_questeval': 'pending',
-                            'metric_bookscore': 'pending',
-                            'metrics_basic': 'pending',
-                        }
-                    ]
-                )
+                row_values = {
+                    'chunk_id': chunk_id,
+                    'story_id': story_id,
+                    'retry_count': 0,
+                }
+                new_row = pd.DataFrame([{
+                    column_name: row_values.get(column_name, 'pending')
+                    for column_name in CHUNK_TRACKER_COLS
+                }])
                 chunk_tracker = pd.concat([chunk_tracker, new_row], ignore_index=True)
 
             # If starting a new task, append timestamp
@@ -278,7 +252,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         if not chunks:
             return jsonify({"error": f"Cannot distribute tasks: No chunks found for story {story_id}"}), 404
 
-        chunk_task = task_mapping[task_type]
+        chunk_task = session.config.WORKER_MAP[task_type]
 
         # Update story-level status to assigned
         update_story_status(story_id, 'metrics', 'assigned')
@@ -325,7 +299,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         if not task_type or task_type not in worker_urls:
             return jsonify({"error": f"Unknown task type: {task_type}"}), 400
 
-        chunk_task = task_mapping[task_type]
+        chunk_task = session.config.WORKER_MAP[task_type]
 
         # Distribute tasks to workers (async)
         worker_url = worker_urls[task_type]
@@ -373,21 +347,6 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         Handles started, completed, and failed statuses.
         @return Simple acknowledgment response."""
 
-        # ================= CONFIGURATION =================
-        # How many times to retry a failed chunk
-        # Worker assignment POST failures are NOT counted here
-        # Failures accumulate across tasks, e.g. 1 bookscore fail and 1 questeval fail = 2 total fails.
-        MAX_RETRIES = 2
-
-        # 'instant': Retry a chunk immediately when it reports failure.
-        # 'deferred': Wait for all other chunks to finish, then bulk-retry failures.
-        RETRY_STRATEGY = 'deferred'
-
-        # 'chunk': Run pipeline_E immediately when a chunk completes.
-        # 'story': Wait for ALL chunks to complete, then run pipeline_E on all of them.
-        EVAL_SCOPE = 'chunk' 
-        # =================================================
-
         data = request.json
         chunk_id = data.get("chunk_id")
         task = data.get("task")
@@ -408,18 +367,18 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
         # Read properties of received chunk
         story_id = chunk["story_id"]
-        chunk_task = task_mapping[task]
+        chunk_task = session.config.WORKER_MAP[task]
         _advance_tracker(chunk_id, story_id, chunk_task, status)
 
         # [EVALUATION SCOPE: CHUNK]
-        if status == "completed" and EVAL_SCOPE == 'chunk':
+        if status == "completed" and session.config.EVAL_SCOPE == 'chunk':
             _finalize_chunk(chunk, chunk_id, story_id)
 
         # [RETRY STRATEGY: INSTANT]
-        if status == "failed" and RETRY_STRATEGY == 'instant':
+        if status == "failed" and session.config.RETRY_STRATEGY == 'instant':
             with tracker_lock:
                 row = chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id].iloc[0]
-                if row['retry_count'] < MAX_RETRIES:
+                if row['retry_count'] < session.config.MAX_RETRIES:
                     _retry_chunk(chunk_id, story_id, task, row['retry_count'])
                     return jsonify({"status": "retrying_instant"}), 200
 
@@ -439,13 +398,13 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         # If we have failures, we need to decide if we retry or give up.
         failed_chunks = story_chunks[story_chunks[chunk_task].str.contains('failed')]
         if not failed_chunks.empty:
-            if RETRY_STRATEGY == 'deferred':
+            if session.config.RETRY_STRATEGY == 'deferred':
                 reassigned_count = 0
                 for _, row in failed_chunks.iterrows():
                     c_id = row['chunk_id']
                     current_retries = row['retry_count']
                     
-                    if current_retries < MAX_RETRIES:
+                    if current_retries < session.config.MAX_RETRIES:
                         _retry_chunk(c_id, story_id, task, current_retries)
                         reassigned_count += 1
                 if reassigned_count > 0:
@@ -469,7 +428,7 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         if all_metrics_complete:
             # [EVALUATION SCOPE: STORY]
             # If we are in per-story mode, NOW we finalize / evaluate all chunks.
-            if EVAL_SCOPE == 'story':
+            if session.config.EVAL_SCOPE == 'story':
                 all_chunks_data = collection.find({"story_id": story_id})
                 for c_doc in all_chunks_data:
                     _finalize_chunk(c_doc, c_doc["_id"], story_id)

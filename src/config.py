@@ -25,6 +25,40 @@ class Config:
     chunk_selection_method: str = "random-30"
     configuration: str = "fast"
 
+    # ================= BOSS CONFIGURATION =================
+    # How many times to retry a failed chunk
+    # Worker assignment POST failures are NOT counted here
+    # Failures accumulate across tasks, e.g. 1 bookscore fail and 1 questeval fail = 2 total fails.
+    MAX_RETRIES = 2
+
+    # 'instant': Retry a chunk immediately when it reports failure.
+    # 'deferred': Wait for all other chunks to finish, then bulk-retry failures.
+    RETRY_STRATEGY = 'deferred'
+
+    # 'chunk': Run pipeline_E immediately when a chunk completes.
+    # 'story': Wait for ALL chunks to complete, then run pipeline_E on all of them.
+    EVAL_SCOPE = 'chunk' 
+
+    STORY_TRACKER_COLS = ['story_id', 'preprocessing', 'chunking', 'summarization', 'metrics']
+    CHUNK_TRACKER_COLS = [
+        'chunk_id',
+        'story_id',
+        'retry_count',
+        'load_to_mongo',
+        'relation_extraction',
+        'llm_inference',
+        'load_triples_to_neo4j',
+        'graph_verbalization',
+        'summarization',
+        'metric_questeval',
+        'metric_bookscore',
+        'metrics_basic',
+    ]
+
+    # Map worker_type to chunk-level task name
+    WORKER_MAP = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
+    # =================================================
+
     @staticmethod
     def to_dict() -> Dict[str, Any]:
         return {
