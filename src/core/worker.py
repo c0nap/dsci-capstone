@@ -27,11 +27,11 @@ boss_session.mount('http://', adapter)
 # Prevents creating a new DB connection for every single task assignment.
 mongo_client_cache = {}
 
-# ================= GENERATION CONTROL =================
+# ================= BATCH CONTROL =================
 # Tracks the "generation" of tasks. When the Boss resets (DELETE), 
 # we increment this. Any running task with an old generation ID is discarded.
-WORKER_GENERATION = 0
-generation_lock = threading.Lock()
+TASK_BATCH = 0
+batch_lock = threading.Lock()
 # ======================================================
 
 def get_cached_client(uri: str) -> MongoClient:
@@ -91,10 +91,10 @@ def process_task(
         # 1. Run the heavy computation
         result = task_handler(chunk_doc, **task_kwargs)
         
-        # 2. CHECK GENERATION: If the queue was purged while we were working, discard this.
-        with generation_lock:
-            if task_gen != WORKER_GENERATION:
-                print(f"Discarding result for chunk {chunk_id} (Task Gen {task_gen} < Current {WORKER_GENERATION})")
+        # 2. CHECK GENERATION: If the Boss reset the system, discard this result.
+        with batch_lock:
+            if task_gen != TASK_BATCH:
+                print(f"Discarding result for chunk {chunk_id} (Task Gen {task_gen} < Current {TASK_BATCH})")
                 return 
 
         # 3. Save and Notify
@@ -103,8 +103,8 @@ def process_task(
 
     except Exception as e:
         # We also check generation here to avoid sending "failed" for a ghost task
-        with generation_lock:
-            if task_gen == WORKER_GENERATION:
+        with batch_lock:
+            if task_gen == TASK_BATCH:
                 notify_boss(boss_url, chunk_id, task_name, "failed")
         
         print(f"Error while running {task_handler.__name__} with args {task_kwargs}: {e}")
@@ -248,9 +248,9 @@ def create_app(task_name: str, boss_url: str) -> Flask:
         """Handle incoming task assignments from boss service.
         @details
         POST: Enqueue a new task from the Boss.
-        DELETE: Clear all pending tasks (used when resetting a story).
+        DELETE: Clear all pending tasks and increment generation ID.
         @return JSON response with status code."""
-        global WORKER_GENERATION
+        global TASK_BATCH
         
         if request.method == "POST":
             data = request.json
@@ -261,37 +261,37 @@ def create_app(task_name: str, boss_url: str) -> Flask:
             if not database_name or not collection_name or not chunk_id:
                 return jsonify({"error": "Missing required fields"}), 400
 
-            # Reconnect to the database since DB_NAME or COLLECTION may have changed
             mongo_uri = load_mongo_config(database_name)
-            mongo_client: MongoClient[Any] = get_cached_client(mongo_uri)  # Use cached client to optimize
+            mongo_client: MongoClient[Any] = get_cached_client(mongo_uri)
             mongo_db = mongo_client[database_name]
     
-            # Retrieve chunk data from MongoDB
             collection = getattr(mongo_db, collection_name)
             chunk_doc = collection.find_one({"_id": chunk_id})
             if not chunk_doc:
                 return jsonify({"error": "Chunk not found"}), 404
             
+            # [GENERATION CONTROL] Capture the ID at time of assignment
+            with batch_lock:
+                current_gen = TASK_BATCH
+
             # Pass current generation to task
-            current_gen = WORKER_GENERATION
             task_queue.put((
                 process_task, 
                 (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler, task_args, current_gen)
             ))
             return jsonify({"status": "accepted"}), 202
     
-        # Delete logic is necessary to remove ghost tasks when the boss restarts but workers do not
         elif request.method == "DELETE":
-            # 1. Clear the Queue (removes pending)
+            # 1. Clear the Queue (removes pending tasks)
             with task_queue.mutex:
                 q_size = len(task_queue.queue)
                 task_queue.queue.clear()
             
-            # 2. Increment Generation (invalidates running)
-            with generation_lock:
-                WORKER_GENERATION += 1
+            # 2. Increment Generation (invalidates currently running threads)
+            with batch_lock:
+                TASK_BATCH += 1
                 
-            print(f"Purged {q_size} pending tasks. Bumped Gen ID to {WORKER_GENERATION} (invalidating active threads).")
+            print(f"Purged {q_size} pending tasks. Bumped Gen ID to {TASK_BATCH} (invalidating active threads).")
             return jsonify({"status": "cleared", "purged_count": q_size}), 200
 
     return app
