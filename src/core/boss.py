@@ -94,6 +94,17 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
     # Lock for thread-safe DataFrame operations
     tracker_lock = threading.Lock()
 
+    # Interval-based watchdog thread to collect stalled tasks, and mark them as failed.
+    # Start it here for access to chunk_tracker and tracker_lock.
+    timeout_seconds = session.config.get_worker_timeout() 
+    watchdog_thread = threading.Thread(
+        target=monitor_timeouts, 
+        args=(chunk_tracker, tracker_lock, timeout_seconds),
+        daemon=True  # Important: ensures thread dies when the Flask app stops
+    )
+    watchdog_thread.start()
+    Log.status_message(msg="Watchdog thread started successfully.")
+
     def update_story_status(story_id: int, task: str, status: str) -> None:
         """Update story-level task status. Auto-initializes with pending if not exists.
         @param story_id Unique identifier for the story.
@@ -581,6 +592,49 @@ def create_boss_thread(DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
     time.sleep(1)
 
 
+def monitor_timeouts(chunk_tracker: pd.DataFrame, tracker_lock: threading.Lock, timeout_seconds: int = 1200) -> None:
+    """Background thread to catch workers that crash or hang without reporting failure.
+    @details Uses a snapshot-and-update pattern to minimize time spent holding the tracker_lock.
+    @param chunk_tracker The DataFrame tracking chunk statuses.
+    @param tracker_lock Thread lock for safe DataFrame access.
+    @param timeout_seconds Time in seconds before a 'started' task is marked failed."""
+    while True:
+        time.sleep(session.config.get_watchdog_frequency())
+        now = datetime.now()
+        
+        # 1. SNAPSHOT: Copy only the necessary columns under lock
+        with tracker_lock:
+            if chunk_tracker.empty:
+                continue
+            task_cols = [c for c in chunk_tracker.columns if c.startswith('metric_') or c == 'summarization']
+            # We copy the relevant slice to process offline
+            snapshot = chunk_tracker[['chunk_id', 'story_id'] + task_cols].copy()
+
+        # 2. PROCESS: Identify timeouts outside of the lock
+        timeouts_to_mark = [] # List of (index, column, chunk_id, story_id)
+        for index, row in snapshot.iterrows():
+            for col in task_cols:
+                status_val = row[col]
+                if isinstance(status_val, str) and status_val.startswith('started,'):
+                    try:
+                        _, ts_str = status_val.split(', ', 1)
+                        start_time = datetime.fromisoformat(ts_str)
+                        
+                        if (now - start_time).total_seconds() > timeout_seconds:
+                            timeouts_to_mark.append((index, col, row['chunk_id'], row['story_id']))
+                    except (ValueError, TypeError):
+                        continue
+
+        # 3. UPDATE: Apply changes only if we found timeouts
+        if timeouts_to_mark:
+            with tracker_lock:
+                for index, col, chunk_id, story_id in timeouts_to_mark:
+                    # Double-check status under lock to ensure it hasn't 
+                    # finished in the milliseconds since our snapshot.
+                    current_status = chunk_tracker.at[index, col]
+                    if isinstance(current_status, str) and current_status.startswith('started,'):
+                        Log.warn(msg=f"Watchdog: Task '{col}' for chunk {chunk_id} timed out. Force failing.")
+                        chunk_tracker.at[index, col] = "failed"
 
 
 
