@@ -627,6 +627,356 @@ def test_ranked_degree_ties(main_graph: KnowledgeGraph) -> None:
     assert empty_result.empty, "No rank-2 nodes exist, should return empty"
 
 
+
+@pytest.mark.kg
+@pytest.mark.order(26)
+@pytest.mark.dependency(name="helper_most_popular", depends=["degree_rank"], scope="session")
+def test_get_node_most_popular(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test retrieval of highest-degree node.
+    @details  Validates that get_node_most_popular returns the node with most connections.
+    """
+    kg = nature_scene_graph
+    
+    # Get most popular node
+    most_popular_id = kg.get_node_most_popular()
+    assert most_popular_id is not None
+    assert isinstance(most_popular_id, str)
+    
+    # Verify it's actually the highest-degree node
+    degree_df = kg.get_edge_counts()
+    expected_id = degree_df.iloc[0]["node_id"]
+    assert most_popular_id == expected_id
+    
+    # Verify it has the maximum edge count
+    max_degree = degree_df["edge_count"].max()
+    actual_degree = degree_df[degree_df["node_id"] == most_popular_id]["edge_count"].iloc[0]
+    assert actual_degree == max_degree
+
+
+@pytest.mark.kg
+@pytest.mark.order(27)
+@pytest.mark.dependency(name="helper_top_degree", depends=["helper_most_popular"], scope="session")
+def test_get_nodes_top_degree(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test retrieval of top-k highest-degree nodes.
+    @details  Validates that get_nodes_top_degree returns correct number of nodes in order.
+    """
+    kg = nature_scene_graph
+    
+    # Get top 3 nodes
+    top_nodes = kg.get_nodes_top_degree(k=3)
+    assert top_nodes is not None
+    assert isinstance(top_nodes, list)
+    assert len(top_nodes) == 3
+    
+    # Verify they're in descending degree order
+    degree_df = kg.get_edge_counts(top_n=3)
+    expected_ids = degree_df["node_id"].tolist()
+    assert top_nodes == expected_ids
+    
+    # Test single node retrieval
+    top_1 = kg.get_nodes_top_degree(k=1)
+    assert len(top_1) == 1
+    assert top_1[0] == kg.get_node_most_popular()
+
+
+@pytest.mark.kg
+@pytest.mark.order(28)
+@pytest.mark.dependency(name="helper_largest_community", depends=["community_detection_minimal"], scope="session")
+def test_get_community_largest(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test retrieval of largest community ID.
+    @details  Validates that get_community_largest returns the community with most nodes.
+    """
+    kg = nature_scene_graph
+    
+    # Run community detection first
+    kg.detect_community_clusters(method="leiden")
+    
+    # Get largest community
+    largest_comm_id = kg.get_community_largest()
+    assert largest_comm_id is not None
+    assert isinstance(largest_comm_id, int)
+    
+    # Verify it's actually the largest
+    df = kg.get_triple_properties()
+    community_sizes = df["n1.community_id"].value_counts()
+    expected_largest = int(community_sizes.idxmax())
+    assert largest_comm_id == expected_largest
+    
+    # Test error when detection not run
+    kg_empty = KnowledgeGraph("empty_test", kg.database)
+    with pytest.raises(Log.Failure):
+        kg_empty.get_community_largest()
+
+
+@pytest.mark.kg
+@pytest.mark.order(29)
+@pytest.mark.dependency(name="helper_community_ids", depends=["helper_largest_community"], scope="session")
+def test_get_community_ids(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test retrieval of all community IDs.
+    @details  Validates that get_community_ids returns sorted list of unique communities.
+    """
+    kg = nature_scene_graph
+    
+    # Run community detection first
+    kg.detect_community_clusters(method="leiden")
+    
+    # Get all community IDs
+    comm_ids = kg.get_community_ids()
+    assert comm_ids is not None
+    assert isinstance(comm_ids, list)
+    assert len(comm_ids) > 0
+    
+    # Verify sorted and unique
+    assert comm_ids == sorted(set(comm_ids))
+    
+    # Verify matches actual communities in graph
+    df = kg.get_triple_properties()
+    expected_ids = sorted(df["n1.community_id"].dropna().unique().astype(int).tolist())
+    assert comm_ids == expected_ids
+    
+    # Test error when detection not run
+    kg_empty = KnowledgeGraph("empty_test_2", kg.database)
+    with pytest.raises(Log.Failure):
+        kg_empty.get_community_ids()
+
+@pytest.mark.kg
+@pytest.mark.order(30)
+@pytest.mark.dependency(name="verbalization_triple", depends=["knowledge_graph_triples"], scope="session")
+def test_to_triples_string_triple_mode(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test triple mode verbalization.
+    @details  Validates raw triple format output (subject relation object).
+    """
+    kg = nature_scene_graph
+    
+    # Get small sample
+    triples_df = kg.get_all_triples()
+    triple_names_df = kg.triples_to_names(triples_df.head(3), drop_ids=True)
+    
+    result = kg.to_triples_string(triple_names_df, mode="raw")
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Should have 3 lines
+    lines = result.strip().split('\n')
+    assert len(lines) == 3
+    
+    # Each line should have format: "subject relation object"
+    for line in lines:
+        parts = line.split()
+        assert len(parts) >= 3, f"Line should have at least 3 parts: {line}"
+
+
+@pytest.mark.kg
+@pytest.mark.order(31)
+@pytest.mark.dependency(name="verbalization_natural", depends=["verbalization_triple"], scope="session")
+def test_to_triples_string_natural_mode(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test natural language verbalization.
+    @details  Validates human-readable sentence format with lowercase relations and periods.
+    """
+    kg = nature_scene_graph
+    
+    # Get specific triples for verification
+    triples_df = kg.get_all_triples()
+    triple_names_df = kg.triples_to_names(triples_df, drop_ids=True)
+    
+    # Filter to known triple for testing
+    kid1_triples = triple_names_df[triple_names_df['subject'] == 'Kid1'].head(2)
+    
+    result = kg.to_triples_string(kid1_triples, mode="natural")
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Should contain lowercase relations
+    assert result.islower() or any(c.isupper() for c in result.split()[0])  # First word may be capitalized (entity name)
+    
+    # Should end sentences with periods
+    lines = result.strip().split('\n')
+    for line in lines:
+        assert line.endswith('.'), f"Natural language should end with period: {line}"
+    
+    # Relations should be converted (e.g., "PLAYS_ON" -> "plays on")
+    assert '_' not in result or 'PLAYS_ON' not in result, "Underscores should be replaced with spaces"
+
+
+@pytest.mark.kg
+@pytest.mark.order(32)
+@pytest.mark.dependency(name="verbalization_json", depends=["verbalization_triple"], scope="session")
+def test_to_triples_string_json_mode(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test JSON format verbalization.
+    @details  Validates JSON array output with s/r/o keys matching Triple TypedDict.
+    """
+    kg = nature_scene_graph
+    import json
+    
+    # Get small sample
+    triples_df = kg.get_all_triples()
+    triple_names_df = kg.triples_to_names(triples_df.head(3), drop_ids=True)
+    
+    result = kg.to_triples_string(triple_names_df, mode="json")
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Should be valid JSON
+    parsed = json.loads(result)
+    assert isinstance(parsed, list)
+    assert len(parsed) == 3
+    
+    # Each item should have s, r, o keys (matching Triple TypedDict)
+    for item in parsed:
+        assert "s" in item
+        assert "r" in item
+        assert "o" in item
+        assert len(item) == 3  # No extra keys
+        
+        # Values should be strings
+        assert isinstance(item["s"], str)
+        assert isinstance(item["r"], str)
+        assert isinstance(item["o"], str)
+    
+    # Test empty DataFrame
+    empty_df = DataFrame(columns=["subject", "relation", "object"])
+    empty_result = kg.to_triples_string(empty_df, mode="json")
+    assert empty_result == "[]"
+
+
+@pytest.mark.kg
+@pytest.mark.order(33)
+@pytest.mark.dependency(name="verbalization_context", depends=["verbalization_triple"], scope="session")
+def test_to_triples_string_context_mode(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test context-grouped verbalization.
+    @details  Validates grouping by subject with formatted headers and indented facts.
+    """
+    kg = nature_scene_graph
+    
+    # Get triples for specific subjects
+    triples_df = kg.get_all_triples()
+    triple_names_df = kg.triples_to_names(triples_df, drop_ids=True)
+    
+    # Filter to subjects with multiple triples
+    subject_counts = triple_names_df['subject'].value_counts()
+    multi_triple_subjects = subject_counts[subject_counts > 1].index[:2]  # Get 2 subjects with multiple triples
+    sample_df = triple_names_df[triple_names_df['subject'].isin(multi_triple_subjects)]
+    
+    result = kg.to_triples_string(sample_df, mode="context")
+    assert result is not None
+    assert isinstance(result, str)
+    
+    # Should contain "Facts about" headers
+    assert "Facts about" in result
+    
+    # Should have indented facts (lines starting with "  - ")
+    lines = result.split('\n')
+    fact_lines = [line for line in lines if line.startswith('  - ')]
+    assert len(fact_lines) > 0, "Should have indented fact lines"
+    
+    # Should have empty lines between subjects (if multiple subjects)
+    if len(multi_triple_subjects) > 1:
+        assert '' in lines, "Should have empty lines separating subjects"
+    
+    # Verify structure: header followed by facts
+    for subject in multi_triple_subjects:
+        assert f"Facts about {subject}:" in result
+        # Find the section for this subject
+        header_idx = None
+        for i, line in enumerate(lines):
+            if line == f"Facts about {subject}:":
+                header_idx = i
+                break
+        
+        assert header_idx is not None
+        # Next non-empty line should be a fact
+        next_line = lines[header_idx + 1]
+        assert next_line.startswith('  - '), f"Fact should follow header: {next_line}"
+
+
+@pytest.mark.kg
+@pytest.mark.order(34)
+@pytest.mark.dependency(name="verbalization_edge_cases", depends=["verbalization_context"], scope="session")
+def test_to_triples_string_edge_cases(nature_scene_graph: KnowledgeGraph) -> None:
+    """Test edge cases for verbalization methods.
+    @details  Tests empty DataFrames, None input, and invalid modes.
+    """
+    kg = nature_scene_graph
+    
+    # Test 1: Empty DataFrame
+    empty_df = DataFrame(columns=["subject", "relation", "object"])
+    
+    assert kg.to_triples_string(empty_df, mode="raw") == ""
+    assert kg.to_triples_string(empty_df, mode="natural") == ""
+    assert kg.to_triples_string(empty_df, mode="json") == "[]"
+    assert kg.to_triples_string(empty_df, mode="context") == ""
+    
+    # Test 2: None input (should fetch all triples)
+    result = kg.to_triples_string(None, mode="raw")
+    assert result is not None
+    assert len(result) > 0  # Should have content from nature_scene_graph
+    
+    # Test 3: Invalid mode
+    triples_df = kg.get_all_triples().head(1)
+    triple_names_df = kg.triples_to_names(triples_df, drop_ids=True)
+    
+    with pytest.raises(ValueError, match="Invalid mode"):
+        kg.to_triples_string(triple_names_df, mode="invalid_mode")
+    
+    with pytest.raises(ValueError, match="expected one of"):
+        kg.to_triples_string(triple_names_df, mode="xml")
+    
+    # Test 4: Single triple context mode
+    single_df = triple_names_df.head(1)
+    context_result = kg.to_triples_string(single_df, mode="context")
+    assert "Facts about" in context_result
+    assert context_result.count("Facts about") == 1  # Only one subject
+
+
+@pytest.mark.kg
+@pytest.mark.order(35)
+@pytest.mark.dependency(name="verbalization_comprehensive", depends=["verbalization_edge_cases"], scope="session")
+def test_to_triples_string_comprehensive(nature_scene_graph: KnowledgeGraph) -> None:
+    """Comprehensive test comparing all verbalization modes.
+    @details  Validates that all modes produce consistent information from same input.
+    """
+    kg = nature_scene_graph
+    
+    # Get sample data
+    triples_df = kg.get_all_triples().head(5)
+    triple_names_df = kg.triples_to_names(triples_df, drop_ids=True)
+    
+    # Generate all formats
+    triple_output = kg.to_triples_string(triple_names_df, mode="raw")
+    natural_output = kg.to_triples_string(triple_names_df, mode="natural")
+    json_output = kg.to_triples_string(triple_names_df, mode="json")
+    context_output = kg.to_triples_string(triple_names_df, mode="context")
+    
+    # All should be non-empty
+    assert len(triple_output) > 0
+    assert len(natural_output) > 0
+    assert len(json_output) > 2  # At least "[]"
+    assert len(context_output) > 0
+    
+    # Extract unique entities from original DataFrame
+    unique_subjects = set(triple_names_df['subject'])
+    unique_objects = set(triple_names_df['object'])
+    unique_relations = set(triple_names_df['relation'])
+    
+    # All formats should mention the same entities
+    for entity in unique_subjects.union(unique_objects):
+        assert entity in triple_output or entity in json_output
+        assert entity in natural_output or entity in json_output
+        assert entity in context_output or entity in json_output
+    
+    # JSON should parse to correct structure
+    import json
+    parsed_json = json.loads(json_output)
+    assert len(parsed_json) == len(triple_names_df)
+    
+    # Context mode should group by subject
+    for subject in unique_subjects:
+        assert f"Facts about {subject}:" in context_output
+    
+    # Natural mode should be longest (sentences with spaces and periods)
+    assert len(natural_output) >= len(triple_output)
+
+
 # ==========================================
 # NODE AND EDGE LABEL SANITIZATION
 # ==========================================

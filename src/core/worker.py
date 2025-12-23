@@ -18,23 +18,44 @@ from typing import Any, Callable, Dict, Generator, Optional, Tuple
 MongoHandle = Generator["Database[Any]", None, None]
 
 
+# Create a global session for communication with boss
+# This keeps the TCP connection open, preventing "Read timed out" on high loads.
+boss_session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(pool_connections=10, pool_maxsize=10)
+boss_session.mount('http://', adapter)
+
+# Prevents creating a new DB connection for every single task assignment.
+mongo_client_cache = {}
+
+# ================= BATCH CONTROL =================
+# Tracks the "generation" of tasks. When the Boss resets (DELETE), 
+# we increment this. Any running task with an old generation ID is discarded.
+TASK_BATCH = 0
+batch_lock = threading.Lock()
+# ======================================================
+
+def get_cached_client(uri: str) -> MongoClient:
+    if uri not in mongo_client_cache:
+        mongo_client_cache[uri] = MongoClient(uri)
+    return mongo_client_cache[uri]
+
 ######################################################################################
 # Background threading system for non-blocking task handling.
 # Allows Flask to immediately respond to the boss service (202: accepted)
 # while processing continues asynchronously in a separate thread.
 ######################################################################################
-def task_worker():
+def task_worker() -> None:
     """Continuously process tasks from the global queue in the background.
     @details  Each task runs sequentially (or with limited concurrency if multiple workers are started).
-    @throws Exception  Logs any runtime errors that occur during task execution."""
+    @note Uses queue.get() which blocks; exception handling ensures thread survival."""
     while True:
-        time.sleep(0.5)
+        # queue.get() blocks by default, so explicit sleep is not required
         func, args = task_queue.get()
         try:
             func(*args)
         except Exception as e:
-            raise e
-            # print(f"Worker thread error: {e}")
+            # Do not raise here; it kills the thread.
+            print(f"Worker thread caught fatal error: {e}")
         finally:
             task_queue.task_done()
 
@@ -47,7 +68,8 @@ def process_task(
     chunk_doc: Dict[str, Any],
     boss_url: str,
     task_handler: Callable[[Dict[str, Any]], Dict[str, Any]],
-    task_kwargs: Any = None,
+    task_kwargs: Optional[Dict[str, Any]] = None,
+    task_gen: int = 0
 ) -> None:
     """Perform the assigned task in a background thread.
     This includes updating task status, running the handler, saving results,
@@ -65,16 +87,28 @@ def process_task(
     try:
         notify_boss(boss_url, chunk_id, task_name, "started")
         mark_task_in_progress(mongo_db, collection_name, chunk_id, task_name)
+        
+        # 1. Run the heavy computation
         result = task_handler(chunk_doc, **task_kwargs)
+        
+        # 2. CHECK GENERATION: If the Boss reset the system, discard this result.
+        with batch_lock:
+            if task_gen != TASK_BATCH:
+                print(f"Discarding result for chunk {chunk_id} (Task Gen {task_gen} < Current {TASK_BATCH})")
+                return 
+
+        # 3. Save and Notify
         save_task_result(mongo_db, collection_name, chunk_id, task_name, result)
         notify_boss(boss_url, chunk_id, task_name, "completed")
+
     except Exception as e:
-        notify_boss(boss_url, chunk_id, task_name, "failed")
-        print(f"Error while running {task_handler.__name__} with args {task_kwargs}")
-        raise e
-        # print(f"Ignored error from background task: {e}")
-
-
+        # We also check generation here to avoid sending "failed" for a ghost task
+        with batch_lock:
+            if task_gen == TASK_BATCH:
+                notify_boss(boss_url, chunk_id, task_name, "failed")
+        
+        print(f"Error while running {task_handler.__name__} with args {task_kwargs}: {e}")
+        # Do not raise since this is handled by task_worker try/catch
 ######################################################################################
 
 
@@ -119,7 +153,7 @@ def get_task_info(task_name: str) -> Tuple[Callable[[Dict[str, Any]], Dict[str, 
         from src.components.metrics import run_bookscore
 
         return run_bookscore, {
-            "model": "gpt-4o-mini",
+            "model": "gpt-4o",
             "use_v2": False,  # single-pass mode
         }
     elif task_name == "questeval":
@@ -177,16 +211,22 @@ def save_task_result(mongo_db: MongoHandle, collection_name: str, chunk_id: str,
 
 def notify_boss(boss_url: str, chunk_id: str, task_name: str, status: str) -> None:
     """Send completion notification to boss service.
+    @details Spawns a thread so the worker doesn't block waiting for the Boss.
+    Uses the global worker_session for connection reuse.
     @param boss_url Callback URL for the boss service.
     @param chunk_id Unique identifier for the chunk within the story.
     @param task_name Name of the completed task.
     @param status Task completion status ('completed' or 'failed')."""
     payload = {"chunk_id": chunk_id, "task": task_name, "status": status}
-
-    try:
-        requests.post(boss_url, json=payload, timeout=5)
-    except requests.RequestException as e:
-        print(f"Failed to notify boss: {e}")
+    def _send_async():
+        try:
+            # Use global session + short timeout
+            worker_session.post(boss_url, json=payload, timeout=2) 
+        except Exception as e:
+            # We print but don't raise, because we don't want to kill the worker process
+            print(f"Failed to notify boss ({status}): {e}")
+    # Daemon thread ensures this doesn't block program exit
+    threading.Thread(target=_send_async, daemon=True).start()
 
 
 def create_app(task_name: str, boss_url: str) -> Flask:
@@ -202,35 +242,57 @@ def create_app(task_name: str, boss_url: str) -> Flask:
     if task_name == "questeval":
         print("\n" * 6)
 
-    @app.route("/tasks/queue", methods=["POST"])
-    def enqueue_task() -> Tuple[Response, int]:
+    
+    @app.route("/tasks/queue", methods=["POST", "DELETE"])
+    def manage_queue() -> Tuple[Response, int]:
         """Handle incoming task assignments from boss service.
+        @details
+        POST: Enqueue a new task from the Boss.
+        DELETE: Clear all pending tasks and increment generation ID.
         @return JSON response with status code."""
-        data = request.json
-        chunk_id = data.get("chunk_id")
-        database_name = data.get("database_name")
-        collection_name = data.get("collection_name")
-        if not database_name or not collection_name:
-            return jsonify({"error": "Missing database_name or collection_name"}), 400
-        if not chunk_id:
-            return jsonify({"error": "Missing chunk_id"}), 400
+        global TASK_BATCH
+        
+        if request.method == "POST":
+            data = request.json
+            chunk_id = data.get("chunk_id")
+            database_name = data.get("database_name")
+            collection_name = data.get("collection_name")
+            
+            if not database_name or not collection_name or not chunk_id:
+                return jsonify({"error": "Missing required fields"}), 400
 
-        print(f"[QUEUED] chunk '{chunk_id}' from Boss: using database '{database_name}' and collection '{collection_name}'")
+            mongo_uri = load_mongo_config(database_name)
+            mongo_client: MongoClient[Any] = get_cached_client(mongo_uri)
+            mongo_db = mongo_client[database_name]
+    
+            collection = getattr(mongo_db, collection_name)
+            chunk_doc = collection.find_one({"_id": chunk_id})
+            if not chunk_doc:
+                return jsonify({"error": "Chunk not found"}), 404
+            
+            # [GENERATION CONTROL] Capture the ID at time of assignment
+            with batch_lock:
+                current_gen = TASK_BATCH
 
-        # Reconnect to the database since DB_NAME or COLLECTION may have changed
-        mongo_uri = load_mongo_config(database_name)
-        mongo_client: MongoClient[Any] = MongoClient(mongo_uri)
-        mongo_db = mongo_client[database_name]
-
-        # Retrieve chunk data from MongoDB
-        collection = getattr(mongo_db, collection_name)
-        chunk_doc = collection.find_one({"_id": chunk_id})
-        if not chunk_doc:
-            return jsonify({"error": "Chunk not found"}), 404
-
-        # Enqueue the background task
-        task_queue.put((process_task, (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler, task_args)))
-        return jsonify({"status": "accepted"}), 202
+            # Pass current generation to task
+            task_queue.put((
+                process_task, 
+                (mongo_db, collection_name, chunk_id, task_name, chunk_doc, boss_url, task_handler, task_args, current_gen)
+            ))
+            return jsonify({"status": "accepted"}), 202
+    
+        elif request.method == "DELETE":
+            # 1. Clear the Queue (removes pending tasks)
+            with task_queue.mutex:
+                q_size = len(task_queue.queue)
+                task_queue.queue.clear()
+            
+            # 2. Increment Generation (invalidates currently running threads)
+            with batch_lock:
+                TASK_BATCH += 1
+                
+            print(f"Purged {q_size} pending tasks. Bumped Gen ID to {TASK_BATCH} (invalidating active threads).")
+            return jsonify({"status": "cleared", "purged_count": q_size}), 200
 
     return app
 
@@ -244,7 +306,7 @@ if __name__ == "__main__":
     task_queue: "Queue[Tuple[Any, Any]]" = Queue()
 
     # Start one background worker thread (can increase to 2–4 for limited concurrency)
-    for _ in range(1):
+    for _ in range(2):
         threading.Thread(target=task_worker, daemon=True).start()
 
     # Flask prep: Boss URL never changes, but MongoDB connection might

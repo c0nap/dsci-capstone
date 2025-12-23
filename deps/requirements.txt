@@ -3,17 +3,24 @@ python-dotenv
 pytest
 pytest-order
 pytest-dependency
+pytest-instafail
 pandas
 sqlparse
 pypandoc
 lxml
 rapidfuzz
-evaluate
+flask
+
+# Metrics - TODO REMOVE
+numpy
 rouge_score
 nltk
 absl-py
 bert-score
-flask
+scipy
+scikit-learn
+sentence_transformers
+textstat
 
 # Database drivers
 sqlalchemy

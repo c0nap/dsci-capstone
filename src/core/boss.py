@@ -21,19 +21,25 @@ from typing import Any, Dict, Generator, List, Optional, Tuple
 MongoHandle = Generator["Database[Any]", None, None]
 
 
-def load_worker_config(task_types: List[str]) -> Dict[str, str]:
+# Create a global session for communication with workers
+# This keeps the TCP connection open, speeding up task assignment significantly.
+worker_session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(pool_connections=10, pool_maxsize=10)
+worker_session.mount('http://', adapter)
+
+
+def load_worker_config(worker_types: List[str]) -> Dict[str, str]:
     """Load worker service URLs from environment variables.
-    @param task_types  List of valid task keys to use when searching the .env
+    @param worker_types  List of valid task keys to use when searching the .env
     @return  Dictionary mapping task names to worker URLs."""
     load_dotenv(".env")
 
     # Expected environment variables: BOOKSCORE_PORT, QUESTEVAL_HOST, etc.
     workers = {}
 
-    for task in task_types:
+    for task in worker_types:
         host_key = f"{task.upper()}_HOST"
         port_key = f"{task.upper()}_PORT"
-        load_dotenv(".env")
         HOST = os.environ[host_key]
         PORT = os.environ[port_key]
         if HOST and PORT:
@@ -54,18 +60,19 @@ def clear_task_data(mongo_db: MongoHandle, collection_name: str, chunk_id: str, 
 
 def assign_task_to_worker(worker_url: str, database_name: str, collection_name: str, chunk_id: str) -> bool:
     """Assign a task to a worker microservice.
+    @note  We do not use the threaded approach in @ref src.core.worker.notify_boss.
+    This is because we MUST get an 'accepted' response from the worker before proceeding.
     @param worker_url Full URL of the worker's /start endpoint.
     @param database_name Name of the MongoDB database to use.
     @param collection_name The name of our primary chunk storage collection in Mongo.
     @param chunk_id Unique identifier for the chunk within the story.
     @return True if task was successfully assigned, False otherwise."""
     payload = {"database_name": database_name, "collection_name": collection_name, "chunk_id": chunk_id}
-
     try:
-        response = requests.post(worker_url, json=payload, timeout=5)
+        response = worker_session.post(worker_url, json=payload, timeout=5)
         return response.status_code == 202
-    except requests.RequestException as e:
-        print(f"Failed to assign task to {worker_url}: {e}")
+    except requests.RequestException:
+        Log.warn(msg=f"Failed to assign task to {worker_url}")
         return False
 
 
@@ -80,31 +87,23 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
     docs_db.change_database(database_name)
     mongo_db = docs_db.get_unmanaged_handle()
 
-    # Track task completion with two DataFrames
-    # Story-level tracking
-    story_tracker = pd.DataFrame(columns=['story_id', 'preprocessing', 'chunking', 'summarization', 'metrics'])
-
-    # Chunk-level tracking
-    chunk_tracker = pd.DataFrame(
-        columns=[
-            'chunk_id',
-            'story_id',
-            'load_to_mongo',
-            'relation_extraction',
-            'llm_inference',
-            'load_triples_to_neo4j',
-            'graph_verbalization',
-            'summarization',
-            'metric_questeval',
-            'metric_bookscore',
-            'metrics_basic',
-        ]
-    )
+    # Track completion stages for chunks and stories
+    story_tracker = pd.DataFrame(columns=session.config.get_story_tracker_cols())
+    chunk_tracker = pd.DataFrame(columns=session.config.get_chunk_tracker_cols())
 
     # Lock for thread-safe DataFrame operations
-    import threading
-
     tracker_lock = threading.Lock()
+
+    # Interval-based watchdog thread to collect stalled tasks, and mark them as failed.
+    # Start it here for access to chunk_tracker and tracker_lock.
+    timeout_seconds = session.config.get_worker_timeout() 
+    watchdog_thread = threading.Thread(
+        target=monitor_timeouts, 
+        args=(chunk_tracker, tracker_lock, timeout_seconds),
+        daemon=True  # Important: ensures thread dies when the Flask app stops
+    )
+    watchdog_thread.start()
+    Log.status_message(msg="Watchdog thread started successfully.")
 
     def update_story_status(story_id: int, task: str, status: str) -> None:
         """Update story-level task status. Auto-initializes with pending if not exists.
@@ -115,14 +114,17 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         with tracker_lock:
             if story_id not in story_tracker['story_id'].values:
                 # Initialize new story row with all tasks as pending
-                new_row = pd.DataFrame(
-                    [{'story_id': story_id, 'preprocessing': 'pending', 'chunking': 'pending', 'summarization': 'pending', 'metrics': 'pending'}]
-                )
+                row_values = {
+                    'story_id': story_id,
+                }
+                new_row = pd.DataFrame([{
+                    column_name: row_values.get(column_name, 'pending')
+                    for column_name in session.config.get_story_tracker_cols(only_tasks=True)
+                }])
                 story_tracker = pd.concat([story_tracker, new_row], ignore_index=True)
 
             # Update specific task status
             story_tracker.loc[story_tracker['story_id'] == story_id, task] = status
-        # print(f"{" " * 16}Stories Status:\n{story_tracker}\n")
 
     def update_chunk_status(chunk_id: str, story_id: int, task: str, status: str) -> None:
         """Update chunk-level task status. Auto-initializes with pending if not exists.
@@ -134,24 +136,15 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         with tracker_lock:
             if chunk_id not in chunk_tracker['chunk_id'].values:
                 # Initialize new chunk row with all tasks as pending
-                new_row = pd.DataFrame(
-                    [
-                        {
-                            'chunk_id': chunk_id,
-                            'story_id': story_id,
-                            'extraction': 'pending',
-                            'load_to_mongo': 'pending',
-                            'relation_extraction': 'pending',
-                            'llm_inference': 'pending',
-                            'load_triples_to_neo4j': 'pending',
-                            'graph_verbalization': 'pending',
-                            'summarization': 'pending',
-                            'metric_questeval': 'pending',
-                            'metric_bookscore': 'pending',
-                            'metrics_basic': 'pending',
-                        }
-                    ]
-                )
+                row_values = {
+                    'chunk_id': chunk_id,
+                    'story_id': story_id,
+                    'retry_count': 0,
+                }
+                new_row = pd.DataFrame([{
+                    column_name: row_values.get(column_name, 'pending')
+                    for column_name in session.config.get_chunk_tracker_cols(only_tasks=True)
+                }])
                 chunk_tracker = pd.concat([chunk_tracker, new_row], ignore_index=True)
 
             # If starting a new task, append timestamp
@@ -160,29 +153,28 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
             # Update specific task status
             chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, task] = status
-        # print(f"{" " * 16}Chunks Status:\n{chunk_tracker}\n")
 
-    def check_story_completion(story_id: int, task_type: str) -> bool:
+    def check_story_completion(story_id: int, worker_type: str) -> bool:
         """Check if all chunks for a story have completed a specific task.
         @param story_id Unique identifier for the story.
-        @param task_type Task to check (e.g., 'metric_questeval', 'metric_bookscore').
+        @param worker_type Task to check (e.g., 'metric_questeval', 'metric_bookscore').
         @return True if all chunks completed, False otherwise."""
         with tracker_lock:
             story_chunks = chunk_tracker[chunk_tracker['story_id'] == story_id]
             if story_chunks.empty:
                 return False
-            return all(story_chunks[task_type].str.contains('completed'))
+            return all(story_chunks[worker_type].str.contains('completed'))
 
-    def check_story_failure(story_id: int, task_type: str) -> bool:
+    def check_story_failure(story_id: int, worker_type: str) -> bool:
         """Check if any chunks for a story have failed a specific task.
         @param story_id Unique identifier for the story.
-        @param task_type Task to check (e.g., 'metric_questeval').
+        @param worker_type Task to check (e.g., 'metric_questeval').
         @return True if any chunk failed, False otherwise."""
         with tracker_lock:
             story_chunks = chunk_tracker[chunk_tracker['story_id'] == story_id]
             if story_chunks.empty:
                 return False
-            return any(story_chunks[task_type].str.contains('failed'))
+            return any(story_chunks[worker_type].str.contains('failed'))
 
     def record_elapsed_time(chunk_id: str, task: str) -> Optional[float]:
         if not Log.RECORD_TIME:
@@ -250,18 +242,38 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
             # Write status
             chunk_tracker.loc[mask, task] = f"{status}, {seconds}"
 
+    def dispatch_task(chunk_id: str, story_id: int, worker_type: str) -> bool:
+        """Helper to prepare, clear, and assign a single task to a worker.
+        @return True if assigned (HTTP 202), False otherwise."""
+        chunk_task = session.config.get_worker_map(worker_type)
+        worker_url = worker_urls[worker_type]
+
+        # Initialize status and clear old DB data
+        update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
+        clear_task_data(mongo_db, collection_name, chunk_id, worker_type)
+
+        # Assign task to worker, and verify task was accepted
+        if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
+            update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
+            Log.status_message(prefix=Log.assigned, msg=Log.msg_task_assigned(chunk_id, worker_type, database_name, collection_name))
+            return True
+        else:
+            Log.warn(msg=f"Failed to assign chunk {chunk_id} to worker at {worker_url}")
+            update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
+            return False
+
     @app.route("/process_story", methods=["POST"])
     def process_story() -> Tuple[Response, int]:
         """Initiate processing for a story by distributing tasks to workers.
         @return JSON response indicating success or failure."""
         data = request.json
         story_id = data.get("story_id")
-        task_type = data.get("task_type")
+        worker_type = data.get("worker_type")
 
         if not story_id:
             return jsonify({"error": "Missing story_id"}), 400
-        if not task_type or task_type not in worker_urls:
-            return jsonify({"error": f"Unknown task type: {task_type}"}), 400
+        if not worker_type or worker_type not in worker_urls:
+            return jsonify({"error": f"Unknown task type: {worker_type}"}), 400
 
         # Get all chunks for this story
         collection = getattr(mongo_db, collection_name)
@@ -269,139 +281,152 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
         if not chunks:
             return jsonify({"error": f"Cannot distribute tasks: No chunks found for story {story_id}"}), 404
 
-        # Map task_type to chunk-level task name
-        task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
-        chunk_task = task_mapping.get(task_type, task_type)
-
-        # Update story-level status to assigned
         update_story_status(story_id, 'metrics', 'assigned')
 
-        # Distribute tasks to workers (async)
-        worker_url = worker_urls[task_type]
-        assigned = 0
-
+        # Distribute tasks
+        assigned_count = 0
         for chunk in chunks:
-            chunk_id = chunk["_id"]
-
-            # Initialize chunk tracker entry
-            update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
-
-            # Clear any existing task data
-            clear_task_data(mongo_db, collection_name, chunk_id, task_type)
-
-            # Assign task to worker - verify 202 accepted
-            if assign_task_to_worker(worker_url, database_name, collection_name, chunk_id):
-                update_chunk_status(chunk_id, story_id, chunk_task, 'assigned')
-                assigned += 1
-                print(f"[ASSIGNED] chunk '{chunk_id}' to worker {task_type}: using database '{database_name}' and collection '{collection_name}'")
-            else:
-                # If assignment failed, set status to failed
-                print(f"WARNING: Failed to assign chunk {chunk_id} to worker")
-                update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
+            if dispatch_task(chunk["_id"], story_id, worker_type):
+                assigned_count += 1
 
         return (
-            jsonify({"status": "tasks_assigned", "story_id": story_id, "task_type": task_type, "total_chunks": len(chunks), "assigned": assigned}),
+            jsonify({"status": "tasks_assigned", "story_id": story_id, "worker_type": worker_type, "total_chunks": len(chunks), "assigned": assigned_count}),
             200,
         )
+
+    @app.route("/process_chunk", methods=["POST"])
+    def process_chunk() -> Tuple[Response, int]:
+        """Initiate processing for a chunk by distributing tasks to workers.
+        @return JSON response indicating success or failure."""
+        data = request.json
+        chunk_id = data.get("chunk_id")
+        story_id = data.get("story_id")
+        worker_type = data.get("worker_type")
+
+        if not story_id:
+            return jsonify({"error": "Missing story_id"}), 400
+        if not worker_type or worker_type not in worker_urls:
+            return jsonify({"error": f"Unknown task type: {worker_type}"}), 400
+
+        success = dispatch_task(chunk_id, story_id, worker_type)
+
+        return (
+            jsonify({"status": "tasks_assigned", "chunk_id": chunk_id, "story_id": story_id, "worker_type": worker_type, "assigned": 1 if success else 0}),
+            200,
+        )
+
+    def _advance_tracker(chunk_id, story_id, task_col, status):
+        """Updates status and timing for a chunk task."""
+        if "started" in status:
+            update_chunk_status(chunk_id, story_id, task_col, 'started')
+            update_story_status(story_id, 'metrics', 'started')
+        elif "completed" in status:
+            seconds = record_elapsed_time(chunk_id, task_col)
+            update_chunk_status(chunk_id, story_id, task_col, 'completed')
+            if seconds: set_elapsed_time(chunk_id, task_col, seconds, 'completed')
+        elif "failed" in status:
+            Log.warn(msg=f"Task {task_col} failed for chunk {chunk_id}")
+            seconds = record_elapsed_time(chunk_id, task_col)
+            update_chunk_status(chunk_id, story_id, task_col, 'failed')
+            if seconds: set_elapsed_time(chunk_id, task_col, seconds, 'failed')
 
     @app.route("/callback", methods=["POST"])
     def callback() -> Tuple[Response, int]:
         """Receive status notifications from worker services.
         Handles started, completed, and failed statuses.
         @return Simple acknowledgment response."""
-        from src.main import pipeline_E
 
         data = request.json
-
         chunk_id = data.get("chunk_id")
         task = data.get("task")
         status = data.get("status")  # Expected: "started", "completed", or "failed"
 
         if not chunk_id or not task or not status:
             return jsonify({"error": "Missing required fields: chunk_id, task, status"}), 400
-
-        print(f"[CALLBACK] chunk_id={chunk_id}, task={task}, status={status}")
+        if not any([status_stub in status for status_stub in ["started", "completed", "failed"]]):
+            return jsonify({"error": f"Unknown status: {status}"}), 400
+        Log.status_message(prefix=Log.callback, msg=f"chunk_id={chunk_id}, task={task}, status={status}")
 
         # Get specific chunk by chunk_id
         collection = getattr(mongo_db, collection_name)
         chunk = collection.find_one({"_id": chunk_id})
-
         if not chunk:
-            # Cannot update tracker without story_id from chunk document
-            # This indicates a more serious issue (chunk never existed or was deleted)
-            print(f"[ERROR] Could not find chunk {chunk_id} in MongoDB - cannot update tracker")
+            Log.warn(msg=f"Could not find chunk {chunk_id} in MongoDB - cannot update tracker")
             return jsonify({"error": f"Could not find chunk {chunk_id} in MongoDB."}), 404
 
+        # Read properties of received chunk
         story_id = chunk["story_id"]
+        chunk_task = session.config.get_worker_map(task)
+        _advance_tracker(chunk_id, story_id, chunk_task, status)
 
-        # Map task to chunk-level task name
-        task_mapping = {'questeval': 'metric_questeval', 'bookscore': 'metric_bookscore'}
-        chunk_task = task_mapping[task]
+        # [EVALUATION SCOPE: CHUNK]
+        if status == "completed" and session.config.EVAL_SCOPE == 'chunk':
+            _finalize_chunk(chunk, chunk_id, story_id)
 
-        # Handle different status types
-        if "started" in status:
-            # Update chunk status to started
-            update_chunk_status(chunk_id, story_id, chunk_task, 'started')
+        # [RETRY STRATEGY: INSTANT]
+        if status == "failed" and session.config.RETRY_STRATEGY == 'instant':
+            with tracker_lock:
+                row = chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id].iloc[0]
+                if row['retry_count'] < session.config.MAX_RETRIES:
+                    _retry_chunk(chunk_id, story_id, task, row['retry_count'])
+                    return jsonify({"status": "retrying_instant"}), 200
 
-            # Update story status to started if not already
-            update_story_status(story_id, 'metrics', 'started')
+        # Barrier for Story Completion
+        # Get in-progress chunks for this story
+        with tracker_lock:  # Lock to take a snapshot, and keep processing logic outside.
+            story_chunks = chunk_tracker[chunk_tracker['story_id'] == story_id].copy()
+        incomplete_chunks = story_chunks[
+            ~story_chunks[chunk_task].str.contains('completed') & 
+            ~story_chunks[chunk_task].str.contains('failed')
+        ]
+        if not incomplete_chunks.empty:  # Do nothing if there are still pending tasks.
+            return jsonify({"status": "received_pending_others"}), 200
+        # --- BARRIER REACHED: All chunks are accounted for (completed or failed) ---
 
-        elif "completed" in status:
-            # Update chunk status to completed
-            seconds = record_elapsed_time(chunk_id, chunk_task)
-            update_chunk_status(chunk_id, story_id, chunk_task, 'completed')
-            if seconds:
-                set_elapsed_time(chunk_id, chunk_task, seconds, 'completed')
+        # [RETRY STRATEGY: DEFERRED]
+        # If we have failures, we need to decide if we retry or give up.
+        failed_chunks = story_chunks[story_chunks[chunk_task].str.contains('failed')]
+        if not failed_chunks.empty:
+            if session.config.RETRY_STRATEGY == 'deferred':
+                reassigned_count = 0
+                for _, row in failed_chunks.iterrows():
+                    c_id = row['chunk_id']
+                    current_retries = row['retry_count']
+                    
+                    if current_retries < session.config.MAX_RETRIES:
+                        _retry_chunk(c_id, story_id, task, current_retries)
+                        reassigned_count += 1
+                if reassigned_count > 0:
+                    return jsonify({"status": "retrying_failures_deferred"}), 200
+            
+            # --- Exhausted Retries ---
+            # Failures exist but NO retries are left; mark the story as failed and STOP.
+            update_story_status(story_id, 'metrics', 'failed')
+            Log.warn(prefix=Log.task_failed, msg=f"Story {story_id} failed: Max retries exhausted.")
+            return jsonify({"error": "Story failed after max retries"}), 200
 
-            # Check if all chunks for this story completed this task
-            if check_story_completion(story_id, chunk_task):
-                print(f"[STORY COMPLETE] All chunks completed {chunk_task} for story {story_id}")
+        # --- SUCCESS: All chunks passed the current task ---
+        Log.status_message(Log.task_complete, Log.msg_completed_task(chunk_task, story_id))
 
-                Log.print_timing_summary()
-                Log.dump_timing_csv()
-                Plot.time_elapsed_by_names()
-
-                # Check if all metric tasks are complete for the story
-                all_metrics_complete = all(
-                    [check_story_completion(story_id, 'metric_questeval'), check_story_completion(story_id, 'metric_bookscore')]
-                )
-
-                if all_metrics_complete:
-                    # Update story-level metrics to completed
-                    update_story_status(story_id, 'metrics', 'completed')
-
-                    # FINALIZE PIPELINE - all workers finished for this story
-                    # Access fields directly from the MongoDB document
-                    book_id = chunk["book_id"]
-                    book_title = chunk["book_title"]
-                    text = chunk["text"]
-                    summary = chunk["summary"]
-                    gold_summary = chunk.get("gold_summary", text[: len(text) // 2])
-                    bookscore = float(chunk["bookscore"]["result"]["value"])
-                    questeval = float(chunk["questeval"]["result"]["value"])
-                    pipeline_E(summary, book_title, book_id, text, gold_summary, bookscore, questeval)
-
-                    print(f"[PIPELINE FINALIZED] Story {story_id} fully processed")
-
-                    Log.print_timing_summary()
-                    Log.dump_timing_csv()
-                    Plot.time_elapsed_by_names()
-
-        elif "failed" in status:
-            # Update chunk status to failed
-            print(f"[WARNING] Task {task} failed for chunk {chunk_id}")
-            seconds = record_elapsed_time(chunk_id, chunk_task)
-            update_chunk_status(chunk_id, story_id, chunk_task, 'failed')
-            if seconds:
-                set_elapsed_time(chunk_id, chunk_task, seconds, 'failed')
-
-            # Check if we should mark the story-level task as failed
-            if check_story_failure(story_id, chunk_task):
-                update_story_status(story_id, 'metrics', 'failed')
-                print(f"[STORY FAILED] Story {story_id} has failed chunks for {chunk_task}")
-
-        else:
-            return jsonify({"error": f"Unknown status: {status}"}), 400
+        all_metrics_complete = True
+        metric_cols = [c for c in story_chunks.columns if c.startswith("metric_")]
+        for col in metric_cols:
+            if not all(story_chunks[col].str.contains('completed')):
+                all_metrics_complete = False
+                break
+        if all_metrics_complete:
+            # [EVALUATION SCOPE: STORY]
+            # If we are in per-story mode, NOW we finalize / evaluate all chunks.
+            if session.config.EVAL_SCOPE == 'story':
+                all_chunks_data = collection.find({"story_id": story_id})
+                for c_doc in all_chunks_data:
+                    _finalize_chunk(c_doc, c_doc["_id"], story_id)
+        
+            # Final Reporting when everything is done
+            Log.print_timing_summary()
+            Log.dump_timing_csv()
+            Plot.time_elapsed_by_names()
+            Log.status_message(Log.story_complete, Log.msg_completed_story(story_id))
 
         return jsonify({"status": "received"}), 200
 
@@ -504,11 +529,11 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
                 return jsonify({"error": "Invalid story_id, must be integer"}), 400
 
             update_story_status(story_id, task, status)
-            print(f"[STATUS] Story {story_id}: {task} -> {status}")
+            Log.status_message(msg=Log.msg_task_update("Story", story_id, task, status))
 
         elif status_type == "chunk":
             update_chunk_status(chunk_id, story_id, task, status)
-            print(f"[STATUS] Chunk {chunk_id}: {task} -> {status}")
+            Log.status_message(msg=Log.msg_task_update("Chunk", chunk_id, task, status))
 
         else:
             return jsonify({"error": f"Invalid status_type: {status_type}. Use 'story' or 'chunk'"}), 400
@@ -533,17 +558,28 @@ def create_app(docs_db: DocumentConnector, database_name: str, collection_name: 
 
 
 def create_boss_thread(DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
+    # Load configuration
+    worker_urls = load_worker_config(session.config.get_active_workers())
+    if not worker_urls:
+        Log.warn(msg="No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
+
     # Drop old chunks
     mongo_db = session.docs_db.get_unmanaged_handle()
     collection = getattr(mongo_db, COLLECTION)
     collection.drop()
     print("Deleted old chunks...")
 
-    # Load configuration
-    task_types = ["questeval", "bookscore"]
-    worker_urls = load_worker_config(task_types)
-    if not worker_urls:
-        print("Warning: No worker URLs configured. Set WORKER_<TASKNAME> environment variables.")
+    # Clear tasks from previous runs
+    for task in worker_types:
+        try:
+            worker_url = worker_urls[task]
+            # Sending DELETE to the worker's endpoint triggers the task purge.
+            response = requests.delete(worker_url, timeout=5)
+            if response.status_code == 200:
+                print(f"Purged old tasks from '{task}'...")
+        except requests.RequestException:
+             # Can still proceed but there is a chance of collision between MongoDB document IDs.
+            Log.warn(msg=f"Failed to clear queue at {worker_url} - worker may be offline")
 
     # Create and run app
     app = create_app(session.docs_db, DB_NAME, COLLECTION, worker_urls)
@@ -554,6 +590,99 @@ def create_boss_thread(DB_NAME: str, BOSS_PORT: int, COLLECTION: str) -> None:
 
     # Wait for boss to be ready
     time.sleep(1)
+
+
+def monitor_timeouts(chunk_tracker: pd.DataFrame, tracker_lock: threading.Lock, timeout_seconds: int = 1200) -> None:
+    """Background thread to catch workers that crash or hang without reporting failure.
+    @details Uses a snapshot-and-update pattern to minimize time spent holding the tracker_lock.
+    @param chunk_tracker The DataFrame tracking chunk statuses.
+    @param tracker_lock Thread lock for safe DataFrame access.
+    @param timeout_seconds Time in seconds before a 'started' task is marked failed."""
+    while True:
+        time.sleep(session.config.get_watchdog_frequency())
+        now = datetime.now()
+        
+        # 1. SNAPSHOT: Copy only the necessary columns under lock
+        with tracker_lock:
+            if chunk_tracker.empty:
+                continue
+            task_cols = [c for c in chunk_tracker.columns if c.startswith('metric_') or c == 'summarization']
+            # We copy the relevant slice to process offline
+            snapshot = chunk_tracker[['chunk_id', 'story_id'] + task_cols].copy()
+
+        # 2. PROCESS: Identify timeouts outside of the lock
+        timeouts_to_mark = [] # List of (index, column, chunk_id, story_id)
+        for index, row in snapshot.iterrows():
+            for col in task_cols:
+                status_val = row[col]
+                if isinstance(status_val, str) and status_val.startswith('started,'):
+                    try:
+                        _, ts_str = status_val.split(', ', 1)
+                        start_time = datetime.fromisoformat(ts_str)
+                        
+                        if (now - start_time).total_seconds() > timeout_seconds:
+                            timeouts_to_mark.append((index, col, row['chunk_id'], row['story_id']))
+                    except (ValueError, TypeError):
+                        continue
+
+        # 3. UPDATE: Apply changes only if we found timeouts
+        if timeouts_to_mark:
+            with tracker_lock:
+                for index, col, chunk_id, story_id in timeouts_to_mark:
+                    # Double-check status under lock to ensure it hasn't 
+                    # finished in the milliseconds since our snapshot.
+                    current_status = chunk_tracker.at[index, col]
+                    if isinstance(current_status, str) and current_status.startswith('started,'):
+                        Log.warn(msg=f"Watchdog: Task '{col}' for chunk {chunk_id} timed out. Force failing.")
+                        chunk_tracker.at[index, col] = "failed"
+
+
+
+# ---------------------------------------------------------
+# Helper Functions for Boss Callback
+# ---------------------------------------------------------
+def _retry_chunk(chunk_id: str, story_id: int, worker_type: str, current_retries: int) -> None:
+    """Helper to increment retry count and re-queue task.
+    @param chunk_id Unique identifier for the chunk.
+    @param story_id Unique identifier for the story.
+    @param task Task name to retry.
+    @param current_retries Current retry count before incrementing."""
+    # Increment tracker
+    chunk_tracker.loc[chunk_tracker['chunk_id'] == chunk_id, 'retry_count'] += 1
+    
+    Log.status_message(Log.assigned, f"Self-Healing: Retrying chunk {chunk_id} (Attempt {current_retries + 1})")
+    
+    # Re-queue
+    worker_session.post(f"http://localhost:{request.host.split(':')[-1]}/process_chunk", 
+                        json={'chunk_id': chunk_id, 'story_id': story_id, 'worker_type': worker_type})
+
+
+def _finalize_chunk(chunk_doc: Dict[str, Any], chunk_id: str, story_id: int) -> None:
+    """Helper to extract data and run the pipeline function.
+    @param chunk_doc The MongoDB document for the chunk.
+    @param chunk_id Unique identifier for the chunk.
+    @param story_id Unique identifier for the story."""
+    from src.main import pipeline_E  # Import here to avoid circular dependency
+    
+    try:
+        book_id = chunk_doc["book_id"]
+        book_title = chunk_doc["book_title"]
+        text = chunk_doc["text"]
+        summary = chunk_doc["summary"]
+        gold_summary = chunk_doc.get("gold_summary", text[: len(text) // 2])
+        
+        # Safe access to result
+        if "bookscore" in chunk_doc and "result" in chunk_doc["bookscore"]:
+            bookscore = float(chunk_doc["bookscore"]["result"]["value"])
+        else:
+            bookscore = 0.0 
+            
+        RESULTS = pipeline_E(summary, book_title, book_id, chunk_id, text, gold_summary, bookscore)
+        
+        Plot.save_metrics_csv(RESULTS)
+        Plot.summary_results(RESULTS)
+    except Exception as e:
+        Log.warn(msg=f"Pipeline execution failed for chunk {chunk_id}: {e}")
 
 
 ##############################################################################################
@@ -583,10 +712,20 @@ def post_chunk_status(boss_port: int, chunk_id: str, story_id: int, task: str, s
     )
 
 
-def post_process_full_story(boss_port: int, story_id: int, task_type: str) -> requests.models.Response:
+def post_process_full_story(boss_port: int, story_id: int, worker_type: str) -> requests.models.Response:
     """Process all chunks in MongoDB matching the provided story ID.
     @param boss_port Port the boss microservice is running on.
     @param story_id Unique identifier for the story.
-    @param task_type Worker name (questeval, bookscore).
+    @param worker_type Worker name (questeval, bookscore).
     @return JSON response indicating success or failure."""
-    return requests.post(f'http://localhost:{boss_port}/process_story', json={'story_id': story_id, 'task_type': task_type})
+    return requests.post(f'http://localhost:{boss_port}/process_story', json={'story_id': story_id, 'worker_type': worker_type})
+
+def post_process_chunk(boss_port: int, chunk_id: int, story_id: int, worker_type: str) -> requests.models.Response:
+    """Process a single chunk in MongoDB matching the provided chunk ID.
+    @param boss_port Port the boss microservice is running on.
+    @param chunk_id Unique identifier for the chunk.
+    @param story_id Unique identifier for the story.
+    @param worker_type Worker name (questeval, bookscore).
+    @return JSON response indicating success or failure."""
+    return requests.post(f'http://localhost:{boss_port}/process_chunk', json={'chunk_id': chunk_id, 'story_id': story_id, 'worker_type': worker_type})
+

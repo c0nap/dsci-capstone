@@ -16,6 +16,10 @@ class Log:
     USE_COLORS = True
     ## Enable time-logging with the 'Log.time' decorator
     RECORD_TIME = True
+    ## Option to globally disable the 'Log.timer' label argument, i.e. 'calculate[multiply]' instead of just 'calculate'
+    USE_TIME_LABELS = True
+    ## Enable status-logging for Flask callbacks and boss task-tracking.
+    SHOW_STATUS = False
     ## Print the entire DataFrame to console
     FULL_DF = False
 
@@ -47,6 +51,8 @@ class Log:
     TIME_COLOR = CYAN
     ## ANSI color applied to the prefix of chart generation messages
     CHART_COLOR = GRAY
+    ## ANSI color applied to the prefix of task status messages
+    STATUS_COLOR = GREEN
     ## ANSI color applied to the body of every Log message
     MSG_COLOR = BRIGHT
 
@@ -164,6 +170,30 @@ class Log:
         print(text)
 
     @staticmethod
+    def status_message(prefix: str = "[STATUS] ", msg: str = "", verbose: bool = True) -> None:
+        """A status message begins with a green prefix.
+        @param prefix  The context of the message.
+        @param msg  The message to print.
+        @param verbose  Whether to actually print. Saves space and reduces nested if statements."""
+        if not verbose or not Log.SHOW_STATUS:
+            return
+        text = f"{Log.STATUS_COLOR}{prefix}{Log.MSG_COLOR}{msg}{Log.WHITE}" if Log.USE_COLORS else f"{prefix}{msg}"
+        print(text)
+
+    task_failed = "[STORY FAILED] "
+    task_complete = "[STORY COMPLETE] "
+    msg_completed_task = lambda task, story: f"All chunks completed {task} for story {story}"
+
+    story_complete = "[PIPELINE FINALIZED] "
+    msg_completed_story = lambda story: f"Story {story} fully processed"
+
+    msg_task_update = lambda unit_type, unit_id, task, status: f"{unit_type} {unit_id}: {task} -> {status}"
+
+    callback = "[CALLBACK] "
+    assigned = "[ASSIGNED] "
+    msg_task_assigned = lambda chunk, task, database, collection:  f"chunk '{chunk}' to worker {task}: using database '{database}' and collection '{collection}'"
+
+    @staticmethod
     def chart(title: str, filename: str, verbose: bool = True) -> None:
         """Print the time taken to complete a function.
         @param title  The title of the chart.
@@ -173,7 +203,9 @@ class Log:
         msg = Log.msg_chart_saved(title, filename)
         Log.chart_message(msg=msg, verbose=verbose)
 
+    ch_dump = "[DUMP] "
     msg_chart_saved = lambda title, filename: f"Saved chart '{title}' to {filename}"
+    msg_scores_saved = lambda run_id, filename: f"Saved summary scores for run '{run_id}' to {filename}"
 
     @staticmethod
     def elapsed_time(name: str, seconds: float, call_chain: str, verbose: bool = True) -> None:
@@ -258,9 +290,10 @@ class Log:
     # Advantage over @Log.time: Cleaner traceback
     @staticmethod
     @contextmanager
-    def timer(name: str = None) -> Generator[None, None, None]:
+    def timer(name: str = None, label: str = "") -> Generator[None, None, None]:
         """Context manager for recording the execution time of code blocks.
         @param name  Optional name for the timed block. If not provided, uses caller function name.
+        @param label  Optional label containing configuration details, e.g. calculate[add]
         Usage:
             with Log.timer():
                 # your code here
@@ -280,6 +313,8 @@ class Log:
                     break
 
         call_chain = Log.format_call_chain(stack, name)
+        if Log.USE_TIME_LABELS:
+            name += label
         start = time.time()
         try:
             yield  # If an exception happens here... (see below)
@@ -300,23 +335,11 @@ class Log:
     @staticmethod
     def get_merged_timing(file_path: str = "./logs/elapsed_time.csv") -> DataFrame:
         """Reads the existing file, deletes rows matching this run_id, and adds current data.
+        @param file_path  Where the saved CSV will be located.
         @return  DataFrame with columns: function, elapsed, call_chain, run_id
         """
-        # Current run timing as DataFrame
         current_df = Log.get_timing_summary()
-
-        # Read existing file if it exists
-        if not os.path.exists(file_path):
-            return current_df
-        try:
-            existing_df = read_csv(file_path)
-            # Remove rows with the current run_id
-            existing_df = existing_df[existing_df['run_id'] != Log.run_id]
-        except:
-            return current_df
-        # Merge existing with current
-        merged_df = concat([existing_df, current_df], ignore_index=True)
-        return merged_df
+        return get_merged_df(current_df, file_path, str(Log.run_id))
 
     @staticmethod
     def dump_timing_csv(file_path: str = "./logs/elapsed_time.csv") -> None:
@@ -324,18 +347,11 @@ class Log:
         @param file_path  Where the saved CSV will be located.
         @return  DataFrame with columns: function, elapsed, call_chain
         """
-        # Ensure directory exists
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        # Check if header exists by reading first line
-        header_exists = False
-        if os.path.exists(file_path):
-            with open(file_path, 'r') as f:
-                first_line = f.readline().strip()
-                # Check if first line contains expected column names
-                header_exists = bool(first_line and not first_line[0].isdigit())
-
-        df = Log.get_merged_timing()
-        df.to_csv(file_path, mode="a", index=False, header=not header_exists)
+        
+        df = Log.get_merged_timing(file_path)
+        df.to_csv(file_path, index=False)  # Overwrite with merged result
+        
         Log.time_message(prefix=Log.t_dump, msg=Log.msg_time_dump(file_path))
 
     t_dump = "[DUMP] "
@@ -522,3 +538,25 @@ def check_values(results: List[Any], expected: List[Any], verbose: bool, log_sou
                 raise Log.Failure(log_source + Log.bad_val, Log.msg_compare(results[i], expected[i])) from None
             return False
     return True
+
+
+def get_merged_df(current_df: DataFrame, file_path: str, current_run_id: Optional[str] = None
+) -> DataFrame:
+    """Merge current data with existing CSV, replacing rows with matching run_id.
+    @details
+    This is the append-or-update pattern: if a CSV exists, remove any rows
+    matching the current run, then concat. Handles missing files gracefully.
+    """
+    if not os.path.exists(file_path):
+        return current_df
+    
+    try:
+        existing_df = read_csv(file_path)
+        if current_run_id is not None:
+            # Force the dataframe column to string so it matches current_run_id
+            existing_df = existing_df[existing_df["run_id"].astype(str) != current_run_id]
+    except Exception:
+        return current_df
+    
+    return concat([existing_df, current_df], ignore_index=True)
+

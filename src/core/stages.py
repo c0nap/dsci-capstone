@@ -1,14 +1,27 @@
-import json
-import random
 from src.components.book_conversion import Book, Chunk, EPUBToTEI, ParagraphStreamTEI, Story
-from src.connectors.llm import clean_json_block, normalize_to_dict
+from src.connectors.llm import to_triples_string
+from src.components.relation_extraction import RelationExtractor, Triple
 from src.core.context import session
 from src.util import Log
 
 # unused?
 import traceback
-from typing import Dict, List, Optional
-
+from typing import Dict, List, Optional, Tuple, Any
+from src.components.metrics import (
+    run_rouge_l,
+    run_bertscore,
+    run_novel_ngrams,
+    run_jsd_stats,
+    run_entity_coverage,
+    run_ncd_overlap,
+    run_salience_recall,
+    run_nli_faithfulness,
+    run_readability_delta,
+    run_sentence_coherence,
+    run_entity_grid_coherence,
+    run_lexical_diversity,
+    run_stopword_ratio,
+)
 
 ### Will revisit later - Book classes need refactoring ###
 
@@ -101,9 +114,6 @@ from typing import Dict, List, Optional
 
 
 
-
-
-
 ##########################################################################
 
 
@@ -144,150 +154,104 @@ def task_03_chunk_story(story, max_chunk_length=1500):
 
 
 # PIPELINE STAGE B - RELATION EXTRACTION / CHUNKS -> TRIPLES
-def task_10_random_chunk(chunks):
-    with Log.timer():
-        unique_numbers, sample = task_10_sample_chunks(chunks, n_sample=1)
-        return (unique_numbers[0], sample[0])
+def task_10_sample_chunks(chunks):
+    # TODO: trivial time elapsed, consider combining with another task
+    return session.config.get_chunks(session.config.chunk_selection_method, chunks)
 
-
-def task_10_sample_chunks(chunks, n_sample):
-    with Log.timer():
-        unique_numbers = random.sample(range(len(chunks)), n_sample)
-        sample = []
-        for i in unique_numbers:
-            c = chunks[i]
-            sample.append(c)
-        return (unique_numbers, sample)
-
-
-def task_11_send_chunk(c, collection_name, book_title):
-    with Log.timer():
+def task_11_send_chunks(chunks, collection_name, book_title):
+    with Log.timer(label=f"[{len(chunks)}]"):
         # TODO: remove book_title from chunk schema?
         mongo_db = session.docs_db.get_unmanaged_handle()
         collection = getattr(mongo_db, collection_name)
-        collection.insert_one(c.to_mongo_dict())
-        collection.update_one({"_id": c.get_chunk_id()}, {"$set": {"book_title": book_title}})
+
+        batch_data = []
+        for c in chunks:
+            data = c.to_mongo_dict()
+            data['book_title'] = book_title
+            batch_data.append(data)
+
+        # Use bulk insert for speed
+        if batch_data:
+            collection.insert_many(batch_data)
 
 
 # TODO: 11, 12, 13 fit better as preprocessing tasks
 # tied to pipeline_B -> pipeline_A
+    
 
-
-def task_12_relation_extraction_rebel(text, max_tokens=1024):
-    with Log.timer():
-        from src.components.relation_extraction import RelationExtractorREBEL
-
-        # TODO: move to session.rel_extract
-        re_rebel = "Babelscape/rebel-large"
-        # TODO: different models
-        # re_rst = "GAIR/rst-information-extraction-11b"
-        # ner_renard = "compnet-renard/bert-base-cased-literary-NER"
-        nlp = RelationExtractorREBEL(model_name=re_rebel, max_tokens=max_tokens)
-        extracted = nlp.extract(text)
+def task_12_relation_extraction(text: str) -> List[Triple]:
+    extractor_type = session.config.relation_extractor_type
+    with Log.timer(label=f"[{extractor_type}]"):
+        re = session.config.get_extractor(extractor_type)
+        extracted = re.extract(text)
         return extracted
 
 
-def task_12_relation_extraction_openie(text, memory='4G'):
-    with Log.timer():
-        from src.components.relation_extraction import RelationExtractorOpenIE
-
-        # Initialize OpenIE wrapper (handles CoreNLP server internally)
-        nlp = RelationExtractorOpenIE(memory=memory)
-        extracted = nlp.extract(text)
-        return extracted
-
-
-def task_12_relation_extraction_textacy(text):
-    with Log.timer():
-        from src.components.relation_extraction import RelationExtractorTextacy
-
-        # Initialize Textacy wrapper (pure Python backup)
-        nlp = RelationExtractorTextacy()
-        extracted = nlp.extract(text)
-        return extracted
-
-
-def task_13_concatenate_triples(extracted):
-    with Log.timer():
-        # TODO: to_triples_string in RelationExtractor?
-        triples_string = ""
-        for triple in extracted:
-            triples_string += str(triple) + "\n"
-        return triples_string
-
-
-def task_14_relation_extraction_llm_langchain(triples_string, text):
-    with Log.timer():
-        from src.connectors.llm import LangChainConnector
-
-        # TODO: move to session.llm
-        llm = LangChainConnector(
-            temperature=1,  # gpt-5-nano only supports temperature 1
-            system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
-        )
+def task_14_validate_llm(triples: List[Triple], text: str) -> Tuple[str, List[Triple]]:
+    llm_connector_type = session.config.validation_llm_engine
+    with Log.timer(label=f"[{llm_connector_type}]"):
+        triples_string = to_triples_string(triples)
+        # TOOD: reasoning_effort, model_name, prompt_basic
+        system_prompt = "You are a helpful assistant that converts semantic triples into structured JSON."
+        llm = session.config.get_llm(llm_connector_type, system_prompt)
         prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
         prompt += f"And here is the original text:\n{text}\n\n"
         prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
         prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
-        llm_output = llm.execute_query(prompt)
-        # # TODO - move retry logic to LLMConnector
-        # # Enforce valid JSON
-        # attempts = 10
-        # while not json.loads(llm_output) and attempts > 0:
-        #     llm_output = llm.execute_query(prompt)
-        #     attempts -= 1
-        # if attempts == 0:
-        #     raise Log.Failure()
-        return (prompt, llm_output)
+        triples = llm.execute_to_triples(prompt)
+        return (prompt, triples)
 
 
-def task_14_relation_extraction_llm_openai(triples_string, text):
-    with Log.timer():
-        from src.connectors.llm import OpenAIConnector
-
-        # TODO: move to session.llm
-        llm = OpenAIConnector(
-            temperature=1,  # gpt-5-nano only supports temperature 1
-            system_prompt="You are a helpful assistant that converts semantic triples into structured JSON.",
-        )
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-        prompt += f"And here is the original text:\n{text}\n\n"
-        prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
-        prompt += "Remove nonsensical triples but otherwise retain all relevant entries, and add new ones to encapsulate events, dialogue, and core meaning where applicable."
-        llm_output = llm.execute_query(prompt)
-        # # TODO - move retry logic to LLMConnector
-        # # Enforce valid JSON
-        # attempts = 10
-        # while not json.loads(llm_output) and attempts > 0:
-        #     llm_output = llm.execute_query(prompt)
-        #     attempts -= 1
-        # if attempts == 0:
-        #     raise Log.Failure()
-        return (prompt, llm_output)
-
-
-def task_15_sanitize_triples_llm(llm_output: str) -> List[Dict[str, str]]:
-    with Log.timer():
-        # TODO: rely on robust LLM connector logic to assume json
-        llm_output = clean_json_block(llm_output)
-        json_triples = json.loads(llm_output)
-        # TODO: should LLM connector run sanitization internally?
-        norm_triples = normalize_to_dict(json_triples, keys=["s", "r", "o"])
-        return norm_triples
-
-
-def task_16_moderate_triples_llm(triples: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def task_16_moderate_triples_llm(triples: List[Triple], text: str) -> List[Triple]:
     """Filter offensive content from literary triples.
     @param triples  Normalized triples in JSON format.
+    @param text  The original source text for context.
     @return Safe triples for knowledge graph insertion."""
-    with Log.timer():
-        from src.connectors.llm import moderate_triples
+    moderation_strategy = session.config.moderation_strategy
+    with Log.timer(label=f"[{moderation_strategy}]"):
+        from src.connectors.llm import flag_triples
+        safe, bad = flag_triples(triples, session.config.get_moderation_thresholds())
+        if moderation_strategy == "resolve":
+            if not bad:  # Optimization: If nothing is bad, skip the expensive LLM call
+                return safe
+            fixed = _task_16_resolve_strategy(bad, text)
+            return safe + fixed
+        else:  # == "drop":
+            return safe
 
-        return moderate_triples(triples)
+
+def _task_16_resolve_strategy(
+    bad_triples: List[Tuple[Triple, Dict[str, float]]],
+    text: str,
+) -> List[Triple]:
+    """Attempt to fix flagged triples using context from original text.
+    @details
+    - Uses LLM to distinguish between malicious content and literary depictions
+    - Drops triples that cannot be redeemed
+    @param bad_triples  List of (triple, reasons) tuples
+    @param text  The source text chunk
+    @return List of corrected/sanitized triples
+    """
+    from src.connectors.llm import to_flagged_reasons
+    llm_connector_type = session.config.moderation_llm_engine
+    triples_string = to_flagged_reasons(bad_triples)
+
+    system_prompt = "You are a helpful assistant that corrects harmful content in old fiction."
+    llm = session.config.get_llm(llm_connector_type, system_prompt)
+    prompt = f"Here are some flagged triples extracted from a story chunk:\n{triples_string}\n"
+    prompt += f"And here is the original text:\n{text}\n\n"
+    prompt += "Output JSON with keys: s (subject), r (relation), o (object).\n"
+    prompt += "For each triple you must fix the harmful content by inspecting the intent of the original text."
+    prompt += "If the original text has genuinely harmful content represented by this triple, then drop this triple."
+
+    triples = llm.execute_to_triples(prompt)
+    return triples
+
+
 
 
 # PIPELINE STAGE C - ENRICHMENT / TRIPLES -> GRAPH
-def task_20_send_triples(triples):
+def task_20_send_triples(triples: List[Triple]) -> None:
     with Log.timer():
         session.main_graph.add_triples_json(triples)
 
@@ -315,47 +279,42 @@ def task_21_3_post_statistics():
         pass
 
 
-def task_22_verbalize_triples(mode="triple"):
-    with Log.timer():
-        triples_df = session.main_graph.get_by_ranked_degree(worst_rank=3, enforce_count=True, id_columns=["subject_id"])
+def task_22_fetch_subgraph():
+    """Retrieve and convert subgraph to named triples."""
+    lookup_mode = session.config.graph_lookup_mode
+    with Log.timer(label=f"[{lookup_mode}]"):
+        triples_df = session.config.get_subgraph(lookup_mode)
         triples_df = session.main_graph.triples_to_names(triples_df, drop_ids=True)
-        triples_string = session.main_graph.to_triples_string(triples_df, mode=mode)
+        return triples_df
+
+
+def task_23_verbalize_triples(triples_df):
+    """Convert triples to string format for LLM consumption."""
+    verbal_mode = session.config.verbalize_triples_mode
+    with Log.timer(label=f"[{verbal_mode}]"):
+        triples_string = session.main_graph.to_triples_string(triples_df, verbal_mode)
         return triples_string
 
 
 # PIPELINE STAGE D - CONSOLIDATE / GRAPH -> SUMMARY
-def task_30_summarize_llm_langchain(triples_string):
+def task_30_summarize_llm(triples_string: str = None, text: str = None) -> Tuple[str, str]:
     """Prompt LLM to generate summary"""
-    with Log.timer():
-        from src.connectors.llm import LangChainConnector
-
-        # TODO: move to session.llm
-        llm = LangChainConnector(
-            temperature=1,  # gpt-5-nano only supports temperature 1
-            system_prompt="You are a helpful assistant that processes semantic triples.",
-        )
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-        prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
-        prompt += "Output your generated summary and nothing else."
+    use_triples = session.config.triples_visible
+    use_text = session.config.source_text_visible
+    llm_connector_type = session.config.summary_llm_engine
+    # TODO: maybe make this a string config instead of 2 bools
+    if use_triples and use_text:
+        label = "all"
+    else:
+        label = "triples" if use_triples else "text"
+    with Log.timer(label=f"[{label}]"):
+        # TOOD: reasoning_effort, model_name, prompt_basic
+        system_prompt = "You are a helpful assistant that summarizes text."
+        llm = session.config.get_llm(llm_connector_type, system_prompt)
+        prompt = session.config.get_final_prompt(use_triples, use_text, triples_string, text)
         summary = llm.execute_query(prompt)
         return (prompt, summary)
 
-
-def task_30_summarize_llm_openai(triples_string):
-    """Prompt LLM to generate summary"""
-    with Log.timer():
-        from src.connectors.llm import OpenAIConnector
-
-        # TODO: move to session.llm
-        llm = OpenAIConnector(
-            temperature=1,  # gpt-5-nano only supports temperature 1
-            system_prompt="You are a helpful assistant that processes semantic triples.",
-        )
-        prompt = f"Here are some semantic triples extracted from a story chunk:\n{triples_string}\n"
-        prompt += "Transform this data into a coherent, factual, and concise summary. Some relations may be irrelevant, so don't force yourself to include every single one.\n"
-        prompt += "Output your generated summary and nothing else."
-        summary = llm.execute_query(prompt)
-        return (prompt, summary)
 
 
 def task_31_send_summary(summary, collection_name, chunk_id):
@@ -371,7 +330,7 @@ def task_40_post_summary(book_id, book_title, summary):
     - Post to Blazor metrics page"""
     # TODO: pytest
     with Log.timer():
-        session.metrics.post_example(book_id, book_title, summary)
+        return session.metrics.post_example(book_id, book_title, summary)
 
 
 def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, bookscore, questeval):
@@ -382,6 +341,75 @@ def task_40_post_payload(book_id, book_title, summary, gold_summary, chunk, book
     # TODO: pytest
     with Log.timer():
         session.metrics.post_basic(book_id, book_title, summary, gold_summary, chunk, booook_score=bookscore, questeval_score=questeval)
+
+
+def task_45_eval_rouge(summary, chunk):
+    """Compute metric for ROUGE-L Recall (Coverage Score)"""
+    with Log.timer():
+        return run_rouge_l(summary, chunk)
+
+def task_45_eval_bertscore(summary, chunk):
+    """Compute metric for BERTScore embedding similarity"""
+    with Log.timer():
+        return run_bertscore(summary, chunk)
+
+def task_45_eval_ngrams(summary, chunk):
+    """Compute metric for Novel n-gram Percentage"""
+    with Log.timer():
+        return run_novel_ngrams(summary, chunk)
+
+def task_45_eval_jsd(summary, chunk):
+    """Compute metric for Jensen-Shannon Divergence (JSD)"""
+    with Log.timer():
+        return run_jsd_stats(summary, chunk)
+
+def task_45_eval_coverage(summary, chunk):
+    """Compute metric for Entity Coverage & Hallucination (spaCy)"""
+    with Log.timer():
+        return run_entity_coverage(summary, chunk)
+
+def task_45_eval_ncd(summary, chunk):
+    """Compute metric for Normalized Compression Distance (NCD)"""
+    with Log.timer():
+        return run_ncd_overlap(summary, chunk)
+
+def task_45_eval_salience(summary, chunk):
+    """Compute metric for TF-IDF Salience Recall"""
+    with Log.timer():
+        return run_salience_recall(summary, chunk)
+
+def task_45_eval_faithfulness(summary, chunk):
+    """Compute metric for NLI-based Faithfulness Score"""
+    with Log.timer():
+        return run_nli_faithfulness(summary, chunk)
+
+def task_45_eval_readability(summary, chunk):
+    """Compute metric for Readability Delta (textstats)"""
+    with Log.timer():
+        return run_readability_delta(summary, chunk)
+
+def task_45_eval_sentence_coherence(summary):
+    """Compute metric for Sentence Coherence (Adjacent Embedding Similarity)"""
+    with Log.timer():
+        return run_sentence_coherence(summary)
+
+def task_45_eval_entity_grid(summary):
+    """Compute metric for Entity Grid Coherence (Discourse Structure)"""
+    with Log.timer():
+        return run_entity_grid_coherence(summary)
+
+def task_45_eval_diversity(summary):
+    """Compute metric for Lexical Diversity (Type-Token Ratio)"""
+    with Log.timer():
+        return run_lexical_diversity(summary)
+
+def task_45_eval_stopwords(summary):
+    """Compute metric for Stopword Ratio (Content Density)"""
+    with Log.timer():
+        return run_stopword_ratio(summary)
+
+
+
 
 
 # TODO: move rouge / bertscore out of post function

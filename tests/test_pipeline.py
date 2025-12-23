@@ -6,6 +6,7 @@ from src.components.book_conversion import Chunk, EPUBToTEI, ParagraphStreamTEI,
 from src.core.stages import *
 from src.main import pipeline_A, pipeline_C
 from src.util import Log
+from src.connectors.llm import LLMConnector, to_triples_string
 
 
 ##########################################################################
@@ -316,30 +317,11 @@ def test_job_03_chunk_story(book_data):
 def test_job_10_sample_chunks(book_data):
     """Test sampling multiple chunks from a list."""
     chunks = book_data["chunks_list"]
-    n_sample = 2
 
-    unique_numbers, sample = task_10_sample_chunks(chunks, n_sample)
+    sample = task_10_sample_chunks(chunks)
 
-    assert len(unique_numbers) == n_sample
-    assert len(sample) == n_sample
-    assert all(0 <= idx < len(chunks) for idx in unique_numbers)
+    assert len(sample) == 2
     assert all(isinstance(c, Chunk) for c in sample)
-
-
-@pytest.mark.task
-@pytest.mark.stage_B
-@pytest.mark.order(10)
-@pytest.mark.dependency(name="job_10_single", scope="session", depends=["job_10_multi"])
-@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_job_10_random_chunk(book_data):
-    """Test selecting a single random chunk."""
-    chunks = book_data["chunks_list"]
-
-    unique_number, chunk = task_10_random_chunk(chunks)
-
-    assert isinstance(unique_number, int)
-    assert 0 <= unique_number < len(chunks)
-    assert isinstance(chunk, Chunk)
 
 
 @pytest.mark.task
@@ -353,7 +335,7 @@ def test_job_11_send_chunk(docs_db, book_data):
     collection_name = "example_chunks"
     book_title = book_data["book_title"]
 
-    task_11_send_chunk(chunk, collection_name, book_title)
+    task_11_send_chunks([chunk], collection_name, book_title)
 
     # Verify chunk was inserted with correct book_title
     mongo_db = docs_db.get_unmanaged_handle()
@@ -374,10 +356,10 @@ def test_job_13_concatenate_triples(book_data):
     """Test converting extracted triples to newline-delimited string."""
     extracted = book_data["rebel_triples"]
 
-    triples_string = task_13_concatenate_triples(extracted)
+    triples_string = to_triples_string(extracted)
 
     assert isinstance(triples_string, str)
-    assert triples_string.count("\n") == len(extracted)
+    assert triples_string.count("\n") == len(extracted) - 1
     # Verify each triple appears in output
     for triple in extracted:
         assert str(triple) in triples_string
@@ -394,7 +376,7 @@ def test_job_15_sanitize_triples_llm(book_data):
     llm_output = book_data["llm_triples_json"]
     num_triples = book_data["num_triples"]
 
-    triples = task_15_sanitize_triples_llm(llm_output)
+    triples = LLMConnector.parse_json_string(llm_output)
 
     assert isinstance(triples, list)
     assert len(triples) == num_triples  # Matches fixture data
@@ -418,7 +400,7 @@ def test_job_15_comprehensive(llm_data):
     """Test parsing malformed LLM output."""
     llm_output = llm_data["llm_triples_json"]
     num_triples = llm_data["num_triples"]
-    triples = task_15_sanitize_triples_llm(llm_output)
+    triples = LLMConnector.parse_json_string(llm_output)
 
     assert isinstance(triples, list)
     assert len(triples) == num_triples  # Matches fixture data
@@ -439,7 +421,7 @@ def test_job_15_comprehensive(llm_data):
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_20_send_triples(main_graph, book_data):
     """Test inserting triples into knowledge graph."""
-    triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
+    triples_json = LLMConnector.parse_json_string(book_data["llm_triples_json"])
 
     task_20_send_triples(triples_json)
 
@@ -458,7 +440,7 @@ def test_job_20_send_triples(main_graph, book_data):
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
 def test_job_21_describe_graph(main_graph, book_data):
     """Test generating edge count summary of knowledge graph."""
-    triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
+    triples_json = LLMConnector.parse_json_string(book_data["llm_triples_json"])
 
     # First insert triples, treat task_20 as a helper function
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
@@ -477,14 +459,33 @@ def test_job_21_describe_graph(main_graph, book_data):
 @pytest.mark.order(22)
 @pytest.mark.dependency(name="job_22", scope="session", depends=["job_20", "job_15_minimal"])
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_job_22_verbalize_triples(main_graph, book_data):
+def test_job_22_fetch_subgraph(main_graph, book_data):
     """Test converting high-degree triples to string format."""
-    triples_json = task_15_sanitize_triples_llm(book_data["llm_triples_json"])
+    triples_json = LLMConnector.parse_json_string(book_data["llm_triples_json"])
     # First insert triples, treat task_20 as a helper function
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
     task_20_send_triples(triples_json)
 
-    triples_string = task_22_verbalize_triples()
+    triples_df = task_22_fetch_subgraph()
+
+    assert isinstance(triples_df, DataFrame)
+    assert not triples_df.empty
+
+
+@pytest.mark.task
+@pytest.mark.stage_C
+@pytest.mark.order(23)
+@pytest.mark.dependency(name="job_23", scope="session", depends=["job_22", "job_20", "job_15_minimal"])
+@pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
+def test_job_23_verbalize_triples(main_graph, book_data):
+    """Test converting high-degree triples to string format."""
+    triples_json = LLMConnector.parse_json_string(book_data["llm_triples_json"])
+    # First insert triples, treat task_20 as a helper function
+    # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
+    task_20_send_triples(triples_json)
+    triples_df = task_22_fetch_subgraph()
+
+    triples_string = task_23_verbalize_triples(triples_df)
 
     assert isinstance(triples_string, str)
     assert len(triples_string) > 0
@@ -503,7 +504,7 @@ def test_job_31_send_summary(docs_db, book_data):
 
     # First insert the chunk, treat task_11 as a helper function now
     # This is safe because we use function-scoped fixtures (data is dropped) and depend on task_11 passing.
-    task_11_send_chunk(chunk, collection_name, book_data["book_title"])
+    task_11_send_chunks([chunk], collection_name, book_data["book_title"])
 
     # Then add summary
     task_31_send_summary(summary, collection_name, chunk.get_chunk_id())
@@ -527,9 +528,11 @@ def test_job_31_send_summary(docs_db, book_data):
 @pytest.mark.order(4)
 @pytest.mark.dependency(name="stage_A_minimal", scope="session", depends=["job_03", "job_02", "job_01"])
 @pytest.mark.parametrize("book_data", ["book_1_data", "book_2_data"], indirect=True)
-def test_pipeline_A_minimal(book_data):
+def test_pipeline_A_minimal(docs_db, book_data):
     """Test running the aggregate pipeline_A on a single book."""
     data = book_data
+    collection_name = "example_chunks"
+    book_title = book_data["book_title"]
     chunks = pipeline_A(
         data["epub"],
         data["chapters"],
@@ -537,22 +540,33 @@ def test_pipeline_A_minimal(book_data):
         data["end"],
         data["book_id"],
         data["story_id"],
+        book_title,
+        collection_name
     )
     assert isinstance(chunks, list)
     assert len(chunks) > 0
+
+    for chunk in chunks:
+        # Verify chunk was inserted into MongoDB
+        mongo_db = docs_db.get_unmanaged_handle()
+        collection = getattr(mongo_db, collection_name)
+        doc = collection.find_one({"_id": chunk.get_chunk_id()})
+        assert doc is not None
+        assert doc["book_title"] == book_title
 
 
 @pytest.mark.pipeline
 @pytest.mark.stage_A
 @pytest.mark.order(110)
 @pytest.mark.dependency(name="stage_A_csv", scope="session")
-def test_pipeline_A_from_csv():
+def test_pipeline_A_from_csv(docs_db):
     """Read example CSV and run pipeline_A for each row.
     @details
     - Excel -> Save As -> CSV (UTF-8)
     - Pandas will convert all blanks to None, so we must undo using fillna."""
     csv_path = "./tests/examples-pipeline/books.csv"
     assert os.path.exists(csv_path)
+    collection_name = "example_chunks"
 
     df = read_csv(csv_path).fillna("")  # necessary for start_string blank
     for _, row in df.iterrows():
@@ -562,10 +576,19 @@ def test_pipeline_A_from_csv():
         chapters = row["chapters"]
         book_id = row["book_id"]
         story_id = int(row["story_id"])
+        book_title = row["book_title"]
 
-        chunks = pipeline_A(epub_path, chapters, start_str, end_str, book_id, story_id)
+        chunks = pipeline_A(epub_path, chapters, start_str, end_str, book_id, story_id, book_title, collection_name)
         assert isinstance(chunks, list)
         assert len(chunks) > 0
+
+        for chunk in chunks:
+            # Verify chunk was inserted into MongoDB
+            mongo_db = docs_db.get_unmanaged_handle()
+            collection = getattr(mongo_db, collection_name)
+            doc = collection.find_one({"_id": chunk.get_chunk_id()})
+            assert doc is not None
+            assert doc["book_title"] == book_title
 
 
 @pytest.mark.pipeline
